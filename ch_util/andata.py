@@ -1976,6 +1976,7 @@ class CorrReader(BaseReader):
         # renormalize when using Reader.
         self.apply_gain = True
         self.renormalize = True
+        self.distributed = False
         # Insert virtual 'gain' dataset if required parent datasets are present.
         # We could be more careful about this, but I think this will always
         # work.
@@ -2231,6 +2232,7 @@ class CorrReader(BaseReader):
             input_sel=self.input_sel,
             apply_gain=self.apply_gain,
             renormalize=self.renormalize,
+            distributed=self.distributed,
             datasets=dsets,
             out_group=out_group,
         )
@@ -2244,6 +2246,12 @@ class HKReader(BaseReader):
     """Subclass of :class:`BaseReader` for HK data."""
 
     data_class = HKData
+
+
+class HKPReader(BaseReader):
+    """Subclass of :class:`BaseReader` for HKP data."""
+
+    data_class = HKPData
 
 
 class WeatherReader(BaseReader):
