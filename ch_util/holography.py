@@ -102,63 +102,10 @@ class HolographyObservation(base_model):
             Any notes on this observation.
         """
 
-        def _utc_lst_to_unix(datestring, lst):
-            """
-            day : of class datetime
-            lst: in hours
-            """
-            from datetime import datetime, timedelta
-            import re
-
-            rm = re.match("([0-9]{8})-([A-Z]{3})", datestring)
-            if rm is None:
-                msg = (
-                    "Wrong format for datestring: {0}.".format(datestring)
-                    + "\nShould be YYYYMMDD-AAA, "
-                    + "where AAA is one of [UTC,PST,PDT]"
-                )
-                raise ValueError(msg)
-
-            datestring = rm.group(1)
-            time_zone = rm.group(2)
-
-            # Check for time zone
-            if time_zone == "UTC":
-                date = datetime.strptime(datestring, "%Y%m%d")
-
-            elif time_zone == "PST":
-                date = datetime.strptime(datestring, "%Y%m%d") + timedelta(hours=8)
-
-            elif time_zone == "PDT":
-                date = datetime.strptime(datestring, "%Y%m%d") + timedelta(hours=7)
-            else:
-                msg = "Warning: You need to assign a time zone to the dates."
-                print(msg)
-
-            # Get a chime observer
-            obs = ephemeris._get_chime()
-            # Assign chime observer a date
-            obs.date = date
-
-            # Convert date to LST
-            date_in_lst = obs.sidereal_time() * 12.0 / np.pi
-
-            # If start of date is greater than LST subtract 24 hours
-            if date_in_lst > lst:
-                date_in_lst = date_in_lst - 24.0
-
-            # Calculte difference between LST and start of day in LST
-            # and convert to unix time
-            d_lst = lst - date_in_lst
-            d_unix = d_lst * (3600.0) * ephemeris.SIDEREAL_S
-            date_unix = ephemeris.datetime_to_unix(date)
-
-            # Get the start or end of observation in unix time
-            unix = date_unix + d_unix
-
-            return unix
-
-        start_time = _utc_lst_to_unix(start_day, start_lst)
+        start_time = ephemeris.lsa_to_unix(
+            start_lst * 360 / 24,
+            ephemeris.datetime_to_unix(ephemeris.parse_date(start_day)),
+        )
         duration_unix = duration_lst * (3600.0) * ephemeris.SIDEREAL_S
 
         finish_time = start_time + duration_unix
@@ -343,7 +290,8 @@ class HolographyObservation(base_model):
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
                         obs["quality_flag"] += QUALITY_OFFSOURCE
                         print(
-                            "Mean offset: {:.4f}. Std offset: {:.4f}. Setting quality flag to {}.".format(
+                            "Mean offset: {:.4f}. Std offset: {:.4f}. "
+                            + "Setting quality flag to {}.".format(
                                 meanoffset, stdoffset, QUALITY_OFFSOURCE
                             )
                         )
@@ -377,7 +325,8 @@ class HolographyObservation(base_model):
                     cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
                 else:
                     print(
-                        "No on source time found for {}\n{} {}\nMin distance from source {:.1f} degrees".format(
+                        "No on source time found for {}\n{} {}\n"
+                        + "Min distance from source {:.1f} degrees".format(
                             curlog,
                             post_report_params["src"].name,
                             post_report_params["start_time"].utc_strftime(
@@ -475,6 +424,7 @@ class HolographyObservation(base_model):
                         # check possible.
 
                     if dup_found:
+                        tf = ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
                         print(
                             "Tried to add  :  {} {}; LST={:.3f}".format(
                                 src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
@@ -507,11 +457,9 @@ class HolographyObservation(base_model):
                     for entry in dup_entries:
                         cls.delete_instance(entry)
                         if verbose:
-                            print(
-                                "Deleted observation from database and " + "replacing."
-                            )
+                            print("Deleted observation from database and replacing.")
                 elif verbose:
-                    print("Would have deleted observation and replaced " + "(dry run).")
+                    print("Would have deleted observation and replaced (dry run).")
                 addtodb = True
             else:
                 addtodb = False

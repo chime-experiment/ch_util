@@ -256,6 +256,72 @@ def galt_pointing_model_dec(
     return Angle(degrees=delta_dec / 60.0)
 
 
+def parse_date(datestring):
+    """Convert date string to a datetime object.
+
+    Parameters
+    ----------
+    datestring : string
+        Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]
+
+    Returns
+    -------
+    date : datetime
+        A python datetime object in UTC.
+    """
+    from datetime import datetime, timedelta
+    import re
+
+    rm = re.match("([0-9]{8})-([A-Z]{3})", datestring)
+    if rm is None:
+        msg = (
+            "Wrong format for datestring: {0}.".format(datestring)
+            + "\nShould be YYYYMMDD-AAA, "
+            + "where AAA is one of [UTC,PST,PDT]"
+        )
+        raise ValueError(msg)
+
+    datestring = rm.group(1)
+    tzoffset = 0.0
+    tz = rm.group(2)
+
+    tzs = {"PDT": -7.0, "PST": -8.0, "EDT": -4.0, "EST": -5.0, "UTC": 0.0}
+
+    if tz is not None:
+        try:
+            tzoffset = tzs[tz.upper()]
+        except KeyError:
+            print("Time zone {} not known. Known time zones:".format(tz))
+            for key, value in tzs.items():
+                print(key, value)
+            print("Using UTC{:+.1f}.".format(tzoffset))
+
+    return datetime.strptime(datestring, "%Y%m%d") - timedelta(hours=tzoffset)
+
+
+def utc_lst_to_mjd(datestring, lst, verbose=False):
+    """Convert datetime string and LST to corresponding modified Julian Day
+
+    Parameters
+    ----------
+    datestring : string
+        Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]
+    lst : float
+        Local sidereal time at DRAO (CHIME) in decimal hours
+
+    Returns
+    -------
+    float
+        MJD
+    """
+    return (
+        ctime.unix_to_skyfield_time(
+            utc_lst_to_unix(datestring, lst, verbose=verbose)
+        ).tt
+        - 2400000.5
+    )
+
+
 def sphdist(long1, lat1, long2, lat2):
     """
     Return the angular distance between two coordinates.
