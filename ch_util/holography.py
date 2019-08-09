@@ -99,6 +99,7 @@ class HolographyObservation(base_model):
             lst: in hours
             """
             from datetime import datetime, timedelta
+            import re
 
             rm = re.match('([0-9]{8})-([A-Z]{3})', datestring)
             if rm is None:
@@ -223,6 +224,7 @@ class HolographyObservation(base_model):
 
         """
         from skyfield.api import load
+        import re
         ts = load.timescale()
 
         output_params = {}
