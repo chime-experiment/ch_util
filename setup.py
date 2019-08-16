@@ -29,7 +29,7 @@ setup(
         'caput @ git+https://github.com/radiocosmology/caput.git',
         'bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git',
         'numpy >= 1.15.1', 'scipy', 'networkx >= 2.0', 'h5py',
-        'peewee < 3', 'skyfield >= 1.10', 'future'
+        'peewee >= 3.10', 'skyfield >= 1.10', 'future'
     ],
 
     package_data=ch_util_data,

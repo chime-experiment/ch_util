@@ -5,7 +5,7 @@ numpy >= 1.15.1
 scipy
 networkx >= 2.0
 h5py --no-binary=h5py
-peewee < 3
+peewee >= 3.10
 bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git
 caput @ git+https://github.com/radiocosmology/caput.git#egg=caput
 skyfield >= 1.10

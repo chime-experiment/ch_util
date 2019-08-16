@@ -1544,7 +1544,7 @@ def global_flags_between(start_time, end_time, severity=None):
                     ststamp.time < ephemeris.unix_to_datetime(end_time))
     # Constrain the end time (being careful to deal with open events properly)
     query = (query.switch(event)
-             .join(etstamp, on=event.end, join_type=pw.JOIN_LEFT_OUTER)
+             .join(etstamp, on=event.end, join_type=pw.JOIN.LEFT_OUTER)
              .where((etstamp.time > ephemeris.unix_to_datetime(start_time)) |
              event.end.is_null()))
 
