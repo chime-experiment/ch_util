@@ -630,7 +630,7 @@ class Finder(object):
         selection = di.ArchiveAcq.select().join(di.AcqType)
         for i in self._acq_info:
             selection = selection.switch(di.ArchiveAcq).join(i,
-                    pw.JOIN_LEFT_OUTER)
+                    pw.JOIN.LEFT_OUTER)
         selection = selection.switch(di.ArchiveAcq).join(di.ArchiveInst)
         self._acqs = list(selection.where(condition).group_by(di.ArchiveAcq))
 
@@ -677,7 +677,7 @@ class Finder(object):
         info_cond = False
         for i in self._file_info:
             selection = selection.switch(di.ArchiveFile) \
-                                 .join(i, join_type = pw.JOIN_LEFT_OUTER)
+                                 .join(i, join_type = pw.JOIN.LEFT_OUTER)
             # The following ensures that at least _one_ of the info tables is
             # joined.
             info_cond |= ~(i.start_time >> None)
@@ -1387,7 +1387,7 @@ class Finder(object):
                         .join(di.ArchiveFileCopy)
                 for i in self._file_info:
                     size_q = size_q.switch(di.ArchiveFile) \
-                                   .join(i, join_type = pw.JOIN_LEFT_OUTER)
+                                   .join(i, join_type = pw.JOIN.LEFT_OUTER)
                 size_q = size_q.where(cond & info_cond)
                 try:
                   s = float(size_q.scalar()) / 1024**2   # MB.
@@ -1758,8 +1758,8 @@ def files_in_range(acq, start_time, end_time, node_list, extra_cond = None,
                     .join(di.ArchiveFile)
     for i in file_info_table:
         query = query.switch(di.ArchiveFile) \
-                     .join(i, join_type = pw.JOIN_LEFT_OUTER)
-    query = query.where(cond & info_cond).naive()
+                     .join(i, join_type = pw.JOIN.LEFT_OUTER)
+    query = query.where(cond & info_cond).objects()
 
     if not node_spoof:
       return [path.join(af.root, acq_name, af.name) for af in query]

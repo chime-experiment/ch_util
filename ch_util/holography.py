@@ -67,7 +67,7 @@ class HolographyObservation(base_model):
     notes : str
         Any free form notes about the observation.
     """
-    source = pw.ForeignKeyField(HolographySource, related_name='observations')
+    source = pw.ForeignKeyField(HolographySource, backref='observations')
     start_time = pw.DoubleField()
     finish_time = pw.DoubleField()
     quality_flag = pw.IntegerField(null=True)

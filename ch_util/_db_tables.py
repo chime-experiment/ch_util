@@ -244,7 +244,7 @@ class graph_obj(base_model):
     ----------
     id
     """
-    id = pw.PrimaryKeyField()
+    id = pw.AutoField()
 
 
 class global_flag_category(base_model):
@@ -280,11 +280,11 @@ class global_flag(event_table):
     notes : string
         Notes about the global flag.
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="global_flag")
-    category = pw.ForeignKeyField(global_flag_category, related_name="flag")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="global_flag")
+    category = pw.ForeignKeyField(global_flag_category, backref="flag")
     severity = EnumField(["comment", "warning", "severe"])
-    inst = pw.ForeignKeyField(chimedb.data_index.ArchiveInst, related_name="flag",
+    inst = pw.ForeignKeyField(chimedb.data_index.ArchiveInst, backref="flag",
                               null=True)
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
@@ -420,7 +420,7 @@ class component_type_rev(name_table):
     notes : string
         An (optional) description of the component type.
     """
-    type = pw.ForeignKeyField(component_type, related_name='rev')
+    type = pw.ForeignKeyField(component_type, backref='rev')
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
 
@@ -473,11 +473,11 @@ class component(event_table):
     get_property
     set_property
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="component")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="component")
     sn = pw.CharField(max_length=255, unique=True, index=True)
-    type = pw.ForeignKeyField(component_type, related_name="component")
-    type_rev = pw.ForeignKeyField(component_type_rev, related_name="component",
+    type = pw.ForeignKeyField(component_type, backref="component")
+    type_rev = pw.ForeignKeyField(component_type_rev, backref="component",
                                   null=True)
 
     class Meta(object):
@@ -734,10 +734,10 @@ class component_history(event_table):
     notes : string
         The history information.
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="history")
-    comp = pw.ForeignKeyField(component, db_column="comp_sn",
-                              to_field="sn", related_name="history")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="history")
+    comp = pw.ForeignKeyField(component, column_name="comp_sn",
+                              field="sn", backref="history")
     notes = pw.CharField(max_length=65000)
 
 
@@ -755,11 +755,11 @@ class component_doc(event_table):
     ref : string
         The location of the document within the repository (e.g., a filename).
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="doc")
-    comp = pw.ForeignKeyField(component, db_column="comp_sn",
-                              to_field="sn", related_name="doc")
-    repo = pw.ForeignKeyField(external_repo, related_name="doc")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="doc")
+    comp = pw.ForeignKeyField(component, column_name="comp_sn",
+                              field="sn", backref="doc")
+    repo = pw.ForeignKeyField(external_repo, backref="doc")
     ref = pw.CharField(max_length=65000)
 
 
@@ -786,12 +786,12 @@ class connexion(event_table):
     other_comp
     sever
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="connexion")
-    comp1 = pw.ForeignKeyField(component, db_column="comp_sn1",
-                               to_field="sn", related_name="conn1")
-    comp2 = pw.ForeignKeyField(component, db_column="comp_sn2",
-                               to_field="sn", related_name="conn2")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="connexion")
+    comp1 = pw.ForeignKeyField(component, column_name="comp_sn1",
+                               field="sn", backref="conn1")
+    comp2 = pw.ForeignKeyField(component, column_name="comp_sn2",
+                               field="sn", backref="conn2")
 
     class Meta(object):
         indexes = ((("component_sn1", "component_sn2"), True))
@@ -997,9 +997,9 @@ class property_component(base_model):
         The component type to be mapped.
     """
     prop_type = pw.ForeignKeyField(property_type,
-                                   related_name="property_component")
+                                   backref="property_component")
     comp_type = pw.ForeignKeyField(component_type,
-                                   related_name="property_component")
+                                   backref="property_component")
 
     class Meta(object):
         indexes = ((("prop_type", "comp_type"), True))
@@ -1019,11 +1019,11 @@ class property(event_table):
     value : string
         The actual property.
     """
-    id = pw.ForeignKeyField(graph_obj, db_column="id", primary_key=True,
-                            related_name="property")
-    comp = pw.ForeignKeyField(component, db_column="comp_sn",
-                              related_name="property", to_field="sn")
-    type = pw.ForeignKeyField(property_type, related_name="property")
+    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
+                            backref="property")
+    comp = pw.ForeignKeyField(component, column_name="comp_sn",
+                              backref="property", field="sn")
+    type = pw.ForeignKeyField(property_type, backref="property")
     value = pw.CharField(max_length=255)
 
     class Meta(object):
@@ -1162,11 +1162,11 @@ class event(base_model):
     """
     active = pw.BooleanField(default=True)
     replaces = pw.ForeignKeyField(
-        "self", null=True, related_name="replacement")
-    graph_obj = pw.ForeignKeyField(graph_obj, related_name="event")
-    type = pw.ForeignKeyField(event_type, related_name="event")
-    start = pw.ForeignKeyField(timestamp, related_name="event_start")
-    end = pw.ForeignKeyField(timestamp, related_name="event_end")
+        "self", null=True, backref="replacement")
+    graph_obj = pw.ForeignKeyField(graph_obj, backref="event")
+    type = pw.ForeignKeyField(event_type, backref="event")
+    start = pw.ForeignKeyField(timestamp, backref="event_start")
+    end = pw.ForeignKeyField(timestamp, backref="event_end")
 
     class Meta(object):
         indexes = ((("type_id"), False),
@@ -1324,7 +1324,7 @@ class predef_subgraph_spec(name_table):
     """
     name = pw.CharField(max_length=255)
     start_type = pw.ForeignKeyField(component_type,
-                                    related_name="predef_subgraph_spec_start")
+                                    backref="predef_subgraph_spec_start")
     notes = pw.CharField(max_length=65000, null=True)
 
 
@@ -1346,9 +1346,9 @@ class predef_subgraph_spec_param(base_model):
         - O: only draw connexions one way between type1 and type2.
     """
     predef_subgraph_spec = pw.ForeignKeyField(predef_subgraph_spec,
-                                              related_name="param")
-    type1 = pw.ForeignKeyField(component_type, related_name="subgraph_param1")
-    type2 = pw.ForeignKeyField(component_type, related_name="subgraph_param2",
+                                              backref="param")
+    type1 = pw.ForeignKeyField(component_type, backref="subgraph_param1")
+    type2 = pw.ForeignKeyField(component_type, backref="subgraph_param2",
                                null=True)
     action = EnumField(["T", "H", "O"])
 
@@ -1383,7 +1383,7 @@ class user_permission(base_model):
         The permission type to grant to the user.
     """
     user_id = pw.IntegerField()
-    type = pw.ForeignKeyField(user_permission_type, related_name="user")
+    type = pw.ForeignKeyField(user_permission_type, backref="user")
 
     class Meta(object):
         indexes = ((("user_id", "type"), False))
@@ -1438,7 +1438,7 @@ class DataFlag(base_model):
     though it must be accessed directly.
     """
 
-    type = pw.ForeignKeyField(DataFlagType, related_name='flags')
+    type = pw.ForeignKeyField(DataFlagType, backref='flags')
 
     start_time = pw.DoubleField()
     finish_time = pw.DoubleField()
@@ -1574,7 +1574,7 @@ def _graph_obj_iter(sel, obj, time, when, order, active):
                  .join(start, on=(start.id == event.start)) \
                  .switch(event) \
                  .join(end, on=(end.id == event.end),
-                       join_type=pw.JOIN_LEFT_OUTER) \
+                       join_type=pw.JOIN.LEFT_OUTER) \
                  .where((start.time <= time) & ((end.time >> None) |
                                                 (end.time > time)))
     elif when == EVENT_BEFORE:
