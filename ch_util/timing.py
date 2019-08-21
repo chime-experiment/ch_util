@@ -76,7 +76,7 @@ from __future__ import (absolute_import, division,
                         print_function, unicode_literals)
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
-from future.utils import native_str
+from future.utils import native_str, text_type
 # === End Python 2/3 compatibility
 
 import os
@@ -1564,6 +1564,10 @@ def map_input_to_noise_source(inputs, noise_sources):
         # Have to distinguish between CHIME WRH and ERH
         # Otherwise serial numbers already have the
         # desired hierarchical structure.
+
+        # Serial from file is often bytes, ensure it is unicode
+        input_serial = text_type(input_serial, encoding="utf8")
+
         if input_serial.startswith('FCC'):
             if int(input_serial[3:5]) < 4:
                 name = 'FCCW' + input_serial[3:]
