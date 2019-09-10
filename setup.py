@@ -25,6 +25,7 @@ setup(
 
     install_requires=[
         'chimedb @ git+ssh://git@github.com/chime-experiment/chimedb.git',
+        'chimedb.config @ git+ssh://git@github.com/chime-experiment/chimedb_config.git',
         'chimedb.data_index @ git+ssh://git@github.com/chime-experiment/chimedb_di.git',
         'caput @ git+https://github.com/radiocosmology/caput.git',
         'bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git',
