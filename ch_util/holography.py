@@ -33,6 +33,7 @@ from ch_util import ephemeris
 
 QUALITY_GOOD = 0
 QUALITY_OFFSOURCE = 1
+QUALITY_BADGATING = 2
 ONSOURCE_DIST_TO_FLAG = 0.1
 
 # Tables in the for tracking Holography observations
