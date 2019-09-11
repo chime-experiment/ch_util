@@ -31,6 +31,7 @@ such as :func:`get_feed_positions` operate on this list.
     is_holographic
     is_noise_source
     reorder_correlator_inputs
+    redefine_stack_index_map
     serial_to_id
     serial_to_location
     parse_chime_serial
@@ -1422,6 +1423,58 @@ def reorder_correlator_inputs(input_map, corr_inputs):
             sorted_inputs.append(None)
 
     return sorted_inputs
+
+
+def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
+    """Ensure that only baselines between array antennas are used to represent the stack.
+
+    The correlator will have inputs that are not connected to array antennas.  These inputs
+    are flagged as bad and are not included in the stack, however, products that contain
+    their `chan_id` can still be used to represent a characteristic baseline in the `stack`
+    index map.  This method creates a new `stack` index map that, if possible, only contains
+    products between two array antennas.  This new `stack` index map should be used when
+    calculating baseline distances to fringestop stacked data.
+
+    Parameters
+    ----------
+    input_map : list of :class:`CorrInput`
+        List describing the inputs as they are in the file, output from
+        `tools.get_correlator_inputs`
+    prod : np.ndarray[nprod,] of dtype=('input_a', 'input_b')
+        The correlation products as pairs of inputs.
+    stack : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
+        The index into the `prod` axis of a characteristic baseline included in the stack.
+    reverse_stack :  np.ndarray[nprod,] of dtype=('stack', 'conjugate')
+        The index into the `stack` axis that each `prod` belongs.
+
+    Returns
+    -------
+    stack_new : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
+        The updated `stack` index map, where each element is an index to a product
+        consisting of a pair of array antennas.
+    stack_flag : np.ndarray[nstack,] of dtype=np.bool
+        Boolean flag that is True if this element of the stack index map is now valid,
+        and False if none of the baselines that were stacked contained array antennas.
+    """
+    feed_flag = np.array([is_array(inp) for inp in input_map])
+    example_prod = prod[stack['prod']]
+    stack_flag = feed_flag[example_prod['input_a']] & feed_flag[example_prod['input_b']]
+
+    stack_new = stack.copy()
+
+    bad_stack_index = np.flatnonzero(~stack_flag)
+    for ind in bad_stack_index:
+
+        this_stack = np.flatnonzero(reverse_stack['stack'] == ind)
+        for ts in this_stack:
+            tp = prod[ts]
+            if feed_flag[tp[0]] and feed_flag[tp[1]]:
+                stack_new[ind]['prod'] = ts
+                stack_new[ind]['conjugate'] = reverse_stack[ts]['conjugate']
+                stack_flag[ind] = True
+                break
+
+    return stack_new, stack_flag
 
 
 def cmap(i, j, n):
