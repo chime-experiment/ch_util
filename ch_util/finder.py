@@ -313,7 +313,7 @@ class Finder(object):
 
         if not len(self._my_node):
             raise RuntimeError(
-                "No nodes found. Perhaps you need to pass " "a 'node_spoof' parameter?"
+                "No nodes found. Perhaps you need to pass a 'node_spoof' parameter?"
             )
 
         # Get list of join tables. We make a copy because the user may alter

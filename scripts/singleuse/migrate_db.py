@@ -103,7 +103,7 @@ if True:
 # Add documents!
 if True:
     repo = layout.external_repo.get(name="hyper")
-    cur.execute("SELECT * FROM comp_testdata WHERE repo_path LIKE " "'http%';")
+    cur.execute("SELECT * FROM comp_testdata WHERE repo_path LIKE 'http%';")
     for row in cur.fetchall():
         set_user(row[2])
         layout.component.get(sn=row[1]).add_doc(repo, row[4][30:], time=row[3])

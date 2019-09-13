@@ -58,7 +58,7 @@ tmp = h5  # To apease linters who complain about unused imports.
 try:
     from caput import memh5, tod
 except ImportError:
-    raise ImportError("Could not import memh5 or tod." " Have you installed caput?")
+    raise ImportError("Could not import memh5 or tod. Have you installed caput?")
 
 
 ni_msg = "Ask Kiyo to implement this."
@@ -2212,7 +2212,7 @@ def _resolve_stack_prod_input_sel(
     nsels = (stack_sel is not None) + (prod_sel is not None) + (input_sel is not None)
     if nsels > 1:
         raise ValueError(
-            "Only one of *stack_sel*, *input_sel*, and *prod_sel*" " may be specified."
+            "Only one of *stack_sel*, *input_sel*, and *prod_sel* may be specified."
         )
 
     if nsels == 0:

@@ -871,9 +871,7 @@ def sensor_to_hk(graph, comp):
 
         return HKInput(atmel, int(hydra.sn[-1]), None)
     else:
-        raise ValueError(
-            "You can only pass components of type LNA, FLA or " "RFT thru."
-        )
+        raise ValueError("You can only pass components of type LNA, FLA or RFT thru.")
 
 
 def hk_to_sensor(graph, inp):
@@ -1893,7 +1891,7 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
 
     if prod_map is not None:
         if len(prod_map) != nprod:
-            msg = "Length of *prod_map* does not match number of input" " products."
+            msg = "Length of *prod_map* does not match number of input products."
             raise ValueError(msg)
         # Could check prod_map contents as well, but the loop should give a
         # sensible error if this is wrong, and checking is expensive.
@@ -1958,7 +1956,7 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
 
     if not prod_map is None:
         if len(prod_map) != nprod:
-            msg = "Length of *prod_map* does not match number of input" " products."
+            msg = "Length of *prod_map* does not match number of input products."
             raise ValueError(msg)
         # Could check prod_map contents as well, but the loop should give a
         # sensible error if this is wrong, and checking is expensive.

@@ -235,9 +235,7 @@ def get_freeform_chain(fp):
                 x1 = x
                 x = get_barcode("")
                 if x == x1:
-                    x = input(
-                        "  Chain complete. Enter anything to commit, or " "CANCEL: "
-                    )
+                    x = input("  Chain complete. Enter anything to commit, or CANCEL: ")
                     commit_chain(fp, x, chain, "free form")
                     break
                 else:

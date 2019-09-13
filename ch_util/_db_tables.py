@@ -195,7 +195,7 @@ def set_user(u):
     # Find the user.
     if isinstance(u, int):
         q = chimedb.core.proxy.execute_sql(
-            "SELECT user_id FROM chimewiki.user " "WHERE user_id = %d;" % u
+            "SELECT user_id FROM chimewiki.user WHERE user_id = %d;" % u
         )
     else:
         q = chimedb.core.proxy.execute_sql(
@@ -221,7 +221,7 @@ def set_user(u):
 def _check_user(perm):
     if not _user:
         raise UnknownUser(
-            "You must call layout.set_user() before attempting " "to alter the DB."
+            "You must call layout.set_user() before attempting to alter the DB."
         )
     if perm not in _user["perm"]:
         try:
@@ -692,9 +692,7 @@ class component(event_table):
         try:
             external_repo.get(id=repo.id)
         except pw.DoesNotExist:
-            raise DoesNotExist(
-                "Repository does not exist in the DB. Create it " "first."
-            )
+            raise DoesNotExist("Repository does not exist in the DB. Create it first.")
         o = graph_obj.create()
         d = component_doc.create(id=o, comp=self, repo=repo, ref=ref)
         t_stamp = timestamp.create(time=time, notes=notes)
@@ -955,7 +953,7 @@ class connexion(event_table):
             return self.comp1
         else:
             raise DoesNotExist(
-                "The component you passed is not part of this " "connexion."
+                "The component you passed is not part of this connexion."
             )
 
     def make(
@@ -2258,7 +2256,7 @@ def make_connexion(
             fail,
             force,
             AlreadyExists,
-            "Cannot connect because the " "following connexions already exist",
+            "Cannot connect because the following connexions already exist",
         )
 
     t_stamp = timestamp.create(time=time, notes=notes)
@@ -2355,7 +2353,7 @@ def sever_connexion(conn, time=datetime.datetime.now(), notes=None, force=False)
         % (_plural(fail_conn), _does(fail_conn)),
     )
     _check_fail(
-        fail_perm, force, LayoutIntegrity, "Cannot disconnect " "permanent connexions"
+        fail_perm, force, LayoutIntegrity, "Cannot disconnect permanent connexions"
     )
 
     t_stamp = timestamp.create(time=time, notes=notes)
