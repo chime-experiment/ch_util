@@ -1,15 +1,15 @@
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 
 # coding: utf-8
 
 # # Prerequisites
-# 
+#
 # For this demo we really just need to import `andata`, but the other two will probably come in handy during your analyses):
 
 # In[1]:
@@ -26,9 +26,12 @@ from ch_util.andata import HKPData
 # In[15]:
 
 
-f = HKPData.from_acq_h5('/Users/davor/projects/ch_prometheus/archiving/test_data/hkp_prom_20180122.h5', metrics=['ext_sensor_value'])
+f = HKPData.from_acq_h5(
+    "/Users/davor/projects/ch_prometheus/archiving/test_data/hkp_prom_20180122.h5",
+    metrics=["ext_sensor_value"],
+)
 
-m = f.select('ext_sensor_value')
+m = f.select("ext_sensor_value")
 m.head()
 
 
@@ -63,7 +66,7 @@ f7.head()
 # In[8]:
 
 
-fs = f7.groupby('device')
+fs = f7.groupby("device")
 
 
 # The following bit is annoying, but a consequence of having the `device` "category" (in the Pandas sense) still include values which have been filtered out, and have groups of size zero that would cause an error to plot, we'll first get the set of device IDs that are actually connected to `fla-enviromux7` (there is almost certainly a more Pandas-ic way to do it, let us know if you know it):
@@ -71,7 +74,7 @@ fs = f7.groupby('device')
 # In[9]:
 
 
-fs_devices = [k for k,v in fs.groups.items() if len(v) > 0]
+fs_devices = [k for k, v in fs.groups.items() if len(v) > 0]
 fs_devices
 
 
@@ -80,10 +83,9 @@ fs_devices
 # In[21]:
 
 
-fig = plt.figure(figsize=(10,6))
+fig = plt.figure(figsize=(10, 6))
 ax = fig.add_subplot(111)
 for d in fs_devices:
     z = fs.get_group(d)
-    ax.plot(z.index, z.value/10, label=d)
+    ax.plot(z.index, z.value / 10, label=d)
 fig.legend()
-

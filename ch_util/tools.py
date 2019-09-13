@@ -149,10 +149,10 @@ Miscellaneous
     invert_no_zero
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 from past.builtins import basestring
@@ -174,23 +174,30 @@ from ch_util import ephemeris
 
 # CHIME geometry
 _CHIME_POS = [0.0, 0.0, 0.0]
-_CHIME_ROT = 0.0    # CHIME rotation from north. Anti-clockwise looking at the ground (degrees)
+_CHIME_ROT = (
+    0.0
+)  # CHIME rotation from north. Anti-clockwise looking at the ground (degrees)
 
 # 26m geometry
-_26M_POS = [ 254.162124, 21.853934, 20.0]
+_26M_POS = [254.162124, 21.853934, 20.0]
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = 1.986  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
+_PF_ROT = (
+    1.986
+)  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 # Lat/Lon
-_LAT_LON = {'chime':[49.3207125, -119.623670],
-            'pathfinder':[49.3202245, -119.6183635],
-            'galt_26m':[49.320909, -119.620174]}
+_LAT_LON = {
+    "chime": [49.3207125, -119.623670],
+    "pathfinder": [49.3202245, -119.6183635],
+    "galt_26m": [49.320909, -119.620174],
+}
 
 # Classes
 # =======
+
 
 class HKInput(object):
     """A housekeeping input.
@@ -215,6 +222,7 @@ class HKInput(object):
         The mux number; if this HK stream has no multiplexer, this will simply
         remain as :obj:`Null`
     """
+
     atmel = None
     chan = None
     mux = None
@@ -266,7 +274,7 @@ class CorrInput(object):
 
         for basecls in inspect.getmro(type(self))[::-1]:
             for k, attr in basecls.__dict__.items():
-                if k[0] != '_':
+                if k[0] != "_":
                     if not isinstance(attr, property):
                         self.__dict__[k] = input_dict.get(k, None)
 
@@ -275,10 +283,13 @@ class CorrInput(object):
 
     def _attribute_strings(self):
 
-        prop = [(k, getattr(self, k)) for k in ['id', 'crate', 'slot', 'sma', 'corr_order']]
+        prop = [
+            (k, getattr(self, k)) for k in ["id", "crate", "slot", "sma", "corr_order"]
+        ]
 
-        kv = (['%s=%s' % (k, repr(v)) for k, v in prop if v is not None] +
-              ['%s=%s' % (k, repr(v)) for k, v in self.__dict__.items() if k[0] != '_'])
+        kv = ["%s=%s" % (k, repr(v)) for k, v in prop if v is not None] + [
+            "%s=%s" % (k, repr(v)) for k, v in self.__dict__.items() if k[0] != "_"
+        ]
 
         return kv
 
@@ -286,14 +297,14 @@ class CorrInput(object):
 
         kv = self._attribute_strings()
 
-        return "%s(%s)" % (self.__class__.__name__, ', '.join(kv))
+        return "%s(%s)" % (self.__class__.__name__, ", ".join(kv))
 
     @property
     def id(self):
         """Channel ID. Automatically calculated from the serial number
         if id is not explicitly set.
         """
-        if hasattr(self, '_id'):
+        if hasattr(self, "_id"):
             return self._id
         else:
             return serial_to_id(self.input_sn)
@@ -326,6 +337,7 @@ class CorrInput(object):
 class Blank(CorrInput):
     """Unconnected input.
     """
+
     pass
 
 
@@ -342,6 +354,7 @@ class Antenna(CorrInput):
         Serial number of the RF room thru that
         the connection passes.
     """
+
     reflector = None
     antenna = None
     rf_thru = None
@@ -350,12 +363,14 @@ class Antenna(CorrInput):
 class RFIAntenna(Antenna):
     """RFI monitoring antenna
     """
+
     pass
 
 
 class NoiseSource(CorrInput):
     """Broad band noise calibration source.
     """
+
     pass
 
 
@@ -374,6 +389,7 @@ class ArrayAntenna(Antenna):
     flag : bool
         Flag indicating whether or not the antenna is good.
     """
+
     _rotation = 0.0
     _offset = [0.0] * 3
 
@@ -386,13 +402,13 @@ class ArrayAntenna(Antenna):
 
         kv = super(ArrayAntenna, self)._attribute_strings()
         if self.pos is not None:
-            pos = ', '.join(['%0.2f' % pp for pp in self.pos])
-            kv.append('pos=[%s]' % pos)
+            pos = ", ".join(["%0.2f" % pp for pp in self.pos])
+            kv.append("pos=[%s]" % pos)
         return kv
 
     @property
     def pos(self):
-        if hasattr(self, '_pos'):
+        if hasattr(self, "_pos"):
 
             pos = self._pos
 
@@ -401,9 +417,7 @@ class ArrayAntenna(Antenna):
                 t = np.radians(self._rotation)
                 c, s = np.cos(t), np.sin(t)
 
-                pos = [c * pos[0] - s * pos[1],
-                       s * pos[0] + c * pos[1],
-                       pos[2]]
+                pos = [c * pos[0] - s * pos[1], s * pos[0] + c * pos[1], pos[2]]
 
             if any(self._offset):
 
@@ -416,7 +430,7 @@ class ArrayAntenna(Antenna):
 
     @pos.setter
     def pos(self, val):
-        if (val is not None) and hasattr(val, '__iter__') and (len(val) > 1):
+        if (val is not None) and hasattr(val, "__iter__") and (len(val) > 1):
             self._pos = [0.0] * 3
             for ind, vv in enumerate(val):
                 self._pos[ind] = vv
@@ -430,6 +444,7 @@ class PathfinderAntenna(ArrayAntenna):
     powered : bool
         Flag indicating that the antenna is powered.
     """
+
     _rotation = _PF_ROT
     _offset = _PF_POS
 
@@ -439,6 +454,7 @@ class PathfinderAntenna(ArrayAntenna):
 class CHIMEAntenna(ArrayAntenna):
     """ Antenna that is part of CHIME.
     """
+
     _rotation = _CHIME_ROT
     _offset = _CHIME_POS
 
@@ -454,12 +470,14 @@ class HolographyAntenna(Antenna):
     pol : str
         Orientation of the polarisation.
     """
+
     pos = None
     pol = None
 
 
 # Private Functions
 # =================
+
 
 def _ensure_graph(graph):
 
@@ -470,6 +488,7 @@ def _ensure_graph(graph):
     except:
         graph = layout.graph(graph)
     return graph
+
 
 def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source):
     """Fetch all the required properties of an ADC channel or correlator input.
@@ -502,7 +521,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # Check if the correlator input component contains a chan_id property
     corr_prop = lay.node_property(corr_input)
-    chan_id = int(corr_prop['chan_id'].value) if 'chan_id' in corr_prop else None
+    chan_id = int(corr_prop["chan_id"].value) if "chan_id" in corr_prop else None
 
     rfl = None
     cas = None
@@ -517,13 +536,13 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             f = [a for a in rfl_path[1:-1] if a.type.name == name]
             return f[0] if len(f) == 1 else None
 
-        foc = find('focal line slot')
-        cas = find('cassette')
-        slt = find('cassette slot')
-        ant = find('antenna')
-        pol = find('polarisation')
+        foc = find("focal line slot")
+        cas = find("cassette")
+        slt = find("cassette slot")
+        ant = find("antenna")
+        pol = find("polarisation")
 
-        for rft_name in ['rf room thru', 'RFT thru']:
+        for rft_name in ["rf room thru", "RFT thru"]:
             rft = find(rft_name)
             if rft is not None:
                 break
@@ -531,9 +550,19 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
     # If the antenna does not exist, it might be the RFI antenna, the noise source, or empty
     if ant is None:
         if rfi_antenna is not None:
-            rfl = lay.closest_of_type(rfi_antenna, "reflector", type_exclude=["correlator card slot", "ADC board"])
+            rfl = lay.closest_of_type(
+                rfi_antenna,
+                "reflector",
+                type_exclude=["correlator card slot", "ADC board"],
+            )
             rfl_sn = rfl.sn if rfl is not None else None
-            return RFIAntenna(id=chan_id, input_sn=corr_input.sn, corr=corr_sn, reflector=rfl_sn, antenna=rfi_antenna.sn)
+            return RFIAntenna(
+                id=chan_id,
+                input_sn=corr_input.sn,
+                corr=corr_sn,
+                reflector=rfl_sn,
+                antenna=rfi_antenna.sn,
+            )
 
         # Check to see if it is a noise source
         if noise_source is not None:
@@ -544,10 +573,12 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # Determine polarization from antenna properties
     try:
-        keydict = {'H': "hpol_orient",
-                   'V': "vpol_orient",
-                   '1': "pol1_orient",
-                   '2': "pol2_orient"}
+        keydict = {
+            "H": "hpol_orient",
+            "V": "vpol_orient",
+            "1": "pol1_orient",
+            "2": "pol2_orient",
+        }
 
         pkey = keydict[pol.sn[-1]]
         pdir = lay.node_property(ant)[pkey].value
@@ -556,32 +587,41 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         pdir = None
 
     # Determine serial number of RF thru
-    rft_sn = getattr(rft, 'sn', None)
+    rft_sn = getattr(rft, "sn", None)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
 
-        return HolographyAntenna(id=chan_id, input_sn=corr_input.sn, corr=corr_sn,
-                                 reflector=rfl.sn, pol=pdir, antenna=ant.sn, rf_thru=rft_sn,
-                                 pos=_26M_POS)
-
-
+        return HolographyAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
+            pos=_26M_POS,
+        )
 
     # If we are still here, we are a CHIME/Pathfinder feed
 
     # Determine if the correlator input has been manually flagged as good or bad
-    flag = bool(int(corr_prop['manual_flag'].value)) if 'manual_flag' in corr_prop else True
+    flag = (
+        bool(int(corr_prop["manual_flag"].value))
+        if "manual_flag" in corr_prop
+        else True
+    )
 
     # Map the cylinder name in the database into a number. This might
     # be worth changing, such that we could also map into letters
     # (i.e. A, B, C, D) to save confusion.
     pos_dict = {
-        'W_cylinder': 0,
-        'E_cylinder': 1,
-        'cylinder_A': 2,
-        'cylinder_B': 3,
-        'cylinder_C': 4,
-        'cylinder_D': 5
+        "W_cylinder": 0,
+        "E_cylinder": 1,
+        "cylinder_A": 2,
+        "cylinder_B": 3,
+        "cylinder_C": 4,
+        "cylinder_D": 5,
     }
 
     cyl = pos_dict[rfl.sn]
@@ -598,22 +638,31 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             for node in [rfl, foc, cas, slt]:
                 prop = lay.node_property(node)
 
-                for ind, dim in enumerate(['x_offset', 'y_offset', 'z_offset']):
+                for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
 
                     if dim in prop:
-                        pos[ind] += float(prop[dim].value)     # in metres
+                        pos[ind] += float(prop[dim].value)  # in metres
 
-            if 'y_offset' not in lay.node_property(slt):
+            if "y_offset" not in lay.node_property(slt):
                 pos[1] += (float(slt.sn[-1]) - 1.5) * 0.3048
 
         except:
 
             pos = None
 
-
         # Return CHIMEAntenna object
-        return CHIMEAntenna(id=chan_id, input_sn=corr_input.sn, corr=corr_sn, reflector=rfl.sn,
-                            cyl=cyl, pos=pos, pol=pdir, antenna=ant.sn, rf_thru=rft_sn, flag=flag)
+        return CHIMEAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            cyl=cyl,
+            pos=pos,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
+            flag=flag,
+        )
 
     else:
 
@@ -629,10 +678,10 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             slt_prop = lay.node_property(slt)
 
             d1 = float(cas_prop["dist_to_n_end"].value) / 100.0  # in metres
-            d2 = float(slt_prop["dist_to_edge"].value) / 100.0   # in metres
+            d2 = float(slt_prop["dist_to_edge"].value) / 100.0  # in metres
             orient = cas_prop["slot_zero_pos"].value
 
-            pos[1] = d1 + d2 if orient == 'N' else d1 - d2
+            pos[1] = d1 + d2 if orient == "N" else d1 - d2
 
             # Turn into distance increasing from South to North.
             pos[1] = 20.0 - pos[1]
@@ -649,19 +698,29 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
             rft_prop = lay.node_property(rft)
 
-            if 'powered' in rft_prop:
-                pwd = rft_prop['powered'].value
+            if "powered" in rft_prop:
+                pwd = rft_prop["powered"].value
                 pwd = bool(int(pwd))
 
         # Return PathfinderAntenna object
-        return PathfinderAntenna(id=chan_id, input_sn=corr_input.sn, corr=corr_sn, reflector=rfl.sn,
-                                 cyl=cyl, pos=pos, pol=pdir, antenna=ant.sn,
-                                 rf_thru=rft_sn, powered=pwd, flag=flag)
-
+        return PathfinderAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            cyl=cyl,
+            pos=pos,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
+            powered=pwd,
+            flag=flag,
+        )
 
 
 # Public Functions
 # ================
+
 
 def calibrate_temperature(raw):
     """Calibrate housekeeping temperatures.
@@ -680,6 +739,7 @@ def calibrate_temperature(raw):
         The temperature in degrees Kelvin.
     """
     import numpy
+
     off = 150.0
     r_t = 2000.0 * (8320.0 / (raw - off) - 1.0)
     return 1.0 / (1.0 / 298.0 + numpy.log(r_t / 1.0e4) / 3950.0)
@@ -745,8 +805,9 @@ def lna_to_antenna(graph, lna):
         The antenna.
     """
     graph = _ensure_graph(graph)
-    return graph.closest_of_type(graph.component(comp=lna), "antenna",
-                                 type_exclude="60m coax")
+    return graph.closest_of_type(
+        graph.component(comp=lna), "antenna", type_exclude="60m coax"
+    )
 
 
 def sensor_to_hk(graph, comp):
@@ -772,9 +833,9 @@ def sensor_to_hk(graph, comp):
 
     if comp.type.name == "LNA":
         # Find the closest mux.
-        mux = graph.closest_of_type(comp, "HK mux",
-                                    type_exclude=["polarisation", "cassette",
-                                                  "60m coax"])
+        mux = graph.closest_of_type(
+            comp, "HK mux", type_exclude=["polarisation", "cassette", "60m coax"]
+        )
         if not mux:
             return None
         try:
@@ -786,8 +847,9 @@ def sensor_to_hk(graph, comp):
             chan += 8
 
         # Find the ATMEL board.
-        atmel = graph.closest_of_type(hydra, "HK ATMega",
-                                      type_exclude=["cassette", "antenna"])
+        atmel = graph.closest_of_type(
+            hydra, "HK ATMega", type_exclude=["cassette", "antenna"]
+        )
 
         return HKInput(atmel, chan, int(mux.sn[-2]))
 
@@ -803,14 +865,15 @@ def sensor_to_hk(graph, comp):
             return None
 
         # Find the ATMEL board.
-        atmel = graph.closest_of_type(hydra, "HK ATMega",
-                                      type_exclude=["RFT thru", "FLA",
-                                                    "SMA coax"])
+        atmel = graph.closest_of_type(
+            hydra, "HK ATMega", type_exclude=["RFT thru", "FLA", "SMA coax"]
+        )
 
         return HKInput(atmel, int(hydra.sn[-1]), None)
     else:
-        raise ValueError("You can only pass components of type LNA, FLA or "
-                         "RFT thru.")
+        raise ValueError(
+            "You can only pass components of type LNA, FLA or " "RFT thru."
+        )
 
 
 def hk_to_sensor(graph, inp):
@@ -852,21 +915,26 @@ def hk_to_sensor(graph, inp):
         if thing.type.name == "HK preamp":
             # OK, this is a preamp going to FLA's.
             if inp.chan < 0 or inp.chan > 7:
-                raise ValueError("For FLA housekeeping, the channel number "
-                                 "must be in the range [0, 7].")
+                raise ValueError(
+                    "For FLA housekeeping, the channel number "
+                    "must be in the range [0, 7]."
+                )
             for hydra in graph.neighbour_of_type(thing, "HK hydra"):
                 if hydra.sn[-1] == str(inp.chan):
-                    return graph.closest_of_type(hydra, "FLA",
-                                                 type_exclude="HK preamp")
+                    return graph.closest_of_type(hydra, "FLA", type_exclude="HK preamp")
 
         if thing.type.name == "HK mux box":
             # OK, this is a mux box going to LNA's.
             if inp.mux < 0 or inp.mux > 7:
-                raise ValueError("For LNA housekeeping, the mux number must be "
-                                 "in the range [0, 7].")
+                raise ValueError(
+                    "For LNA housekeeping, the mux number must be "
+                    "in the range [0, 7]."
+                )
             if inp.chan < 0 or inp.chan > 15:
-                raise ValueError("For LNA housekeeping, the channel number "
-                                 "must be in the range [0, 15].")
+                raise ValueError(
+                    "For LNA housekeeping, the channel number "
+                    "must be in the range [0, 15]."
+                )
 
             # Construct the S/N of the mux connector and get it.
             sn = "%s%d%s" % (thing.sn, inp.mux, "A" if inp.chan < 8 else "B")
@@ -877,8 +945,9 @@ def hk_to_sensor(graph, inp):
 
             # Find the closest preamp and the hydra cable corresponding to the
             # channel requested.
-            preamp = graph.closest_of_type(mux_card, "HK preamp",
-                                           type_exclude="HK mux box")
+            preamp = graph.closest_of_type(
+                mux_card, "HK preamp", type_exclude="HK mux box"
+            )
             if not preamp:
                 return None
 
@@ -894,10 +963,12 @@ def hk_to_sensor(graph, inp):
 # Parse a serial number into crate, slot, and sma number
 def parse_chime_serial(sn):
 
-    mo = re.match('FCC(\d{2})(\d{2})(\d{2})', sn)
+    mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
-        raise RuntimeError('Serial number %s does not match expected CHIME format.' % sn)
+        raise RuntimeError(
+            "Serial number %s does not match expected CHIME format." % sn
+        )
 
     crate = int(mo.group(1))
     slot = int(mo.group(2))
@@ -905,12 +976,15 @@ def parse_chime_serial(sn):
 
     return crate, slot, sma
 
+
 def parse_pathfinder_serial(sn):
 
-    mo = re.match('(\w{6}\-\d{4})(\d{2})(\d{2})', sn)
+    mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
-        raise RuntimeError('Serial number %s does not match expected Pathfinder format.' % sn)
+        raise RuntimeError(
+            "Serial number %s does not match expected Pathfinder format." % sn
+        )
 
     crate = mo.group(1)
     slot = int(mo.group(2))
@@ -918,12 +992,15 @@ def parse_pathfinder_serial(sn):
 
     return crate, slot, sma
 
+
 def parse_old_serial(sn):
 
-    mo = re.match('(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})', sn)
+    mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
-        raise RuntimeError('Serial number %s does not match expected 8/16 channel format.' % sn)
+        raise RuntimeError(
+            "Serial number %s does not match expected 8/16 channel format." % sn
+        )
 
     slot = mo.group(1)
     sma = int(mo.group(2))
@@ -946,7 +1023,25 @@ def serial_to_id(serial):
 
     # Map a slot and SMA to channel id for Pathfinder
     def get_pathfinder_channel(slot, sma):
-        c = [None, 80, 16, 64, 0, 208, 144, 192, 128, 240, 176, 224, 160, 112, 48, 96, 32]
+        c = [
+            None,
+            80,
+            16,
+            64,
+            0,
+            208,
+            144,
+            192,
+            128,
+            240,
+            176,
+            224,
+            160,
+            112,
+            48,
+            96,
+            32,
+        ]
         channel = c[slot] + sma if slot > 0 else sma
         return channel
 
@@ -988,7 +1083,7 @@ def serial_to_location(serial):
         (corr_order, crate, slot, sma)
     """
 
-    default = (None, ) * 4
+    default = (None,) * 4
     if serial is None:
         return default
 
@@ -1001,7 +1096,7 @@ def serial_to_location(serial):
     try:
         res = parse_chime_serial(serial)
         corr_id = res[0] * 256 + get_crate_channel(*res[1:])
-        return (corr_id, ) + res
+        return (corr_id,) + res
     except RuntimeError:
         pass
 
@@ -1052,22 +1147,31 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     coax_type = ["SMA coax", "3.25m SMA coax"]
 
-    block = ["correlator card slot", "ADC board", "rf room bulkhead", "c-can bulkhead", "50m coax bundle", "HK hydra",
-             "connector plate pol 1", "connector plate pol 2", "thermometer"]
+    block = [
+        "correlator card slot",
+        "ADC board",
+        "rf room bulkhead",
+        "c-can bulkhead",
+        "50m coax bundle",
+        "HK hydra",
+        "connector plate pol 1",
+        "connector plate pol 2",
+        "thermometer",
+    ]
 
     # Replace 'pathfinder' or 'chime' with serial number
     if isinstance(correlator, basestring):
-        if correlator.lower() == 'pathfinder':
-            correlator = 'K7BP16-0004'
-        elif correlator.lower() == 'chime':
-            correlator = 'FCC'
+        if correlator.lower() == "pathfinder":
+            correlator = "K7BP16-0004"
+        elif correlator.lower() == "chime":
+            correlator = "FCC"
 
     if not connect_this_rank():
         return None
 
     if connect:
         layout.connect_database(read_write=False)
-        layout.set_user('Jrs65')
+        layout.set_user("Jrs65")
 
     # Fetch layout_tag start time if we received a layout num
     if isinstance(lay_time, int):
@@ -1102,7 +1206,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
         try:
             corr = layout_graph.component(correlator)
         except layout.NotFound:
-            raise ValueError('Unknown correlator %s' % correlator)
+            raise ValueError("Unknown correlator %s" % correlator)
 
         # Cut out SMA coaxes so we don't go outside of the correlator
         sg = set(layout_graph.nodes())
@@ -1128,10 +1232,14 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     block.append("reflector")
     rfi_ants = layout_graph.closest_of_type(inputs, "RFI antenna", type_exclude=block)
-    noise_sources = layout_graph.closest_of_type(inputs, "noise source", type_exclude=block)
+    noise_sources = layout_graph.closest_of_type(
+        inputs, "noise source", type_exclude=block
+    )
 
-    inputlist = [_get_input_props(layout_graph, *args)
-                 for args in zip(inputs, corrs, rfls, rfi_ants, noise_sources)]
+    inputlist = [
+        _get_input_props(layout_graph, *args)
+        for args in zip(inputs, corrs, rfls, rfi_ants, noise_sources)
+    ]
 
     # Filter to include only inputs attached to the given correlator. In theory
     # this shouldn't be necessary if the earlier filtering worked, but I think
@@ -1166,7 +1274,7 @@ def change_pathfinder_location(rotation=None, location=None, default=False):
     if rotation is not None:
         PathfinderAntenna._rotation = rotation
 
-    if (location is not None):
+    if location is not None:
         offset = [location[ii] if ii < len(location) else 0.0 for ii in range(3)]
         PathfinderAntenna._offset = offset
 
@@ -1192,7 +1300,7 @@ def change_chime_location(rotation=None, location=None, default=False):
     if rotation is not None:
         CHIMEAntenna._rotation = rotation
 
-    if (location is not None):
+    if location is not None:
         offset = [location[ii] if ii < len(location) else 0.0 for ii in range(3)]
         CHIMEAntenna._offset = offset
 
@@ -1216,7 +1324,12 @@ def get_feed_positions(feeds, get_zpos=False):
     """
 
     # Extract positions for all array antennas or holographic antennas, fill other inputs with NaNs
-    pos = np.array([feed.pos if (is_array(feed) or is_holographic(feed)) else [np.nan] * 3 for feed in feeds])
+    pos = np.array(
+        [
+            feed.pos if (is_array(feed) or is_holographic(feed)) else [np.nan] * 3
+            for feed in feeds
+        ]
+    )
 
     # Drop z coordinate if not explicitely requested
     if not get_zpos:
@@ -1238,7 +1351,7 @@ def get_feed_polarisations(feeds):
     pol : np.ndarray
         Array of characters giving polarisation. If not an array feed returns '0'.
     """
-    pol = np.array([(f.pol if is_array(f) else '0') for f in feeds])
+    pol = np.array([(f.pol if is_array(f) else "0") for f in feeds])
 
     return pol
 
@@ -1259,12 +1372,12 @@ def is_array(feed):
 
 def is_array_x(feed):
     """Is this an X-polarisation antenna in an array?"""
-    return is_array(feed) and feed.pol == 'E'
+    return is_array(feed) and feed.pol == "E"
 
 
 def is_array_y(feed):
     """Is this a Y-polarisation antenna in an array?"""
-    return is_array(feed) and feed.pol == 'S'
+    return is_array(feed) and feed.pol == "S"
 
 
 def is_chime(feed):
@@ -1378,11 +1491,15 @@ def is_array_on(inputs, *args):
     """
 
     if len(args) > 0:
-        raise RuntimeError('This routine no longer accepts a layout time argument.')
+        raise RuntimeError("This routine no longer accepts a layout time argument.")
 
     # Treat scalar case
     if isinstance(inputs, CorrInput):
-        return is_array(inputs) and getattr(inputs, 'powered', True) and getattr(inputs, 'flag', True)
+        return (
+            is_array(inputs)
+            and getattr(inputs, "powered", True)
+            and getattr(inputs, "flag", True)
+        )
 
     # Assume that the argument is a sequence otherwise
     else:
@@ -1410,7 +1527,7 @@ def reorder_correlator_inputs(input_map, corr_inputs):
         List of :class:`CorrInput` instances in the new order. Returns `None`
         where the serial number had no matching entry in :arg:`corr_inputs`.
     """
-    serials = input_map['correlator_input']
+    serials = input_map["correlator_input"]
 
     sorted_inputs = []
 
@@ -1457,20 +1574,20 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
         and False if none of the baselines that were stacked contained array antennas.
     """
     feed_flag = np.array([is_array(inp) for inp in input_map])
-    example_prod = prod[stack['prod']]
-    stack_flag = feed_flag[example_prod['input_a']] & feed_flag[example_prod['input_b']]
+    example_prod = prod[stack["prod"]]
+    stack_flag = feed_flag[example_prod["input_a"]] & feed_flag[example_prod["input_b"]]
 
     stack_new = stack.copy()
 
     bad_stack_index = np.flatnonzero(~stack_flag)
     for ind in bad_stack_index:
 
-        this_stack = np.flatnonzero(reverse_stack['stack'] == ind)
+        this_stack = np.flatnonzero(reverse_stack["stack"] == ind)
         for ts in this_stack:
             tp = prod[ts]
             if feed_flag[tp[0]] and feed_flag[tp[1]]:
-                stack_new[ind]['prod'] = ts
-                stack_new[ind]['conjugate'] = reverse_stack[ts]['conjugate']
+                stack_new[ind]["prod"] = ts
+                stack_new[ind]["conjugate"] = reverse_stack[ts]["conjugate"]
                 stack_flag[ind] = True
                 break
 
@@ -1549,10 +1666,12 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
     nfeed = int((2 * nprod) ** 0.5)
 
     if nprod != (nfeed * (nfeed + 1) // 2):
-        raise Exception("Product axis size does not look correct (not exactly n(n+1)/2).")
+        raise Exception(
+            "Product axis size does not look correct (not exactly n(n+1)/2)."
+        )
 
     shape0 = prod_arr.shape[:axis]
-    shape1 = prod_arr.shape[(axis + 1):]
+    shape1 = prod_arr.shape[(axis + 1) :]
 
     # Construct slice objects representing the axes before and after the product axis
     slice0 = (np.s_[:],) * len(shape0)
@@ -1575,7 +1694,9 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
             if fi <= fj:
                 exp_arr[slice0 + (ii, ij) + slice1] = prod_arr[slice0 + (pi,) + slice1]
             else:
-                exp_arr[slice0 + (ii, ij) + slice1] = prod_arr[slice0 + (pi,) + slice1].conj()
+                exp_arr[slice0 + (ii, ij) + slice1] = prod_arr[
+                    slice0 + (pi,) + slice1
+                ].conj()
 
     return exp_arr
 
@@ -1606,7 +1727,7 @@ def pack_product_array(exp_arr, axis=1):
         raise Exception("Does not look like correlation matrices (axes must be equal).")
 
     shape0 = exp_arr.shape[:axis]
-    shape1 = exp_arr.shape[(axis + 2):]
+    shape1 = exp_arr.shape[(axis + 2) :]
 
     slice0 = (np.s_[:],) * len(shape0)
     slice1 = (np.s_[:],) * len(shape1)
@@ -1638,14 +1759,14 @@ def fast_pack_product_array(arr):
     assert arr.shape[0] == arr.shape[1]
 
     nfeed = arr.shape[0]
-    nprod = (nfeed * (nfeed+1)) // 2
+    nprod = (nfeed * (nfeed + 1)) // 2
 
     ret = np.zeros(nprod, dtype=np.float)
     iout = 0
 
     for i in range(nfeed):
-        ret[iout:(iout+nfeed-i)] = arr[i,i:]
-        iout += (nfeed-i)
+        ret[iout : (iout + nfeed - i)] = arr[i, i:]
+        iout += nfeed - i
 
     return ret
 
@@ -1723,9 +1844,9 @@ def normalise_correlations(A, norm=None):
     """
 
     if norm is None:
-        ach = A.diagonal()**0.5
+        ach = A.diagonal() ** 0.5
     else:
-        ach = norm.diagonal()**0.5
+        ach = norm.diagonal() ** 0.5
 
     aci = invert_no_zero(ach)
 
@@ -1772,8 +1893,7 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
 
     if prod_map is not None:
         if len(prod_map) != nprod:
-            msg = ("Length of *prod_map* does not match number of input"
-                   " products.")
+            msg = "Length of *prod_map* does not match number of input" " products."
             raise ValueError(msg)
         # Could check prod_map contents as well, but the loop should give a
         # sensible error if this is wrong, and checking is expensive.
@@ -1833,13 +1953,12 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
     nprod = vis.shape[axis]
     ninput = gain.shape[axis]
 
-    if prod_map is None and  nprod != (ninput * (ninput + 1) // 2):
+    if prod_map is None and nprod != (ninput * (ninput + 1) // 2):
         raise Exception("Number of inputs does not match the number of products.")
 
     if not prod_map is None:
         if len(prod_map) != nprod:
-            msg = ("Length of *prod_map* does not match number of input"
-                   " products.")
+            msg = "Length of *prod_map* does not match number of input" " products."
             raise ValueError(msg)
         # Could check prod_map contents as well, but the loop should give a
         # sensible error if this is wrong, and checking is expensive.
@@ -1936,8 +2055,11 @@ def fringestop(timestream, ra, freq, feeds, src, date=None, wterm=False, prod_ma
     # Calculate the hour angle
     if date is None:
         import warnings
-        warnings.warn('Calling fringestop without a date is rather inaccurate. '
-                      'In future supplying a date will become mandatory.')
+
+        warnings.warn(
+            "Calling fringestop without a date is rather inaccurate. "
+            "In future supplying a date will become mandatory."
+        )
         date = datetime.datetime(2018, 1, 1)
 
     date = date if date is not None else datetime.datetime(2018, 1, 1)
@@ -1953,12 +2075,14 @@ def fringestop(timestream, ra, freq, feeds, src, date=None, wterm=False, prod_ma
     # Check dimensions
     nfeed = len(feeds)
     nfreq = len(freq)
-    nprod = (nfeed * (nfeed+1)) // 2 if prod_map is None else len(prod_map)
+    nprod = (nfeed * (nfeed + 1)) // 2 if prod_map is None else len(prod_map)
 
     nvis = timestream.shape[1]
     if nprod != nvis:
-        msg = ("The shape of product map provided {0} is not the"
-               " same as the timestream product axis {1}")
+        msg = (
+            "The shape of product map provided {0} is not the"
+            " same as the timestream product axis {1}"
+        )
         raise ValueError(msg.format(nprod, nvis))
 
     # Calculate wavelengths
@@ -2000,7 +2124,9 @@ def fringestop(timestream, ra, freq, feeds, src, date=None, wterm=False, prod_ma
 fringestop_pathfinder = fringestop
 
 
-def fringestop_time(timestream, times, freq, feeds, src, wterm=False, prod_map=None, csd=False):
+def fringestop_time(
+    timestream, times, freq, feeds, src, wterm=False, prod_map=None, csd=False
+):
     """Fringestop timestream data to a fixed source.
 
     This routines takes an array of times (or CSDs) specifiying the samples
@@ -2031,7 +2157,7 @@ def fringestop_time(timestream, times, freq, feeds, src, wterm=False, prod_map=N
     """
 
     if csd:
-        ra = (times % 1.0)  * 360.0
+        ra = (times % 1.0) * 360.0
         date = ephemeris.csd_to_unix(times.mean())
     else:
         ra = ephemeris.lsa(times)
@@ -2039,7 +2165,7 @@ def fringestop_time(timestream, times, freq, feeds, src, wterm=False, prod_map=N
 
     return fringestop(timestream, ra, freq, feeds, src, date, wterm, prod_map)
 
-    
+
 def invert_no_zero(x):
     """Return the reciprocal, but ignoring zeros.
 
@@ -2055,5 +2181,5 @@ def invert_no_zero(x):
     r : np.ndarray
         Return the reciprocal of x.
     """
-    with np.errstate(divide='ignore', invalid='ignore'):
+    with np.errstate(divide="ignore", invalid="ignore"):
         return np.where(x == 0, 0.0, 1.0 / x)

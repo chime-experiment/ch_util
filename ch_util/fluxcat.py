@@ -31,10 +31,10 @@ Functions
 
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 from past.builtins import basestring
@@ -60,7 +60,9 @@ FREQ_NOMINAL = 600.0
 
 # Define the source collections that should be loaded when this module is imported.
 DIR_COLLECTIONS = os.path.join(os.path.dirname(__file__), "catalogs")
-DEFAULT_COLLECTIONS = [ os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json") ]
+DEFAULT_COLLECTIONS = [
+    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json")
+]
 
 # ==================================================================================
 class FitSpectrum(with_metaclass(ABCMeta, object)):
@@ -119,24 +121,24 @@ class FitSpectrum(with_metaclass(ABCMeta, object)):
 
         from scipy.stats import t
 
-        prob = 1.0 - alpha/2.0
-        tval = t.ppf(prob, self.stats['ndof'])
+        prob = 1.0 - alpha / 2.0
+        tval = t.ppf(prob, self.stats["ndof"])
         nparam = len(self.param)
 
         x = self._get_x(freq)
 
         dfdp = self._deriv_fit_func(x, *self.param)
 
-        if hasattr(x, '__iter__'):
+        if hasattr(x, "__iter__"):
             df2 = np.zeros(len(x), dtype=np.float)
         else:
             df2 = 0.0
 
         for ii in range(nparam):
             for jj in range(nparam):
-                df2 += dfdp[ii]*dfdp[jj]*self.param_cov[ii][jj]
+                df2 += dfdp[ii] * dfdp[jj] * self.param_cov[ii][jj]
 
-        return tval*np.sqrt(df2)
+        return tval * np.sqrt(df2)
 
     @abstractmethod
     def fit(self, freq, flux, eflux, *args):
@@ -217,7 +219,7 @@ class CurvedPowerLaw(FitSpectrum):
             A = self._vandermonde(x, self.nparam)
 
             # Data covariance matrix
-            C = np.diag((fit_eflux / fit_flux)**2.0)
+            C = np.diag((fit_eflux / fit_flux) ** 2.0)
 
             # Parameter estimate and covariance
             param_cov = np.linalg.inv(np.dot(A.T, np.linalg.solve(C, A)))
@@ -232,7 +234,9 @@ class CurvedPowerLaw(FitSpectrum):
 
             for ii in range(self.nparam):
                 for jj in range(self.nparam):
-                    param_cov[ii, jj] *= (param[0] if ii == 0 else 1.0)*(param[0] if jj == 0 else 1.0)
+                    param_cov[ii, jj] *= (param[0] if ii == 0 else 1.0) * (
+                        param[0] if jj == 0 else 1.0
+                    )
 
             # Save parameter estimate and covariance to instance
             self.param = param.tolist()
@@ -241,12 +245,11 @@ class CurvedPowerLaw(FitSpectrum):
             # Calculate statistics
             if not isinstance(self.stats, dict):
                 self.stats = {}
-            self.stats['ndof'] = len(x) - self.nparam
-            self.stats['chisq'] = np.sum(resid**2 / np.diag(C))
+            self.stats["ndof"] = len(x) - self.nparam
+            self.stats["chisq"] = np.sum(resid ** 2 / np.diag(C))
 
         # Return results
         return self.param, self.param_cov, self.stats
-
 
     def _get_x(self, freq):
 
@@ -255,19 +258,27 @@ class CurvedPowerLaw(FitSpectrum):
     @staticmethod
     def _vandermonde(x, nparam):
 
-        return np.vstack(( x**rank for rank in range(nparam) )).T
+        return np.vstack((x ** rank for rank in range(nparam))).T
 
     @staticmethod
     def _fit_func(x, *param):
 
-        return param[0] * np.exp(np.sum([ par*x**(rank + 1) for rank, par in enumerate(param[1:]) ], axis=0))
+        return param[0] * np.exp(
+            np.sum(
+                [par * x ** (rank + 1) for rank, par in enumerate(param[1:])], axis=0
+            )
+        )
 
     @staticmethod
     def _deriv_fit_func(x, *param):
 
-        z = param[0] * np.exp(np.sum([ par*x**(rank + 1) for rank, par in enumerate(param[1:]) ], axis=0))
+        z = param[0] * np.exp(
+            np.sum(
+                [par * x ** (rank + 1) for rank, par in enumerate(param[1:])], axis=0
+            )
+        )
 
-        dfdp = np.array([ z*x**rank for rank in range(len(param)) ])
+        dfdp = np.array([z * x ** rank for rank in range(len(param))])
         dfdp[0] /= param[0]
 
         return dfdp
@@ -306,7 +317,7 @@ class MetaFluxCatalog(type):
         except KeyError:
             obj = None
 
-        return (obj is not None)
+        return obj is not None
 
 
 class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
@@ -343,19 +354,37 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     """
 
-    fields = ['ra', 'dec', 'alternate_names', 'model', 'model_kwargs',
-              'stats', 'param', 'param_cov', 'measurements']
+    fields = [
+        "ra",
+        "dec",
+        "alternate_names",
+        "model",
+        "model_kwargs",
+        "stats",
+        "param",
+        "param_cov",
+        "measurements",
+    ]
 
-    model_lookup = {'CurvedPowerLaw' : CurvedPowerLaw}
+    model_lookup = {"CurvedPowerLaw": CurvedPowerLaw}
 
     _entries = {}
     _collections = {}
 
-
-    def __init__(self, name, ra=None, dec=None, alternate_names=[],
-                             model='CurvedPowerLaw', model_kwargs=None,
-                             stats=None, param=None, param_cov=None,
-                             measurements=None, overwrite=0):
+    def __init__(
+        self,
+        name,
+        ra=None,
+        dec=None,
+        alternate_names=[],
+        model="CurvedPowerLaw",
+        model_kwargs=None,
+        stats=None,
+        param=None,
+        param_cov=None,
+        measurements=None,
+        overwrite=0,
+    ):
         """ Instantiates a FluxCatalog object for an astronomical source.
 
         Parameters / Attributes
@@ -430,7 +459,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         if (name in FluxCatalog) and (overwrite < 2):
 
             # Return existing entry
-            print("%s already has an entry in catalog." % name, end=' ')
+            print("%s already has an entry in catalog." % name, end=" ")
             if overwrite == 0:
                 print("Returning existing entry.")
                 self = FluxCatalog[name]
@@ -452,7 +481,9 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             self.ra = ra
             self.dec = dec
 
-            self.alternate_names = [format_source_name(aname) for aname in _ensure_list(alternate_names)]
+            self.alternate_names = [
+                format_source_name(aname) for aname in _ensure_list(alternate_names)
+            ]
 
             # Measurements:
             self.measurements = measurements
@@ -467,10 +498,12 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
                 self.model_kwargs = {}
 
             # Create model object
-            self._model = self.model_lookup[self.model](param=self.param,
-                                                        param_cov=self.param_cov,
-                                                        stats=self.stats,
-                                                        **self.model_kwargs)
+            self._model = self.model_lookup[self.model](
+                param=self.param,
+                param_cov=self.param_cov,
+                stats=self.stats,
+                **self.model_kwargs
+            )
 
             # Populate the kwargs that were used
             arg_list = inspect.getargspec(self.model_lookup[self.model].__init__)
@@ -486,9 +519,9 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             # Save to class dictionary
             self._entries[self.name] = self
 
-
-    def add_measurement(self, freq, flux, eflux, flag=True,
-                              catalog=None, epoch=None, citation=None):
+    def add_measurement(
+        self, freq, flux, eflux, flag=True, catalog=None, epoch=None, citation=None
+    ):
         """ Add entries to the list of measurements.  Each argument/keyword
         can be a list of items with length equal to 'len(flux)', or
         alternatively a single item in which case the same value is used
@@ -537,8 +570,18 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         citation = _ensure_list(citation, nmeas)
 
         # Store as list
-        meas = [ [freq[mm], flux[mm], eflux[mm], flag[mm], catalog[mm], epoch[mm], citation[mm]]
-                for mm in range(nmeas) ]
+        meas = [
+            [
+                freq[mm],
+                flux[mm],
+                eflux[mm],
+                flag[mm],
+                catalog[mm],
+                epoch[mm],
+                citation[mm],
+            ]
+            for mm in range(nmeas)
+        ]
 
         # Add measurements to internal list
         if self.measurements is None:
@@ -550,7 +593,6 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         isort = sorted(list(range(len(self))), key=freq.__getitem__)
         self.measurements = [self.measurements[mm] for mm in isort]
 
-
     def fit_model(self):
         """ Fit the measurements stored in the 'measurements' attribute with the
         spectral model specified in the 'model' attribute. This populates the
@@ -559,15 +601,12 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         arg_list = inspect.getargspec(self._model.fit).args[1:]
 
-        args = [self.freq[self.flag],
-                self.flux[self.flag],
-                self.eflux[self.flag]]
+        args = [self.freq[self.flag], self.flux[self.flag], self.eflux[self.flag]]
 
-        if (self.epoch is not None) and ('epoch' in arg_list):
+        if (self.epoch is not None) and ("epoch" in arg_list):
             args.append(self.epoch[self.flag])
 
         self.param, self.param_cov, self.stats = self._model.fit(*args)
-
 
     def plot(self, legend=True, catalog=True, residuals=False):
         """ Plot the measurements, best-fit model, and confidence interval.
@@ -591,15 +630,13 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         import matplotlib.pyplot as plt
 
         # Define plot parameters
-        colors = ['blue', 'darkorchid', 'm', 'plum', 'mediumvioletred', 'palevioletred']
-        markers = ['o', '*', 's', 'p', '^']
+        colors = ["blue", "darkorchid", "m", "plum", "mediumvioletred", "palevioletred"]
+        markers = ["o", "*", "s", "p", "^"]
         sizes = [10, 12, 12, 12, 12]
 
-        font = {'family' : 'sans-serif',
-                'weight' : 'normal',
-                'size'   : 16}
+        font = {"family": "sans-serif", "weight": "normal", "size": 16}
 
-        plt.rc('font', **font)
+        plt.rc("font", **font)
 
         nplot = 500
 
@@ -609,7 +646,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         fplot = np.logspace(*xrng, num=nplot)
 
-        xrng = [10.0**xx for xx in xrng]
+        xrng = [10.0 ** xx for xx in xrng]
 
         if residuals:
             flux_hat = self.predict_flux(self.freq)
@@ -617,20 +654,32 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             eflux = self.eflux / flux_hat
             model = np.zeros_like(fplot)
             delta = self.predict_uncertainty(fplot) / self.predict_flux(fplot)
-            ylbl = 'Residuals: ' + r'$(S - \hat{S}) / \hat{S}$'
+            ylbl = "Residuals: " + r"$(S - \hat{S}) / \hat{S}$"
             yrng = [-0.50, 0.50]
         else:
             flux = self.flux
             eflux = self.eflux
             model = self.predict_flux(fplot)
             delta = self.predict_uncertainty(fplot)
-            ylbl = 'Flux Density [Jy]'
+            ylbl = "Flux Density [Jy]"
             yrng = [model.min(), model.max()]
 
-        plt.fill_between(fplot, model-delta, model+delta, facecolor='darkgray', alpha=0.3)
-        plt.plot(fplot, model-delta, fplot, model+delta, color='black', linestyle='-', linewidth=0.5)
+        plt.fill_between(
+            fplot, model - delta, model + delta, facecolor="darkgray", alpha=0.3
+        )
+        plt.plot(
+            fplot,
+            model - delta,
+            fplot,
+            model + delta,
+            color="black",
+            linestyle="-",
+            linewidth=0.5,
+        )
 
-        plt.plot(fplot, model, color='black', linestyle='-', linewidth=1.0, label=self.model)
+        plt.plot(
+            fplot, model, color="black", linestyle="-", linewidth=1.0, label=self.model
+        )
 
         # Plot the measurements
         if catalog:
@@ -647,52 +696,64 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
                 pind = np.array([cc == cat for cc in self.citation])
 
             if cat is None:
-                pcol = 'black'
-                pmrk = 'o'
+                pcol = "black"
+                pmrk = "o"
                 psz = 10
-                lbl = 'Meas.'
+                lbl = "Meas."
             else:
                 pcol = colors[ii % len(colors)]
                 pmrk = markers[ii // len(colors)]
                 psz = sizes[ii // len(colors)]
                 lbl = cat
 
-            plt.errorbar(self.freq[pind], flux[pind], yerr=eflux[pind],
-                                          color=pcol, marker=pmrk, markersize=psz,
-                                          linestyle='None', label=lbl)
+            plt.errorbar(
+                self.freq[pind],
+                flux[pind],
+                yerr=eflux[pind],
+                color=pcol,
+                marker=pmrk,
+                markersize=psz,
+                linestyle="None",
+                label=lbl,
+            )
 
         # Set log axis
         ax = plt.gca()
-        ax.set_xscale('log')
+        ax.set_xscale("log")
         if not residuals:
-            ax.set_yscale('log')
+            ax.set_yscale("log")
         plt.xlim(xrng)
         plt.ylim(yrng)
 
-        plt.grid(b=True, which='both')
+        plt.grid(b=True, which="both")
 
         # Plot lines denoting CHIME band
-        plt.axvspan(400.0, 800.0, color='green', alpha=0.1)
+        plt.axvspan(400.0, 800.0, color="green", alpha=0.1)
 
         # Create a legend
         if legend:
-            plt.legend(loc='lower left', numpoints=1, prop=font)
+            plt.legend(loc="lower left", numpoints=1, prop=font)
 
         # Set labels
-        plt.xlabel('Frequency [MHz]')
+        plt.xlabel("Frequency [MHz]")
         plt.ylabel(ylbl)
 
         # Create block with statistics
         if not residuals:
-            txt = r'$\chi^2 = %0.2f$ $(%d)$' % (self.stats['chisq'], self.stats['ndof'])
+            txt = r"$\chi^2 = %0.2f$ $(%d)$" % (self.stats["chisq"], self.stats["ndof"])
 
-            plt.text(0.95, 0.95, txt, horizontalalignment='right', verticalalignment='top',
-                                      transform=ax.transAxes)
+            plt.text(
+                0.95,
+                0.95,
+                txt,
+                horizontalalignment="right",
+                verticalalignment="top",
+                transform=ax.transAxes,
+            )
 
         # Create title
-        ttl = self.name.replace('_', ' ')
+        ttl = self.name.replace("_", " ")
         plt.title(ttl)
-
 
     def predict_flux(self, freq, epoch=None):
         """ Predict the flux density of the source at a particular
@@ -715,7 +776,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         arg_list = inspect.getargspec(self._model.predict).args[1:]
 
-        if (epoch is not None) and ('epoch' in arg_list):
+        if (epoch is not None) and ("epoch" in arg_list):
             args = [freq, epoch]
         else:
             args = [freq]
@@ -723,7 +784,6 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         flux = self._model.predict(*args)
 
         return flux
-
 
     def predict_uncertainty(self, freq, epoch=None):
         """ Calculate the uncertainty in the estimate of the flux density
@@ -746,7 +806,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         arg_list = inspect.getargspec(self._model.uncertainty).args[1:]
 
-        if (epoch is not None) and ('epoch' in arg_list):
+        if (epoch is not None) and ("epoch" in arg_list):
             args = [freq, epoch]
         else:
             args = [freq]
@@ -754,7 +814,6 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         flux_uncertainty = self._model.uncertainty(*args)
 
         return flux_uncertainty
-
 
     def to_dict(self):
         """ Returns an ordered dictionary containing attributes
@@ -776,25 +835,28 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         return flux_body_dict
 
-
     def __str__(self):
         """ Returns a string containing basic information about the source.
         Called by the print statement.
         """
         source_string = "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
-                         self.name, self.ra, self.dec, len(self),
-                         self.predict_flux(FREQ_NOMINAL),
-                         100.0*self.predict_uncertainty(FREQ_NOMINAL) / self.predict_flux(FREQ_NOMINAL))
+            self.name,
+            self.ra,
+            self.dec,
+            len(self),
+            self.predict_flux(FREQ_NOMINAL),
+            100.0
+            * self.predict_uncertainty(FREQ_NOMINAL)
+            / self.predict_flux(FREQ_NOMINAL),
+        )
 
         return source_string
-
 
     def __len__(self):
         """ Returns the number of measurements of the source.
         """
 
         return len(self.measurements) if self.measurements is not None else 0
-
 
     def print_measurements(self):
         """ Print all measurements.
@@ -804,22 +866,24 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         # Define header
         hdr = "{0:<10s} {1:>8s} {2:>8s} {3:>6s} {4:>8s} {5:>8s}   {6:<60s}".format(
-               "Frequency", "Flux", "Error", "Flag", "Catalog", "Epoch", "Citation")
+            "Frequency", "Flux", "Error", "Flag", "Catalog", "Epoch", "Citation"
+        )
 
         units = "{0:<10s} {1:>8s} {2:>8s} {3:>6s} {4:>8s} {5:>8s}   {6:<60s}".format(
-                 "[MHz]", "[Jy]", "[%]", "", "", "", "")
+            "[MHz]", "[Jy]", "[%]", "", "", "", ""
+        )
 
         # Setup the title
-        out.append(''.join(["="]*max(len(hdr), len(units))))
-        out.append("NAME: {0:s}".format(self.name.replace('_', ' ')))
+        out.append("".join(["="] * max(len(hdr), len(units))))
+        out.append("NAME: {0:s}".format(self.name.replace("_", " ")))
         out.append("RA:   {0:>6.2f} deg".format(self.ra))
         out.append("DEC:  {0:>6.2f} deg".format(self.dec))
         out.append("{0:d} Measurements".format(len(self.measurements)))
 
-        out.append(''.join(["-"]*max(len(hdr), len(units))))
+        out.append("".join(["-"] * max(len(hdr), len(units))))
         out.append(hdr)
         out.append(units)
-        out.append(''.join(["-"]*max(len(hdr), len(units))))
+        out.append("".join(["-"] * max(len(hdr), len(units))))
 
         # Add the measurements
         for meas in self.measurements:
@@ -829,18 +893,26 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             else:
                 epoch_fmt = "{5:>8.1f}"
 
-            fmt_string = "{0:<10.1f} {1:>8.1f} {2:>8.1f} {3:>6s} {4:>8s} " + epoch_fmt + "   {6:<.60s}"
+            fmt_string = (
+                "{0:<10.1f} {1:>8.1f} {2:>8.1f} {3:>6s} {4:>8s} "
+                + epoch_fmt
+                + "   {6:<.60s}"
+            )
 
             entry = fmt_string.format(
-                    meas[0], meas[1], 100.0*meas[2]/meas[1], "Good" if meas[3] else "Bad",
-                    meas[4] if meas[4] is not None else "--",
-                    meas[5] if meas[5] is not None else "--",
-                    meas[6] if meas[6] is not None else "--")
+                meas[0],
+                meas[1],
+                100.0 * meas[2] / meas[1],
+                "Good" if meas[3] else "Bad",
+                meas[4] if meas[4] is not None else "--",
+                meas[5] if meas[5] is not None else "--",
+                meas[6] if meas[6] is not None else "--",
+            )
 
             out.append(entry)
 
         # Print
-        print('\n'.join(out))
+        print("\n".join(out))
 
     @property
     def skyfield(self):
@@ -901,9 +973,9 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         """
         # Multipy by -1 so that we will
         # sort from higher to lower flux
-        return -self.predict_flux(FREQ_NOMINAL,
-                                  epoch=get_epoch(datetime.datetime.now()))
-
+        return -self.predict_flux(
+            FREQ_NOMINAL, epoch=get_epoch(datetime.datetime.now())
+        )
 
     # =============================================================
     # Class methods that act on the entire catalog
@@ -918,23 +990,28 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         # Print the header
         hdr = "{0:<25s} {1:^6s} {2:^6s} {3:>6s} {4:^15s} {5:^15s}".format(
-               "Name", "RA", "Dec", "Nmeas", "Flux", "Error")
+            "Name", "RA", "Dec", "Nmeas", "Flux", "Error"
+        )
 
         units = "{0:<25s} {1:^6s} {2:^6s} {3:>6s} {4:^15s} {5:^15s}".format(
-                 "", "[deg]", "[deg]", "",
-                  "@%d MHz [Jy]" % FREQ_NOMINAL,
-                  "@%d MHz [%%]" % FREQ_NOMINAL)
+            "",
+            "[deg]",
+            "[deg]",
+            "",
+            "@%d MHz [Jy]" % FREQ_NOMINAL,
+            "@%d MHz [%%]" % FREQ_NOMINAL,
+        )
 
-        catalog_string.append(''.join(["-"]*max(len(hdr), len(units))))
+        catalog_string.append("".join(["-"] * max(len(hdr), len(units))))
         catalog_string.append(hdr)
         catalog_string.append(units)
-        catalog_string.append(''.join(["-"]*max(len(hdr), len(units))))
+        catalog_string.append("".join(["-"] * max(len(hdr), len(units))))
 
         # Loop over sorted entries and print
         for key in cls.sort():
             catalog_string.append(cls[key].__str__())
 
-        return '\n'.join(catalog_string)
+        return "\n".join(catalog_string)
 
     @classmethod
     def from_dict(cls, name, flux_body_dict):
@@ -961,8 +1038,11 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         arg_list = inspect.getargspec(cls.__init__).args[2:]
 
-        kwargs = { field: flux_body_dict[field] for field in arg_list
-                                                 if field in flux_body_dict }
+        kwargs = {
+            field: flux_body_dict[field]
+            for field in arg_list
+            if field in flux_body_dict
+        }
 
         return cls(name, **kwargs)
 
@@ -1100,7 +1180,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             in the order specified by the 'sort' class method.
 
         """
-        return iter([ (key, cls._entries[key]) for key in cls.sort() ])
+        return iter([(key, cls._entries[key]) for key in cls.sort()])
 
     @classmethod
     def len(cls):
@@ -1136,12 +1216,13 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         # return the number of sources and source names.
         matches = []
         for root, dirnames, filenames in os.walk(current_dir):
-            for filename in (fnmatch.filter(filenames, '*.json') +
-                             fnmatch.filter(filenames, '*.pickle')):
+            for filename in fnmatch.filter(filenames, "*.json") + fnmatch.filter(
+                filenames, "*.pickle"
+            ):
                 full_path = os.path.join(root, filename)
 
                 # Read into dictionary
-                with open(full_path, 'r') as fp:
+                with open(full_path, "r") as fp:
                     collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
 
                 # Append (path, number of sources, source names) to list
@@ -1219,12 +1300,11 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             output[key] = cls._entries[key].to_dict()
 
         # Dump this dictionary to file
-        with open(filename, 'w') as fp:
+        with open(filename, "w") as fp:
             if ext == ".json":
                 json.dump(output, fp, cls=NumpyEncoder, indent=4)
             elif ext == ".pickle":
                 pickle.dump(output, fp)
-
 
     @classmethod
     def load(cls, filename, overwrite=0, set_globals=False, verbose=False):
@@ -1265,7 +1345,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             ValueError("Do not recognize '%s' extension." % ext)
 
         # Load contents of file into a dictionary
-        with open(filename, 'r') as fp:
+        with open(filename, "r") as fp:
             if ext == ".json":
                 collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
             elif ext == ".pickle":
@@ -1282,7 +1362,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         for key, value in collection_dict.items():
 
             # Add overwrite keyword
-            value['overwrite'] = overwrite
+            value["overwrite"] = overwrite
 
             # Create object for this source
             obj = cls.from_dict(key, value)
@@ -1295,24 +1375,23 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
 
 def get_epoch(date):
-
-    def sinceEpoch(date): # returns seconds since epoch
+    def sinceEpoch(date):  # returns seconds since epoch
         return time.mktime(date.timetuple())
 
     year = date.year
     startOfThisYear = datetime.datetime(year=year, month=1, day=1)
-    startOfNextYear = datetime.datetime(year=year+1, month=1, day=1)
+    startOfNextYear = datetime.datetime(year=year + 1, month=1, day=1)
 
     yearElapsed = sinceEpoch(date) - sinceEpoch(startOfThisYear)
     yearDuration = sinceEpoch(startOfNextYear) - sinceEpoch(startOfThisYear)
-    fraction = yearElapsed/yearDuration
+    fraction = yearElapsed / yearDuration
 
     return date.year + fraction
 
 
 def varname(name):
 
-    varname = name.replace(' ', '_')
+    varname = name.replace(" ", "_")
 
     if varname[0].isdigit():
         varname = "_" + varname
@@ -1323,7 +1402,7 @@ def varname(name):
 def format_source_name(input_name):
 
     # Address some common naming conventions.
-    if input_name.startswith('NAME '):
+    if input_name.startswith("NAME "):
         # SIMBAD prefixes common source names with 'NAME '.
         # Remove this.
         output_name = input_name[5:]
@@ -1333,8 +1412,8 @@ def format_source_name(input_name):
         # Convert from CygA, HerA, PerB ---> Cyg A, Her A, Per B.
         output_name = input_name[0]
         for ii in range(1, len(input_name)):
-            if input_name[ii-1].islower() and input_name[ii].isupper():
-                output_name += ' ' + input_name[ii]
+            if input_name[ii - 1].islower() and input_name[ii].isupper():
+                output_name += " " + input_name[ii]
             else:
                 output_name += input_name[ii]
 
@@ -1343,7 +1422,7 @@ def format_source_name(input_name):
         output_name = input_name
 
     # Remove multiple spaces.  Replace single spaces with underscores.
-    output_name = '_'.join(output_name.split())
+    output_name = "_".join(output_name.split())
 
     # Put the name in all uppercase.
     output_name = output_name.upper()
@@ -1353,22 +1432,19 @@ def format_source_name(input_name):
 
 
 class NumpyEncoder(json.JSONEncoder):
-
     def default(self, obj):
         """If input object is an ndarray it will be converted into a dict
         holding dtype, shape and the data, base64 encoded.
         """
         if isinstance(obj, np.ndarray):
-            if obj.flags['C_CONTIGUOUS']:
+            if obj.flags["C_CONTIGUOUS"]:
                 obj_data = obj.data
             else:
                 cont_obj = np.ascontiguousarray(obj)
-                assert(cont_obj.flags['C_CONTIGUOUS'])
+                assert cont_obj.flags["C_CONTIGUOUS"]
                 obj_data = cont_obj.data
             data_b64 = base64.b64encode(obj_data)
-            return dict(__ndarray__=data_b64,
-                        dtype=str(obj.dtype),
-                        shape=obj.shape)
+            return dict(__ndarray__=data_b64, dtype=str(obj.dtype), shape=obj.shape)
         # Let the base class default method raise the TypeError
         return json.JSONEncoder(self, obj)
 
@@ -1379,9 +1455,9 @@ def json_numpy_obj_hook(dct):
     :param dct: (dict) json encoded ndarray
     :return: (ndarray) if input was an encoded ndarray
     """
-    if isinstance(dct, dict) and '__ndarray__' in dct:
-        data = base64.b64decode(dct['__ndarray__'])
-        return np.frombuffer(data, dct['dtype']).reshape(dct['shape'])
+    if isinstance(dct, dict) and "__ndarray__" in dct:
+        data = base64.b64decode(dct["__ndarray__"])
+        return np.frombuffer(data, dct["dtype"]).reshape(dct["shape"])
     return dct
 
 
@@ -1405,19 +1481,19 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
     nsrc = len(source_names)
 
     # Create a header containing the collection name and number of sources
-    header = collection_name + '  (%d Sources)' % nsrc
+    header = collection_name + "  (%d Sources)" % nsrc
     print(header)
 
     # Print the sources contained in this collection
     if verbose:
 
         # Seperator
-        print(''.join(['-']*len(header)))
+        print("".join(["-"] * len(header)))
 
         # Source names
         for ii in range(0, nsrc, ncol):
-            jj = min(ii+ncol, nsrc)
-            print((' '.join(["%-25s"] * (jj-ii))) % tuple(source_names[ii:jj]))
+            jj = min(ii + ncol, nsrc)
+            print((" ".join(["%-25s"] * (jj - ii))) % tuple(source_names[ii:jj]))
 
         # Space
         print("")
@@ -1425,7 +1501,7 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 def _ensure_list(obj, num=None):
 
-    if hasattr(obj, '__iter__'):
+    if hasattr(obj, "__iter__"):
         nnum = len(obj)
         if (num is not None) and (nnum != num):
             ValueError("Input list has wrong size.")
@@ -1436,6 +1512,7 @@ def _ensure_list(obj, num=None):
             obj = [obj]
 
     return obj
+
 
 # Load the default collections
 for col in DEFAULT_COLLECTIONS:

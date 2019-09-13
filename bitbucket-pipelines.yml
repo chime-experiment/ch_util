@@ -3,6 +3,11 @@ image: tristpinsm/ch_util_unittest:latest
 pipelines:
   default:
     - step:
+        # Code linting
+        script:
+           - pip3 install black
+           - black --check .
+    - step:
         # Run unit tests
         script:
             - pip3 install --upgrade pip

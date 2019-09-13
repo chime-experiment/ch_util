@@ -15,10 +15,10 @@ Utility Functions
     process_synced_data
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 import numpy as np
@@ -95,24 +95,27 @@ def process_synced_data(data, ni_params=None, only_off=False):
         # headers so this function cannot be used to determine the noise
         # injection parameters.
         ctime_no_noise_inj_data = 1435349183
-        if data.index_map['time']['ctime'][0] > ctime_no_noise_inj_data:
+        if data.index_map["time"]["ctime"][0] > ctime_no_noise_inj_data:
             # All the data required to figure out the noise inj gating is in
             # the data header
             try:
                 ni_params = _find_ni_params(data)
             except ValueError:
-                warn_str = ('There are no enabled noise sources for these data. '
-                             'Returning input')
+                warn_str = (
+                    "There are no enabled noise sources for these data. "
+                    "Returning input"
+                )
                 warnings.warn(warn_str)
                 return data
         else:
             # This is data before ctime = 1435349183. Noise injection
             # parameters are not in the data header. Raise error
             t = datetime.datetime.utcfromtimestamp(ctime_no_noise_inj_data)
-            t_str = t.strftime('%Y %b %d %H:%M:%S UTC')
-            err_str = ('ni_params parameter is required for data before '
-                       '%s (ctime=%i).'
-                       %(t_str, ctime_no_noise_inj_data))
+            t_str = t.strftime("%Y %b %d %H:%M:%S UTC")
+            err_str = (
+                "ni_params parameter is required for data before "
+                "%s (ctime=%i)." % (t_str, ctime_no_noise_inj_data)
+            )
             raise Exception(err_str)
 
     if len([s for s in data.datasets.keys() if "gated_vis" in s]):
@@ -127,13 +130,13 @@ def process_synced_data(data, ni_params=None, only_off=False):
         # time bins with noise ON for each source (within a noise period)
         # This is a list of lists, each list corresponding to the ON time bins
         # for each noise source.
-        ni_on_bins = ni_params['ni_on_bins']
+        ni_on_bins = ni_params["ni_on_bins"]
 
         # Number of enabled noise sources
         N_ni_sources = len(ni_on_bins)
 
         # Noise injection period (assume all sources have same period)
-        ni_period = ni_params['ni_period']
+        ni_period = ni_params["ni_period"]
 
         # time bins with all noise sources off (within a noise period)
         ni_off_bins = np.delete(list(range(ni_period)), np.concatenate(ni_on_bins))
@@ -142,7 +145,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
         nt = ni_period * (data.ntime // ni_period)
 
         # Make sure we're distributed over something other than time
-        data.redistribute('freq')
+        data.redistribute("freq")
 
         # Get distribution parameters
         dist = isinstance(data.vis, memh5.MemDatasetDistributed)
@@ -157,16 +160,16 @@ def process_synced_data(data, ni_params=None, only_off=False):
         memh5.copyattrs(data.attrs, newdata.attrs)
 
         # Add index maps to newdata
-        newdata.create_index_map('freq', data.index_map['freq'])
-        newdata.create_index_map('prod', data.index_map['prod'])
-        newdata.create_index_map('input', data.input)
+        newdata.create_index_map("freq", data.index_map["freq"])
+        newdata.create_index_map("prod", data.index_map["prod"])
+        newdata.create_index_map("input", data.input)
         # Extract timestamps for OFF bins. Only one timestamp per noise period is
         # kept. These will be the timestamps for both the noise on ON and OFF data
-        time = data.index_map['time'][ni_off_bins[0]:nt:ni_period]
-        folding_period = time['ctime'][1] - time['ctime'][0]
-        folding_start = time['ctime'][0]
+        time = data.index_map["time"][ni_off_bins[0] : nt : ni_period]
+        folding_period = time["ctime"][1] - time["ctime"][0]
+        folding_start = time["ctime"][0]
         # Add index map for noise OFF timestamps.
-        newdata.create_index_map('time', time)
+        newdata.create_index_map("time", time)
 
         # Add datasets (for noise OFF) to newdata
         # Extract the noise source off data
@@ -175,50 +178,54 @@ def process_synced_data(data, ni_params=None, only_off=False):
             vis_sky = [data.vis[..., gate:nt:ni_period] for gate in ni_off_bins]
             vis_sky = np.mean(vis_sky, axis=0)
         else:
-            vis_sky = data.vis[..., ni_off_bins[0]:nt:ni_period]
+            vis_sky = data.vis[..., ni_off_bins[0] : nt : ni_period]
 
         # Turn vis_sky into MPIArray if we are distributed
         if dist:
             vis_sky = mpiarray.MPIArray.wrap(vis_sky, axis=0, comm=comm)
 
         # Add new visibility dataset
-        vis_dset = newdata.create_dataset('vis', data=vis_sky, distributed=dist)
+        vis_dset = newdata.create_dataset("vis", data=vis_sky, distributed=dist)
         memh5.copyattrs(data.vis.attrs, vis_dset.attrs)
 
         # Add gain dataset (if exists) for noise OFF data.
         # Gain dataset also averaged (within a period)
         # These will be the gains for both the noise on ON and OFF data
-        if 'gain' in data:
+        if "gain" in data:
             if len(ni_off_bins) > 1:
                 gain = [data.gain[..., gate:nt:ni_period] for gate in ni_off_bins]
                 gain = np.mean(gain, axis=0)
             else:
-                gain = data.gain[..., ni_off_bins[0]:nt:ni_period]
+                gain = data.gain[..., ni_off_bins[0] : nt : ni_period]
 
             # Turn gain into MPIArray if we are distributed
             if dist:
                 gain = mpiarray.MPIArray.wrap(gain, axis=0, comm=comm)
 
             # Add new gain dataset
-            gain_dset = newdata.create_dataset('gain', data=gain, distributed=dist)
+            gain_dset = newdata.create_dataset("gain", data=gain, distributed=dist)
             memh5.copyattrs(data.gain.attrs, gain_dset.attrs)
 
         # Pull out weight dataset if it exists.
         # vis_weight dataset also averaged (within a period)
         # These will be the weights for both the noise on ON and OFF data
-        if 'vis_weight' in data.flags:
+        if "vis_weight" in data.flags:
             if len(ni_off_bins) > 1:
-                vis_weight = [data.weight[..., gate:nt:ni_period] for gate in ni_off_bins]
+                vis_weight = [
+                    data.weight[..., gate:nt:ni_period] for gate in ni_off_bins
+                ]
                 vis_weight = np.mean(vis_weight, axis=0)
             else:
-                vis_weight = data.weight[..., ni_off_bins[0]:nt:ni_period]
+                vis_weight = data.weight[..., ni_off_bins[0] : nt : ni_period]
 
             # Turn vis_weight into MPIArray if we are distributed
             if dist:
                 vis_weight = mpiarray.MPIArray.wrap(vis_weight, axis=0, comm=comm)
 
             # Add new vis_weight dataset
-            vis_weight_dset = newdata.create_flag('vis_weight', data=vis_weight, distributed=dist)
+            vis_weight_dset = newdata.create_flag(
+                "vis_weight", data=vis_weight, distributed=dist
+            )
             memh5.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
 
         # Add gated datasets for each noise source:
@@ -226,26 +233,28 @@ def process_synced_data(data, ni_params=None, only_off=False):
             for i in range(N_ni_sources):
                 # Construct the noise source only data
                 vis_noise = [data.vis[..., gate:nt:ni_period] for gate in ni_on_bins[i]]
-                vis_noise = np.mean(vis_noise, axis=0) # Averaging
-                vis_noise -= vis_sky # Subtracting sky contribution
+                vis_noise = np.mean(vis_noise, axis=0)  # Averaging
+                vis_noise -= vis_sky  # Subtracting sky contribution
 
                 # Turn vis_noise into MPIArray if we are distributed
                 if dist:
                     vis_noise = mpiarray.MPIArray.wrap(vis_noise, axis=0, comm=comm)
 
                 # Add noise source dataset
-                gate_dset = newdata.create_dataset('gated_vis{0}'.format(i+1),
-                                                   data=vis_noise, distributed=dist)
-                gate_dset.attrs['axis'] = np.array(['freq', 'prod',
-                                                    'gated_time{0}'.format(i+1)])
-                gate_dset.attrs['folding_period'] = folding_period
-                gate_dset.attrs['folding_start'] = folding_start
+                gate_dset = newdata.create_dataset(
+                    "gated_vis{0}".format(i + 1), data=vis_noise, distributed=dist
+                )
+                gate_dset.attrs["axis"] = np.array(
+                    ["freq", "prod", "gated_time{0}".format(i + 1)]
+                )
+                gate_dset.attrs["folding_period"] = folding_period
+                gate_dset.attrs["folding_start"] = folding_start
 
                 # Construct array of gate weights (sum = 0)
                 gw = np.zeros(ni_period, dtype=np.float)
-                gw[ni_off_bins] = -1./len(ni_off_bins)
-                gw[ni_on_bins[i]] = 1./len(ni_on_bins[i])
-                gate_dset.attrs['gate_weight'] = gw
+                gw[ni_off_bins] = -1.0 / len(ni_off_bins)
+                gw[ni_on_bins[i]] = 1.0 / len(ni_on_bins[i])
+                gate_dset.attrs["gate_weight"] = gw
 
     return newdata
 
@@ -302,144 +311,159 @@ def _find_ni_params(data, verbose=0):
     ctime_no_noise_inj_data = 1435349183
 
     # ctime of first data frame
-    ctime0 = data.index_map['time']['ctime'][0]
+    ctime0 = data.index_map["time"]["ctime"][0]
     if ctime0 < ctime_no_noise_inj_data:
         # This is data before ctime = 1435349183. Noise injection parameters
         # are not in the data header. Raise error
-        err_str = ('Noise injection parameters are not in the header for '
-                   'these data. See help for details.')
+        err_str = (
+            "Noise injection parameters are not in the header for "
+            "these data. See help for details."
+        )
         raise Exception(err_str)
 
-    ni_period = [] # Noise source period in GPU integrations
-    ni_high_time = [] # Noise source high time in GPU integrations
-    ni_offset = [] # Noise source offset in GPU integrations
-    ni_board = [] # Noise source PWM board
+    ni_period = []  # Noise source period in GPU integrations
+    ni_high_time = []  # Noise source high time in GPU integrations
+    ni_offset = []  # Noise source offset in GPU integrations
+    ni_board = []  # Noise source PWM board
 
     # Noise inj information is in the headers. Assume the fpga frame
     # counter is unwrapped
     if verbose:
-        print('Reading noise injection data from header')
+        print("Reading noise injection data from header")
 
     # Read noise injection parameters from header. Currently the system
     # Can handle up to two noise sources. Only the enabled sources are
     # analyzed
-    if (('fpga.ni_enable' in data.attrs) and
-      (data.attrs['fpga.ni_enable'][0])):
+    if ("fpga.ni_enable" in data.attrs) and (data.attrs["fpga.ni_enable"][0]):
         # It seems some old data.attrs may have 'fpga.ni_enable' but not
         # 'fpga.ni_high_time' (this has to be checked!!)
-        if 'fpga.ni_period' in data.attrs:
-            ni_period.append(data.attrs['fpga.ni_period'][0])
+        if "fpga.ni_period" in data.attrs:
+            ni_period.append(data.attrs["fpga.ni_period"][0])
         else:
             ni_period.append(2)
             if verbose:
-                debug_str = ('"fpga.ni_period" not in data header. '
-                             'Assuming noise source period = 2')
+                debug_str = (
+                    '"fpga.ni_period" not in data header. '
+                    "Assuming noise source period = 2"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_high_time' in data.attrs:
-            ni_high_time.append(data.attrs['fpga.ni_high_time'][0])
+        if "fpga.ni_high_time" in data.attrs:
+            ni_high_time.append(data.attrs["fpga.ni_high_time"][0])
         else:
             ni_high_time.append(1)
             if verbose:
-                debug_str = ('"fpga.ni_high_time" not in data header. '
-                             'Assuming noise source high time = 1')
+                debug_str = (
+                    '"fpga.ni_high_time" not in data header. '
+                    "Assuming noise source high time = 1"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_offset' in data.attrs:
-            ni_offset.append(data.attrs['fpga.ni_offset'][0])
+        if "fpga.ni_offset" in data.attrs:
+            ni_offset.append(data.attrs["fpga.ni_offset"][0])
         else:
             ni_offset.append(0)
             if verbose:
-                debug_str = ('"fpga.ni_offset" not in data header. '
-                             'Assuming noise source offset = 0')
+                debug_str = (
+                    '"fpga.ni_offset" not in data header. '
+                    "Assuming noise source offset = 0"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_board' in data.attrs:
-            ni_board.append(data.attrs['fpga.ni_board'])
+        if "fpga.ni_board" in data.attrs:
+            ni_board.append(data.attrs["fpga.ni_board"])
         else:
-            ni_board.append('')
+            ni_board.append("")
             if verbose:
-                debug_str = ('"fpga.ni_board" not in data header.')
+                debug_str = '"fpga.ni_board" not in data header.'
                 print(debug_str)
 
-    if (('fpga.ni_enable_26m' in data.attrs) and
-      (data.attrs['fpga.ni_enable_26m'][0])):
+    if ("fpga.ni_enable_26m" in data.attrs) and (data.attrs["fpga.ni_enable_26m"][0]):
         # It seems some old data.attrs may have 'fpga.ni_enable_26m' but
         # not 'fpga.ni_high_time_26m' (this has to be checked!!)
-        if 'fpga.ni_period_26m' in data.attrs:
-            ni_period.append(data.attrs['fpga.ni_period_26m'][0])
+        if "fpga.ni_period_26m" in data.attrs:
+            ni_period.append(data.attrs["fpga.ni_period_26m"][0])
         else:
             ni_period.append(2)
             if verbose:
-                debug_str = ('"fpga.ni_period_26m" not in data header. '
-                             'Assuming noise source period = 2')
+                debug_str = (
+                    '"fpga.ni_period_26m" not in data header. '
+                    "Assuming noise source period = 2"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_high_time_26m' in data.attrs:
-            ni_high_time.append(data.attrs['fpga.ni_high_time_26m'][0])
+        if "fpga.ni_high_time_26m" in data.attrs:
+            ni_high_time.append(data.attrs["fpga.ni_high_time_26m"][0])
         else:
             ni_high_time.append(1)
             if verbose:
-                debug_str = ('"fpga.ni_high_time_26m" not in data header.'
-                             ' Assuming noise source high time = 1')
+                debug_str = (
+                    '"fpga.ni_high_time_26m" not in data header.'
+                    " Assuming noise source high time = 1"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_offset_26m' in data.attrs:
-            ni_offset.append(data.attrs['fpga.ni_offset_26m'][0])
+        if "fpga.ni_offset_26m" in data.attrs:
+            ni_offset.append(data.attrs["fpga.ni_offset_26m"][0])
         else:
             ni_offset.append(0)
             if verbose:
-                debug_str = ('"fpga.ni_offset_26m" not in data header. '
-                             'Assuming noise source offset = 0')
+                debug_str = (
+                    '"fpga.ni_offset_26m" not in data header. '
+                    "Assuming noise source offset = 0"
+                )
                 print(debug_str)
 
-        if 'fpga.ni_board_26m' in data.attrs:
-            ni_board.append(data.attrs['fpga.ni_board_26m'])
+        if "fpga.ni_board_26m" in data.attrs:
+            ni_board.append(data.attrs["fpga.ni_board_26m"])
         else:
-            ni_board.append('')
+            ni_board.append("")
             if verbose:
-                debug_str = ('"fpga.ni_board_26m" not in data header.')
+                debug_str = '"fpga.ni_board_26m" not in data header.'
                 print(debug_str)
 
     # Number of enabled noise sources
     N_ni_sources = len(ni_period)
     if N_ni_sources == 0:
         # There are not enabled noise sources. Raise error
-        raise ValueError('There are no enabled noise sources for these data')
+        raise ValueError("There are no enabled noise sources for these data")
 
-    if np.any(np.array(ni_period-ni_period[0])):
+    if np.any(np.array(ni_period - ni_period[0])):
         # Enabled sources do not have same period. Raise error
-        raise Exception('Enabled sources do not have same period')
+        raise Exception("Enabled sources do not have same period")
 
     # Period of first noise source (assume all have same period)
     ni_period = ni_period[0]
 
     if verbose:
         for i in range(N_ni_sources):
-            print('\nPWM signal from board %s is enabled' %ni_board[i])
-            print('Period: %i GPU integrations' %ni_period)
-            print('High time: %i GPU integrations' %ni_high_time[i])
-            print('FPGA offset: %i GPU integrations\n' %ni_offset[i])
+            print("\nPWM signal from board %s is enabled" % ni_board[i])
+            print("Period: %i GPU integrations" % ni_period)
+            print("High time: %i GPU integrations" % ni_high_time[i])
+            print("FPGA offset: %i GPU integrations\n" % ni_offset[i])
 
-    #Number of fpga frames within a GPU integration
-    int_period = data.attrs['gpu.gpu_intergration_period'][0]
+    # Number of fpga frames within a GPU integration
+    int_period = data.attrs["gpu.gpu_intergration_period"][0]
 
     # fpga counts for first period
-    fpga_counts = data.index_map['time']['fpga_count'][:ni_period]
+    fpga_counts = data.index_map["time"]["fpga_count"][:ni_period]
 
     # Start of high time for each noise source (within a noise period)
     ni_on_start_bin = [
-                np.argmin(np.remainder((fpga_counts//int_period-ni_offset[i]),
-                ni_period)) for i in range(N_ni_sources)]
+        np.argmin(np.remainder((fpga_counts // int_period - ni_offset[i]), ni_period))
+        for i in range(N_ni_sources)
+    ]
 
     # time bins with noise ON for each source (within a noise period)
     ni_on_bins = [
-        np.arange(ni_on_start_bin[i], ni_on_start_bin[i]+ ni_high_time[i])
-        for i in range(N_ni_sources)]
+        np.arange(ni_on_start_bin[i], ni_on_start_bin[i] + ni_high_time[i])
+        for i in range(N_ni_sources)
+    ]
 
-    ni_params = {'ni_period':ni_period, 'ni_on_bins':ni_on_bins}
+    ni_params = {"ni_period": ni_period, "ni_on_bins": ni_on_bins}
 
     return ni_params
+
 
 def process_gated_data(data, only_off=False):
     """
@@ -469,7 +493,7 @@ def process_gated_data(data, only_off=False):
     integration half of the frames have on data.
     """
     # Make sure we're distributed over something other than time
-    data.redistribute('freq')
+    data.redistribute("freq")
 
     # Get distribution parameters
     dist = isinstance(data.vis, memh5.MemDatasetDistributed)
@@ -484,66 +508,71 @@ def process_gated_data(data, only_off=False):
     memh5.copyattrs(data.attrs, newdata.attrs)
 
     # Add index maps to newdata
-    newdata.create_index_map('freq', data.index_map['freq'])
-    newdata.create_index_map('prod', data.index_map['prod'])
-    newdata.create_index_map('input', data.input)
-    newdata.create_index_map('time', data.index_map['time'])
+    newdata.create_index_map("freq", data.index_map["freq"])
+    newdata.create_index_map("prod", data.index_map["prod"])
+    newdata.create_index_map("input", data.input)
+    newdata.create_index_map("time", data.index_map["time"])
 
     # Add datasets (for noise OFF) to newdata
     # Extract the noise source off data
-    vis_off = 0.5*(data.vis[:].view(np.ndarray) -
-                   data['gated_vis1'][:].view(np.ndarray))
+    vis_off = 0.5 * (
+        data.vis[:].view(np.ndarray) - data["gated_vis1"][:].view(np.ndarray)
+    )
 
     # Turn vis_off into MPIArray if we are distributed
     if dist:
         vis_off = mpiarray.MPIArray.wrap(vis_off, axis=0, comm=comm)
 
     # Add new visibility dataset
-    vis_dset = newdata.create_dataset('vis', data=vis_off, distributed=dist)
+    vis_dset = newdata.create_dataset("vis", data=vis_off, distributed=dist)
     memh5.copyattrs(data.vis.attrs, vis_dset.attrs)
 
     # Add gain dataset (if exists) for vis_off.
     # These will be the gains for both the noise on ON and OFF data
-    if 'gain' in data:
+    if "gain" in data:
         gain = data.gain[:].view(np.ndarray)
         # Turn gain into MPIArray if we are distributed
         if dist:
             gain = mpiarray.MPIArray.wrap(gain, axis=0, comm=comm)
 
-        gain_dset = newdata.create_dataset('gain', data=gain, distributed=dist)
+        gain_dset = newdata.create_dataset("gain", data=gain, distributed=dist)
         memh5.copyattrs(data.gain.attrs, gain_dset.attrs)
 
     # Pull out weight dataset if it exists.
     # These will be the weights for both the noise on ON and OFF data
-    if 'vis_weight' in data.flags:
+    if "vis_weight" in data.flags:
         vis_weight = data.weight[:].view(np.ndarray)
         # Turn vis_weight into MPIArray if we are distributed
         if dist:
             vis_weight = mpiarray.MPIArray.wrap(vis_weight, axis=0, comm=comm)
 
-        vis_weight_dset = newdata.create_flag('vis_weight', data=vis_weight, distributed=dist)
+        vis_weight_dset = newdata.create_flag(
+            "vis_weight", data=vis_weight, distributed=dist
+        )
         memh5.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
 
     # Add gated dataset (only gated_vis1 currently supported by correlator
     # with 50% duty cycle)
     if not only_off:
-        gated_vis1 = data['gated_vis1'][:].view(np.ndarray)
+        gated_vis1 = data["gated_vis1"][:].view(np.ndarray)
         # Turn gated_vis1 into MPIArray if we are distributed
         if dist:
             gated_vis1 = mpiarray.MPIArray.wrap(gated_vis1, axis=0, comm=comm)
 
-        gate_dset = newdata.create_dataset('gated_vis1',
-                                           data=gated_vis1, distributed=dist)
-        memh5.copyattrs(data['gated_vis1'].attrs, gate_dset.attrs)
+        gate_dset = newdata.create_dataset(
+            "gated_vis1", data=gated_vis1, distributed=dist
+        )
+        memh5.copyattrs(data["gated_vis1"].attrs, gate_dset.attrs)
 
     # The CHIME pipeline uses gpu.gpu_intergration_period to estimate the integration period
     # for both the on and off gates. That number has to be changed (divided by 2) since
     # with fast gating one integration period has 1/2 of data for the on gate and 1/2
     # for the off gate
-    newdata.attrs['gpu.gpu_intergration_period'] = data.attrs['gpu.gpu_intergration_period']//2
+    newdata.attrs["gpu.gpu_intergration_period"] = (
+        data.attrs["gpu.gpu_intergration_period"] // 2
+    )
 
     return newdata
-
 
 
 class ni_data(object):
@@ -583,25 +612,24 @@ class ni_data(object):
         self.adc_channels = np.arange(Nadc_channels)
         self.Nadc_channels = Nadc_channels
         self.raw_vis = Reader_read_obj.vis
-        self.Nfreqs = np.size(self.raw_vis, 0) # Number of frequencies
+        self.Nfreqs = np.size(self.raw_vis, 0)  # Number of frequencies
         if adc_ch_ref != None:
             self.adc_ch_ref = adc_ch_ref
         else:
-            self.adc_ch_ref = self.adc_channels[0] # Default reference channel
+            self.adc_ch_ref = self.adc_channels[0]  # Default reference channel
 
         if fbin_ref != None:
             self.fbin_ref = fbin_ref
-        else: # Default reference frequency bin (rather arbitrary)
-            self.fbin_ref = self.Nfreqs//3
+        else:  # Default reference frequency bin (rather arbitrary)
+            self.fbin_ref = self.Nfreqs // 3
 
         self.timestamp = Reader_read_obj.timestamp
         try:
             self.f_MHz = Reader_read_obj.freq
         except AttributeError:
-            pass # May happen if TimeStream type does not have this property
+            pass  # May happen if TimeStream type does not have this property
 
         self.subtract_sky_noise()
-
 
     def subtract_sky_noise(self):
         """Removes sky and system noise contributions from noise injection
@@ -612,17 +640,22 @@ class ni_data(object):
         subtract_sky_noise function
         """
 
-        ni_dict = subtract_sky_noise(self.raw_vis, self.Nadc_channels, self.timestamp, self.adc_ch_ref, self.fbin_ref)
-        self.time_index_on = ni_dict['time_index_on']
-        self.time_index_off = ni_dict['time_index_off']
-        self.vis_on_dec = ni_dict['vis_on_dec']
-        self.vis_off_dec = ni_dict['vis_off_dec']
-        self.vis_dec_sub = ni_dict['vis_dec_sub']
-        self.timestamp_on_dec = ni_dict['timestamp_on_dec']
-        self.timestamp_off_dec = ni_dict['timestamp_off_dec']
-        self.timestamp_dec = ni_dict['timestamp_dec']
-        self.cor_prod_ref = ni_dict['cor_prod_ref']
-
+        ni_dict = subtract_sky_noise(
+            self.raw_vis,
+            self.Nadc_channels,
+            self.timestamp,
+            self.adc_ch_ref,
+            self.fbin_ref,
+        )
+        self.time_index_on = ni_dict["time_index_on"]
+        self.time_index_off = ni_dict["time_index_off"]
+        self.vis_on_dec = ni_dict["vis_on_dec"]
+        self.vis_off_dec = ni_dict["vis_off_dec"]
+        self.vis_dec_sub = ni_dict["vis_dec_sub"]
+        self.timestamp_on_dec = ni_dict["timestamp_on_dec"]
+        self.timestamp_off_dec = ni_dict["timestamp_off_dec"]
+        self.timestamp_dec = ni_dict["timestamp_dec"]
+        self.cor_prod_ref = ni_dict["cor_prod_ref"]
 
     def get_ni_gains(self, normalize_vis=False, masked_channels=None):
         """Computes gains and evalues from noise injection visibility data.
@@ -644,8 +677,9 @@ class ni_data(object):
         self.Nchannels = len(self.channels)
         # Correlation product indices for selected channels
         cor_prod = gen_prod_sel(self.channels, total_N_channels=self.Nadc_channels)
-        self.ni_gains, self.ni_evals = ni_gains_evalues_tf(self.vis_dec_sub[:, cor_prod, :], self.Nchannels, normalize_vis)
-
+        self.ni_gains, self.ni_evals = ni_gains_evalues_tf(
+            self.vis_dec_sub[:, cor_prod, :], self.Nchannels, normalize_vis
+        )
 
     def get_als_gains(self):
         """Compute gains, sky and system noise covariance matrices from a
@@ -654,14 +688,11 @@ class ni_data(object):
 
         pass
 
-
     def save(self):
         """Save gain solutions
         """
 
         pass
-
-
 
 
 def gen_prod_sel(channels_to_select, total_N_channels):
@@ -686,13 +717,13 @@ def gen_prod_sel(channels_to_select, total_N_channels):
     """
 
     prod_sel = []
-    k=0
+    k = 0
     for i in range(total_N_channels):
         for j in range(i, total_N_channels):
             if (i in channels_to_select) and (j in channels_to_select):
                 prod_sel.append(k)
 
-            k=k+1
+            k = k + 1
 
     return np.array(prod_sel)
 
@@ -719,7 +750,7 @@ def mat2utvec(A):
     utvec2mat
     """
 
-    iu = np.triu_indices(np.size(A, 0)) # Indices for upper triangle of A
+    iu = np.triu_indices(np.size(A, 0))  # Indices for upper triangle of A
 
     return A[iu]
 
@@ -742,8 +773,8 @@ def utvec2mat(n, utvec):
 
     iu = np.triu_indices(n)
     A = np.zeros((n, n), dtype=np.complex128)
-    A[iu] = utvec # Filling uppper triangle of A
-    A = A+np.triu(A, 1).conj().T # Filling lower triangle of A
+    A[iu] = utvec  # Filling uppper triangle of A
+    A = A + np.triu(A, 1).conj().T  # Filling lower triangle of A
     return A
 
 
@@ -765,9 +796,9 @@ def ktrprod(A, B):
     nrowsA = np.size(A, 0)
     nrowsB = np.size(B, 0)
     ncols = np.size(A, 1)
-    C = np.zeros((nrowsA*nrowsB, ncols), dtype=np.complex128)
+    C = np.zeros((nrowsA * nrowsB, ncols), dtype=np.complex128)
     for i in range(ncols):
-        C[:, i] = np.kron(A[:, i] ,B[:, i])
+        C[:, i] = np.kron(A[:, i], B[:, i])
 
     return C
 
@@ -818,8 +849,8 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
 
     g = g0.copy()
     G = np.diag(g)
-    Nchannels = np.size(R, 0) # Number of receiver channels
-    rank_Gamma = np.size(Gamma, 1) # Number of sky covariance matrix parameters
+    Nchannels = np.size(R, 0)  # Number of receiver channels
+    rank_Gamma = np.size(Gamma, 1)  # Number of sky covariance matrix parameters
     # Calculate initial weight matrix
     if weighted_als:
         inv_W = sciLA.sqrtm(R)
@@ -828,32 +859,36 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
         W = np.eye(Nchannels)
         inv_W = W.copy()
 
-    W_kron_W=np.kron(W.conj(), W)
-    G_kron_G=np.kron(G.conj(), G)
+    W_kron_W = np.kron(W.conj(), W)
+    G_kron_G = np.kron(G.conj(), G)
     Psi = np.hstack((np.dot(G_kron_G, Gamma), Upsilon))
     psi = np.dot(np.dot(np.linalg.pinv(np.dot(W_kron_W, Psi)), W_kron_W), R)
     gamma = psi[:rank_Gamma]
     upsilon = psi[rank_Gamma:]
     # Estimate of sky covariance matrix
-    C = np.dot(Gamma, gamma).reshape((Nchannels, Nchannels), order='F')
+    C = np.dot(Gamma, gamma).reshape((Nchannels, Nchannels), order="F")
     # Estimate of output noise covariance matrix
-    N = np.dot(Upsilon, upsilon).reshape((Nchannels, Nchannels), order='F')
+    N = np.dot(Upsilon, upsilon).reshape((Nchannels, Nchannels), order="F")
     # Make sure C and N are positive (semi-)definite
-    evals, V = LA.eigh(C, 'U') # Get eigens of C
-    D = np.diag(np.maximum(evals, 0.)) # Replace negative eigenvalues by zeros
-    C = np.dot(V, np.dot(D, V.conj().T)) # Positive (semi-)definite version of C
-    evals, V = LA.eigh(N, 'U')
+    evals, V = LA.eigh(C, "U")  # Get eigens of C
+    D = np.diag(np.maximum(evals, 0.0))  # Replace negative eigenvalues by zeros
+    C = np.dot(V, np.dot(D, V.conj().T))  # Positive (semi-)definite version of C
+    evals, V = LA.eigh(N, "U")
     D = np.diag(np.maximum(evals, 0))
     N = np.dot(V, np.dot(D, V.conj().T))
     # Calculate error
-    err = [LA.norm(np.dot(W, np.dot(R-np.dot(G, np.dot(C, G.conj()))-N, W)), ord='fro'),]
+    err = [
+        LA.norm(np.dot(W, np.dot(R - np.dot(G, np.dot(C, G.conj())) - N, W)), ord="fro")
+    ]
 
     for i in range(1, maxsteps):
-        if (err[-1] >= abs_tol) or ((i > 1) and (abs(err[-2]-err[-1]) <= rel_tol*err[-2])):
+        if (err[-1] >= abs_tol) or (
+            (i > 1) and (abs(err[-2] - err[-1]) <= rel_tol * err[-2])
+        ):
             break
 
         if weighted_als:
-            inv_W = sciLA.sqrtm(R+np.dot(G, np.dot(C, G.conj()))+N)
+            inv_W = sciLA.sqrtm(R + np.dot(G, np.dot(C, G.conj())) + N)
             W = LA.inv(inv_W)
         else:
             W = np.eye(Nchannels)
@@ -861,24 +896,33 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
 
         W_pow2 = np.dot(W, W)
         W_pow2GC = np.dot(W_pow2, np.dot(G, C))
-        g = np.dot(LA.pinv(np.dot(C, np.dot(G.conj().T, W_pow2GC)).conj()*W_pow2),
-                   np.dot(ktrprod(W_pow2GC, W_pow2).conj().T, (R-N).reshape(Nchannels**2,order='F')))
+        g = np.dot(
+            LA.pinv(np.dot(C, np.dot(G.conj().T, W_pow2GC)).conj() * W_pow2),
+            np.dot(
+                ktrprod(W_pow2GC, W_pow2).conj().T,
+                (R - N).reshape(Nchannels ** 2, order="F"),
+            ),
+        )
 
         G = np.diag(g)
-        G_kron_G=np.kron(G.conj(), G)
+        G_kron_G = np.kron(G.conj(), G)
         Psi = np.hstack((np.dot(G_kron_G, Gamma), Upsilon))
         psi = np.dot(np.dot(np.linalg.pinv(np.dot(W_kron_W, Psi)), W_kron_W), R)
         gamma = psi[:rank_Gamma]
         upsilon = psi[rank_Gamma:]
-        C = np.dot(Gamma, gamma).reshape((Nchannels, Nchannels), order='F')
-        N = np.dot(Upsilon, upsilon).reshape((Nchannels, Nchannels), order='F')
-        evals, V = LA.eigh(C, 'U')
-        D = np.diag(np.maximum(evals, 0.))
+        C = np.dot(Gamma, gamma).reshape((Nchannels, Nchannels), order="F")
+        N = np.dot(Upsilon, upsilon).reshape((Nchannels, Nchannels), order="F")
+        evals, V = LA.eigh(C, "U")
+        D = np.diag(np.maximum(evals, 0.0))
         C = np.dot(V, np.dot(D, V.conj().T))
-        evals, V = LA.eigh(N, 'U')
+        evals, V = LA.eigh(N, "U")
         D = np.diag(np.maximum(evals, 0))
         N = np.dot(V, np.dot(D, V.conj().T))
-        err.append(LA.norm(np.dot(W, np.dot(R-np.dot(G, np.dot(C, G.conj()))-N, W)), ord='fro'))
+        err.append(
+            LA.norm(
+                np.dot(W, np.dot(R - np.dot(G, np.dot(C, G.conj())) - N, W)), ord="fro"
+            )
+        )
 
     return g, C, N, np.array(err)
 
@@ -897,7 +941,7 @@ def sort_evalues_mag(evalues):
         Array of same shape as evalues
     """
 
-    ev = np.zeros(evalues.shape, dtype = float)
+    ev = np.zeros(evalues.shape, dtype=float)
     for f in range(np.size(ev, 0)):
         for t in range(np.size(ev, 2)):
             ev[f, :, t] = evalues[f, np.argsort(abs(evalues[f, :, t])), t]
@@ -937,21 +981,23 @@ def ni_gains_evalues(C, normalize_vis=False):
     ni_gains_evalues_tf, subtract_sky_noise
     """
 
-    Nchannels = np.size(C, 0) # Number of receiver channels
-    if normalize_vis: # Convert to correlation coefficient matrix
-        W = np.diag(1/np.sqrt(np.diag(C).real))
+    Nchannels = np.size(C, 0)  # Number of receiver channels
+    if normalize_vis:  # Convert to correlation coefficient matrix
+        W = np.diag(1 / np.sqrt(np.diag(C).real))
         Winv = np.diag(np.sqrt(np.diag(C).real))
     else:
         W = np.identity(Nchannels)
         Winv = np.identity(Nchannels)
 
-    ev, V = LA.eigh(np.dot(np.dot(W, C), W), 'U')
-    g = np.sqrt(ev.max())*np.dot(Winv, V[:, ev.argmax()])
+    ev, V = LA.eigh(np.dot(np.dot(W, C), W), "U")
+    g = np.sqrt(ev.max()) * np.dot(Winv, V[:, ev.argmax()])
 
     return g, ev
 
 
-def ni_gains_evalues_tf(vis_gated, Nchannels, normalize_vis=False, vis_on=None, vis_off=None, niter=0):
+def ni_gains_evalues_tf(
+    vis_gated, Nchannels, normalize_vis=False, vis_on=None, vis_off=None, niter=0
+):
     """Computes gains and evalues from noise injection visibility data.
 
     Gains and eigenvalues are calculated for all frames and
@@ -1010,8 +1056,10 @@ def ni_gains_evalues_tf(vis_gated, Nchannels, normalize_vis=False, vis_on=None, 
     Ntimeframes = np.size(vis_gated, 2)
 
     # Create NaN matrices to hold the gains and eigenvalues
-    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.complex)*(np.nan+1j*np.nan)
-    evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float)*np.nan
+    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.complex) * (
+        np.nan + 1j * np.nan
+    )
+    evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float) * np.nan
 
     # Determine if we will weight by the square root of the autos
     # of the matrix vis_on = vis_gated + vis_off
@@ -1028,19 +1076,23 @@ def ni_gains_evalues_tf(vis_gated, Nchannels, normalize_vis=False, vis_on=None, 
             # Create Nchannel x Nchannel matrix of noise-injection-on visibilities
             if weight_by_autos_on:
                 if vis_on_is_input:
-                    mat_slice_vis_on = utvec2mat(Nchannels, vis_on[f,:,t])
+                    mat_slice_vis_on = utvec2mat(Nchannels, vis_on[f, :, t])
                 else:
-                    mat_slice_vis_on = utvec2mat(Nchannels, np.add(vis_gated[f,:,t], vis_off[f,:,t]))
+                    mat_slice_vis_on = utvec2mat(
+                        Nchannels, np.add(vis_gated[f, :, t], vis_off[f, :, t])
+                    )
             else:
                 mat_slice_vis_on = None
 
             # Create Nchannel x Nchannel matrix of gated visibilities
-            mat_slice_vis_gated = utvec2mat(Nchannels, vis_gated[f,:,t])
+            mat_slice_vis_gated = utvec2mat(Nchannels, vis_gated[f, :, t])
 
             # If requested, then normalize the gated visibilities
             # by the square root of the autocorrelations
             if normalize_vis:
-                mat_slice_vis_gated, sqrt_autos = normalise_correlations(mat_slice_vis_gated, norm=mat_slice_vis_on)
+                mat_slice_vis_gated, sqrt_autos = normalise_correlations(
+                    mat_slice_vis_gated, norm=mat_slice_vis_on
+                )
 
             # Solve for eigenvalues and eigenvectors.
             # The gain solutions for the zero'th feed
@@ -1049,15 +1101,22 @@ def ni_gains_evalues_tf(vis_gated, Nchannels, normalize_vis=False, vis_on=None, 
             # solutions are relative phases with respect
             # to the zero'th feed.
             try:
-                eigenvals, eigenvecs = eigh_no_diagonal(mat_slice_vis_gated, niter=niter)
+                eigenvals, eigenvecs = eigh_no_diagonal(
+                    mat_slice_vis_gated, niter=niter
+                )
 
                 if eigenvecs[0, eigenvals.argmax()] < 0:
                     sign0 = -1
                 else:
                     sign0 = 1
 
-                gains[f,:,t] = sign0 * sqrt_autos * eigenvecs[:, eigenvals.argmax()] * np.sqrt(np.abs(eigenvals.max()))
-                evals[f,:,t] = eigenvals
+                gains[f, :, t] = (
+                    sign0
+                    * sqrt_autos
+                    * eigenvecs[:, eigenvals.argmax()]
+                    * np.sqrt(np.abs(eigenvals.max()))
+                )
+                evals[f, :, t] = eigenvals
 
             except LA.LinAlgError:
                 pass
@@ -1125,56 +1184,77 @@ def subtract_sky_noise(vis, Nchannels, timestamp, adc_ch_ref, fbin_ref):
 
     # Find correlation product of autocorrelation of ref channel in read data
     # Indices of autocorrelations for selected channels
-    cor_prod_auto = [k*Nchannels-(k*(k-1))//2 for k in range(Nchannels)]
+    cor_prod_auto = [k * Nchannels - (k * (k - 1)) // 2 for k in range(Nchannels)]
     cor_prod_ref = cor_prod_auto[adc_ch_ref]
     auto_ref = np.real(vis[fbin_ref, cor_prod_ref, :])
 
     # Find timestamp indices for noise signal on and off
     # auto_ref points above/below auto_ref_mean are considered to be on/off
     auto_ref_mean = np.mean(auto_ref)
-    time_index_on = np.where(auto_ref>=auto_ref_mean)[0]
-    time_index_off = np.where(auto_ref<auto_ref_mean)[0]
+    time_index_on = np.where(auto_ref >= auto_ref_mean)[0]
+    time_index_off = np.where(auto_ref < auto_ref_mean)[0]
     diff_index_on = np.diff(time_index_on)
     # Indices indicating ends of noise-on subsets
-    index_end_on_cycle = time_index_on[np.where(diff_index_on>1)[0]]
+    index_end_on_cycle = time_index_on[np.where(diff_index_on > 1)[0]]
     # Indices indicating starts of noise-on subsets
-    index_start_on_cycle = time_index_on[np.where(diff_index_on>1)[0]+1]
-    vis_on_dec = [] # Decimated visibility on points
+    index_start_on_cycle = time_index_on[np.where(diff_index_on > 1)[0] + 1]
+    vis_on_dec = []  # Decimated visibility on points
     vis_off_dec = []
-    timestamp_on_dec = [] # Timestamps of visibility on points
+    timestamp_on_dec = []  # Timestamps of visibility on points
     timestamp_off_dec = []
-    timestamp_dec = [] # Timestamp of decimated visibility (on minus off)
+    timestamp_dec = []  # Timestamp of decimated visibility (on minus off)
 
-    for i in range(len(index_end_on_cycle)-1):
+    for i in range(len(index_end_on_cycle) - 1):
         # Visibilities with noise on for cycle i
-        vis_on_cycle_i = vis[:, :, index_start_on_cycle[i]:index_end_on_cycle[i+1]+1]
+        vis_on_cycle_i = vis[
+            :, :, index_start_on_cycle[i] : index_end_on_cycle[i + 1] + 1
+        ]
         # Visibilities with noise off for cycle i
-        vis_off_cycle_i = vis[:, :, index_end_on_cycle[i]+1:index_start_on_cycle[i]]
+        vis_off_cycle_i = vis[:, :, index_end_on_cycle[i] + 1 : index_start_on_cycle[i]]
 
         # New lines to find indices of maximum and minimum point of each cycle based on the reference channel
-        index_max_i = auto_ref[index_start_on_cycle[i]:index_end_on_cycle[i+1]+1].argmax()
-        index_min_i = auto_ref[index_end_on_cycle[i]+1:index_start_on_cycle[i]].argmin()
+        index_max_i = auto_ref[
+            index_start_on_cycle[i] : index_end_on_cycle[i + 1] + 1
+        ].argmax()
+        index_min_i = auto_ref[
+            index_end_on_cycle[i] + 1 : index_start_on_cycle[i]
+        ].argmin()
         vis_on_dec.append(vis_on_cycle_i[:, :, index_max_i])
         vis_off_dec.append(vis_off_cycle_i[:, :, index_min_i])
 
         # Instead of averaging all the data with noise on of a cycle, we take the median
-        #vis_on_dec.append(np.median(vis_on_cycle_i.real, axis=2)+1j*np.median(vis_on_cycle_i.imag, axis=2))
-        #vis_off_dec.append(np.median(vis_off_cycle_i.real, axis=2)+1j*np.median(vis_off_cycle_i.imag, axis=2))
-        timestamp_on_dec.append(np.mean(timestamp[index_start_on_cycle[i]:index_end_on_cycle[i+1]+1]))
-        timestamp_off_dec.append(np.mean(timestamp[index_end_on_cycle[i]+1:index_start_on_cycle[i]]))
-        timestamp_dec.append(np.mean(timestamp[index_end_on_cycle[i]+1:index_end_on_cycle[i+1]+1]))
+        # vis_on_dec.append(np.median(vis_on_cycle_i.real, axis=2)+1j*np.median(vis_on_cycle_i.imag, axis=2))
+        # vis_off_dec.append(np.median(vis_off_cycle_i.real, axis=2)+1j*np.median(vis_off_cycle_i.imag, axis=2))
+        timestamp_on_dec.append(
+            np.mean(timestamp[index_start_on_cycle[i] : index_end_on_cycle[i + 1] + 1])
+        )
+        timestamp_off_dec.append(
+            np.mean(timestamp[index_end_on_cycle[i] + 1 : index_start_on_cycle[i]])
+        )
+        timestamp_dec.append(
+            np.mean(
+                timestamp[index_end_on_cycle[i] + 1 : index_end_on_cycle[i + 1] + 1]
+            )
+        )
 
     vis_on_dec = np.dstack(vis_on_dec)
     vis_off_dec = np.dstack(vis_off_dec)
-    vis_dec_sub = vis_on_dec-vis_off_dec
+    vis_dec_sub = vis_on_dec - vis_off_dec
     timestamp_on_dec = np.array(timestamp_on_dec)
     timestamp_off_dec = np.array(timestamp_off_dec)
     timestamp_dec = np.array(timestamp_dec)
 
-    return {'time_index_on': time_index_on, 'time_index_off': time_index_off,
-             'vis_on_dec': vis_on_dec, 'vis_off_dec': vis_off_dec, 'vis_dec_sub': vis_dec_sub,
-             'timestamp_on_dec': timestamp_on_dec, 'timestamp_off_dec': timestamp_off_dec,
-             'timestamp_dec': timestamp_dec, 'cor_prod_ref': cor_prod_ref}
+    return {
+        "time_index_on": time_index_on,
+        "time_index_off": time_index_off,
+        "vis_on_dec": vis_on_dec,
+        "vis_off_dec": vis_off_dec,
+        "vis_dec_sub": vis_dec_sub,
+        "timestamp_on_dec": timestamp_on_dec,
+        "timestamp_off_dec": timestamp_off_dec,
+        "timestamp_dec": timestamp_dec,
+        "cor_prod_ref": cor_prod_ref,
+    }
 
 
 def gains2utvec_tf(gains):
@@ -1221,10 +1301,10 @@ def gains2utvec_tf(gains):
     gains2utvec, ni_gains_evalues_tf
     """
 
-    Nfreqs = np.size(gains, 0) # Number of frequencies
-    Ntimeframes = np.size(gains, 2) # Number of time frames
+    Nfreqs = np.size(gains, 0)  # Number of frequencies
+    Ntimeframes = np.size(gains, 2)  # Number of time frames
     Nchannels = np.size(gains, 1)
-    Ncorrprods = Nchannels*(Nchannels+1)//2 # Number of correlation products
+    Ncorrprods = Nchannels * (Nchannels + 1) // 2  # Number of correlation products
     G_ut = np.zeros((Nfreqs, Ncorrprods, Ntimeframes), dtype=np.complex)
 
     for f in range(Nfreqs):
@@ -1232,7 +1312,6 @@ def gains2utvec_tf(gains):
             G_ut[f, :, t] = gains2utvec(gains[f, :, t])
 
     return G_ut
-
 
 
 def gains2utvec(g):

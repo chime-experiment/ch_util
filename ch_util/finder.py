@@ -45,10 +45,10 @@ Routines
 
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 from past.builtins import basestring
@@ -64,20 +64,17 @@ import chimedb.core as db
 import chimedb.data_index as di
 from . import layout, ephemeris
 
-from ._db_tables import (
-        DataFlagType,
-        DataFlag,
-        )
+from ._db_tables import DataFlagType, DataFlag
 
 from .holography import HolographySource, HolographyObservation
 
 # Module Constants
 # ================
 
-GF_REJECT = 'gf_reject'
-GF_RAISE = 'gf_raise'
-GF_WARN = 'gf_warn'
-GF_ACCEPT = 'gf_accept'
+GF_REJECT = "gf_reject"
+GF_RAISE = "gf_raise"
+GF_WARN = "gf_warn"
+GF_ACCEPT = "gf_accept"
 
 
 # Initializing connection to database.
@@ -290,11 +287,10 @@ class Finder(object):
 
     """
 
-
     # Constructors and setup
     # ----------------------
 
-    def __init__(self, acqs=(), node_spoof = None):
+    def __init__(self, acqs=(), node_spoof=None):
         import copy
 
         # Which nodes do we have available?
@@ -305,17 +301,20 @@ class Finder(object):
         connect_database()
 
         if not node_spoof:
-            for n in di.StorageNode.select() \
-                    .where(di.StorageNode.host == host) \
-                    .where(di.StorageNode.mounted):
+            for n in (
+                di.StorageNode.select()
+                .where(di.StorageNode.host == host)
+                .where(di.StorageNode.mounted)
+            ):
                 self._my_node.append(n)
         else:
             for key, val in node_spoof.items():
                 self._my_node.append(di.StorageNode.get(name=key))
 
         if not len(self._my_node):
-            raise RuntimeError("No nodes found. Perhaps you need to pass " \
-                               "a 'node_spoof' parameter?")
+            raise RuntimeError(
+                "No nodes found. Perhaps you need to pass " "a 'node_spoof' parameter?"
+            )
 
         # Get list of join tables. We make a copy because the user may alter
         # this later through the only_XXX() methods.
@@ -333,27 +332,23 @@ class Finder(object):
         self._time_intervals = None
         self._time_exclusions = []
         self._atmel_restrict = None
-        self.min_interval = 240.
-        self._gf_mode = {
-            'comment': GF_ACCEPT,
-            'warning': GF_WARN,
-            'severe': GF_REJECT,
-        }
+        self.min_interval = 240.0
+        self._gf_mode = {"comment": GF_ACCEPT, "warning": GF_WARN, "severe": GF_REJECT}
         self._data_flag_types = []
         # The following line cuts any acquisitions with no files.
-        #self.filter_acqs_by_files(True)
+        # self.filter_acqs_by_files(True)
         # This is very similar to the above line, but takes ~.5s instead of
         # 12s.
         acq_ids = [acq.id for acq in self.acqs]
         if not acq_ids:
             # Nothing to do.
             return
-        condition = (di.ArchiveAcq.id << acq_ids) \
-                    & (di.ArchiveFileCopy.node << self._my_node) \
-                    & (di.ArchiveFileCopy.has_file == 'Y')
-        selection = di.ArchiveAcq.select() \
-                .join(di.ArchiveFile) \
-                .join(di.ArchiveFileCopy)
+        condition = (
+            (di.ArchiveAcq.id << acq_ids)
+            & (di.ArchiveFileCopy.node << self._my_node)
+            & (di.ArchiveFileCopy.has_file == "Y")
+        )
+        selection = di.ArchiveAcq.select().join(di.ArchiveFile).join(di.ArchiveFileCopy)
         self._acqs = list(selection.where(condition).group_by(di.ArchiveAcq))
 
     @classmethod
@@ -370,11 +365,11 @@ class Finder(object):
         """
 
         node_spoof = {}
-        #for n in di.StorageNode.select():
+        # for n in di.StorageNode.select():
         #    node_spoof[n.name] = ''
         # I think all the data live on at lease one of these -KM.
-        node_spoof['gong'] = ''
-        node_spoof['niedermayer'] = ''
+        node_spoof["gong"] = ""
+        node_spoof["niedermayer"] = ""
         return cls(acqs, node_spoof=node_spoof)
 
     # Filters on the index
@@ -524,19 +519,20 @@ class Finder(object):
 
         if comment:
             _validate_gf_value(comment)
-            self._gf_mode['comment'] = comment
+            self._gf_mode["comment"] = comment
         if warning:
             _validate_gf_value(warning)
-            self._gf_mode['warning'] = warning
+            self._gf_mode["warning"] = warning
         if severe:
             _validate_gf_value(severe)
-            self._gf_mode['severe'] = severe
+            self._gf_mode["severe"] = severe
 
     def accept_all_global_flags(self):
         """Set global flag behaviour to accept all data."""
 
-        self.update_global_flag_mode(comment=GF_ACCEPT, warning=GF_ACCEPT,
-                                     severe=GF_ACCEPT)
+        self.update_global_flag_mode(
+            comment=GF_ACCEPT, warning=GF_ACCEPT, severe=GF_ACCEPT
+        )
 
     def only_corr(self):
         """Only include correlator acquisitions in this search."""
@@ -629,8 +625,7 @@ class Finder(object):
 
         selection = di.ArchiveAcq.select().join(di.AcqType)
         for i in self._acq_info:
-            selection = selection.switch(di.ArchiveAcq).join(i,
-                    pw.JOIN.LEFT_OUTER)
+            selection = selection.switch(di.ArchiveAcq).join(i, pw.JOIN.LEFT_OUTER)
         selection = selection.switch(di.ArchiveAcq).join(di.ArchiveInst)
         self._acqs = list(selection.where(condition).group_by(di.ArchiveAcq))
 
@@ -667,22 +662,24 @@ class Finder(object):
         if not acq_ids:
             # Nothing to do.
             return
-        condition = (di.ArchiveAcq.id << acq_ids) \
-                    & (di.ArchiveFileCopy.node << self._my_node) \
-                    & (di.ArchiveFileCopy.has_file == 'Y') \
-                    & (condition)
-        selection = di.ArchiveAcq.select() \
-                .join(di.ArchiveFile) \
-                .join(di.ArchiveFileCopy)
+        condition = (
+            (di.ArchiveAcq.id << acq_ids)
+            & (di.ArchiveFileCopy.node << self._my_node)
+            & (di.ArchiveFileCopy.has_file == "Y")
+            & (condition)
+        )
+        selection = di.ArchiveAcq.select().join(di.ArchiveFile).join(di.ArchiveFileCopy)
         info_cond = False
         for i in self._file_info:
-            selection = selection.switch(di.ArchiveFile) \
-                                 .join(i, join_type = pw.JOIN.LEFT_OUTER)
+            selection = selection.switch(di.ArchiveFile).join(
+                i, join_type=pw.JOIN.LEFT_OUTER
+            )
             # The following ensures that at least _one_ of the info tables is
             # joined.
             info_cond |= ~(i.start_time >> None)
-        self._acqs = list(selection.where(condition & info_cond) \
-                                   .group_by(di.ArchiveAcq))
+        self._acqs = list(
+            selection.where(condition & info_cond).group_by(di.ArchiveAcq)
+        )
 
     def set_time_range(self, start_time=None, end_time=None):
         """Restrict the time range of the search.
@@ -718,16 +715,19 @@ class Finder(object):
         # Delete any acquisitions that do not overlap with the new range.
         cond = True
         for i in self._file_info:
-            cond &= (i.start_time >> None) | ((i.start_time < end_time) \
-                                             & (i.finish_time > start_time))
+            cond &= (i.start_time >> None) | (
+                (i.start_time < end_time) & (i.finish_time > start_time)
+            )
         self.filter_acqs_by_files(cond)
 
         if not self._time_intervals is None:
-            time_intervals = _trim_intervals_range(self.time_intervals,
-                                                   (start_time, end_time))
+            time_intervals = _trim_intervals_range(
+                self.time_intervals, (start_time, end_time)
+            )
             self._time_intervals = time_intervals
-        time_exclusions = _trim_intervals_range(self.time_exclusions,
-                                                (start_time, end_time))
+        time_exclusions = _trim_intervals_range(
+            self.time_exclusions, (start_time, end_time)
+        )
         self._time_exclusions = time_exclusions
         self._time_range = (start_time, end_time)
 
@@ -826,7 +826,6 @@ class Finder(object):
 
         """
 
-
         interval = self._format_time_interval(start_time, end_time)
         if interval:
             self._append_time_interval(interval)
@@ -918,7 +917,6 @@ class Finder(object):
         else:
             self.data_flag_types.append(flag_type)
 
-
     def include_RA_interval(self, start_RA, end_RA):
         """Add time intervals to include passings of given right RA intervals
 
@@ -956,12 +954,13 @@ class Finder(object):
         """
 
         from . import ephemeris
+
         delta_RA = (end_RA - start_RA) % 360
-        mid_RA = (start_RA + delta_RA / 2.) % 360
-        time_delta = delta_RA * 4 * 60. * ephemeris.SIDEREAL_S
+        mid_RA = (start_RA + delta_RA / 2.0) % 360
+        time_delta = delta_RA * 4 * 60.0 * ephemeris.SIDEREAL_S
         self.include_transits(mid_RA, time_delta=time_delta)
 
-    def exclude_RA_interval(self,start_RA, end_RA):
+    def exclude_RA_interval(self, start_RA, end_RA):
         """ Add time intervals to exclude passings of given right RA
         intervals
 
@@ -978,11 +977,11 @@ class Finder(object):
 
         """
         from . import ephemeris
-        delta_RA = (end_RA - start_RA) % 360
-        mid_RA = (start_RA + delta_RA / 2.) % 360
-        time_delta = delta_RA * 4 * 60. * ephemeris.SIDEREAL_S
-        self.exclude_transits(mid_RA, time_delta=time_delta)
 
+        delta_RA = (end_RA - start_RA) % 360
+        mid_RA = (start_RA + delta_RA / 2.0) % 360
+        time_delta = delta_RA * 4 * 60.0 * ephemeris.SIDEREAL_S
+        self.exclude_transits(mid_RA, time_delta=time_delta)
 
     def include_transits(self, body, time_delta=None):
         """Add time intervals to include transits for given celestial body.
@@ -1018,9 +1017,9 @@ class Finder(object):
             time_delta = self.min_interval * 2
         ttimes = ephemeris.transit_times(body, *self.time_range)
         for ttime in ttimes:
-            self.include_time_interval(ttime - time_delta / 2.,
-                                       ttime + time_delta / 2.)
-
+            self.include_time_interval(
+                ttime - time_delta / 2.0, ttime + time_delta / 2.0
+            )
 
     def include_26m_obs(self, source, require_quality=True):
         """Add time intervals to include 26m observations of a source.
@@ -1054,26 +1053,37 @@ class Finder(object):
         sources = HolographySource.select()
         sources = sources.where(HolographySource.name == source)
         if len(sources) == 0:
-            msg = ('No sources found in the database that match: {0}\n'.format(source)
-                  +'Returning full time range')
+            msg = (
+                "No sources found in the database that match: {0}\n".format(source)
+                + "Returning full time range"
+            )
             logging.warning(msg)
-        obs = (HolographyObservation.select().join(HolographySource)
-                        .where(HolographyObservation.source << sources))
+        obs = (
+            HolographyObservation.select()
+            .join(HolographySource)
+            .where(HolographyObservation.source << sources)
+        )
         if require_quality:
-            obs = obs.select().where( (HolographyObservation.quality_flag == 0) |
-                        (HolographyObservation.quality_flag == None))
+            obs = obs.select().where(
+                (HolographyObservation.quality_flag == 0)
+                | (HolographyObservation.quality_flag == None)
+            )
 
         found_obs = False
         for ob in obs:
-            in_range = ((self.time_range[1] > ob.start_time)
-                    and (self.time_range[0] < ob.finish_time))
+            in_range = (self.time_range[1] > ob.start_time) and (
+                self.time_range[0] < ob.finish_time
+            )
             if in_range:
                 found_obs = True
-                self.include_time_interval(ob.start_time,
-                                           ob.finish_time)
+                self.include_time_interval(ob.start_time, ob.finish_time)
         if not found_obs:
-            msg = ('No observation of the source ({0}) was found within the time range.\n'.format(source)
-                  +'Returning full time range')
+            msg = (
+                "No observation of the source ({0}) was found within the time range.\n".format(
+                    source
+                )
+                + "Returning full time range"
+            )
             logging.warning(msg)
 
     def exclude_transits(self, body, time_delta):
@@ -1111,15 +1121,17 @@ class Finder(object):
             time_delta = self.min_interval * 2
         ttimes = ephemeris.transit_times(body, *self.time_range)
         for ttime in ttimes:
-            self.exclude_time_interval(ttime - time_delta / 2.,
-                                       ttime + time_delta / 2.)
+            self.exclude_time_interval(
+                ttime - time_delta / 2.0, ttime + time_delta / 2.0
+            )
 
     def exclude_daytime(self):
         """ Add time intervals to exclude all day time data.
         """
 
-        rise_times = ephemeris.solar_rising(self.time_range[0] - 24 * 3600.0,
-                                            self.time_range[1])
+        rise_times = ephemeris.solar_rising(
+            self.time_range[0] - 24 * 3600.0, self.time_range[1]
+        )
 
         for rise_time in rise_times:
             set_time = ephemeris.solar_setting(rise_time)
@@ -1140,27 +1152,26 @@ class Finder(object):
 
         # Sunrise
         rise_times = ephemeris.solar_rising(
-                self.time_range[0] - time_delta_rise_set,
-                self.time_range[1])
+            self.time_range[0] - time_delta_rise_set, self.time_range[1]
+        )
         for rise_time in rise_times:
-            self.exclude_time_interval(rise_time,
-                                       rise_time + time_delta_rise_set)
+            self.exclude_time_interval(rise_time, rise_time + time_delta_rise_set)
 
         # Sunset
         set_times = ephemeris.solar_setting(
-                self.time_range[0],
-                self.time_range[1] + time_delta_rise_set)
+            self.time_range[0], self.time_range[1] + time_delta_rise_set
+        )
         for set_time in set_times:
-            self.exclude_time_interval(set_time - time_delta_rise_set,
-                                       set_time)
+            self.exclude_time_interval(set_time - time_delta_rise_set, set_time)
 
         # Sun transit
         transit_times = ephemeris.solar_transit(
-                self.time_range[0] - time_delta / 2.,
-                self.time_range[1] + time_delta / 2.)
+            self.time_range[0] - time_delta / 2.0, self.time_range[1] + time_delta / 2.0
+        )
         for transit_time in transit_times:
-            self.exclude_time_interval(transit_time - time_delta / 2.,
-                                       transit_time + time_delta / 2.)
+            self.exclude_time_interval(
+                transit_time - time_delta / 2.0, transit_time + time_delta / 2.0
+            )
 
     def set_hk_input(self, name):
         """Restrict files to only one HK input type.
@@ -1176,9 +1187,9 @@ class Finder(object):
         name : str
             The name of the housekeeping input.
         """
-        self._atmel_restrict = (di.HKFileInfo.atmel_name == name)
+        self._atmel_restrict = di.HKFileInfo.atmel_name == name
 
-    def get_results_acq(self, acq_ind, file_condition = None):
+    def get_results_acq(self, acq_ind, file_condition=None):
         """Get search results restricted to a given acquisition.
 
         Parameters
@@ -1200,15 +1211,11 @@ class Finder(object):
         acq_start = acq.start_time
         acq_finish = acq.finish_time
         time_intervals = _trim_intervals_range(
-                self.time_intervals,
-                (acq_start, acq_finish),
-                self.min_interval,
-                )
+            self.time_intervals, (acq_start, acq_finish), self.min_interval
+        )
         time_intervals = _trim_intervals_exclusions(
-                time_intervals,
-                self.time_exclusions,
-                self.min_interval,
-                )
+            time_intervals, self.time_exclusions, self.min_interval
+        )
         # Deal with all global flags.
         for severity, mode in self.global_flag_mode.items():
             if mode is GF_ACCEPT:
@@ -1216,8 +1223,9 @@ class Finder(object):
                 continue
             else:
                 # Need to actually get the flags.
-                global_flags = layout.global_flags_between(acq_start,
-                        acq_finish, severity)
+                global_flags = layout.global_flags_between(
+                    acq_start, acq_finish, severity
+                )
                 global_flag_names = [gf.name for gf in global_flags]
                 flag_times = []
                 for f in global_flags:
@@ -1230,25 +1238,27 @@ class Finder(object):
                 overlap = _check_intervals_overlap(time_intervals, flag_times)
             if mode is GF_WARN:
                 if overlap:
-                    msg = ("Global flag with severity '%s' present in data"
-                           " search results and warning requested."
-                           " Global flag name: %s"
-                           % (severity, global_flag_names[overlap[1]]))
+                    msg = (
+                        "Global flag with severity '%s' present in data"
+                        " search results and warning requested."
+                        " Global flag name: %s"
+                        % (severity, global_flag_names[overlap[1]])
+                    )
                     logging.warning(msg)
             elif mode is GF_RAISE:
                 if overlap:
-                    msg = ("Global flag with severity '%s' present in data"
-                            " search results and exception requested."
-                           " Global flag name: %s"
-                           % (severity, global_flag_names[overlap[1]]))
+                    msg = (
+                        "Global flag with severity '%s' present in data"
+                        " search results and exception requested."
+                        " Global flag name: %s"
+                        % (severity, global_flag_names[overlap[1]])
+                    )
                     raise DataFlagged(msg)
             elif mode is GF_REJECT:
                 if overlap:
                     time_intervals = _trim_intervals_exclusions(
-                            time_intervals,
-                            flag_times,
-                            self.min_interval,
-                            )
+                        time_intervals, flag_times, self.min_interval
+                    )
             else:
                 raise RuntimeError("Finder has invalid global_flag_mode.")
         # Do the same for Data flags
@@ -1256,12 +1266,11 @@ class Finder(object):
             df_types = [t.name for t in DataFlagType.select()]
             for dft in self.data_flag_types:
                 if not dft in df_types:
-                    raise RuntimeError(
-                            "Could not find data flag type {}.".format(dft)
-                            )
+                    raise RuntimeError("Could not find data flag type {}.".format(dft))
                 flag_times = []
-                for f in DataFlag.select() \
-                        .where(DataFlag.type == DataFlagType.get(name=dft)):
+                for f in DataFlag.select().where(
+                    DataFlag.type == DataFlagType.get(name=dft)
+                ):
                     start, stop = f.start_time, f.finish_time
                     if stop is None:
                         stop = time.time()
@@ -1271,10 +1280,8 @@ class Finder(object):
                 overlap = _check_intervals_overlap(time_intervals, flag_times)
                 if overlap:
                     time_intervals = _trim_intervals_exclusions(
-                            time_intervals,
-                            flag_times,
-                            self.min_interval,
-                            )
+                        time_intervals, flag_times, self.min_interval
+                    )
         data_intervals = []
         if self._atmel_restrict:
             if file_condition:
@@ -1282,9 +1289,14 @@ class Finder(object):
             else:
                 file_condition = self._atmel_restrict
         for time_interval in time_intervals:
-            filenames = files_in_range(acq.id, time_interval[0],
-                                       time_interval[1], self._my_node,
-                                       file_condition, self._node_spoof)
+            filenames = files_in_range(
+                acq.id,
+                time_interval[0],
+                time_interval[1],
+                self._my_node,
+                file_condition,
+                self._node_spoof,
+            )
             filenames = sorted(filenames)
 
             tup = (filenames, time_interval)
@@ -1294,9 +1306,11 @@ class Finder(object):
                 data_intervals.append(HKDataInterval(tup))
             elif acq.type == di.AcqType.weather():
                 data_intervals.append(WeatherDataInterval(tup))
-            elif (acq.type == di.AcqType.gain()
-                    or acq.type == di.AcqType.flaginput()
-                    or acq.type == di.AcqType.digitalgain()):
+            elif (
+                acq.type == di.AcqType.gain()
+                or acq.type == di.AcqType.flaginput()
+                or acq.type == di.AcqType.digitalgain()
+            ):
                 data_intervals.append(GainFlagDataInterval(tup))
             else:
                 data_intervals.append(BaseDataInterval(tup))
@@ -1341,12 +1355,13 @@ class Finder(object):
         """
 
         from . import ephemeris
-        print ("acquisition | name | start | length (hrs) | N files")
+
+        print("acquisition | name | start | length (hrs) | N files")
         row_proto = "%4d  |  %-36s  |  %s  |  %7.2f  |  %4d"
         for ii, acq in enumerate(self.acqs):
             start = acq.start_time
             finish = acq.finish_time
-            length = (finish - start) / 3600.
+            length = (finish - start) / 3600.0
             start = ephemeris.unix_to_datetime(start)
             start = start.strftime("%Y-%m-%d %H:%M")
             name = acq.name
@@ -1359,40 +1374,43 @@ class Finder(object):
         """
 
         row_proto = "%4d | %-36s | %7.f | %7.f | %4d | %6.f"
-        total_data = 0.
-        total_size = 0.
+        total_data = 0.0
+        total_size = 0.0
         interval_number = 0
-        titles = ("# ", " acquisition", "start (s)", "len (s) ", "files ",
-                  "MB ")
+        titles = ("# ", " acquisition", "start (s)", "len (s) ", "files ", "MB ")
         print("%5s|%-38s|%9s|%9s|%6s|%8s" % titles)
         for ii, acq in enumerate(self.acqs):
             acq_start = acq.start_time
             intervals = self.get_results_acq(ii)
-            #if len(intervals):
+            # if len(intervals):
             #  print intervals[0]
             for interval in intervals:
                 offset = interval[1][0] - acq_start
                 length = interval[1][1] - interval[1][0]
                 n_files = len(interval[0])
                 # Get total size of files by doing new query.
-                cond = (di.ArchiveFile.acq == acq) & \
-                       (di.ArchiveFileCopy.node << self._my_node) & \
-                       (di.ArchiveFileCopy.has_file == 'Y')
+                cond = (
+                    (di.ArchiveFile.acq == acq)
+                    & (di.ArchiveFileCopy.node << self._my_node)
+                    & (di.ArchiveFileCopy.has_file == "Y")
+                )
                 info_cond = False
                 for i in self._file_info:
-                    info_cond |= ((i.finish_time >= interval[1][0]) \
-                               & (i.start_time <= interval[1][1]))
-                size_q = di.ArchiveFile \
-                        .select(pw.fn.Sum(di.ArchiveFile.size_b)) \
-                        .join(di.ArchiveFileCopy)
+                    info_cond |= (i.finish_time >= interval[1][0]) & (
+                        i.start_time <= interval[1][1]
+                    )
+                size_q = di.ArchiveFile.select(pw.fn.Sum(di.ArchiveFile.size_b)).join(
+                    di.ArchiveFileCopy
+                )
                 for i in self._file_info:
-                    size_q = size_q.switch(di.ArchiveFile) \
-                                   .join(i, join_type = pw.JOIN.LEFT_OUTER)
+                    size_q = size_q.switch(di.ArchiveFile).join(
+                        i, join_type=pw.JOIN.LEFT_OUTER
+                    )
                 size_q = size_q.where(cond & info_cond)
                 try:
-                  s = float(size_q.scalar()) / 1024**2   # MB.
+                    s = float(size_q.scalar()) / 1024 ** 2  # MB.
                 except TypeError:
-                  s = 0
+                    s = 0
                 info = (interval_number, acq.name, offset, length, n_files, s)
                 print(row_proto % info)
                 total_data += length
@@ -1401,7 +1419,7 @@ class Finder(object):
         print("Total %6.f seconds, %6.f MB of data." % (total_data, total_size))
 
 
-def _trim_intervals_range(intervals, time_range, min_interval=0.):
+def _trim_intervals_range(intervals, time_range, min_interval=0.0):
     range_start, range_end = time_range
     out = []
     for start, end in intervals:
@@ -1414,12 +1432,12 @@ def _trim_intervals_range(intervals, time_range, min_interval=0.):
     return out
 
 
-def _trim_intervals_exclusions(intervals, exclusions, min_interval=0.):
+def _trim_intervals_exclusions(intervals, exclusions, min_interval=0.0):
     for excl_start, excl_end in exclusions:
         tmp_intervals = []
         for start, end in intervals:
-            if (end <= excl_start or start >= excl_end):
-                if (start + min_interval <= end):
+            if end <= excl_start or start >= excl_end:
+                if start + min_interval <= end:
                     tmp_intervals.append((start, end))
                 continue
             if end > excl_start and start + min_interval <= excl_start:
@@ -1442,23 +1460,26 @@ def _check_intervals_overlap(intervals1, intervals2):
 
 def _validate_gf_value(value):
     if not value in (GF_REJECT, GF_RAISE, GF_WARN, GF_ACCEPT):
-        raise ValueError("Global flag behaviour must be one of"
-                         " the *GF_REJECT*, *GF_RAISE*, *GF_WARN*, *GF_ACCEPT*"
-                         " constants from the finder module.")
+        raise ValueError(
+            "Global flag behaviour must be one of"
+            " the *GF_REJECT*, *GF_RAISE*, *GF_WARN*, *GF_ACCEPT*"
+            " constants from the finder module."
+        )
 
 
 def _get_global_flag_times_by_name_event_id(flag):
     if isinstance(flag, basestring):
         event = (
-                layout.event.select()
-                .where(layout.event.active == True)
-                .join(layout.global_flag,
-                      on=(layout.event.graph_obj == layout.global_flag.id))
-                .where(layout.global_flag.name == flag)
-                .get()
-                )
+            layout.event.select()
+            .where(layout.event.active == True)
+            .join(
+                layout.global_flag, on=(layout.event.graph_obj == layout.global_flag.id)
+            )
+            .where(layout.global_flag.name == flag)
+            .get()
+        )
     else:
-        event = layout.event.get(id = flag)
+        event = layout.event.get(id=flag)
     start = event.start.time
     try:
         end = event.end.time
@@ -1549,6 +1570,7 @@ class BaseDataInterval(tuple):
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
+
         return andata.BaseReader
 
     def as_reader(self):
@@ -1584,8 +1606,8 @@ class BaseDataInterval(tuple):
         """
         reader = self.as_reader()
         for k, v in kwargs.items():
-          if v is not None:
-            setattr(reader, k, v)
+            if v is not None:
+                setattr(reader, k, v)
         data = reader.read()
         return data
 
@@ -1603,6 +1625,7 @@ class CorrDataInterval(BaseDataInterval):
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
+
         return andata.CorrReader
 
     def as_loaded_data(self, prod_sel=None, freq_sel=None, datasets=None):
@@ -1623,10 +1646,11 @@ class CorrDataInterval(BaseDataInterval):
             Data interval loaded into memory.
 
         """
-        return super(CorrDataInterval, self) \
-                    .as_loaded_data(prod_sel = prod_sel,
-                                    freq_sel = freq_sel,
-                                    datasets = datasets)
+        return super(CorrDataInterval, self).as_loaded_data(
+            prod_sel=prod_sel, freq_sel=freq_sel, datasets=datasets
+        )
+
+
 # Legacy.
 DataInterval = CorrDataInterval
 
@@ -1638,6 +1662,7 @@ class HKDataInterval(BaseDataInterval):
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
+
         return andata.HKReader
 
 
@@ -1648,6 +1673,7 @@ class WeatherDataInterval(BaseDataInterval):
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
+
         return andata.WeatherReader
 
 
@@ -1658,6 +1684,7 @@ class GainFlagDataInterval(BaseDataInterval):
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
+
         return andata.GainFlagReader
 
 
@@ -1685,11 +1712,12 @@ class GainFlagDataInterval(BaseDataInterval):
 
         """
         from . import andata
+
         reader = andata.GainFlagReader(self[0])
         reader.select_time_range(self[1][0], self[1][1])
         return reader
 
-    def as_loaded_data(self, datasets = None):
+    def as_loaded_data(self, datasets=None):
         """Load data interval to memory as an :class:`andata.GainFlagData` instance
 
         datasets : list of strings
@@ -1701,16 +1729,16 @@ class GainFlagDataInterval(BaseDataInterval):
             Data interval loaded into memory.
 
         """
-        return super(GainFlagDataInterval, self) \
-                    .as_loaded_data(datasets = datasets)
-
+        return super(GainFlagDataInterval, self).as_loaded_data(datasets=datasets)
 
 
 # Query routines
 # ==============
 
-def files_in_range(acq, start_time, end_time, node_list, extra_cond = None,
-                   node_spoof = None):
+
+def files_in_range(
+    acq, start_time, end_time, node_list, extra_cond=None, node_spoof=None
+):
     """Get files for a given acquisition within a time range.
 
     Parameters
@@ -1739,34 +1767,37 @@ def files_in_range(acq, start_time, end_time, node_list, extra_cond = None,
     else:
         acq_name = di.ArchiveAcq.get(di.ArchiveAcq.id == acq).name
 
-    cond = ((di.ArchiveFile.acq == acq) &
-            (di.ArchiveFileCopy.node << node_list) &
-            (di.ArchiveFileCopy.has_file == 'Y'))
+    cond = (
+        (di.ArchiveFile.acq == acq)
+        & (di.ArchiveFileCopy.node << node_list)
+        & (di.ArchiveFileCopy.has_file == "Y")
+    )
     info_cond = False
     for i in file_info_table:
-        info_cond |= ((i.finish_time >= start_time) & \
-                      (i.start_time <= end_time))
+        info_cond |= (i.finish_time >= start_time) & (i.start_time <= end_time)
 
     if extra_cond:
-      cond &= extra_cond
+        cond &= extra_cond
 
-    query = di.ArchiveFileCopy.select(
+    query = (
+        di.ArchiveFileCopy.select(
             di.ArchiveFileCopy.node,
-            di.ArchiveFile.name, di.StorageNode.root,
-            di.StorageNode.name.alias("node_name")
-            ).join(di.StorageNode).switch(di.ArchiveFileCopy) \
-                    .join(di.ArchiveFile)
+            di.ArchiveFile.name,
+            di.StorageNode.root,
+            di.StorageNode.name.alias("node_name"),
+        )
+        .join(di.StorageNode)
+        .switch(di.ArchiveFileCopy)
+        .join(di.ArchiveFile)
+    )
     for i in file_info_table:
-        query = query.switch(di.ArchiveFile) \
-                     .join(i, join_type = pw.JOIN.LEFT_OUTER)
+        query = query.switch(di.ArchiveFile).join(i, join_type=pw.JOIN.LEFT_OUTER)
     query = query.where(cond & info_cond).objects()
 
     if not node_spoof:
-      return [path.join(af.root, acq_name, af.name) for af in query]
+        return [path.join(af.root, acq_name, af.name) for af in query]
     else:
-      return [path.join(node_spoof[af.node_name], acq_name, af.name) \
-              for af in query]
-
+        return [path.join(node_spoof[af.node_name], acq_name, af.name) for af in query]
 
 
 # Exceptions
@@ -1775,10 +1806,12 @@ def files_in_range(acq, start_time, end_time, node_list, extra_cond = None,
 # This is the base CHIMEdb exception
 from chimedb.core.exceptions import CHIMEdbError
 
+
 class DataFlagged(CHIMEdbError):
     """Raised when data is affected by a global flag."""
 
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

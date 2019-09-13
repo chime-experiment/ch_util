@@ -3,10 +3,10 @@ Private module for defining the DB tables with the peewee ORM. These are
 imported into the layout and finder modules.
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 from past.builtins import basestring
@@ -53,6 +53,7 @@ ORDER_DESC = 1
 # Exceptions
 # ==========
 
+
 class NoSubgraph(chimedb.core.CHIMEdbError):
     """Raise when a subgraph specification is missing."""
 
@@ -92,7 +93,8 @@ class ClosestDraw(chimedb.core.CHIMEdbError):
 # Helper classes for the peewee ORM
 # =================================
 
-from chimedb.core.orm import (JSONDictField, EnumField, base_model, name_table)
+from chimedb.core.orm import JSONDictField, EnumField, base_model, name_table
+
 
 class event_table(base_model):
     """Baseclass for all models which are linked to the event class.
@@ -102,8 +104,14 @@ class event_table(base_model):
     event
     """
 
-    def event(self, time=datetime.datetime.now(), type=None, when=EVENT_ALL,
-              order=None, active=True):
+    def event(
+        self,
+        time=datetime.datetime.now(),
+        type=None,
+        when=EVENT_ALL,
+        order=None,
+        active=True,
+    ):
         """event(self, time = datetime.datetime.now(), type = None,\
                  when = EVENT_ALL, order = None, active = True)
            Find events associated with entries in this table.
@@ -125,8 +133,9 @@ class event_table(base_model):
         -------
         event : :obj:`peewee.SelectQuery`
         """
-        ret = _graph_obj_iter(event, self.__class__, time, when, order, active) \
-            .where(self.__class__.id == self.id)
+        ret = _graph_obj_iter(event, self.__class__, time, when, order, active).where(
+            self.__class__.id == self.id
+        )
         if type:
             try:
                 dummy = iter(type)
@@ -138,6 +147,7 @@ class event_table(base_model):
 
 # Initializing connection to database.
 # ====================================
+
 
 def connect_peewee_tables(read_write=False, reconnect=False):
     """Initialize the connection to the CHIME data index database.
@@ -184,12 +194,15 @@ def set_user(u):
 
     # Find the user.
     if isinstance(u, int):
-        q = chimedb.core.proxy.execute_sql("SELECT user_id FROM chimewiki.user "
-                                       "WHERE user_id = %d;" % u)
+        q = chimedb.core.proxy.execute_sql(
+            "SELECT user_id FROM chimewiki.user " "WHERE user_id = %d;" % u
+        )
     else:
-        q = chimedb.core.proxy.execute_sql("SELECT user_id FROM chimewiki.user "
-                                       "WHERE user_name = '%s' OR "
-                                       "user_real_name = '%s';" % (u, u))
+        q = chimedb.core.proxy.execute_sql(
+            "SELECT user_id FROM chimewiki.user "
+            "WHERE user_name = '%s' OR "
+            "user_real_name = '%s';" % (u, u)
+        )
     r = q.fetchone()
     if not r:
         raise UnknownUser("Could not find user.")
@@ -197,21 +210,27 @@ def set_user(u):
     _user["perm"] = []
 
     # Get permissions.
-    for r in user_permission_type.select().join(user_permission) \
-                                 .where(user_permission.user_id == _user["id"]):
+    for r in (
+        user_permission_type.select()
+        .join(user_permission)
+        .where(user_permission.user_id == _user["id"])
+    ):
         _user["perm"].append(r.name)
 
 
 def _check_user(perm):
     if not _user:
-        raise UnknownUser("You must call layout.set_user() before attempting "
-                          "to alter the DB.")
+        raise UnknownUser(
+            "You must call layout.set_user() before attempting " "to alter the DB."
+        )
     if perm not in _user["perm"]:
         try:
-            p = user_permission_type.select().where(user_permission_type.name ==
-                                                    perm).get()
-            raise NoPermission(
-                "You do not have the permissions to %s." % p.long_name)
+            p = (
+                user_permission_type.select()
+                .where(user_permission_type.name == perm)
+                .get()
+            )
+            raise NoPermission("You do not have the permissions to %s." % p.long_name)
         except pw.DoesNotExist:
             raise RuntimeError("Wow, code is broken.")
 
@@ -226,8 +245,7 @@ def _peewee_get_current_user():
     if _user is None:
         return None
 
-    return _user['id']
-
+    return _user["id"]
 
 
 # Tables in the DB pertaining to layouts
@@ -244,6 +262,7 @@ class graph_obj(base_model):
     ----------
     id
     """
+
     id = pw.AutoField()
 
 
@@ -258,6 +277,7 @@ class global_flag_category(base_model):
     notes : string
         An (optional) description of the category.
     """
+
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
 
@@ -280,12 +300,13 @@ class global_flag(event_table):
     notes : string
         Notes about the global flag.
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="global_flag")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="global_flag"
+    )
     category = pw.ForeignKeyField(global_flag_category, backref="flag")
     severity = EnumField(["comment", "warning", "severe"])
-    inst = pw.ForeignKeyField(chimedb.data_index.ArchiveInst, backref="flag",
-                              null=True)
+    inst = pw.ForeignKeyField(chimedb.data_index.ArchiveInst, backref="flag", null=True)
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
 
@@ -340,8 +361,9 @@ class global_flag(event_table):
             self.id = o
             self.save(force_insert=True)
             g = self
-        e = event.create(graph_obj=o, type=event_type.global_flag(),
-                         start=start, end=None)
+        e = event.create(
+            graph_obj=o, type=event_type.global_flag(), start=start, end=None
+        )
         logger.info("Created global flag as event %d." % e.id)
         return g
 
@@ -401,6 +423,7 @@ class component_type(name_table):
     notes : string
         An (optional) description of the component type.
     """
+
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
 
@@ -420,7 +443,8 @@ class component_type_rev(name_table):
     notes : string
         An (optional) description of the component type.
     """
-    type = pw.ForeignKeyField(component_type, backref='rev')
+
+    type = pw.ForeignKeyField(component_type, backref="rev")
     name = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
 
@@ -438,6 +462,7 @@ class external_repo(name_table):
     notes : string
         Any notes about this repository.
     """
+
     name = pw.CharField(max_length=255)
     root = pw.CharField(max_length=255)
     notes = pw.CharField(max_length=65000, null=True)
@@ -473,15 +498,16 @@ class component(event_table):
     get_property
     set_property
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="component")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="component"
+    )
     sn = pw.CharField(max_length=255, unique=True, index=True)
     type = pw.ForeignKeyField(component_type, backref="component")
-    type_rev = pw.ForeignKeyField(component_type_rev, backref="component",
-                                  null=True)
+    type_rev = pw.ForeignKeyField(component_type_rev, backref="component", null=True)
 
     class Meta(object):
-        indexes = ((("sn"), True))
+        indexes = (("sn"), True)
 
     def __hash__(self):
         # Reimplement the hash function. Peewee's default implementation, while
@@ -489,8 +515,14 @@ class component(event_table):
         # graph as it is called a huge number of times
         return id(self)
 
-    def get_connexion(self, comp=None, time=datetime.datetime.now(),
-                      when=EVENT_AT, order=ORDER_ASC, active=True):
+    def get_connexion(
+        self,
+        comp=None,
+        time=datetime.datetime.now(),
+        when=EVENT_AT,
+        order=ORDER_ASC,
+        active=True,
+    ):
         """Get connexions involving this component.
 
         Parameters
@@ -511,17 +543,17 @@ class component(event_table):
         -------
         A :obj:`peewee.SelectQuery` for :class:`connexion` entries.
         """
-        c = _graph_obj_iter(connexion, event, time, when, order, active) \
-            .where((connexion.comp1 == self) |
-                   (connexion.comp2 == self))
+        c = _graph_obj_iter(connexion, event, time, when, order, active).where(
+            (connexion.comp1 == self) | (connexion.comp2 == self)
+        )
         if comp:
-            return c.where((connexion.comp1 == comp) | (connexion.comp2 == comp)) \
-                    .get()
+            return c.where((connexion.comp1 == comp) | (connexion.comp2 == comp)).get()
         else:
             return c
 
-    def get_history(self, time=datetime.datetime.now(), when=EVENT_AT,
-                    order=ORDER_ASC, active=True):
+    def get_history(
+        self, time=datetime.datetime.now(), when=EVENT_AT, order=ORDER_ASC, active=True
+    ):
         """Get history items associated with this component.
 
         Parameters
@@ -539,9 +571,9 @@ class component(event_table):
         -------
         A :obj:`peewee.SelectQuery` for :class:`history` entries.
         """
-        return _graph_obj_iter(component_history, event, time, EVENT_AT, None,
-                               True) \
-            .where(component_history.comp == self)
+        return _graph_obj_iter(
+            component_history, event, time, EVENT_AT, None, True
+        ).where(component_history.comp == self)
 
     def get_doc(self, time=datetime.datetime.now()):
         """Get document pointers associated with this component.
@@ -555,8 +587,9 @@ class component(event_table):
         -------
         A :obj:`peewee.SelectQuery` for :class:`component_doc` entries.
         """
-        return _graph_obj_iter(component_doc, event, time, EVENT_AT, None, True) \
-            .where(component_doc.comp == self)
+        return _graph_obj_iter(component_doc, event, time, EVENT_AT, None, True).where(
+            component_doc.comp == self
+        )
 
     def add(self, time=datetime.datetime.now(), notes=None, force=True):
         """Add this component.
@@ -610,8 +643,7 @@ class component(event_table):
         """
         remove_component(self, time, notes, force)
 
-    def add_history(self, notes, time=datetime.datetime.now(),
-                    timestamp_notes=None):
+    def add_history(self, notes, time=datetime.datetime.now(), timestamp_notes=None):
         """Add a history item for this component.
 
         Parameters
@@ -632,8 +664,7 @@ class component(event_table):
         o = graph_obj.create()
         h = component_history.create(id=o, comp=self, notes=notes)
         t_stamp = timestamp.create(time=time, notes=timestamp_notes)
-        e = event.create(graph_obj=o, type=event_type.comp_history(),
-                         start=t_stamp)
+        e = event.create(graph_obj=o, type=event_type.comp_history(), start=t_stamp)
         logger.info("Added component history as event %d." % e.id)
         return h
 
@@ -661,13 +692,13 @@ class component(event_table):
         try:
             external_repo.get(id=repo.id)
         except pw.DoesNotExist:
-            raise DoesNotExist("Repository does not exist in the DB. Create it "
-                               "first.")
+            raise DoesNotExist(
+                "Repository does not exist in the DB. Create it " "first."
+            )
         o = graph_obj.create()
         d = component_doc.create(id=o, comp=self, repo=repo, ref=ref)
         t_stamp = timestamp.create(time=time, notes=notes)
-        e = event.create(graph_obj=o, type=event_type.comp_doc(),
-                         start=t_stamp)
+        e = event.create(graph_obj=o, type=event_type.comp_doc(), start=t_stamp)
         logger.info("Added component document as event %d." % e.id)
         return d
 
@@ -686,15 +717,15 @@ class component(event_table):
         property : string
             If no property is set, then :obj:`None` is returned.
         """
-        p = _graph_obj_iter(property, event, time, EVENT_AT, None, True) \
-            .where(property.comp == self)
+        p = _graph_obj_iter(property, event, time, EVENT_AT, None, True).where(
+            property.comp == self
+        )
         if type:
             return p.where(property.type == type).get()
         else:
             return p
 
-    def set_property(self, type, value, time=datetime.datetime.now(),
-                     notes=None):
+    def set_property(self, type, value, time=datetime.datetime.now(), notes=None):
         """Set a property for this component.
 
         Parameters
@@ -734,10 +765,13 @@ class component_history(event_table):
     notes : string
         The history information.
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="history")
-    comp = pw.ForeignKeyField(component, column_name="comp_sn",
-                              field="sn", backref="history")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="history"
+    )
+    comp = pw.ForeignKeyField(
+        component, column_name="comp_sn", field="sn", backref="history"
+    )
     notes = pw.CharField(max_length=65000)
 
 
@@ -755,10 +789,13 @@ class component_doc(event_table):
     ref : string
         The location of the document within the repository (e.g., a filename).
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="doc")
-    comp = pw.ForeignKeyField(component, column_name="comp_sn",
-                              field="sn", backref="doc")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="doc"
+    )
+    comp = pw.ForeignKeyField(
+        component, column_name="comp_sn", field="sn", backref="doc"
+    )
     repo = pw.ForeignKeyField(external_repo, backref="doc")
     ref = pw.CharField(max_length=65000)
 
@@ -786,15 +823,19 @@ class connexion(event_table):
     other_comp
     sever
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="connexion")
-    comp1 = pw.ForeignKeyField(component, column_name="comp_sn1",
-                               field="sn", backref="conn1")
-    comp2 = pw.ForeignKeyField(component, column_name="comp_sn2",
-                               field="sn", backref="conn2")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="connexion"
+    )
+    comp1 = pw.ForeignKeyField(
+        component, column_name="comp_sn1", field="sn", backref="conn1"
+    )
+    comp2 = pw.ForeignKeyField(
+        component, column_name="comp_sn2", field="sn", backref="conn2"
+    )
 
     class Meta(object):
-        indexes = ((("component_sn1", "component_sn2"), True))
+        indexes = (("component_sn1", "component_sn2"), True)
 
     @classmethod
     def from_pair(cls, comp1, comp2, allow_new=True):
@@ -822,10 +863,10 @@ class connexion(event_table):
                 pair.append(component.get(sn=comp))
             except pw.DoesNotExist:
                 raise DoesNotExist("Component %s does not exist." % comp)
-        q = cls.select().where(((cls.comp1 == pair[0]) &
-                                (cls.comp2 == pair[1])) |
-                               ((cls.comp1 == pair[1]) &
-                                (cls.comp2 == pair[0])))
+        q = cls.select().where(
+            ((cls.comp1 == pair[0]) & (cls.comp2 == pair[1]))
+            | ((cls.comp1 == pair[1]) & (cls.comp2 == pair[0]))
+        )
         if allow_new:
             try:
                 return q.get()
@@ -855,11 +896,11 @@ class connexion(event_table):
             Raised if one or both of the components does not exist.
         """
         try:
-            self.event(time=time,
-                       type=(event_type.connexion(),
-                             event_type.perm_connexion()),
-                       when=EVENT_AT) \
-                .get()
+            self.event(
+                time=time,
+                type=(event_type.connexion(), event_type.perm_connexion()),
+                when=EVENT_AT,
+            ).get()
             return True
         except pw.DoesNotExist:
             return False
@@ -885,10 +926,7 @@ class connexion(event_table):
             Raised if one or both of the components does not exist.
         """
         try:
-            self.event(time=time,
-                       type=event_type.perm_connexion(),
-                       when=EVENT_AT) \
-                .get()
+            self.event(time=time, type=event_type.perm_connexion(), when=EVENT_AT).get()
             return True
         except pw.DoesNotExist:
             return False
@@ -916,11 +954,13 @@ class connexion(event_table):
         elif self.comp2 == comp:
             return self.comp1
         else:
-            raise DoesNotExist("The component you passed is not part of this "
-                               "connexion.")
+            raise DoesNotExist(
+                "The component you passed is not part of this " "connexion."
+            )
 
-    def make(self, time=datetime.datetime.now(), permanent=False,
-             notes=None, force=False):
+    def make(
+        self, time=datetime.datetime.now(), permanent=False, notes=None, force=False
+    ):
         """Create a connexion.
         This method begins a connexion event at the specified time.
 
@@ -976,6 +1016,7 @@ class property_type(name_table):
     notes : string
         Any (optional) notes further explaining the property.
     """
+
     name = pw.CharField(max_length=255)
     units = pw.CharField(max_length=255, null=True)
     regex = pw.CharField(max_length=255, null=True)
@@ -996,13 +1037,12 @@ class property_component(base_model):
     comp_type : foreign key
         The component type to be mapped.
     """
-    prop_type = pw.ForeignKeyField(property_type,
-                                   backref="property_component")
-    comp_type = pw.ForeignKeyField(component_type,
-                                   backref="property_component")
+
+    prop_type = pw.ForeignKeyField(property_type, backref="property_component")
+    comp_type = pw.ForeignKeyField(component_type, backref="property_component")
 
     class Meta(object):
-        indexes = ((("prop_type", "comp_type"), True))
+        indexes = (("prop_type", "comp_type"), True)
 
 
 class property(event_table):
@@ -1019,15 +1059,18 @@ class property(event_table):
     value : string
         The actual property.
     """
-    id = pw.ForeignKeyField(graph_obj, column_name="id", primary_key=True,
-                            backref="property")
-    comp = pw.ForeignKeyField(component, column_name="comp_sn",
-                              backref="property", field="sn")
+
+    id = pw.ForeignKeyField(
+        graph_obj, column_name="id", primary_key=True, backref="property"
+    )
+    comp = pw.ForeignKeyField(
+        component, column_name="comp_sn", backref="property", field="sn"
+    )
     type = pw.ForeignKeyField(property_type, backref="property")
     value = pw.CharField(max_length=255)
 
     class Meta(object):
-        indexes = ((("comp_sn, type_id"), False))
+        indexes = (("comp_sn, type_id"), False)
 
 
 class event_type(name_table):
@@ -1054,6 +1097,7 @@ class event_type(name_table):
     notes : string
         Any notes about this event type.
     """
+
     name = pw.CharField(max_length=255)
     human_name = pw.CharField(max_length=255)
     assoc_table = pw.CharField(max_length=255, null=True)
@@ -1111,6 +1155,7 @@ class timestamp(base_model):
     notes : string
         Any (optional) notes about the timestamp.
     """
+
     # Removed problematic constructor and replaced functionality with
     # the fact that peewee supports callables as default arguments.
 
@@ -1160,17 +1205,16 @@ class event(base_model):
     -------
     deactivate
     """
+
     active = pw.BooleanField(default=True)
-    replaces = pw.ForeignKeyField(
-        "self", null=True, backref="replacement")
+    replaces = pw.ForeignKeyField("self", null=True, backref="replacement")
     graph_obj = pw.ForeignKeyField(graph_obj, backref="event")
     type = pw.ForeignKeyField(event_type, backref="event")
     start = pw.ForeignKeyField(timestamp, backref="event_start")
     end = pw.ForeignKeyField(timestamp, backref="event_end")
 
     class Meta(object):
-        indexes = ((("type_id"), False),
-                   (("start", "end"), False))
+        indexes = ((("type_id"), False), (("start", "end"), False))
 
     def _event_permission(self):
         t = self.type
@@ -1214,34 +1258,57 @@ class event(base_model):
             comp = self.graph_obj.component.get()
 
             # Check history.
-            for e in _graph_obj_iter(event, component_history, None, EVENT_ALL, None,
-                                     True).where(component_history.comp == comp):
+            for e in _graph_obj_iter(
+                event, component_history, None, EVENT_ALL, None, True
+            ).where(component_history.comp == comp):
                 fail.append(str(e.id))
-            _check_fail(fail, False, LayoutIntegrity, "Cannot deactivate because "
-                        "the following history event%s %s set for this "
-                        "component" % (_plural(fail), _are(fail)))
+            _check_fail(
+                fail,
+                False,
+                LayoutIntegrity,
+                "Cannot deactivate because "
+                "the following history event%s %s set for this "
+                "component" % (_plural(fail), _are(fail)),
+            )
 
             # Check documents.
-            for e in _graph_obj_iter(event, component_doc, None, EVENT_ALL, None,
-                                     True).where(component_doc.comp == comp):
+            for e in _graph_obj_iter(
+                event, component_doc, None, EVENT_ALL, None, True
+            ).where(component_doc.comp == comp):
                 fail.append(str(e.id))
-            _check_fail(fail, False, LayoutIntegrity, "Cannot deactivate because "
-                        "the following document event%s %s set for this "
-                        "component" % (_plural(fail), _are(fail)))
+            _check_fail(
+                fail,
+                False,
+                LayoutIntegrity,
+                "Cannot deactivate because "
+                "the following document event%s %s set for this "
+                "component" % (_plural(fail), _are(fail)),
+            )
 
             # Check properties.
-            for e in _graph_obj_iter(event, property, None, EVENT_ALL, None,
-                                     True).where(property.comp == comp):
+            for e in _graph_obj_iter(
+                event, property, None, EVENT_ALL, None, True
+            ).where(property.comp == comp):
                 fail.append(str(e.id))
-            _check_fail(fail, False, LayoutIntegrity, "Cannot deactivate because "
-                        "the following property event%s %s set for this "
-                        "component" % (_plural(fail), _are(fail)))
+            _check_fail(
+                fail,
+                False,
+                LayoutIntegrity,
+                "Cannot deactivate because "
+                "the following property event%s %s set for this "
+                "component" % (_plural(fail), _are(fail)),
+            )
 
             # Check connexions.
             for conn in comp.get_connexion(when=EVENT_ALL):
                 fail.append("%s<->%s" % (conn.comp1.sn, conn.comp2.sn))
-            _check_fail(fail, False, LayoutIntegrity, "Cannot deactivate because "
-                        "the following component%s are connected" % (_plural(fail)))
+            _check_fail(
+                fail,
+                False,
+                LayoutIntegrity,
+                "Cannot deactivate because "
+                "the following component%s are connected" % (_plural(fail)),
+            )
 
         self.active = False
         self.save()
@@ -1278,11 +1345,15 @@ class event(base_model):
         self._event_permission()
         if self.type == event_type.comp_avail():
             if end or force_end:
-                raise RuntimeError("This method does not currently support ending "
-                                   "component availability events.")
+                raise RuntimeError(
+                    "This method does not currently support ending "
+                    "component availability events."
+                )
             if start.time > self.start.time:
-                raise RuntimeError("This method does not currently support moving a "
-                                   "component availability event later.")
+                raise RuntimeError(
+                    "This method does not currently support moving a "
+                    "component availability event later."
+                )
         if start == None:
             start = self.start
         else:
@@ -1295,8 +1366,7 @@ class event(base_model):
                 end = _pw_getattr(self, "end", None)
         else:
             if end.time < start.time:
-                raise LayoutIntegrity(
-                    "End time cannot be earlier than start time.")
+                raise LayoutIntegrity("End time cannot be earlier than start time.")
             try:
                 timestamp.get(id=end.id)
             except pw.DoesNotExist:
@@ -1304,8 +1374,13 @@ class event(base_model):
         self.active = False
         self.save()
 
-        new = event.create(replaces=self, graph_obj=self.graph_obj,
-                           type=self.type, start=start, end=end)
+        new = event.create(
+            replaces=self,
+            graph_obj=self.graph_obj,
+            type=self.type,
+            start=start,
+            end=end,
+        )
         self = new
         return self
 
@@ -1322,9 +1397,11 @@ class predef_subgraph_spec(name_table):
     notes : string
         Optional notes about this specification.
     """
+
     name = pw.CharField(max_length=255)
-    start_type = pw.ForeignKeyField(component_type,
-                                    backref="predef_subgraph_spec_start")
+    start_type = pw.ForeignKeyField(
+        component_type, backref="predef_subgraph_spec_start"
+    )
     notes = pw.CharField(max_length=65000, null=True)
 
 
@@ -1345,15 +1422,14 @@ class predef_subgraph_spec_param(base_model):
         - H: hide type1 (type2 is left NULL).
         - O: only draw connexions one way between type1 and type2.
     """
-    predef_subgraph_spec = pw.ForeignKeyField(predef_subgraph_spec,
-                                              backref="param")
+
+    predef_subgraph_spec = pw.ForeignKeyField(predef_subgraph_spec, backref="param")
     type1 = pw.ForeignKeyField(component_type, backref="subgraph_param1")
-    type2 = pw.ForeignKeyField(component_type, backref="subgraph_param2",
-                               null=True)
+    type2 = pw.ForeignKeyField(component_type, backref="subgraph_param2", null=True)
     action = EnumField(["T", "H", "O"])
 
     class Meta(object):
-        indexes = ((("predef_subgraph_spec", "type", "action"), False))
+        indexes = (("predef_subgraph_spec", "type", "action"), False)
 
 
 class user_permission_type(name_table):
@@ -1367,6 +1443,7 @@ class user_permission_type(name_table):
         An (optional) description of the permission.
         peewee doesn't support foreign keys to different schemas.
     """
+
     name = pw.CharField(max_length=255)
     long_name = pw.CharField(max_length=65000)
 
@@ -1382,11 +1459,12 @@ class user_permission(base_model):
     type : foreign key
         The permission type to grant to the user.
     """
+
     user_id = pw.IntegerField()
     type = pw.ForeignKeyField(user_permission_type, backref="user")
 
     class Meta(object):
-        indexes = ((("user_id", "type"), False))
+        indexes = (("user_id", "type"), False)
 
 
 class DataFlagType(base_model):
@@ -1401,6 +1479,7 @@ class DataFlagType(base_model):
     metadata : dict
         An optional JSON object describing how this flag type is being generated.
     """
+
     name = pw.CharField(max_length=64)
     description = pw.TextField(null=True)
     metadata = JSONDictField(null=True)
@@ -1438,7 +1517,7 @@ class DataFlag(base_model):
     though it must be accessed directly.
     """
 
-    type = pw.ForeignKeyField(DataFlagType, backref='flags')
+    type = pw.ForeignKeyField(DataFlagType, backref="flags")
 
     start_time = pw.DoubleField()
     finish_time = pw.DoubleField()
@@ -1449,7 +1528,7 @@ class DataFlag(base_model):
     def instrument(self):
         """The instrument the flag applies to."""
         if self.metadata is not None:
-            return self.metadata.get('instrument', None)
+            return self.metadata.get("instrument", None)
         else:
             return None
 
@@ -1458,7 +1537,7 @@ class DataFlag(base_model):
         """The list of inputs the flag applies to. `None` if not set.
         """
         if self.metadata is not None:
-            return self.metadata.get('freq', None)
+            return self.metadata.get("freq", None)
         else:
             return None
 
@@ -1481,7 +1560,7 @@ class DataFlag(base_model):
         """The list of inputs the flag applies to. `None` if not set.
         """
         if self.metadata is not None:
-            return self.metadata.get('inputs', None)
+            return self.metadata.get("inputs", None)
         else:
             return None
 
@@ -1492,7 +1571,7 @@ class DataFlag(base_model):
         if self.instrument is None:
             return None
 
-        inp_dict = {'chime': 2048, 'pathfinder': 256}
+        inp_dict = {"chime": 2048, "pathfinder": 256}
         mask = np.ones(inp_dict[self.instrument], dtype=np.bool)
 
         if self.inputs is not None:
@@ -1502,8 +1581,16 @@ class DataFlag(base_model):
         return mask
 
     @classmethod
-    def create_flag(cls, flagtype, start_time, finish_time, freq=None,
-                    instrument='chime', inputs=None, metadata=None):
+    def create_flag(
+        cls,
+        flagtype,
+        start_time,
+        finish_time,
+        freq=None,
+        instrument="chime",
+        inputs=None,
+        metadata=None,
+    ):
         """Create a flag entry.
 
         Parameters
@@ -1532,33 +1619,37 @@ class DataFlag(base_model):
         if freq is not None:
             if not isinstance(freq, list):
                 raise ValueError("freq argument (%s) must be list.", freq)
-            table_metadata['freq'] = freq
+            table_metadata["freq"] = freq
 
         if instrument is not None:
-            table_metadata['instrument'] = instrument
+            table_metadata["instrument"] = instrument
 
         if inputs is not None:
             if not isinstance(inputs, list):
                 raise ValueError("inputs argument (%s) must be list.", inputs)
-            table_metadata['inputs'] = inputs
+            table_metadata["inputs"] = inputs
 
         if metadata is not None:
             if not isinstance(metadata, dict):
-                raise ValueError("metadata argument (%s) must be dict.",
-                                 metadata)
+                raise ValueError("metadata argument (%s) must be dict.", metadata)
             table_metadata.update(metadata)
 
         # Get the flag
         type_ = DataFlagType.get(name=flagtype)
 
-        flag = cls.create(type=type_, start_time=start_time,
-                          finish_time=finish_time, metadata=table_metadata)
+        flag = cls.create(
+            type=type_,
+            start_time=start_time,
+            finish_time=finish_time,
+            metadata=table_metadata,
+        )
 
         return flag
 
 
 # Functions for manipulating layout tables in a robust way.
 # =========================================================
+
 
 def _graph_obj_iter(sel, obj, time, when, order, active):
     ret = sel.select()
@@ -1570,21 +1661,25 @@ def _graph_obj_iter(sel, obj, time, when, order, active):
     if when == EVENT_AT:
         start = timestamp.alias()
         end = timestamp.alias()
-        ret = ret.switch(event) \
-                 .join(start, on=(start.id == event.start)) \
-                 .switch(event) \
-                 .join(end, on=(end.id == event.end),
-                       join_type=pw.JOIN.LEFT_OUTER) \
-                 .where((start.time <= time) & ((end.time >> None) |
-                                                (end.time > time)))
+        ret = (
+            ret.switch(event)
+            .join(start, on=(start.id == event.start))
+            .switch(event)
+            .join(end, on=(end.id == event.end), join_type=pw.JOIN.LEFT_OUTER)
+            .where((start.time <= time) & ((end.time >> None) | (end.time > time)))
+        )
     elif when == EVENT_BEFORE:
-        ret = ret.switch(event) \
-                 .join(timestamp, on=(timestamp.id == event.end)) \
-                 .where(timestamp.time < time)
+        ret = (
+            ret.switch(event)
+            .join(timestamp, on=(timestamp.id == event.end))
+            .where(timestamp.time < time)
+        )
     elif when == EVENT_AFTER:
-        ret = ret.switch(event) \
-                 .join(timestamp, on=(timestamp.id == event.start)) \
-                 .where(timestamp.time > time)
+        ret = (
+            ret.switch(event)
+            .join(timestamp, on=(timestamp.id == event.start))
+            .where(timestamp.time > time)
+        )
 
     if active:
         ret = ret.where(event.active == True)
@@ -1613,15 +1708,14 @@ def _check_property_type(ptype, ctype):
     except pw.DoesNotExist:
         raise DoesNotExist("Property type does not exist in the DB.")
     try:
-        property_type.select() \
-                     .where(property_type.id == ptype) \
-                     .join(property_component) \
-                     .where(property_component.comp_type == ctype) \
-                     .get() \
-                     .name
+        property_type.select().where(property_type.id == ptype).join(
+            property_component
+        ).where(property_component.comp_type == ctype).get().name
     except pw.DoesNotExist:
-        raise PropertyType("Property type \"%s\" cannot be used for component "
-                           "type \"%s\"." % (ptype.name, ctype.name))
+        raise PropertyType(
+            'Property type "%s" cannot be used for component '
+            'type "%s".' % (ptype.name, ctype.name)
+        )
 
 
 def _check_fail(fail, force, exception, msg):
@@ -1690,9 +1784,14 @@ def compare_connexion(conn1, conn2):
         return False
 
 
-def add_global_flag(name, start_time=datetime.datetime.now(),
-                    end_time=None, notes=None, start_notes=None,
-                    end_notes=None):
+def add_global_flag(
+    name,
+    start_time=datetime.datetime.now(),
+    end_time=None,
+    notes=None,
+    start_notes=None,
+    end_notes=None,
+):
     """Add a global flag.
 
     A global flag is an event that labels the configuration over a specified time
@@ -1721,8 +1820,7 @@ def add_global_flag(name, start_time=datetime.datetime.now(),
     return t
 
 
-def add_component(comp, time=datetime.datetime.now(), notes=None,
-                  force=False):
+def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
     """Make one or more components available with a common timestamp.
 
     If you are adding only one component, this function is equivalent to calling
@@ -1797,9 +1895,13 @@ def add_component(comp, time=datetime.datetime.now(), notes=None,
             # permanent connexions.
             pass
 
-    _check_fail(fail, force, AlreadyExists, "Aborting because the following "
-                "component%s %s already available at that time" %
-                (_plural(fail), _are(fail)))
+    _check_fail(
+        fail,
+        force,
+        AlreadyExists,
+        "Aborting because the following "
+        "component%s %s already available at that time" % (_plural(fail), _are(fail)),
+    )
 
     if len(to_add):
         t_stamp = timestamp.create(time=time, notes=notes)
@@ -1814,18 +1916,23 @@ def add_component(comp, time=datetime.datetime.now(), notes=None,
         try:
             # If the component is already available after this time, replace it with
             # an event starting at this new time.
-            e_old = comp.event(time, event_type.comp_avail(), EVENT_AFTER,
-                               ORDER_ASC).get()
+            e_old = comp.event(
+                time, event_type.comp_avail(), EVENT_AFTER, ORDER_ASC
+            ).get()
             e_old._replace(start=t_stamp)
-            logger.debug("Added %s by replacing previous event %d." % (comp.sn,
-                                                                       e_old.id))
+            logger.debug(
+                "Added %s by replacing previous event %d." % (comp.sn, e_old.id)
+            )
         except pw.DoesNotExist:
-            e = event.create(graph_obj=comp.id, type=event_type.comp_avail(),
-                             start=t_stamp)
+            e = event.create(
+                graph_obj=comp.id, type=event_type.comp_avail(), start=t_stamp
+            )
             logger.debug("Added %s with new event %d." % (comp.sn, e.id))
-    if (len(to_add)):
-        logger.info("Added %d new component%s: %s" %
-                    (len(to_add), _plural(to_add), ", ".join(to_add_sn)))
+    if len(to_add):
+        logger.info(
+            "Added %d new component%s: %s"
+            % (len(to_add), _plural(to_add), ", ".join(to_add_sn))
+        )
     else:
         logger.info("Added no new component.")
 
@@ -1874,8 +1981,7 @@ def _check_perm_connexion_recurse(comp, time, done=[]):
     return ev, ev_sn, fail
 
 
-def remove_component(comp, time=datetime.datetime.now(), notes=None,
-                     force=False):
+def remove_component(comp, time=datetime.datetime.now(), notes=None, force=False):
     """End availability of one or more components with a common timestamp.
 
     If you are adding only one component, this function is equivalent to calling
@@ -1919,12 +2025,10 @@ def remove_component(comp, time=datetime.datetime.now(), notes=None,
             found_conn = False
             for conn in c.get_connexion(time=time):
                 if not conn.is_permanent():
-                    fail_conn.append("%s<->%s" %
-                                     (conn.comp1.sn, conn.comp2.sn))
+                    fail_conn.append("%s<->%s" % (conn.comp1.sn, conn.comp2.sn))
                     found_conn = True
 
-            perm_ev, perm_ev_sn, perm_fail = _check_perm_connexion_recurse(
-                c, time)
+            perm_ev, perm_ev_sn, perm_fail = _check_perm_connexion_recurse(c, time)
             if len(perm_fail):
                 fail_perm_conn += perm_fail
                 found_conn = True
@@ -1940,32 +2044,53 @@ def remove_component(comp, time=datetime.datetime.now(), notes=None,
             fail_avail.append(c.sn)
             pass
 
-    _check_fail(fail_avail, force, LayoutIntegrity, "The following component%s "
-                "%s not available at that time, or you have specified an "
-                "end time earlier than %s start time%s" %
-                (_plural(fail_avail), _are(fail_avail),
-                 "its" if len(fail_avail) == 1 else "their", _plural(fail_avail)))
-    _check_fail(fail_conn, force, LayoutIntegrity, "Cannot remove because the "
-                "following component%s %s connected" % (_plural(fail_conn),
-                                                        _are(fail_conn)))
-    _check_fail(fail_perm_conn, force, LayoutIntegrity, "Cannot remove because "
-                "the following component%s %s connected (via permanent "
-                "connexions)" % (_plural(fail_perm_conn), _are(fail_perm_conn)))
+    _check_fail(
+        fail_avail,
+        force,
+        LayoutIntegrity,
+        "The following component%s "
+        "%s not available at that time, or you have specified an "
+        "end time earlier than %s start time%s"
+        % (
+            _plural(fail_avail),
+            _are(fail_avail),
+            "its" if len(fail_avail) == 1 else "their",
+            _plural(fail_avail),
+        ),
+    )
+    _check_fail(
+        fail_conn,
+        force,
+        LayoutIntegrity,
+        "Cannot remove because the "
+        "following component%s %s connected" % (_plural(fail_conn), _are(fail_conn)),
+    )
+    _check_fail(
+        fail_perm_conn,
+        force,
+        LayoutIntegrity,
+        "Cannot remove because "
+        "the following component%s %s connected (via permanent "
+        "connexions)" % (_plural(fail_perm_conn), _are(fail_perm_conn)),
+    )
 
     t_stamp = timestamp.create(time=time, notes=notes)
     for e in ev:
         e.end = t_stamp
         e.save()
         logger.debug("Removed component by ending event %d." % e.id)
-    if (len(ev)):
-        logger.info("Removed %d component%s: %s." %
-                    (len(ev), _plural(ev), ", ".join(ev_comp_sn)))
+    if len(ev):
+        logger.info(
+            "Removed %d component%s: %s."
+            % (len(ev), _plural(ev), ", ".join(ev_comp_sn))
+        )
     else:
         logger.info("Removed no component.")
 
 
-def set_property(comp, type, value, time=datetime.datetime.now(),
-                 notes=None, force=False):
+def set_property(
+    comp, type, value, time=datetime.datetime.now(), notes=None, force=False
+):
     """Set a property value for one or more components with a common timestamp.
 
     Passing :obj:`None` for the property value erases that property from the
@@ -2009,8 +2134,10 @@ def set_property(comp, type, value, time=datetime.datetime.now(),
         _check_property_type(type, comp.type)
     if type.regex and value != None:
         if not re.match(re.compile(type.regex), value):
-            raise ValueError("Value \"%s\" does not conform to regular "
-                             "expression %s." % (value, type.regex))
+            raise ValueError(
+                'Value "%s" does not conform to regular '
+                "expression %s." % (value, type.regex)
+            )
 
     fail = []
     to_end = []
@@ -2021,10 +2148,11 @@ def set_property(comp, type, value, time=datetime.datetime.now(),
         try:
             # If this property type is already set, then end it---unless the value is
             # exactly the same, in which case don't do anything.
-            p = _graph_obj_iter(property, event, time, EVENT_AT, None, True) \
-                .where((property.comp == comp) &
-                       (property.type == type)) \
+            p = (
+                _graph_obj_iter(property, event, time, EVENT_AT, None, True)
+                .where((property.comp == comp) & (property.type == type))
                 .get()
+            )
             if p.value == value:
                 fail.append(comp.sn)
             else:
@@ -2038,8 +2166,13 @@ def set_property(comp, type, value, time=datetime.datetime.now(),
             to_set.append(comp)
             to_set_sn.append(comp.sn)
 
-    _check_fail(fail, force, PropertyUnchanged, "The following component%s "
-                "property does not change" % ("'s" if len(fail) == 1 else "s'"))
+    _check_fail(
+        fail,
+        force,
+        PropertyUnchanged,
+        "The following component%s "
+        "property does not change" % ("'s" if len(fail) == 1 else "s'"),
+    )
 
     # End any events that need to be ended.
     if len(to_end):
@@ -2051,8 +2184,10 @@ def set_property(comp, type, value, time=datetime.datetime.now(),
 
     # If no value was passed, then we are done.
     if not value:
-        logger.info("Removed property %s from the following %d component%s: %s." %
-                    (type.name, len(to_end), _plural(to_end), ", ".join(to_end_sn)))
+        logger.info(
+            "Removed property %s from the following %d component%s: %s."
+            % (type.name, len(to_end), _plural(to_end), ", ".join(to_end_sn))
+        )
         return
 
     # Start the event with a common timestamp.
@@ -2061,16 +2196,18 @@ def set_property(comp, type, value, time=datetime.datetime.now(),
         for comp in to_set:
             o = graph_obj.create()
             p = property.create(id=o, comp=comp, type=type, value=value)
-            e = event.create(graph_obj=o, type=event_type.property(),
-                             start=t_stamp)
-        logger.info("Added property %s=%s to the following component%s: %s." %
-                    (type.name, value, _plural(to_set), ", ".join(to_set_sn)))
+            e = event.create(graph_obj=o, type=event_type.property(), start=t_stamp)
+        logger.info(
+            "Added property %s=%s to the following component%s: %s."
+            % (type.name, value, _plural(to_set), ", ".join(to_set_sn))
+        )
     else:
         logger.info("No component property was changed.")
 
 
-def make_connexion(conn, time=datetime.datetime.now(), permanent=False,
-                   notes=None, force=False):
+def make_connexion(
+    conn, time=datetime.datetime.now(), permanent=False, notes=None, force=False
+):
     """Connect one or more component pairs with a common timestamp.
 
     If you are connecting only one pair, this function is equivalent to calling
@@ -2117,8 +2254,12 @@ def make_connexion(conn, time=datetime.datetime.now(), permanent=False,
             to_conn.append(c)
             to_conn_sn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
     if len(fail):
-        _check_fail(fail, force, AlreadyExists, "Cannot connect because the "
-                    "following connexions already exist")
+        _check_fail(
+            fail,
+            force,
+            AlreadyExists,
+            "Cannot connect because the " "following connexions already exist",
+        )
 
     t_stamp = timestamp.create(time=time, notes=notes)
     for c in to_conn:
@@ -2127,8 +2268,7 @@ def make_connexion(conn, time=datetime.datetime.now(), permanent=False,
             # starting at this new time.
             e_old = c.event(time, EVENT_AFTER, ORDER_ASC).get()
             e_old._replace(start=t_stamp)
-            logger.debug(
-                "Added connexion by replacing previous event %d." % e_old.id)
+            logger.debug("Added connexion by replacing previous event %d." % e_old.id)
         except pw.DoesNotExist:
             try:
                 conn = connexion.from_pair(c.comp1, c.comp2, allow_new=False)
@@ -2142,15 +2282,16 @@ def make_connexion(conn, time=datetime.datetime.now(), permanent=False,
                 e_type = event_type.connexion()
             e = event.create(graph_obj=o, type=e_type, start=t_stamp)
             logger.debug("Added connexion with new event %d." % e.id)
-    if (len(to_conn)):
-        logger.info("Added %d new connexion%s: %s" %
-                    (len(to_conn), _plural(to_conn), ", ".join(to_conn_sn)))
+    if len(to_conn):
+        logger.info(
+            "Added %d new connexion%s: %s"
+            % (len(to_conn), _plural(to_conn), ", ".join(to_conn_sn))
+        )
     else:
         logger.info("Added no new connexions.")
 
 
-def sever_connexion(conn, time=datetime.datetime.now(), notes=None,
-                    force=False):
+def sever_connexion(conn, time=datetime.datetime.now(), notes=None, force=False):
     """Sever one or more component pairs with a common timestamp.
 
     If you are severing only one pair, this function is equivalent to calling
@@ -2193,29 +2334,39 @@ def sever_connexion(conn, time=datetime.datetime.now(), notes=None,
     ev_conn_sn = []
     for c in conn:
         try:
-            ev.append(c.event(time=time, type=event_type.connexion(),
-                              when=EVENT_AT).get())
+            ev.append(
+                c.event(time=time, type=event_type.connexion(), when=EVENT_AT).get()
+            )
             ev_conn_sn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
         except pw.DoesNotExist:
             try:
-                c.event(time=time, type=event_type.perm_connexion(),
-                        when=EVENT_AT).get()
+                c.event(
+                    time=time, type=event_type.perm_connexion(), when=EVENT_AT
+                ).get()
                 fail_perm.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
             except pw.DoesNotExist:
                 fail_conn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
-    _check_fail(fail_conn, force, AlreadyExists, "Cannot disconnect because "
-                "the following connexion%s %s not exist at that time" %
-                (_plural(fail_conn), _does(fail_conn)))
-    _check_fail(fail_perm, force, LayoutIntegrity, "Cannot disconnect "
-                "permanent connexions")
+    _check_fail(
+        fail_conn,
+        force,
+        AlreadyExists,
+        "Cannot disconnect because "
+        "the following connexion%s %s not exist at that time"
+        % (_plural(fail_conn), _does(fail_conn)),
+    )
+    _check_fail(
+        fail_perm, force, LayoutIntegrity, "Cannot disconnect " "permanent connexions"
+    )
 
     t_stamp = timestamp.create(time=time, notes=notes)
     for e in ev:
         e.end = t_stamp
         e.save()
         logger.debug("Severed connexion by ending event %d." % e.id)
-    if (len(ev)):
-        logger.info("Severed %d connexion%s: %s." %
-                    (len(ev), _plural(ev), ", ".join(ev_conn_sn)))
+    if len(ev):
+        logger.info(
+            "Severed %d connexion%s: %s."
+            % (len(ev), _plural(ev), ", ".join(ev_conn_sn))
+        )
     else:
         logger.info("Severed no connexion.")

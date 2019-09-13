@@ -14,10 +14,10 @@ and the constants:
 
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 import os
@@ -68,15 +68,23 @@ class HolographyObservation(base_model):
     notes : str
         Any free form notes about the observation.
     """
-    source = pw.ForeignKeyField(HolographySource, backref='observations')
+
+    source = pw.ForeignKeyField(HolographySource, backref="observations")
     start_time = pw.DoubleField()
     finish_time = pw.DoubleField()
     quality_flag = pw.IntegerField(null=True)
     notes = pw.TextField(null=True)
 
     @classmethod
-    def from_lst(cls, source, start_day, start_lst, duration_lst,
-                 quality_flag=QUALITY_GOOD, notes=None):
+    def from_lst(
+        cls,
+        source,
+        start_day,
+        start_lst,
+        duration_lst,
+        quality_flag=QUALITY_GOOD,
+        notes=None,
+    ):
         """Method to initialize a HolographyObservation from a start day,
         start LST, and a stop day, stop LST.
 
@@ -102,29 +110,29 @@ class HolographyObservation(base_model):
             from datetime import datetime, timedelta
             import re
 
-            rm = re.match('([0-9]{8})-([A-Z]{3})', datestring)
+            rm = re.match("([0-9]{8})-([A-Z]{3})", datestring)
             if rm is None:
-                msg = ("Wrong format for datestring: {0}.".format(datestring)
-                       + "\nShould be YYYYMMDD-AAA, "
-                       + "where AAA is one of [UTC,PST,PDT]")
+                msg = (
+                    "Wrong format for datestring: {0}.".format(datestring)
+                    + "\nShould be YYYYMMDD-AAA, "
+                    + "where AAA is one of [UTC,PST,PDT]"
+                )
                 raise ValueError(msg)
 
             datestring = rm.group(1)
             time_zone = rm.group(2)
 
             # Check for time zone
-            if time_zone == 'UTC':
-                date = datetime.strptime(datestring, '%Y%m%d')
+            if time_zone == "UTC":
+                date = datetime.strptime(datestring, "%Y%m%d")
 
-            elif time_zone == 'PST':
-                date = (datetime.strptime(datestring, '%Y%m%d')
-                        + timedelta(hours=8))
+            elif time_zone == "PST":
+                date = datetime.strptime(datestring, "%Y%m%d") + timedelta(hours=8)
 
-            elif time_zone == 'PDT':
-                date = (datetime.strptime(datestring, '%Y%m%d')
-                        + timedelta(hours=7))
+            elif time_zone == "PDT":
+                date = datetime.strptime(datestring, "%Y%m%d") + timedelta(hours=7)
             else:
-                msg = 'Warning: You need to assign a time zone to the dates.'
+                msg = "Warning: You need to assign a time zone to the dates."
                 print(msg)
 
             # Get a chime observer
@@ -133,16 +141,16 @@ class HolographyObservation(base_model):
             obs.date = date
 
             # Convert date to LST
-            date_in_lst = obs.sidereal_time() * 12. / np.pi
+            date_in_lst = obs.sidereal_time() * 12.0 / np.pi
 
             # If start of date is greater than LST subtract 24 hours
             if date_in_lst > lst:
-                date_in_lst = date_in_lst - 24.
+                date_in_lst = date_in_lst - 24.0
 
             # Calculte difference between LST and start of day in LST
             # and convert to unix time
             d_lst = lst - date_in_lst
-            d_unix = d_lst * (3600.) * ephemeris.SIDEREAL_S
+            d_unix = d_lst * (3600.0) * ephemeris.SIDEREAL_S
             date_unix = ephemeris.datetime_to_unix(date)
 
             # Get the start or end of observation in unix time
@@ -151,45 +159,50 @@ class HolographyObservation(base_model):
             return unix
 
         start_time = _utc_lst_to_unix(start_day, start_lst)
-        duration_unix = duration_lst * (3600.) * ephemeris.SIDEREAL_S
+        duration_unix = duration_lst * (3600.0) * ephemeris.SIDEREAL_S
 
         finish_time = start_time + duration_unix
 
-        return cls.create(source=source, start_time=start_time,
-                finish_time=finish_time, quality_flag=quality_flag, notes=notes)
+        return cls.create(
+            source=source,
+            start_time=start_time,
+            finish_time=finish_time,
+            quality_flag=quality_flag,
+            notes=notes,
+        )
 
     # Aliases of source names in the spreadsheet to ones we use in the database
     # (hard-coded at initialization, but user should be able to edit)
     source_alias = {
-        'B0329******': 'B0329+54',
-        'B0950*****': 'B0950+08',
-        'B1133+16*****': 'B1133+16',
-        'B1929+10*****': 'B1929+10',
-        'B0355+56': 'B0355+54',
-        '3C218': 'HydraA',
-        'C48': '3C48',
-        '3C_58': '3C58',
-        '3C348': 'HerA',
-        '3C144': 'TauA',
-        'PerB': '3C123',
-        'B0531+21*****': 'B0531+21',
-        'B2016+28*****': 'B2016+28',
-        'B1133*****': 'B1133+16',
-        'B1937+21*****': 'B1937+21',
-        'B2016*****': 'B2016+28',
-        'B0950+08*****': 'B0950+08',
-        'FAN': 'FanRegion1',
-        'Fan Region 1': 'FanRegion1',
-        'FAN1': 'FanRegion1',
-        'Fan Region 2': 'FanRegion2',
-        'FAN2': 'FanRegion2',
-        'B0905*****': 'B0905*****',
-        'VIRA': 'VirA',
-        '3C274': 'VirA',
-        '3C405': 'CygA',
-        '3C461': 'CasA',
-        'NCP_20H': 'NCP 20H',
-        'NCP_4H': 'NCP 4H'
+        "B0329******": "B0329+54",
+        "B0950*****": "B0950+08",
+        "B1133+16*****": "B1133+16",
+        "B1929+10*****": "B1929+10",
+        "B0355+56": "B0355+54",
+        "3C218": "HydraA",
+        "C48": "3C48",
+        "3C_58": "3C58",
+        "3C348": "HerA",
+        "3C144": "TauA",
+        "PerB": "3C123",
+        "B0531+21*****": "B0531+21",
+        "B2016+28*****": "B2016+28",
+        "B1133*****": "B1133+16",
+        "B1937+21*****": "B1937+21",
+        "B2016*****": "B2016+28",
+        "B0950+08*****": "B0950+08",
+        "FAN": "FanRegion1",
+        "Fan Region 1": "FanRegion1",
+        "FAN1": "FanRegion1",
+        "Fan Region 2": "FanRegion2",
+        "FAN2": "FanRegion2",
+        "B0905*****": "B0905*****",
+        "VIRA": "VirA",
+        "3C274": "VirA",
+        "3C405": "CygA",
+        "3C461": "CasA",
+        "NCP_20H": "NCP 20H",
+        "NCP_4H": "NCP 4H",
     }
 
     # read the .POST_REPORT file and pull out source name, time, and observation
@@ -226,47 +239,52 @@ class HolographyObservation(base_model):
         """
         from skyfield.api import load
         import re
+
         ts = load.timescale()
 
         output_params = {}
 
-        with open(post_report_file, 'r') as f:
+        with open(post_report_file, "r") as f:
             lines = [line for line in f]
             for l in lines:
-                if(l.find('Source')) != -1:
-                    srcnm = re.search('Source:\s+(.*?)\s+', l).group(1)
+                if (l.find("Source")) != -1:
+                    srcnm = re.search("Source:\s+(.*?)\s+", l).group(1)
                     if srcnm in cls.source_alias:
                         srcnm = cls.source_alias[srcnm]
-                if(l.find('DURATION')) != -1:
-                    output_params['DURATION'] = float(
-                        re.search('DURATION:\s+(.*?)\s+', l).group(1))
+                if (l.find("DURATION")) != -1:
+                    output_params["DURATION"] = float(
+                        re.search("DURATION:\s+(.*?)\s+", l).group(1)
+                    )
 
                 # convert Julian Date to Skyfield time object
-                if(l.find('JULIAN DATE')) != -1:
-                    output_params['start_time'] = ts.ut1(
-                        jd=float(re.search('JULIAN DATE:\s+(.*?)\s+', l) \
-                                .group(1)))
+                if (l.find("JULIAN DATE")) != -1:
+                    output_params["start_time"] = ts.ut1(
+                        jd=float(re.search("JULIAN DATE:\s+(.*?)\s+", l).group(1))
+                    )
 
-                if l.find('SID:') != -1:
-                    output_params['SID'] = int(
-                        re.search('SID:\s(.*?)\s+', l).group(1))
+                if l.find("SID:") != -1:
+                    output_params["SID"] = int(re.search("SID:\s(.*?)\s+", l).group(1))
             try:
-                output_params['src'] = HolographySource.get(name=srcnm)
+                output_params["src"] = HolographySource.get(name=srcnm)
             except pw.DoesNotExist:
                 print("Missing", srcnm)
-                output_params['src'] = srcnm
+                output_params["src"] = srcnm
 
-            output_params['finish_time'] = ts.utc(ephemeris.unix_to_datetime(
-                float(output_params['start_time'].utc_strftime('%s')) +
-                output_params['DURATION'] * 3600. * ephemeris.SIDEREAL_S))
+            output_params["finish_time"] = ts.utc(
+                ephemeris.unix_to_datetime(
+                    float(output_params["start_time"].utc_strftime("%s"))
+                    + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S
+                )
+            )
 
-            output_params['quality_flag'] = QUALITY_GOOD
+            output_params["quality_flag"] = QUALITY_GOOD
 
             return output_params
 
     @classmethod
-    def create_from_ant_logs(cls, logs, verbose=False, onsource_dist=0.1,
-                             notes=None, **kwargs):
+    def create_from_ant_logs(
+        cls, logs, verbose=False, onsource_dist=0.1, notes=None, **kwargs
+    ):
         """
         Read John Galt Telescope log files and create an entry in the
         holography database corresponding to the exact times on source
@@ -287,77 +305,111 @@ class HolographyObservation(base_model):
         from ch_util.ephemeris import sphdist
         from skyfield.positionlib import Angle
         from skyfield.api import load
-        ts = load.timescale()
-        DATE_FMT_STR = '%Y-%m-%d %H:%M:%S %Z'
 
-        pr_list, al_list = cls.parse_ant_logs(logs,
-                                              return_post_report_params=True)
+        ts = load.timescale()
+        DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
+
+        pr_list, al_list = cls.parse_ant_logs(logs, return_post_report_params=True)
 
         for post_report_params, ant_log, curlog in zip(pr_list, al_list, logs):
-            print(' ')
-            if isinstance(post_report_params['src'], HolographySource):
+            print(" ")
+            if isinstance(post_report_params["src"], HolographySource):
                 if verbose:
-                    print('Processing {} from {}'.format(
-                        post_report_params['src'].name, curlog))
-                dist = sphdist(Angle(degrees=post_report_params['src'].ra),
-                               Angle(degrees=post_report_params['src'].dec),
-                               ant_log['ra'], ant_log['dec'])
+                    print(
+                        "Processing {} from {}".format(
+                            post_report_params["src"].name, curlog
+                        )
+                    )
+                dist = sphdist(
+                    Angle(degrees=post_report_params["src"].ra),
+                    Angle(degrees=post_report_params["src"].dec),
+                    ant_log["ra"],
+                    ant_log["dec"],
+                )
                 if verbose:
-                    print('onsource_dist = {:.2f} deg'.format(onsource_dist))
+                    print("onsource_dist = {:.2f} deg".format(onsource_dist))
                 onsource = np.where(dist.degrees < onsource_dist)[0]
 
                 if len(onsource) > 0:
-                    stdoffset = np.std(dist.degrees[onsource[0]:onsource[-1]])
-                    meanoffset = np.mean(dist.degrees[onsource[0]:onsource[-1]])
-                    obs = {'src': post_report_params['src'],
-                           'start_time': ant_log['t'][onsource[0]],
-                           'finish_time': ant_log['t'][onsource[-1]],
-                           'quality_flag': QUALITY_GOOD}
-                    noteout = 'Added by create_from_ant_logs ' + \
-                        ts.now().utc_strftime(DATE_FMT_STR)
+                    stdoffset = np.std(dist.degrees[onsource[0] : onsource[-1]])
+                    meanoffset = np.mean(dist.degrees[onsource[0] : onsource[-1]])
+                    obs = {
+                        "src": post_report_params["src"],
+                        "start_time": ant_log["t"][onsource[0]],
+                        "finish_time": ant_log["t"][onsource[-1]],
+                        "quality_flag": QUALITY_GOOD,
+                    }
+                    noteout = "Added by create_from_ant_logs " + ts.now().utc_strftime(
+                        DATE_FMT_STR
+                    )
                     if notes is not None:
-                        noteout = notes + ' ' + noteout
+                        noteout = notes + " " + noteout
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
-                        obs['quality_flag'] += QUALITY_OFFSOURCE
-                        print('Mean offset: {:.4f}. Std offset: {:.4f}. '
-                                + 'Setting quality flag to {}.'.format(
-                                    meanoffset, stdoffset, QUALITY_OFFSOURCE))
-                        noteout = 'Questionable on source. '
-                        + 'Mean, STD(offset) : {:.3f}, {:.3f}. {}'.format(
-                                meanoffset, stdoffset, noteout)
+                        obs["quality_flag"] += QUALITY_OFFSOURCE
+                        print(
+                            "Mean offset: {:.4f}. Std offset: {:.4f}. "
+                            + "Setting quality flag to {}.".format(
+                                meanoffset, stdoffset, QUALITY_OFFSOURCE
+                            )
+                        )
+                        noteout = "Questionable on source. "
+                        +"Mean, STD(offset) : {:.3f}, {:.3f}. {}".format(
+                            meanoffset, stdoffset, noteout
+                        )
                     if verbose:
-                        print('Times in .ANT log    : {} {}'.format(
-                            ant_log['t'][onsource[0]].utc_strftime(
-                                DATE_FMT_STR),
-                            ant_log['t'][onsource[-1]].utc_strftime(
-                                DATE_FMT_STR)))
-                        print('Times in .POST_REPORT: {} {}'.format(
-                            post_report_params['start_time'].utc_strftime(
-                                DATE_FMT_STR),
-                            post_report_params['finish_time'] \
-                                    .utc_strftime(DATE_FMT_STR)))
-                        print('Mean offset: {:.4f}. Std offset: {:.4f}.' \
-                                .format(meanoffset, stdoffset))
+                        print(
+                            "Times in .ANT log    : {} {}".format(
+                                ant_log["t"][onsource[0]].utc_strftime(DATE_FMT_STR),
+                                ant_log["t"][onsource[-1]].utc_strftime(DATE_FMT_STR),
+                            )
+                        )
+                        print(
+                            "Times in .POST_REPORT: {} {}".format(
+                                post_report_params["start_time"].utc_strftime(
+                                    DATE_FMT_STR
+                                ),
+                                post_report_params["finish_time"].utc_strftime(
+                                    DATE_FMT_STR
+                                ),
+                            )
+                        )
+                        print(
+                            "Mean offset: {:.4f}. Std offset: {:.4f}.".format(
+                                meanoffset, stdoffset
+                            )
+                        )
 
-                    cls.create_from_dict(obs, verbose=verbose, notes=noteout,
-                            **kwargs)
+                    cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
                 else:
-                    print('No on source time found for {}\n{} {}\n'
-                            + 'Min distance from source {:.1f} degrees' \
-                            .format(
-                                curlog,
-                                post_report_params['src'].name,
-                                post_report_params['start_time'].utc_strftime(
-                                    '%Y-%m-%d %H:%M'),
-                                np.min(dist.degrees)))
+                    print(
+                        "No on source time found for {}\n{} {}\n"
+                        + "Min distance from source {:.1f} degrees".format(
+                            curlog,
+                            post_report_params["src"].name,
+                            post_report_params["start_time"].utc_strftime(
+                                "%Y-%m-%d %H:%M"
+                            ),
+                            np.min(dist.degrees),
+                        )
+                    )
             else:
-                print('{} is not a HolographySource; need to add to database?' \
-                        .format(post_report_params['src']))
-                print('Doing nothing')
+                print(
+                    "{} is not a HolographySource; need to add to database?".format(
+                        post_report_params["src"]
+                    )
+                )
+                print("Doing nothing")
 
     @classmethod
-    def create_from_dict(cls, dict, notes=None, start_tol=60., dryrun=True,
-                         replace_dup=False, verbose=False):
+    def create_from_dict(
+        cls,
+        dict,
+        notes=None,
+        start_tol=60.0,
+        dryrun=True,
+        replace_dup=False,
+        verbose=False,
+    ):
         """Create a holography database entry from a dictionary containing:
             src: a HolographySource object for the source
             start_time: start time as a Skyfield Time object
@@ -366,8 +418,9 @@ class HolographyObservation(base_model):
         only if replace_dup = True
         """
         from skyfield.api import load
+
         ts = load.timescale()
-        DATE_FMT_STR = '%Y-%m-%d %H:%M:%S %Z'
+        DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
 
         def check_for_duplicates(t, src, start_tol, ignore_src_mismatch=False):
             """
@@ -397,18 +450,18 @@ class HolographyObservation(base_model):
 
             # precise only to one second; should be good enough for searching
             # database
-            unixt = float(t.utc_strftime('%s'))
+            unixt = float(t.utc_strftime("%s"))
 
             dup_found = False
 
             existing_db_entry = cls.select().where(
-                cls.start_time.between(unixt-start_tol, unixt+start_tol))
+                cls.start_time.between(unixt - start_tol, unixt + start_tol)
+            )
             if len(existing_db_entry) > 0:
                 if len(existing_db_entry) > 1:
                     print("Multiple entries found.")
                 for entry in existing_db_entry:
-                    tt = ts.utc(
-                        ephemeris.unix_to_datetime(entry.start_time))
+                    tt = ts.utc(ephemeris.unix_to_datetime(entry.start_time))
                     # LST = GST + east longitude
                     ttlst = np.mod(tt.gmst + DRAO_lon, 24.0)
 
@@ -417,45 +470,49 @@ class HolographyObservation(base_model):
                     if src.name.upper() == entry.source.name.upper():
                         dup_found = True
                         if verbose:
-                            print('Observation is already in database.')
+                            print("Observation is already in database.")
                     else:
                         if ignore_src_mismatch:
                             dup_found = True
-                        print('** Observation at same time but with different '
-                                + 'sources in database: ',
-                                src.name,
-                                entry.source.name,
-                                tt.utc_datetime().isoformat())
+                        print(
+                            "** Observation at same time but with different "
+                            + "sources in database: ",
+                            src.name,
+                            entry.source.name,
+                            tt.utc_datetime().isoformat(),
+                        )
                         # if the observations match in start time and source,
                         # call them the same observation. Not the most strict
                         # check possible.
 
                     if dup_found:
-                        tf = ts.utc(
-                            ephemeris.unix_to_datetime(entry.finish_time))
-                        print('Tried to add  :  {} {}; LST={:.3f}' \
-                                .format(src.name,
-                                    t.utc_datetime().strftime(DATE_FMT_STR),
-                                    ttlst))
-                        print('Existing entry:  {} {}; LST={:.3f}' \
-                                .format(entry.source.name,
-                                    tt.utc_datetime().strftime(DATE_FMT_STR),
-                                    ttlst))
+                        tf = ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
+                        print(
+                            "Tried to add  :  {} {}; LST={:.3f}".format(
+                                src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
+                            )
+                        )
+                        print(
+                            "Existing entry:  {} {}; LST={:.3f}".format(
+                                entry.source.name,
+                                tt.utc_datetime().strftime(DATE_FMT_STR),
+                                ttlst,
+                            )
+                        )
             if dup_found:
                 return existing_db_entry
             else:
                 return None
 
         # DRAO longitude in hours
-        DRAO_lon = ephemeris._get_chime().longitude * 24.0/360.0
+        DRAO_lon = ephemeris._get_chime().longitude * 24.0 / 360.0
 
         if verbose:
             print(" ")
         addtodb = True
         missing = False
 
-        dup_entries = check_for_duplicates(
-            dict['start_time'], dict['src'], start_tol)
+        dup_entries = check_for_duplicates(dict["start_time"], dict["src"], start_tol)
 
         if dup_entries is not None:
             if replace_dup:
@@ -463,37 +520,45 @@ class HolographyObservation(base_model):
                     for entry in dup_entries:
                         cls.delete_instance(entry)
                         if verbose:
-                            print('Deleted observation from database and '
-                                    + 'replacing.')
+                            print(
+                                "Deleted observation from database and " + "replacing."
+                            )
                 elif verbose:
-                    print('Would have deleted observation and replaced '
-                            + '(dry run).')
+                    print("Would have deleted observation and replaced " + "(dry run).")
                 addtodb = True
             else:
                 addtodb = False
                 for entry in dup_entries:
-                    print("Not replacing duplicate {} observation {}".format(
-                        entry.source.name,
-                        ephemeris.unix_to_datetime(entry.start_time) \
-                                .strftime(DATE_FMT_STR)))
+                    print(
+                        "Not replacing duplicate {} observation {}".format(
+                            entry.source.name,
+                            ephemeris.unix_to_datetime(entry.start_time).strftime(
+                                DATE_FMT_STR
+                            ),
+                        )
+                    )
 
         # we've appended this observation to obslist.
         # Now add to the database, if we're supposed to.
         if addtodb:
-            string = 'Adding to database: {} {} to {}'
-            print(string.format(dict['src'].name,
-                                dict['start_time'].utc_datetime().strftime(
-                DATE_FMT_STR),
-                dict['finish_time'].utc_datetime().strftime(DATE_FMT_STR)))
+            string = "Adding to database: {} {} to {}"
+            print(
+                string.format(
+                    dict["src"].name,
+                    dict["start_time"].utc_datetime().strftime(DATE_FMT_STR),
+                    dict["finish_time"].utc_datetime().strftime(DATE_FMT_STR),
+                )
+            )
             if dryrun:
-                print('Dry run; doing nothing')
+                print("Dry run; doing nothing")
             else:
-                cls.create(source=dict['src'],
-                           start_time=float(
-                               dict['start_time'].utc_strftime('%s')),
-                           finish_time=float(
-                               dict['finish_time'].utc_strftime('%s')),
-                           quality_flag=dict['quality_flag'], notes=notes)
+                cls.create(
+                    source=dict["src"],
+                    start_time=float(dict["start_time"].utc_strftime("%s")),
+                    finish_time=float(dict["finish_time"].utc_strftime("%s")),
+                    quality_flag=dict["quality_flag"],
+                    notes=notes,
+                )
 
     @classmethod
     def parse_ant_logs(cls, logs, return_post_report_params=False):
@@ -541,7 +606,7 @@ class HolographyObservation(base_model):
         from skyfield.positionlib import Angle
         from caput import time as ctime
 
-        DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0/360.0
+        DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0 / 360.0
 
         def sidlst_to_csd(sid, lst, sid_ref, t_ref):
             """
@@ -564,8 +629,9 @@ class HolographyObservation(base_model):
             output : float
                 CHIME sidereal day
             """
-            csd_ref = int(ephemeris.csd(
-                ephemeris.datetime_to_unix(t_ref.utc_datetime())))
+            csd_ref = int(
+                ephemeris.csd(ephemeris.datetime_to_unix(t_ref.utc_datetime()))
+            )
             csd = sid - sid_ref + csd_ref
             return csd + lst / ephemeris.SIDEREAL_S / 24.0
 
@@ -575,35 +641,37 @@ class HolographyObservation(base_model):
         for log in logs:
             doobs = True
 
-            filename = log.split('/')[-1]
-            basedir = '/tmp/'
-            basename, extension = filename.split('.')
-            post_report_file = basename + '.POST_REPORT'
-            ant_file = basename + '.ANT'
+            filename = log.split("/")[-1]
+            basedir = "/tmp/"
+            basename, extension = filename.split(".")
+            post_report_file = basename + ".POST_REPORT"
+            ant_file = basename + ".ANT"
 
-            if extension == 'zip':
+            if extension == "zip":
                 try:
-                    zipfile.ZipFile(log).extract(
-                        post_report_file, path=basedir)
+                    zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except:
-                    print('failed to find {}. Moving right along...'.format(
-                        post_report_file))
+                    print(
+                        "failed to find {}. Moving right along...".format(
+                            post_report_file
+                        )
+                    )
                     doobs = False
                 try:
                     zipfile.ZipFile(log).extract(ant_file, path=basedir)
                 except:
-                    print('failed to find {}. Moving right along...'.format(
-                        ant_file))
+                    print("failed to find {}. Moving right along...".format(ant_file))
                     doobs = False
 
             if doobs:
                 try:
                     post_report_params = cls.parse_post_report(
-                        basedir + post_report_file)
+                        basedir + post_report_file
+                    )
 
-                    with open(os.path.join(basedir, ant_file), 'r') as f:
+                    with open(os.path.join(basedir, ant_file), "r") as f:
                         lines = [line for line in f]
-                        ant_data = {'sid': np.array([])}
+                        ant_data = {"sid": np.array([])}
                         lsth = []
                         lstm = []
                         lsts = []
@@ -620,86 +688,105 @@ class HolographyObservation(base_model):
                             arr = l.split()
 
                             try:
-                                lst_hms = [float(x) for x in arr[2].split(':')]
+                                lst_hms = [float(x) for x in arr[2].split(":")]
 
                                 # do last element first: if this is going to
                                 # crash because a line in the log is incomplete,
                                 # we don't want it to append to any of the lists
 
-                                decs.append(float(arr[8].replace('\"', '')))
-                                decm.append(float(arr[7].replace('\'', '')))
-                                decd.append(float(arr[6].replace('D', '')))
+                                decs.append(float(arr[8].replace('"', "")))
+                                decm.append(float(arr[7].replace("'", "")))
+                                decd.append(float(arr[6].replace("D", "")))
 
-                                has.append(float(arr[5].replace('S', '')))
-                                ham.append(float(arr[4].replace('M', '')))
-                                hah.append(float(arr[3].replace('H', '')))
+                                has.append(float(arr[5].replace("S", "")))
+                                ham.append(float(arr[4].replace("M", "")))
+                                hah.append(float(arr[3].replace("H", "")))
 
                                 lsts.append(float(lst_hms[2]))
                                 lstm.append(float(lst_hms[1]))
                                 lsth.append(float(lst_hms[0]))
 
-                                ant_data['sid'] = np.append(ant_data['sid'],
-                                                            int(arr[1]))
+                                ant_data["sid"] = np.append(
+                                    ant_data["sid"], int(arr[1])
+                                )
                             except:
-                                print('Failed in file {} for line \n{}'.format(
-                                    ant_file, l))
-                                if len(ant_data['sid']) != len(decs):
-                                    print('WARNING: mismatch in list lengths.')
+                                print(
+                                    "Failed in file {} for line \n{}".format(
+                                        ant_file, l
+                                    )
+                                )
+                                if len(ant_data["sid"]) != len(decs):
+                                    print("WARNING: mismatch in list lengths.")
 
-                        ant_data['lst'] = Angle(hours=(lsth, lstm, lsts))
+                        ant_data["lst"] = Angle(hours=(lsth, lstm, lsts))
 
                         ha = Angle(hours=(hah, ham, has))
                         dec = Angle(degrees=(decd, decm, decs))
 
-                        ant_data['ha'] = Angle(radians = ha.radians \
-                                - ephemeris.galt_pointing_model_ha(ha,dec) \
-                                .radians, preference = 'hours')
+                        ant_data["ha"] = Angle(
+                            radians=ha.radians
+                            - ephemeris.galt_pointing_model_ha(ha, dec).radians,
+                            preference="hours",
+                        )
 
-                        ant_data['dec_cirs'] = Angle(radians = dec.radians \
-                                - ephemeris.galt_pointing_model_dec(ha,dec) \
-                                .radians, preference = 'degrees')
+                        ant_data["dec_cirs"] = Angle(
+                            radians=dec.radians
+                            - ephemeris.galt_pointing_model_dec(ha, dec).radians,
+                            preference="degrees",
+                        )
 
-                        ant_data['csd'] = sidlst_to_csd(
-                                np.array(ant_data['sid']),
-                                ant_data['lst'].hours,
-                                post_report_params['SID'],
-                                post_report_params['start_time'])
+                        ant_data["csd"] = sidlst_to_csd(
+                            np.array(ant_data["sid"]),
+                            ant_data["lst"].hours,
+                            post_report_params["SID"],
+                            post_report_params["start_time"],
+                        )
 
-                    ant_data['t'] = ephemeris.unix_to_skyfield_time(
-                        ephemeris.csd_to_unix(ant_data['csd']))
+                    ant_data["t"] = ephemeris.unix_to_skyfield_time(
+                        ephemeris.csd_to_unix(ant_data["csd"])
+                    )
 
                     # Correct RA from equinox to CIRS coords (both in radians)
                     era = np.radians(
-                            ctime.unix_to_era(
-                                ephemeris.ensure_unix(ant_data['t'])))
-                    gast = ant_data['t'].gast * 2 * np.pi / 24.0
+                        ctime.unix_to_era(ephemeris.ensure_unix(ant_data["t"]))
+                    )
+                    gast = ant_data["t"].gast * 2 * np.pi / 24.0
 
-                    ant_data['ra_cirs'] = Angle(
-                            radians=ant_data['lst'].radians \
-                                    - ant_data['ha'].radians \
-                                    + (era - gast),
-                                    preference = 'hours')
+                    ant_data["ra_cirs"] = Angle(
+                        radians=ant_data["lst"].radians
+                        - ant_data["ha"].radians
+                        + (era - gast),
+                        preference="hours",
+                    )
 
-                    obs = ephemeris.Star_cirs(ra=ant_data['ra_cirs'],
-                                              dec=ant_data['dec_cirs'],
-                                              epoch=ant_data['t'])
+                    obs = ephemeris.Star_cirs(
+                        ra=ant_data["ra_cirs"],
+                        dec=ant_data["dec_cirs"],
+                        epoch=ant_data["t"],
+                    )
 
-                    ant_data['ra'] = obs.ra
-                    ant_data['dec'] = obs.dec
-
+                    ant_data["ra"] = obs.ra
+                    ant_data["dec"] = obs.dec
 
                     ant_data_list.append(ant_data)
                     post_report_list.append(post_report_params)
                 except:
-                    print('Parsing {} failed'.format(post_report_file))
+                    print("Parsing {} failed".format(post_report_file))
 
         if return_post_report_params:
             return post_report_list, ant_data_list
         return ant_data
 
     @classmethod
-    def create_from_post_reports(cls, logs, start_tol=60.0, dryrun=True,
-                                 replace_dup=False, verbose=True, notes=None):
+    def create_from_post_reports(
+        cls,
+        logs,
+        start_tol=60.0,
+        dryrun=True,
+        replace_dup=False,
+        verbose=True,
+        notes=None,
+    ):
         """Create holography database entry from .POST_REPORT log files
         generated by the nsched controller for the Galt Telescope.
 
@@ -741,45 +828,50 @@ class HolographyObservation(base_model):
                 dryrun=False)
         """
         from skyfield.api import load
+
         ts = load.timescale()
 
         # check notes. Can be a string (in which case duplicate it), None (in
         # which case do nothing) or a list (in which case use it if same length
         # as logs, otherwise crash)
         if notes == None:
-            print('Notes is None')
+            print("Notes is None")
             notesarr = [None] * len(logs)
         elif isinstance(notes, basestring):
             notesarr = [notes] * len(logs)
         else:
             assert len(notes) == len(
-                logs), 'notes must be a string or a list the same length as logs'
+                logs
+            ), "notes must be a string or a list the same length as logs"
             notesarr = notes
 
         for log, note in zip(logs, notesarr):
             if verbose:
                 print("Working on {}".format(log))
             addtodb = True
-            filename = log.split('/')[-1]
+            filename = log.split("/")[-1]
             # basedir = '/'.join(log.split('/')[:-1]) + '/'
-            basedir = '/tmp/'
+            basedir = "/tmp/"
 
-            basename, extension = filename.split('.')
+            basename, extension = filename.split(".")
 
-            post_report_file = basename + '.POST_REPORT'
+            post_report_file = basename + ".POST_REPORT"
 
             doobs = True
-            if extension == 'zip':
+            if extension == "zip":
                 try:
-                    zipfile.ZipFile(log).extract(
-                        post_report_file, path=basedir)
+                    zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except:
-                    print('failed to find {}. Moving right along...'.format(
-                        post_report_file))
+                    print(
+                        "failed to find {}. Moving right along...".format(
+                            post_report_file
+                        )
+                    )
                     doobs = False
-            elif extension != 'POST_REPORT':
-                print('WARNING: extension should be .zip or .POST_REPORT; is ',
-                      extension)
+            elif extension != "POST_REPORT":
+                print(
+                    "WARNING: extension should be .zip or .POST_REPORT; is ", extension
+                )
 
             if doobs:
                 missing = False
@@ -787,11 +879,10 @@ class HolographyObservation(base_model):
                 # Read the post report file and pull out the HolographySource
                 # object, start time (LST), and duration (in LST hours) of the
                 # observation
-                output_params = cls.parse_post_report(
-                    basedir + post_report_file)
-                DURATION = output_params['DURATION']
-                t = output_params['start_time']
-                src = output_params['src']
+                output_params = cls.parse_post_report(basedir + post_report_file)
+                DURATION = output_params["DURATION"]
+                t = output_params["start_time"]
+                src = output_params["src"]
 
                 # if the source was found, src would be a HolographySource
                 # object otherwise (ie the source is missing), it's a string
@@ -801,6 +892,11 @@ class HolographyObservation(base_model):
                     missing_obs_list.append(obs)
                     addtodb = False
                 else:
-                    cls.create_from_dict(output_params, notes=notes,
-                            start_tol=start_tol, dryrun=dryrun,
-                            replace_dup=replace_dup, verbose=verbose)
+                    cls.create_from_dict(
+                        output_params,
+                        notes=notes,
+                        start_tol=start_tol,
+                        dryrun=dryrun,
+                        replace_dup=replace_dup,
+                        verbose=verbose,
+                    )

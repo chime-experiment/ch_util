@@ -141,10 +141,10 @@ Constants
   ORDER_DESC
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 from past.builtins import basestring
@@ -160,58 +160,53 @@ import chimedb.core
 
 _property = property  # Do this since there is a class "property" in _db_tables.
 from ._db_tables import (
-        EVENT_AT,
-        EVENT_BEFORE,
-        EVENT_AFTER,
-        EVENT_ALL,
-        ORDER_ASC,
-        ORDER_DESC,
-
-        _check_fail,
-        _plural,
-        _are,
-
-        NoSubgraph,
-        BadSubgraph,
-        DoesNotExist,
-        UnknownUser,
-        NoPermission,
-        LayoutIntegrity,
-        PropertyType,
-        PropertyUnchanged,
-        ClosestDraw,
-
-        set_user,
-
-        graph_obj,
-        global_flag_category,
-        global_flag,
-        component_type,
-        component_type_rev,
-        external_repo,
-        component,
-        component_history,
-        component_doc,
-        connexion,
-        property_type,
-        property_component,
-        property,
-        event_type,
-        timestamp,
-        event,
-        predef_subgraph_spec,
-        predef_subgraph_spec_param,
-        user_permission_type,
-        user_permission,
-
-        compare_connexion,
-        add_global_flag,
-        add_component,
-        remove_component,
-        set_property,
-        make_connexion,
-        sever_connexion,
-        )
+    EVENT_AT,
+    EVENT_BEFORE,
+    EVENT_AFTER,
+    EVENT_ALL,
+    ORDER_ASC,
+    ORDER_DESC,
+    _check_fail,
+    _plural,
+    _are,
+    NoSubgraph,
+    BadSubgraph,
+    DoesNotExist,
+    UnknownUser,
+    NoPermission,
+    LayoutIntegrity,
+    PropertyType,
+    PropertyUnchanged,
+    ClosestDraw,
+    set_user,
+    graph_obj,
+    global_flag_category,
+    global_flag,
+    component_type,
+    component_type_rev,
+    external_repo,
+    component,
+    component_history,
+    component_doc,
+    connexion,
+    property_type,
+    property_component,
+    property,
+    event_type,
+    timestamp,
+    event,
+    predef_subgraph_spec,
+    predef_subgraph_spec_param,
+    user_permission_type,
+    user_permission,
+    compare_connexion,
+    add_global_flag,
+    add_component,
+    remove_component,
+    set_property,
+    make_connexion,
+    sever_connexion,
+)
 
 # Legacy name
 from chimedb.core import NotFoundError as NotFound
@@ -226,10 +221,11 @@ os.environ["TZ"] = "UTC"
 try:  # Python 2.7+
     from logging import NullHandler
 except ImportError:
-    class NullHandler(logging.Handler):
 
+    class NullHandler(logging.Handler):
         def emit(self, record):
             pass
+
 
 # All peewee-generated logs are logged to this namespace.
 logger = logging.getLogger("layout")
@@ -238,6 +234,7 @@ logger.addHandler(NullHandler())
 
 # Layout!
 # =======
+
 
 class subgraph_spec(object):
     """Specifications for extracting a subgraph from a full graph.
@@ -410,9 +407,8 @@ class subgraph_spec(object):
         for param in predef_subgraph_spec_param.select(
             predef_subgraph_spec_param.action,
             predef_subgraph_spec_param.type1.alias("type1_id"),
-            predef_subgraph_spec_param.type2.alias("type2_id")).\
-            where(predef_subgraph_spec_param.predef_subgraph_spec ==
-                  predef):
+            predef_subgraph_spec_param.type2.alias("type2_id"),
+        ).where(predef_subgraph_spec_param.predef_subgraph_spec == predef):
             if param.action == "T":
                 t.append(param.type1_id)
             elif param.action == "O":
@@ -420,8 +416,7 @@ class subgraph_spec(object):
             elif param.action == "H":
                 h.append(param.type1_id)
             else:
-                raise RuntimeError("Unknown subgraph action type \"%s\"." %
-                                   param.action)
+                raise RuntimeError('Unknown subgraph action type "%s".' % param.action)
         return cls(s, t, o, h)
 
     @_property
@@ -449,8 +444,13 @@ class subgraph_spec(object):
 
     @oneway.setter
     def oneway(self, val):
-        self._oneway = [[_id_from_multi(component_type, oo[0]),
-                         _id_from_multi(component_type, oo[1])] for oo in val]
+        self._oneway = [
+            [
+                _id_from_multi(component_type, oo[0]),
+                _id_from_multi(component_type, oo[1]),
+            ]
+            for oo in val
+        ]
 
     @_property
     def hide(self):
@@ -571,8 +571,7 @@ class graph(nx.Graph):
         self.neighbor_of_type = self.neighbour_of_type
 
     @classmethod
-    def from_db(cls, time=datetime.datetime.now(), sg_spec=None,
-                sg_start_sn=None):
+    def from_db(cls, time=datetime.datetime.now(), sg_spec=None, sg_start_sn=None):
         """Create a new graph by reading the database.
 
         This method is designed to be efficient. It has customised SQL calls so that
@@ -610,28 +609,30 @@ class graph(nx.Graph):
         g = cls(time)
 
         # Add the connexions.
-        sql = "SELECT c1.*, c2.*, pt.id " \
-              "FROM connexion c " \
-              "JOIN component c1 ON c1.sn = c.comp_sn1 " \
-              "JOIN event e1 ON e1.graph_obj_id = c1.id " \
-              "JOIN timestamp e1t1 ON e1.start_id = e1t1.id " \
-              "LEFT JOIN timestamp e1t2 ON e1.end_id = e1t2.id " \
-              "JOIN component c2 ON c2.sn = c.comp_sn2 " \
-              "JOIN event e2 ON e2.graph_obj_id = c2.id " \
-              "JOIN timestamp e2t1 ON e2.start_id = e2t1.id " \
-              "LEFT JOIN timestamp e2t2 ON e2.end_id = e2t2.id " \
-              "JOIN event e ON e.graph_obj_id = c.id " \
-              "JOIN event_type pt ON e.type_id = pt.id " \
-              "JOIN timestamp t1 ON e.start_id = t1.id " \
-              "LEFT JOIN timestamp t2 ON e.end_id = t2.id " \
-              "WHERE e.active = 1 AND e1.type_id = 1 AND e2.type_id = 1 AND " \
-              "e1t1.time <= '%s' AND " \
-              "(e1.end_id IS NULL OR e1t2.time > '%s') AND " \
-              "e2t1.time <= '%s' AND " \
-              "(e2.end_id IS NULL OR e2t2.time > '%s') AND " \
-              "t1.time <= '%s' AND " \
-              "(e.end_id IS NULL OR t2.time > '%s');" % \
-              (time, time, time, time, time, time)
+        sql = (
+            "SELECT c1.*, c2.*, pt.id "
+            "FROM connexion c "
+            "JOIN component c1 ON c1.sn = c.comp_sn1 "
+            "JOIN event e1 ON e1.graph_obj_id = c1.id "
+            "JOIN timestamp e1t1 ON e1.start_id = e1t1.id "
+            "LEFT JOIN timestamp e1t2 ON e1.end_id = e1t2.id "
+            "JOIN component c2 ON c2.sn = c.comp_sn2 "
+            "JOIN event e2 ON e2.graph_obj_id = c2.id "
+            "JOIN timestamp e2t1 ON e2.start_id = e2t1.id "
+            "LEFT JOIN timestamp e2t2 ON e2.end_id = e2t2.id "
+            "JOIN event e ON e.graph_obj_id = c.id "
+            "JOIN event_type pt ON e.type_id = pt.id "
+            "JOIN timestamp t1 ON e.start_id = t1.id "
+            "LEFT JOIN timestamp t2 ON e.end_id = t2.id "
+            "WHERE e.active = 1 AND e1.type_id = 1 AND e2.type_id = 1 AND "
+            "e1t1.time <= '%s' AND "
+            "(e1.end_id IS NULL OR e1t2.time > '%s') AND "
+            "e2t1.time <= '%s' AND "
+            "(e2.end_id IS NULL OR e2t2.time > '%s') AND "
+            "t1.time <= '%s' AND "
+            "(e.end_id IS NULL OR t2.time > '%s');"
+            % (time, time, time, time, time, time)
+        )
         # print sql
         conn_list = chimedb.core.proxy.execute_sql(sql)
         for r in conn_list:
@@ -644,22 +645,23 @@ class graph(nx.Graph):
             g.add_edge(c1, c2, permanent=perm, hidden=False)
 
         # Add the properties.
-        sql = "SELECT p.*, c.*, pt.name " \
-              "FROM property p " \
-              "JOIN property_type pt ON p.type_id = pt.id " \
-              "JOIN component c ON p.comp_sn = c.sn " \
-              "JOIN event ce ON ce.graph_obj_id = c.id " \
-              "JOIN timestamp ct1 ON ce.start_id = ct1.id " \
-              "LEFT JOIN timestamp ct2 ON ce.end_id = ct2.id " \
-              "JOIN event e ON e.graph_obj_id = p.id " \
-              "JOIN timestamp t1 ON e.start_id = t1.id " \
-              "LEFT JOIN timestamp t2 ON e.end_id = t2.id " \
-              "WHERE e.active = 1 AND ce.type_id = 1 AND " \
-              "ct1.time <= '%s' AND " \
-              "(ce.end_id IS NULL OR ct2.time > '%s') AND " \
-              "t1.time <= '%s' AND " \
-              "(e.end_id IS NULL OR t2.time > '%s');" % \
-              (time, time, time, time)
+        sql = (
+            "SELECT p.*, c.*, pt.name "
+            "FROM property p "
+            "JOIN property_type pt ON p.type_id = pt.id "
+            "JOIN component c ON p.comp_sn = c.sn "
+            "JOIN event ce ON ce.graph_obj_id = c.id "
+            "JOIN timestamp ct1 ON ce.start_id = ct1.id "
+            "LEFT JOIN timestamp ct2 ON ce.end_id = ct2.id "
+            "JOIN event e ON e.graph_obj_id = p.id "
+            "JOIN timestamp t1 ON e.start_id = t1.id "
+            "LEFT JOIN timestamp t2 ON e.end_id = t2.id "
+            "WHERE e.active = 1 AND ce.type_id = 1 AND "
+            "ct1.time <= '%s' AND "
+            "(ce.end_id IS NULL OR ct2.time > '%s') AND "
+            "t1.time <= '%s' AND "
+            "(e.end_id IS NULL OR t2.time > '%s');" % (time, time, time, time)
+        )
         prop_list = chimedb.core.proxy.execute_sql(sql)
         for r in prop_list:
             p = property(id=r[0], comp=r[1], type=r[2], value=r[3])
@@ -781,7 +783,7 @@ class graph(nx.Graph):
             try:
                 ret = self._sn_dict[sn]
             except KeyError:
-                raise NotFound("Serial number \"%s\" is not in the graph." % (sn))
+                raise NotFound('Serial number "%s" is not in the graph.' % (sn))
         elif not type:
             ret = self.nodes()
         else:
@@ -796,8 +798,9 @@ class graph(nx.Graph):
                 if sort_sn:
                     ret.sort(key=lambda x: x.sn)
             except KeyError:
-                raise NotFound("No components of type \"%s\" are in the graph." %
-                               type_name)
+                raise NotFound(
+                    'No components of type "%s" are in the graph.' % type_name
+                )
         return ret
 
     def _subgraph_recurse(self, gr, comp1, sg, done, last_no_hide):
@@ -805,8 +808,9 @@ class graph(nx.Graph):
             c1 = last_no_hide
             hidden = True
         else:
-            c1 = gr._ensure_add(comp1.id, comp1.sn, comp1.type.id,
-                                comp1.rev.id if comp1.rev else None)
+            c1 = gr._ensure_add(
+                comp1.id, comp1.sn, comp1.type.id, comp1.rev.id if comp1.rev else None
+            )
             if not last_no_hide:
                 last_no_hide = c1
             for k, v in self.node_property(comp1).items():
@@ -823,8 +827,12 @@ class graph(nx.Graph):
                 continue
 
             if comp2.type.id not in sg.hide:
-                c2 = gr._ensure_add(comp2.id, comp2.sn, comp2.type.id,
-                                    comp2.rev.id if comp2.rev else None)
+                c2 = gr._ensure_add(
+                    comp2.id,
+                    comp2.sn,
+                    comp2.type.id,
+                    comp2.rev.id if comp2.rev else None,
+                )
                 for k, v in self.node_property(comp2).items():
                     gr.nodes[c2][k] = v
 
@@ -836,8 +844,7 @@ class graph(nx.Graph):
                             perm = False
                         else:
                             perm = self.edges[comp1, comp2]["permanent"]
-                        gr.add_edge(c1, c2, permanent=perm, hidden=hidden,
-                                    _head=c1)
+                        gr.add_edge(c1, c2, permanent=perm, hidden=hidden, _head=c1)
                         last_no_hide = c2
 
             if comp2.type.id not in sg.terminate and comp2.sn not in done:
@@ -863,11 +870,15 @@ class graph(nx.Graph):
         if sg_spec == None:
             return g
         if sg_spec.start in sg_spec.terminate:
-            raise BadSubgraph("You cannot terminate on the component type of the "
-                              "starting component of your subgraph.")
+            raise BadSubgraph(
+                "You cannot terminate on the component type of the "
+                "starting component of your subgraph."
+            )
         if sg_spec.start in sg_spec.hide:
-            raise BadSubgraph("You cannot hide the component type of the "
-                              "starting component of a subgraph.")
+            raise BadSubgraph(
+                "You cannot hide the component type of the "
+                "starting component of a subgraph."
+            )
 
         ret = []
         for start_comp in g.component(type=component_type.from_id(sg_spec.start)):
@@ -992,13 +1003,14 @@ class graph(nx.Graph):
         K7BP16-00041506
         """
         if not self._sg_spec:
-            raise NoSubgraph("This layout is not a subgraph. You can only create "
-                             "LTF representations of subgraphs generated from "
-                             "predef_subgraph_spec objects.")
+            raise NoSubgraph(
+                "This layout is not a subgraph. You can only create "
+                "LTF representations of subgraphs generated from "
+                "predef_subgraph_spec objects."
+            )
         return self._ltf_recurse(self._sg_spec_start, [], None)
 
-    def shortest_path_to_type(self, comp, type, type_exclude=None,
-                              ignore_draws=True):
+    def shortest_path_to_type(self, comp, type, type_exclude=None, ignore_draws=True):
         """Searches for the shortest path to a component of a given type.
 
         Sometimes the closest component is through a long, convoluted path that you
@@ -1097,8 +1109,7 @@ class graph(nx.Graph):
         else:
             return shortest
 
-    def closest_of_type(self, comp, type, type_exclude=None,
-                        ignore_draws=True):
+    def closest_of_type(self, comp, type, type_exclude=None, ignore_draws=True):
         """Searches for the closest connected component of a given type.
 
         Sometimes the closest component is through a long, convoluted path that you
@@ -1179,8 +1190,7 @@ class graph(nx.Graph):
         explicitly rejected such paths.
         """
 
-        path = self.shortest_path_to_type(comp, type, type_exclude,
-                                          ignore_draws)
+        path = self.shortest_path_to_type(comp, type, type_exclude, ignore_draws)
 
         try:
             closest = [p[-1] if p is not None else None for p in path]
@@ -1255,6 +1265,7 @@ class graph(nx.Graph):
 # Private Functions
 # ==================
 
+
 def _add_to_sever(sn1, sn2, sever, fail_comp):
     ok = True
     for sn in (sn1, sn2):
@@ -1280,21 +1291,23 @@ def _add_to_chain(chain, sn, prop, sever, fail_comp):
     if len(chain):
         if chain[-1] == "//":
             if len(chain) < 2:
-                raise SyntaxError("Confused about chain ending in \"%s\". Is the "
-                                  "first serial number valid?" % (chain[-1]))
+                raise SyntaxError(
+                    'Confused about chain ending in "%s". Is the '
+                    "first serial number valid?" % (chain[-1])
+                )
             try:
                 _add_to_sever(chain[-2]["comp"].sn, sn, sever, fail_comp)
             except KeyError:
                 pass
-            del(chain[-2])
-            del(chain[-1])
+            del chain[-2]
+            del chain[-1]
 
     chain.append(dict())
     try:
         chain[-1]["comp"] = component.get(sn=sn)
         for k in range(len(prop)):
             if len(prop[k].split("=")) != 2:
-                raise SyntaxError("Confused by the property command \"%s\"." % prop[k])
+                raise SyntaxError('Confused by the property command "%s".' % prop[k])
             chain[-1][prop[k].split("=")[0]] = prop[k].split("=")[1]
     except pw.DoesNotExist:
         if not sn in fail_comp:
@@ -1308,6 +1321,7 @@ def _id_from_multi(cls, o):
         return o.id
     else:
         return cls.get(name=o).id
+
 
 # Public Functions
 # ================
@@ -1381,7 +1395,7 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
     sever = []
     i = 0
     for l in ltf:
-        if len(l) and l[0] == '#':
+        if len(l) and l[0] == "#":
             continue
         severed = False
         try:
@@ -1418,7 +1432,9 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
                     if sn[j] != "." and sn[j] != "-" and sn[j] != "+":
                         if multi_sn[j + off] == "." or multi_sn[j + off] == "-":
                             match = True
-                            multi_sn = multi_sn[:j + off] + sn[j] + multi_sn[j + off + 1:]
+                            multi_sn = (
+                                multi_sn[: j + off] + sn[j] + multi_sn[j + off + 1 :]
+                            )
                             multi_prop = prop
             if not match:
                 _add_to_chain(chain[i], multi_sn, multi_prop, sever, fail_comp)
@@ -1435,9 +1451,14 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
     if multi_sn:
         _add_to_chain(chain[i], multi_sn, multi_prop, sever, fail_comp)
 
-    _check_fail(fail_comp, False, DoesNotExist, "The following component%s "
-                "%s not in the DB and must be added first" %
-                (_plural(fail_comp), _are(fail_comp)))
+    _check_fail(
+        fail_comp,
+        False,
+        DoesNotExist,
+        "The following component%s "
+        "%s not in the DB and must be added first"
+        % (_plural(fail_comp), _are(fail_comp)),
+    )
 
     conn_list = []
     prop_list = []
@@ -1446,14 +1467,17 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
             comp1 = c[i - 1]["comp"]
             comp2 = c[i]["comp"]
             if comp1.sn == comp2.sn:
-                logger.info("Skipping auto connexion: %s <=> %s." %
-                            (comp1.sn, comp2.sn))
+                logger.info(
+                    "Skipping auto connexion: %s <=> %s." % (comp1.sn, comp2.sn)
+                )
             else:
                 conn = connexion.from_pair(comp1, comp2)
                 try:
                     if conn.is_permanent(time):
-                        logger.info("Skipping permanent connexion: %s <=> %s." %
-                                    (comp1.sn, comp2.sn))
+                        logger.info(
+                            "Skipping permanent connexion: %s <=> %s."
+                            % (comp1.sn, comp2.sn)
+                        )
                     elif conn not in conn_list:
                         conn_list.append(conn)
                 except pw.DoesNotExist:
@@ -1466,7 +1490,7 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
                 try:
                     prop_list.append([comp, property_type.get(name=p), c[i][p]])
                 except pw.DoesNotExist:
-                    raise DoesNotExist("Property type \"%s\" does not exist." % p)
+                    raise DoesNotExist('Property type "%s" does not exist.' % p)
     make_connexion(conn_list, time, False, notes, force)
     sever_connexion(sever, time, notes, force)
     for p in prop_list:
@@ -1541,11 +1565,16 @@ def global_flags_between(start_time, end_time, severity=None):
 
     # Add constraint for the start time
     query = query.join(ststamp, on=event.start).where(
-                    ststamp.time < ephemeris.unix_to_datetime(end_time))
+        ststamp.time < ephemeris.unix_to_datetime(end_time)
+    )
     # Constrain the end time (being careful to deal with open events properly)
-    query = (query.switch(event)
-             .join(etstamp, on=event.end, join_type=pw.JOIN.LEFT_OUTER)
-             .where((etstamp.time > ephemeris.unix_to_datetime(start_time)) |
-             event.end.is_null()))
+    query = (
+        query.switch(event)
+        .join(etstamp, on=event.end, join_type=pw.JOIN.LEFT_OUTER)
+        .where(
+            (etstamp.time > ephemeris.unix_to_datetime(start_time))
+            | event.end.is_null()
+        )
+    )
 
     return list(query)

@@ -104,10 +104,10 @@ Time Utilities
 
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 import math
@@ -116,39 +116,51 @@ import logging
 
 # NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data
 import skyfield.api
+
 # import ephem # TODO: delete
 import numpy as np
 
 import caput.time as ctime
-from caput.time import (unix_to_datetime, datetime_to_unix,
-                        datetime_to_timestr, timestr_to_datetime,
-                        leap_seconds_between, time_of_day, Observer,
-                        unix_to_skyfield_time, skyfield_wrapper, ensure_unix)
+from caput.time import (
+    unix_to_datetime,
+    datetime_to_unix,
+    datetime_to_timestr,
+    timestr_to_datetime,
+    leap_seconds_between,
+    time_of_day,
+    Observer,
+    unix_to_skyfield_time,
+    skyfield_wrapper,
+    ensure_unix,
+)
 
 
 # Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
-CHIMELATITUDE = 49.32      # degrees
-CHIMELONGITUDE = -119.62   # degrees
+CHIMELATITUDE = 49.32  # degrees
+CHIMELONGITUDE = -119.62  # degrees
 # Mateus looked this up on Wikipedia. Should replace with 'official' number.
-CHIMEALTITUDE = 545.       # metres
+CHIMEALTITUDE = 545.0  # metres
 
 EPOCH = "J2000"
 
 # Number of seconds in a sidereal second.
-#SIDEREAL_S = 1. - 1. / 365.2422
+# SIDEREAL_S = 1. - 1. / 365.2422
 # Above only includes first term in taylor series.  Below is more accurate.
 # Copied from wikipeadia.
-#SIDEREAL_S = 0.99726958
+# SIDEREAL_S = 0.99726958
 # Even more accurate.
-SIDEREAL_S = 1. / (1. + 1. / 365.259636)
+SIDEREAL_S = 1.0 / (1.0 + 1.0 / 365.259636)
 
 
 def _ephem_body_from_ra_dec(ra, dec, bd_name):
     """Legacy. Here for backwards compatibility"""
     import ephem
-    msg = ("CHIME code is transitioning from pyephem to skyfield.\n"
-           "Use skyfield_star_from_ra_dec() instead of"
-           "_ephem_body_from_ra_dec() in the future.")
+
+    msg = (
+        "CHIME code is transitioning from pyephem to skyfield.\n"
+        "Use skyfield_star_from_ra_dec() instead of"
+        "_ephem_body_from_ra_dec() in the future."
+    )
     logging.warning(msg)
 
     body = ephem.FixedBody()
@@ -158,8 +170,9 @@ def _ephem_body_from_ra_dec(ra, dec, bd_name):
     return body
 
 
-def galt_pointing_model_ha(ha_in, dec_in,
-                           a=[-5.872, -0.5292, 5.458, -0.076, -0.707, 0.0, 0.0]):
+def galt_pointing_model_ha(
+    ha_in, dec_in, a=[-5.872, -0.5292, 5.458, -0.076, -0.707, 0.0, 0.0]
+):
     """Calculate pointing correction in hour angle for the Galt Telescope
     See description of the pointing model by Lewis Knee CHIME document library
     754 https://bao.chimenet.ca/doc/documents/754
@@ -187,17 +200,22 @@ def galt_pointing_model_ha(ha_in, dec_in,
     dec = dec_in.radians
 
     # hour angle pointing correction in arcmin
-    delta_ha_cos_dec = (a[0] + a[1]*np.sin(dec) + a[2]*np.cos(dec) +
-                        a[3]*np.sin(ha)*np.sin(dec) +
-                        a[4]*np.cos(ha)*np.sin(dec) +
-                        a[5]*np.sin(ha)*np.cos(dec) +
-                        a[6]*np.cos(ha)*np.cos(dec))
+    delta_ha_cos_dec = (
+        a[0]
+        + a[1] * np.sin(dec)
+        + a[2] * np.cos(dec)
+        + a[3] * np.sin(ha) * np.sin(dec)
+        + a[4] * np.cos(ha) * np.sin(dec)
+        + a[5] * np.sin(ha) * np.cos(dec)
+        + a[6] * np.cos(ha) * np.cos(dec)
+    )
 
-    return Angle(degrees=(delta_ha_cos_dec/np.cos(dec))/60.)
+    return Angle(degrees=(delta_ha_cos_dec / np.cos(dec)) / 60.0)
 
 
-def galt_pointing_model_dec(ha_in, dec_in,
-                            b=[1.081, 0.707, -0.076, 0.0, 0.0, 0.0, 0.0]):
+def galt_pointing_model_dec(
+    ha_in, dec_in, b=[1.081, 0.707, -0.076, 0.0, 0.0, 0.0, 0.0]
+):
     """Calculate pointing correction in declination for the Galt Telescope
     See description of the pointing model by Lewis Knee CHIME document library
     754 https://bao.chimenet.ca/doc/documents/754
@@ -225,11 +243,17 @@ def galt_pointing_model_dec(ha_in, dec_in,
     dec = dec_in.radians
 
     # declination pointing correction in arcmin
-    delta_dec = (b[0] + b[1]*np.sin(ha) + b[2]*np.cos(ha) + b[3]*np.sin(dec) +
-                 b[4]*np.cos(dec) + b[5]*np.sin(dec)*np.cos(ha) +
-                 b[6]*np.sin(dec)*np.sin(ha))
+    delta_dec = (
+        b[0]
+        + b[1] * np.sin(ha)
+        + b[2] * np.cos(ha)
+        + b[3] * np.sin(dec)
+        + b[4] * np.cos(dec)
+        + b[5] * np.sin(dec) * np.cos(ha)
+        + b[6] * np.sin(dec) * np.sin(ha)
+    )
 
-    return Angle(degrees=delta_dec/60.)
+    return Angle(degrees=delta_dec / 60.0)
 
 
 def sphdist(long1, lat1, long2, lat2):
@@ -255,22 +279,26 @@ def sphdist(long1, lat1, long2, lat2):
     """
     from skyfield.positionlib import Angle
 
-    dsinb = np.sin((lat1.radians - lat2.radians) / 2.0)**2
+    dsinb = np.sin((lat1.radians - lat2.radians) / 2.0) ** 2
 
-    dsinl = np.cos(lat1.radians)*np.cos(lat2.radians) * \
-        (np.sin((long1.radians-long2.radians)/2.0))**2
+    dsinl = (
+        np.cos(lat1.radians)
+        * np.cos(lat2.radians)
+        * (np.sin((long1.radians - long2.radians) / 2.0)) ** 2
+    )
 
     dist = np.arcsin(np.sqrt(dsinl + dsinb))
 
     return Angle(radians=2 * dist)
 
 
-def skyfield_star_from_ra_dec(ra, dec, bd_name=''):
+def skyfield_star_from_ra_dec(ra, dec, bd_name=""):
     """ra and dec in degrees"""
     body = skyfield.api.Star(
-        ra=skyfield.units.Angle(degrees=ra, preference='hours'),
+        ra=skyfield.units.Angle(degrees=ra, preference="hours"),
         dec=skyfield.units.Angle(degrees=dec),
-        names=bd_name)
+        names=bd_name,
+    )
     return body
 
 
@@ -292,7 +320,7 @@ class SkyfieldObserverWrapper(Observer):
     def date(self):
         """ """
         if self._date is None:
-            msg = 'You need to assing a date to the observer before retrieving it.'
+            msg = "You need to assing a date to the observer before retrieving it."
             raise RuntimeError(msg)
         return self._date
 
@@ -329,7 +357,7 @@ class SkyfieldObserverWrapper(Observer):
 
     def sidereal_time(self):
         """ In radians"""
-        return np.radians(self.date.gast * 15. + self.longitude) % (2. * np.pi)
+        return np.radians(self.date.gast * 15.0 + self.longitude) % (2.0 * np.pi)
 
     def lha(self, src, symmetric=False):
         """Returns the local hour angle for src.
@@ -344,7 +372,7 @@ class SkyfieldObserverWrapper(Observer):
         # Local hour angle:
         lha = (lst - ra._degrees) % 360
         if symmetric:
-            lha = lha - 360. * (lha // 180)
+            lha = lha - 360.0 * (lha // 180)
         return np.radians(lha)
 
     def next_transit(self, src):
@@ -359,7 +387,8 @@ class SkyfieldObserverWrapper(Observer):
 
         """
         from scipy.optimize import newton
-        SD = 24. * 3600. * SIDEREAL_S  # Sidereal day
+
+        SD = 24.0 * 3600.0 * SIDEREAL_S  # Sidereal day
         time = self.date
         time = ensure_unix(time)  # Ensure 'time' is utime
 
@@ -368,11 +397,11 @@ class SkyfieldObserverWrapper(Observer):
             self.date = tm + time  # Update self.date
             return np.degrees(self.lha(src, symmetric=True))
 
-        lha = src_lha(0.)
-        if lha > 0.:
-            t0 = (1. - lha / 360.) * SD
+        lha = src_lha(0.0)
+        if lha > 0.0:
+            t0 = (1.0 - lha / 360.0) * SD
         else:
-            t0 = -lha / 360. * SD
+            t0 = -lha / 360.0 * SD
 
         # Solve with Newton's method:
         transit_time = newton(src_lha, t0, tol=1e-4) + time
@@ -382,7 +411,7 @@ class SkyfieldObserverWrapper(Observer):
 
         return transit_time
 
-    def next_setting(self, src, ang_diam=0.):
+    def next_setting(self, src, ang_diam=0.0):
         """Returns the next source set time
 
         src : skyfield.starlib.Star or skyfield.vectorlib.VectorSum or skyfield.jpllib.ChebyshevPosition
@@ -395,7 +424,8 @@ class SkyfieldObserverWrapper(Observer):
 
         """
         from scipy.optimize import newton
-        SD = 24. * 3600. * SIDEREAL_S  # Sidereal day
+
+        SD = 24.0 * 3600.0 * SIDEREAL_S  # Sidereal day
         time = self.date
         time = ensure_unix(time)  # Ensure 'time' is utime
 
@@ -412,15 +442,15 @@ class SkyfieldObserverWrapper(Observer):
 
         # Aproximate sky rotation angle between transit and setting in degrees:
         ra, dec = self.radec(src)
-        trans_to_set = 180. - \
-            math.degrees(
-                np.arccos(np.tan(math.radians(CHIMELATITUDE)) * np.tan(dec.radians)))
+        trans_to_set = 180.0 - math.degrees(
+            np.arccos(np.tan(math.radians(CHIMELATITUDE)) * np.tan(dec.radians))
+        )
         # Approximate sky rotation angle past setting
-        angle_past = src_lha(0.) - trans_to_set - ang_diam * 0.5
-        if angle_past > 0.:
-            t0 = (1. - angle_past / 360.) * SD
+        angle_past = src_lha(0.0) - trans_to_set - ang_diam * 0.5
+        if angle_past > 0.0:
+            t0 = (1.0 - angle_past / 360.0) * SD
         else:
-            t0 = -angle_past / 360. * SD
+            t0 = -angle_past / 360.0 * SD
 
         # Solve with Newton's method:
         set_time = newton(src_alt, t0, tol=1e-4) + time
@@ -430,7 +460,7 @@ class SkyfieldObserverWrapper(Observer):
 
         return set_time
 
-    def next_rising(self, src, ang_diam=0.):
+    def next_rising(self, src, ang_diam=0.0):
         """Returns the next source set time
 
         src : skyfield.starlib.Star or skyfield.vectorlib.VectorSum or skyfield.jpllib.ChebyshevPosition
@@ -443,7 +473,8 @@ class SkyfieldObserverWrapper(Observer):
 
         """
         from scipy.optimize import newton
-        SD = 24. * 3600. * SIDEREAL_S  # Sidereal day
+
+        SD = 24.0 * 3600.0 * SIDEREAL_S  # Sidereal day
         time = self.date
         time = ensure_unix(time)  # Ensure 'time' is utime
 
@@ -460,15 +491,15 @@ class SkyfieldObserverWrapper(Observer):
 
         # Aproximate sky rotation angle between transit and rising in degrees:
         ra, dec = self.radec(src)
-        rise_to_trans = 180. - \
-            math.degrees(
-                np.arccos(np.tan(math.radians(CHIMELATITUDE)) * np.tan(dec.radians)))
+        rise_to_trans = 180.0 - math.degrees(
+            np.arccos(np.tan(math.radians(CHIMELATITUDE)) * np.tan(dec.radians))
+        )
         # Approximate sky rotation angle past rising
-        angle_past = src_lha(0.) + rise_to_trans + ang_diam * 0.5
-        if angle_past > 0.:
-            t0 = (1. - angle_past / 360.) * SD
+        angle_past = src_lha(0.0) + rise_to_trans + ang_diam * 0.5
+        if angle_past > 0.0:
+            t0 = (1.0 - angle_past / 360.0) * SD
         else:
-            t0 = -angle_past / 360. * SD
+            t0 = -angle_past / 360.0 * SD
 
         # Solve with Newton's method:
         rise_time = newton(src_alt, t0, tol=1e-4) + time
@@ -482,9 +513,9 @@ class SkyfieldObserverWrapper(Observer):
 def _get_chime():
     """Create a SkyfieldObserverWrapper object for CHIME.
     """
-    chime = SkyfieldObserverWrapper(lon=CHIMELONGITUDE,
-                                    lat=CHIMELATITUDE,
-                                    alt=CHIMEALTITUDE)
+    chime = SkyfieldObserverWrapper(
+        lon=CHIMELONGITUDE, lat=CHIMELATITUDE, alt=CHIMEALTITUDE
+    )
     # No support for altitude yet.
     return chime
 
@@ -523,12 +554,11 @@ def transit_times(body, start, end=None):
         pass
     else:
         ra = float(body)
-        body = skyfield_star_from_ra_dec(ra, dec=0.)
+        body = skyfield_star_from_ra_dec(ra, dec=0.0)
 
     obs = _get_chime()
     start = ensure_unix(start)
-    end = ensure_unix(end) if end is not None else start + \
-        (24. * 3600. * SIDEREAL_S)
+    end = ensure_unix(end) if end is not None else start + (24.0 * 3600.0 * SIDEREAL_S)
 
     obs.date = start
 
@@ -539,7 +569,7 @@ def transit_times(body, start, end=None):
         ttime = obs.next_transit(body)
 
         # Increment the observer time to just after the transit
-        obs.date = ttime + 1.
+        obs.date = ttime + 1.0
 
         # Check whether it is within the bounds (add to list), or outside them
         # (stop search).
@@ -569,8 +599,8 @@ def solar_transit(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    sun = planets['sun']
+    planets = skyfield_wrapper.load("de421.bsp")
+    sun = planets["sun"]
     return transit_times(sun, start_time, end_time)
 
 
@@ -592,8 +622,8 @@ def lunar_transit(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    moon = planets['moon']
+    planets = skyfield_wrapper.load("de421.bsp")
+    moon = planets["moon"]
     return transit_times(moon, start_time, end_time)
 
 
@@ -605,8 +635,10 @@ def chime_observer():
     on 15/11/2013).
     """
     obs = Observer(
-        lon=CHIMELONGITUDE, lat=CHIMELATITUDE,
-        alt=CHIMEALTITUDE, lsd_start=datetime(2013, 11, 15)
+        lon=CHIMELONGITUDE,
+        lat=CHIMELATITUDE,
+        alt=CHIMEALTITUDE,
+        lsd_start=datetime(2013, 11, 15),
     )
 
     return obs
@@ -635,8 +667,11 @@ def transit_RA(time):
     """
 
     import warnings
-    warnings.warn("transit_RA is now an alias for `ephemeris.lsa`, please "
-                  "use that directly instead.")
+
+    warnings.warn(
+        "transit_RA is now an alias for `ephemeris.lsa`, please "
+        "use that directly instead."
+    )
 
     return lsa(time)
 
@@ -658,7 +693,8 @@ def chime_local_datetime(*args):
     """
 
     from pytz import timezone
-    tz = timezone('Canada/Pacific')
+
+    tz = timezone("Canada/Pacific")
     dt_nieve = datetime(*args)
     if dt_nieve.tzinfo:
         msg = "Time zone should not be supplied."
@@ -667,7 +703,7 @@ def chime_local_datetime(*args):
     return dt_aware.replace(tzinfo=None) - dt_aware.utcoffset()
 
 
-def setting_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
+def setting_times(body, start, end=None, ang_diam=0.0, max_n=int(1e4)):
     """Find the times a body sets in a given interval.
 
     Parameters
@@ -706,8 +742,7 @@ def setting_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
 
     obs = _get_chime()
     start = ensure_unix(start)
-    end = ensure_unix(end) if end is not None else start + \
-        (24. * 3600. * SIDEREAL_S)
+    end = ensure_unix(end) if end is not None else start + (24.0 * 3600.0 * SIDEREAL_S)
 
     obs.date = start
 
@@ -719,7 +754,7 @@ def setting_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
         stime = obs.next_setting(body, ang_diam=ang_diam)
 
         # Increment the observer time to just after the setting
-        obs.date = stime + 1.
+        obs.date = stime + 1.0
 
         # Check whether it is within the bounds (add to list), or outside them
         # (stop search).
@@ -754,8 +789,8 @@ def solar_setting(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    sun = planets['sun']
+    planets = skyfield_wrapper.load("de421.bsp")
+    sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
     return setting_times(sun, start_time, end_time, ang_diam=0.6)
 
@@ -778,13 +813,13 @@ def lunar_setting(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    moon = planets['moon']
+    planets = skyfield_wrapper.load("de421.bsp")
+    moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
     return setting_times(moon, start_time, end_time, ang_diam=0.6)
 
 
-def rising_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
+def rising_times(body, start, end=None, ang_diam=0.0, max_n=int(1e4)):
     """Find the times a body rises in a given interval.
 
     Parameters
@@ -822,8 +857,7 @@ def rising_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
 
     obs = _get_chime()
     start = ensure_unix(start)
-    end = ensure_unix(end) if end is not None else start + \
-        (24. * 3600. * SIDEREAL_S)
+    end = ensure_unix(end) if end is not None else start + (24.0 * 3600.0 * SIDEREAL_S)
 
     obs.date = start
 
@@ -835,7 +869,7 @@ def rising_times(body, start, end=None, ang_diam=0., max_n=int(1E4)):
         rtime = obs.next_rising(body, ang_diam=ang_diam)
 
         # Increment the observer time to 10 minutes after the rising
-        obs.date = rtime + 10. * 60.
+        obs.date = rtime + 10.0 * 60.0
 
         # Check whether it is within the bounds (add to list), or outside them
         # (stop search).
@@ -870,8 +904,8 @@ def solar_rising(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    sun = planets['sun']
+    planets = skyfield_wrapper.load("de421.bsp")
+    sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
     return rising_times(sun, start_time, end_time, ang_diam=0.6)
 
@@ -894,16 +928,18 @@ def lunar_rising(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load('de421.bsp')
-    moon = planets['moon']
+    planets = skyfield_wrapper.load("de421.bsp")
+    moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
     return rising_times(moon, start_time, end_time, ang_diam=0.6)
 
 
 def _is_skyfield_obj(body):
-    return (isinstance(body, skyfield.starlib.Star)
-            or isinstance(body, skyfield.vectorlib.VectorSum)
-            or isinstance(body, skyfield.jpllib.ChebyshevPosition))
+    return (
+        isinstance(body, skyfield.starlib.Star)
+        or isinstance(body, skyfield.vectorlib.VectorSum)
+        or isinstance(body, skyfield.jpllib.ChebyshevPosition)
+    )
 
 
 def _ensure_skyfield_body(body):
@@ -912,9 +948,9 @@ def _ensure_skyfield_body(body):
 
     if not _is_skyfield_obj(body):
         # Try and get out RA, DEC
-        if hasattr(body, '_ra'):  # ephem.FixedBody
+        if hasattr(body, "_ra"):  # ephem.FixedBody
             ra, dec = body._ra, body._dec
-        elif hasattr(body, 'ra'):
+        elif hasattr(body, "ra"):
             ra, dec = body.ra, body.dec
         else:
             raise ValueError("Cannot convert to skyfield body.")
@@ -970,12 +1006,13 @@ def cirs_radec(body, date=None, deg=False):
     pos = _get_chime().skyfield_obs().at(epoch).observe(body)
 
     # Matrix CT transforms from CIRS to ICRF (https://rhodesmill.org/skyfield/time.html)
-    r_au, dec, ra = skyfield.functions.to_polar(np.einsum('ij...,j...->i...',
-                                                          epoch.CT,
-                                                          pos.position.au))
+    r_au, dec, ra = skyfield.functions.to_polar(
+        np.einsum("ij...,j...->i...", epoch.CT, pos.position.au)
+    )
 
-    return Star(ra=Angle(radians=ra, preference='hours'), dec=Angle(radians=dec),
-                epoch=epoch)
+    return Star(
+        ra=Angle(radians=ra, preference="hours"), dec=Angle(radians=dec), epoch=epoch
+    )
 
 
 def object_coords(body, date=None, deg=False):
@@ -1014,7 +1051,8 @@ def object_coords(body, date=None, deg=False):
             ra, dec = body.ra.radians, body.dec.radians
         else:
             raise ValueError(
-                'Body is not fixed, cannot calculate coordinates without a date.')
+                "Body is not fixed, cannot calculate coordinates without a date."
+            )
 
     else:  # Calculate CIRS position with all corrections
 
@@ -1058,8 +1096,8 @@ def peak_RA(body, date=None, deg=False):
         RA when the transiting source peaks.
     """
 
-    _PF_ROT = np.radians(1.986)           # Pathfinder rotation from north.
-    _PF_LAT = np.radians(CHIMELATITUDE)   # Latitude of pathfinder
+    _PF_ROT = np.radians(1.986)  # Pathfinder rotation from north.
+    _PF_LAT = np.radians(CHIMELATITUDE)  # Latitude of pathfinder
 
     # Extract RA and dec of object
     ra, dec = object_coords(body, date=date)
@@ -1101,15 +1139,17 @@ def get_source_dictionary(*args):
     src_dict = {}
     for catalog_name in reversed(args):
 
-        path_to_catalog = os.path.join(os.path.dirname(__file__), 'catalogs',
-                                       os.path.splitext(catalog_name)[0] + '.json')
+        path_to_catalog = os.path.join(
+            os.path.dirname(__file__),
+            "catalogs",
+            os.path.splitext(catalog_name)[0] + ".json",
+        )
 
-        with open(path_to_catalog, 'r') as handler:
+        with open(path_to_catalog, "r") as handler:
             catalog = json.load(handler)
 
         for name, info in catalog.items():
-            src_dict[name] = skyfield_star_from_ra_dec(
-                info['ra'], info['dec'], name)
+            src_dict[name] = skyfield_star_from_ra_dec(info["ra"], info["dec"], name)
 
     return src_dict
 
@@ -1117,12 +1157,13 @@ def get_source_dictionary(*args):
 # Common radio point sources
 source_dictionary = get_source_dictionary("primary_calibrators_perley2016")
 
-CasA = source_dictionary['CAS_A']
-CygA = source_dictionary['CYG_A']
-TauA = source_dictionary['TAU_A']
-VirA = source_dictionary['VIR_A']
+CasA = source_dictionary["CAS_A"]
+CygA = source_dictionary["CYG_A"]
+TauA = source_dictionary["TAU_A"]
+VirA = source_dictionary["VIR_A"]
 
 
 if __name__ == "__main__":
     import doctest
+
     doctest.testmod()

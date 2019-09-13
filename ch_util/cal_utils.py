@@ -25,10 +25,10 @@ Functions
 
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 import inspect
@@ -38,8 +38,10 @@ from scipy.interpolate import interp1d
 
 from ch_util import ephemeris
 
-def fit_point_source_transit(ra, response, response_error, flag=None,
-                                 fwhm=None, verbose=False):
+
+def fit_point_source_transit(
+    ra, response, response_error, flag=None, fwhm=None, verbose=False
+):
     """ Fits the complex point source response to a model that
         consists of a gaussian in amplitude and a line in phase.
 
@@ -112,15 +114,31 @@ def fit_point_source_transit(ra, response, response_error, flag=None,
             #  phase_intercept, phase_slope,
             #  phase_quad, phase_cube,
             #  phase_quart, phase_quint]
-            p0 = np.array([np.max(np.nan_to_num(np.abs(y_complex))), np.median(x), fwhm[ff, ii],
-                           np.median(np.nan_to_num(np.angle(y_complex, deg=True))),
-                           0.0, 0.0, 0.0, 0.0, 0.0])
+            p0 = np.array(
+                [
+                    np.max(np.nan_to_num(np.abs(y_complex))),
+                    np.median(x),
+                    fwhm[ff, ii],
+                    np.median(np.nan_to_num(np.angle(y_complex, deg=True))),
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                    0.0,
+                ]
+            )
 
             # Perform the fit.  If there is an error,
             # then we leave parameter values as NaN.
             try:
-                popt, pcov = curve_fit(func_point_source_transit, x, y,
-                                        p0=p0, sigma=y_error, absolute_sigma=True)
+                popt, pcov = curve_fit(
+                    func_point_source_transit,
+                    x,
+                    y,
+                    p0=p0,
+                    sigma=y_error,
+                    absolute_sigma=True,
+                )
             except Exception as error:
                 if verbose:
                     print("Feed %d, Freq %d: %s" % (ii, ff, error))
@@ -134,10 +152,18 @@ def fit_point_source_transit(ra, response, response_error, flag=None,
     return param, param_cov
 
 
-def func_point_source_transit(x, peak_amplitude, centroid, fwhm,
-                                 phase_intercept, phase_slope,
-                                 phase_quad, phase_cube,
-                                 phase_quart, phase_quint):
+def func_point_source_transit(
+    x,
+    peak_amplitude,
+    centroid,
+    fwhm,
+    phase_intercept,
+    phase_slope,
+    phase_quad,
+    phase_cube,
+    phase_quart,
+    phase_quint,
+):
     """ Computes parameteric model for the point source transit.
     Model consists of a gaussian in amplitude and a line in phase.
     To be used within curve fitting routine.
@@ -172,25 +198,38 @@ def func_point_source_transit(x, peak_amplitude, centroid, fwhm,
     """
 
     model = np.empty_like(x)
-    nreal = len(x)//2
+    nreal = len(x) // 2
 
     dx = x[:nreal] - centroid
-    dx = dx - (dx > 180.0)*360.0 + (dx < -180.0)*360.0
+    dx = dx - (dx > 180.0) * 360.0 + (dx < -180.0) * 360.0
 
-    model_amp = peak_amplitude*np.exp(-4.0*np.log(2.0)*(dx/fwhm)**2)
-    model_phase = np.deg2rad(phase_intercept + phase_slope * dx +
-                             phase_quad * dx**2 + phase_cube * dx**3 +
-                             phase_quart * dx**4 + phase_quint * dx**5)
-    model[:nreal] = model_amp*np.cos(model_phase)
-    model[nreal:] = model_amp*np.sin(model_phase)
+    model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dx / fwhm) ** 2)
+    model_phase = np.deg2rad(
+        phase_intercept
+        + phase_slope * dx
+        + phase_quad * dx ** 2
+        + phase_cube * dx ** 3
+        + phase_quart * dx ** 4
+        + phase_quint * dx ** 5
+    )
+    model[:nreal] = model_amp * np.cos(model_phase)
+    model[nreal:] = model_amp * np.sin(model_phase)
 
     return model
 
 
-def model_point_source_transit(x, peak_amplitude, centroid, fwhm,
-                                 phase_intercept, phase_slope,
-                                 phase_quad, phase_cube,
-                                 phase_quart, phase_quint):
+def model_point_source_transit(
+    x,
+    peak_amplitude,
+    centroid,
+    fwhm,
+    phase_intercept,
+    phase_slope,
+    phase_quad,
+    phase_cube,
+    phase_quart,
+    phase_quint,
+):
     """ Computes parameteric model for the point source transit.
     Model consists of a gaussian in amplitude and a line in phase.
 
@@ -222,20 +261,33 @@ def model_point_source_transit(x, peak_amplitude, centroid, fwhm,
     """
 
     dx = x - centroid
-    dx = dx - (dx > 180.0)*360.0 + (dx < -180.0)*360.0
+    dx = dx - (dx > 180.0) * 360.0 + (dx < -180.0) * 360.0
 
-    model_amp = peak_amplitude*np.exp(-4.0*np.log(2.0)*(dx/fwhm)**2)
-    model_phase = np.deg2rad(phase_intercept + phase_slope * dx +
-                             phase_quad * dx**2 + phase_cube * dx**3 +
-                             phase_quart * dx**4 + phase_quint * dx**5)
-    model = model_amp*np.exp(1.0j*model_phase)
+    model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dx / fwhm) ** 2)
+    model_phase = np.deg2rad(
+        phase_intercept
+        + phase_slope * dx
+        + phase_quad * dx ** 2
+        + phase_cube * dx ** 3
+        + phase_quart * dx ** 4
+        + phase_quint * dx ** 5
+    )
+    model = model_amp * np.exp(1.0j * model_phase)
 
     return model
 
 
-def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
-                                          real_map=False, freq=600.0,
-                                          ra0=None, dec0=None):
+def fit_point_source_map(
+    ra,
+    dec,
+    submap,
+    rms=None,
+    dirty_beam=None,
+    real_map=False,
+    freq=600.0,
+    ra0=None,
+    dec0=None,
+):
     """ Fits a map of a point source to a model.
 
     Parameter
@@ -272,8 +324,9 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
     el = _dec_to_el(dec)
 
     # Check if dirty beam was input
-    do_dirty = (dirty_beam is not None) and ((len(dirty_beam) == 3) or
-                                            (dirty_beam.shape == submap.shape))
+    do_dirty = (dirty_beam is not None) and (
+        (len(dirty_beam) == 3) or (dirty_beam.shape == submap.shape)
+    )
     if do_dirty:
 
         if real_map:
@@ -285,7 +338,7 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
         param_name = inspect.getargspec(model(None)).args[1:]
 
         # Define dimensions of the dirty beam
-        if (len(dirty_beam) != 3):
+        if len(dirty_beam) != 3:
             db_ra, db_dec, db = submap.ra, submap.dec, dirty_beam
         else:
             db_ra, db_dec, db = dirty_beam
@@ -323,7 +376,7 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
 
     # Create arrays to hold best-fit parameters and
     # parameter covariance.  Initialize to NaN.
-    param = np.full(dims + (nparam, ), np.nan, dtype=np.float64)
+    param = np.full(dims + (nparam,), np.nan, dtype=np.float64)
     param_cov = np.full(dims + (nparam, nparam), np.nan, dtype=np.float64)
     resid_rms = np.full(dims, np.nan, dtype=np.float64)
 
@@ -334,7 +387,9 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
         # check for data flagged as bad (rms == 0.0).
         if rms is not None:
             good_ra = rms[index] > 0.0
-            this_rms = np.tile(rms[index][good_ra, np.newaxis], [1, submap.shape[-1]]).ravel()
+            this_rms = np.tile(
+                rms[index][good_ra, np.newaxis], [1, submap.shape[-1]]
+            ).ravel()
         else:
             good_ra = np.ones(submap.shape[-2], dtype=np.bool)
             this_rms = None
@@ -354,39 +409,54 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
         offset0 = np.median(np.nan_to_num(this_submap))
         peak0 = np.max(np.nan_to_num(this_submap))
 
-        p0_dict = {'peak_amplitude' : peak0,
-                   'centroid_x' : ra0,
-                   'centroid_y' : dec0,
-                   'fwhm_x' : 2.0,
-                   'fwhm_y' : 2.0,
-                   'offset' : offset0,
-                   'fringe_rate' : 22.0 * freq * 1e6 / 3e8}
+        p0_dict = {
+            "peak_amplitude": peak0,
+            "centroid_x": ra0,
+            "centroid_y": dec0,
+            "fwhm_x": 2.0,
+            "fwhm_y": 2.0,
+            "offset": offset0,
+            "fringe_rate": 22.0 * freq * 1e6 / 3e8,
+        }
 
-        lb_dict = {'peak_amplitude' : 0.0,
-                   'centroid_x' : ra0 - 1.5,
-                   'centroid_y' : dec0 - 0.75,
-                   'fwhm_x' : 0.5,
-                   'fwhm_y' : 0.5,
-                   'offset' : offset0 - 2.0*np.abs(offset0),
-                   'fringe_rate' : -200.0}
+        lb_dict = {
+            "peak_amplitude": 0.0,
+            "centroid_x": ra0 - 1.5,
+            "centroid_y": dec0 - 0.75,
+            "fwhm_x": 0.5,
+            "fwhm_y": 0.5,
+            "offset": offset0 - 2.0 * np.abs(offset0),
+            "fringe_rate": -200.0,
+        }
 
-        ub_dict = {'peak_amplitude' : 1.5*peak0,
-                   'centroid_x' : ra0 + 1.5,
-                   'centroid_y' : dec0 + 0.75,
-                   'fwhm_x' : 6.0,
-                   'fwhm_y' : 6.0,
-                   'offset' : offset0 + 2.0*np.abs(offset0),
-                   'fringe_rate' : 200.0}
+        ub_dict = {
+            "peak_amplitude": 1.5 * peak0,
+            "centroid_x": ra0 + 1.5,
+            "centroid_y": dec0 + 0.75,
+            "fwhm_x": 6.0,
+            "fwhm_y": 6.0,
+            "offset": offset0 + 2.0 * np.abs(offset0),
+            "fringe_rate": 200.0,
+        }
 
         p0 = np.array([p0_dict[key] for key in param_name])
 
-        bounds = (np.array([lb_dict[key] for key in param_name]),
-                  np.array([ub_dict[key] for key in param_name]))
+        bounds = (
+            np.array([lb_dict[key] for key in param_name]),
+            np.array([ub_dict[key] for key in param_name]),
+        )
 
         # Define model
         if do_dirty:
-            fdirty = interp1d(db_el, db[index][good_ra, :], axis=-1, copy=False, kind='cubic',
-                                                            bounds_error=False, fill_value=0.0)
+            fdirty = interp1d(
+                db_el,
+                db[index][good_ra, :],
+                axis=-1,
+                copy=False,
+                kind="cubic",
+                bounds_error=False,
+                fill_value=0.0,
+            )
             this_model = model(fdirty)
         else:
             this_model = model
@@ -394,10 +464,19 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
         # Perform the fit.  If there is an error,
         # then we leave parameter values as NaN.
         try:
-            popt, pcov = curve_fit(this_model, this_coord, this_submap,
-                                   p0=p0, sigma=this_rms, absolute_sigma=True) #, bounds=bounds)
+            popt, pcov = curve_fit(
+                this_model,
+                this_coord,
+                this_submap,
+                p0=p0,
+                sigma=this_rms,
+                absolute_sigma=True,
+            )  # , bounds=bounds)
         except Exception as error:
-            print("index %s: %s" % ('(' + ', '.join(["%d" % ii for ii in index]) + ')', error))
+            print(
+                "index %s: %s"
+                % ("(" + ", ".join(["%d" % ii for ii in index]) + ")", error)
+            )
             continue
 
         # Save the results
@@ -406,7 +485,7 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
 
         # Calculate RMS of the residuals
         resid = this_submap - this_model(this_coord, *popt)
-        resid_rms[index] = 1.4826*np.median(np.abs(resid - np.median(resid)))
+        resid_rms[index] = 1.4826 * np.median(np.abs(resid - np.median(resid)))
 
     # If this is a single fit, then remove singleton dimension
     if ndims == 2:
@@ -421,8 +500,9 @@ def fit_point_source_map(ra, dec, submap, rms=None, dirty_beam=None,
     return param_name, param, param_cov, resid_rms
 
 
-def func_2d_gauss(coord, peak_amplitude, centroid_x, centroid_y,
-                         fwhm_x, fwhm_y, offset):
+def func_2d_gauss(
+    coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
+):
     """ Returns a parameteric model for the map of a point source,
     consisting of a 2-dimensional gaussian.
 
@@ -455,14 +535,18 @@ def func_2d_gauss(coord, peak_amplitude, centroid_x, centroid_y,
     """
     x, y = coord
 
-    model = (peak_amplitude*np.exp(-4.0*np.log(2.0)*((x[:, np.newaxis] - centroid_x)/fwhm_x)**2)*
-                            np.exp(-4.0*np.log(2.0)*((y[np.newaxis, :] - centroid_y)/fwhm_y)**2)) + offset
+    model = (
+        peak_amplitude
+        * np.exp(-4.0 * np.log(2.0) * ((x[:, np.newaxis] - centroid_x) / fwhm_x) ** 2)
+        * np.exp(-4.0 * np.log(2.0) * ((y[np.newaxis, :] - centroid_y) / fwhm_y) ** 2)
+    ) + offset
 
     return model.ravel()
 
 
-def func_2d_sinc_gauss(coord, peak_amplitude, centroid_x, centroid_y,
-                              fwhm_x, fwhm_y, offset):
+def func_2d_sinc_gauss(
+    coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
+):
     """ Returns a parameteric model for the map of a point source,
         consisting of a sinc function along the declination direction
         and gaussian along the right ascension direction.
@@ -496,8 +580,11 @@ def func_2d_sinc_gauss(coord, peak_amplitude, centroid_x, centroid_y,
     """
     x, y = coord
 
-    model = (peak_amplitude*np.exp(-4.0*np.log(2.0)*((x[:, np.newaxis] - centroid_x)/fwhm_x)**2)*
-                            np.sinc(1.2075*(y[np.newaxis, :] - centroid_y)/fwhm_y)) + offset
+    model = (
+        peak_amplitude
+        * np.exp(-4.0 * np.log(2.0) * ((x[:, np.newaxis] - centroid_x) / fwhm_x) ** 2)
+        * np.sinc(1.2075 * (y[np.newaxis, :] - centroid_y) / fwhm_y)
+    ) + offset
 
     return model.ravel()
 
@@ -556,8 +643,13 @@ def func_dirty_gauss(dirty_beam):
 
         x, y = coord
 
-        model = (peak_amplitude*np.exp(-4.0*np.log(2.0)*((x[:, np.newaxis] - centroid_x)/fwhm_x)**2)*
-                                dirty_beam(y - _dec_to_el(centroid_y))) + offset
+        model = (
+            peak_amplitude
+            * np.exp(
+                -4.0 * np.log(2.0) * ((x[:, np.newaxis] - centroid_x) / fwhm_x) ** 2
+            )
+            * dirty_beam(y - _dec_to_el(centroid_y))
+        ) + offset
 
         return model.ravel()
 
@@ -585,7 +677,9 @@ def func_real_dirty_gauss(dirty_beam):
         Model prediction for the map of the point source.
     """
 
-    def real_dirty_gauss(coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset, fringe_rate):
+    def real_dirty_gauss(
+        coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset, fringe_rate
+    ):
         """ Returns a parameteric model for the map of a point source,
         consisting of the interpolated dirty beam along the y-axis
         and a sinusoid with gaussian envelope along the x-axis.
@@ -620,19 +714,28 @@ def func_real_dirty_gauss(dirty_beam):
 
         x, y = coord
 
-        model = (peak_amplitude*np.exp(-4.0*np.log(2.0)*((x[:, np.newaxis] - centroid_x)/fwhm_x)**2)*
-                                dirty_beam(y - _dec_to_el(centroid_y))) + offset
+        model = (
+            peak_amplitude
+            * np.exp(
+                -4.0 * np.log(2.0) * ((x[:, np.newaxis] - centroid_x) / fwhm_x) ** 2
+            )
+            * dirty_beam(y - _dec_to_el(centroid_y))
+        ) + offset
 
-        phase = np.exp(2.0J * np.pi * np.cos(np.radians(centroid_y)) *
-                       np.sin(-np.radians(x - centroid_x)) *
-                       fringe_rate)
+        phase = np.exp(
+            2.0j
+            * np.pi
+            * np.cos(np.radians(centroid_y))
+            * np.sin(-np.radians(x - centroid_x))
+            * fringe_rate
+        )
 
-        return (model*phase[:, np.newaxis]).real.ravel()
+        return (model * phase[:, np.newaxis]).real.ravel()
 
     return real_dirty_gauss
 
 
-def guess_fwhm(freq, pol='X', dec=None, sigma=False):
+def guess_fwhm(freq, pol="X", dec=None, sigma=False):
     """ This function provides a rough estimate of the FWHM
     of the primary antenna beam of a CHIME feed for a
     given frequency and polarization.
@@ -664,7 +767,7 @@ def guess_fwhm(freq, pol='X', dec=None, sigma=False):
     """
 
     # Define linear coefficients based on polarization
-    if (pol == 'Y') or (pol == 'S'):
+    if (pol == "Y") or (pol == "S"):
         slope = -0.0025954
         offset = 3.0311712
     else:
@@ -672,7 +775,7 @@ def guess_fwhm(freq, pol='X', dec=None, sigma=False):
         offset = 4.3951982
 
     # Estimate standard deviation
-    sig = offset + slope*freq
+    sig = offset + slope * freq
 
     # Divide by declination to convert to degrees hour angle
     if dec is not None:
@@ -682,7 +785,7 @@ def guess_fwhm(freq, pol='X', dec=None, sigma=False):
     if sigma:
         return sig
     else:
-        return 2.35482*sig
+        return 2.35482 * sig
 
 
 def _el_to_dec(el):
@@ -690,6 +793,7 @@ def _el_to_dec(el):
     """
 
     return np.degrees(np.arcsin(el)) + ephemeris.CHIMELATITUDE
+
 
 def _dec_to_el(dec):
     """ Convert from declination in degrees to el = sin(zenith angle).

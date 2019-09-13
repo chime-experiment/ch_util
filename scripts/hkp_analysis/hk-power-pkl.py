@@ -9,10 +9,10 @@ The day is given as an argument on the comand line. Change the value of
 Author: Nolan Denman
 """
 # === Start Python 2/3 compatibility
-from __future__ import (absolute_import, division,
-                        print_function, unicode_literals)
+from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+
 # === End Python 2/3 compatibility
 
 import numpy as np
@@ -26,26 +26,62 @@ mets = ["pdu_outlet_sensor_value"]
 onlen = 1440
 
 day = int(sys.argv[1])
-prestring="201801"
+prestring = "201801"
 
-acq_file = HKPData.from_acq_h5('/mnt/gong/archive/{0}01T000000Z_chime_hkp/hkp_prom_{0}{1:02}.h5'.format(prestring,day), metrics=mets)
+acq_file = HKPData.from_acq_h5(
+    "/mnt/gong/archive/{0}01T000000Z_chime_hkp/hkp_prom_{0}{1:02}.h5".format(
+        prestring, day
+    ),
+    metrics=mets,
+)
 pdu_out_data = acq_file.select(mets[0])
 
-rack_list = ['cn0cx', 'cn1cx', 'cn2cx', 'cn3cx', 'cn4cx', 'cn5cx', 'cn6cx', 'cn8cx', 'cn9cx', 'cnAcx', 'cnBcx', 'cnCcx', 'cnDcx', 'cs0cx', 'cs1cx', 'cs2cx', 'cs3cx', 'cs4cx', 'cs5cx', 'cs6cx', 'cs8cx', 'csAcx', 'cs9cx', 'csBcx', 'csCcx', 'csDcx']
+rack_list = [
+    "cn0cx",
+    "cn1cx",
+    "cn2cx",
+    "cn3cx",
+    "cn4cx",
+    "cn5cx",
+    "cn6cx",
+    "cn8cx",
+    "cn9cx",
+    "cnAcx",
+    "cnBcx",
+    "cnCcx",
+    "cnDcx",
+    "cs0cx",
+    "cs1cx",
+    "cs2cx",
+    "cs3cx",
+    "cs4cx",
+    "cs5cx",
+    "cs6cx",
+    "cs8cx",
+    "csAcx",
+    "cs9cx",
+    "csBcx",
+    "csCcx",
+    "csDcx",
+]
 
 outv = []
 
 for rack in rack_list:
     rack = rack[:3]
-    rack_power_out = pdu_out_data.query("sensor=='active_power' and instance=='{}pd'".format(rack))
+    rack_power_out = pdu_out_data.query(
+        "sensor=='active_power' and instance=='{}pd'".format(rack)
+    )
 
     max_nodes = 10
-    if rack[2] == 'D':
+    if rack[2] == "D":
         max_nodes = 8
 
     for node_id in range(max_nodes):
         dat_vec = np.zeros(onlen)
-        node_power = np.asarray(rack_power_out.query("device=='{}g{}'".format(rack, node_id)).value)
+        node_power = np.asarray(
+            rack_power_out.query("device=='{}g{}'".format(rack, node_id)).value
+        )
         plen = len(node_power)
         if plen == onlen:
             dat_vec += node_power
@@ -59,6 +95,6 @@ for rack in rack_list:
 outv = np.asarray(outv)
 print(prestring, day, outv.shape)
 
-outf = open("/home/denman/hk-uptime-{0}{1:02}".format(prestring,day), 'wb')
+outf = open("/home/denman/hk-uptime-{0}{1:02}".format(prestring, day), "wb")
 pickle.dump(outv, outf)
 outf.close()
