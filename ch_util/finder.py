@@ -64,7 +64,7 @@ import chimedb.core as db
 import chimedb.data_index as di
 from . import layout, ephemeris
 
-from ._db_tables import DataFlagType, DataFlag
+from chimedb.dataflag import DataFlagType, DataFlag
 
 from .holography import HolographySource, HolographyObservation
 
