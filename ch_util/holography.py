@@ -237,10 +237,9 @@ class HolographyObservation(base_model):
                 Calculated as start_time + duration * ephemeris.SIDEREAL_S
 
         """
-        from skyfield.api import load
         import re
 
-        ts = load.timescale()
+        ts = ephemeris.skyfield_wrapper.timescale
 
         output_params = {}
 
@@ -304,9 +303,8 @@ class HolographyObservation(base_model):
 
         from ch_util.ephemeris import sphdist
         from skyfield.positionlib import Angle
-        from skyfield.api import load
 
-        ts = load.timescale()
+        ts = ephemeris.skyfield_wrapper.timescale
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
 
         pr_list, al_list = cls.parse_ant_logs(logs, return_post_report_params=True)
@@ -417,9 +415,6 @@ class HolographyObservation(base_model):
         This routine checks for duplicates and overwrites duplicates if and
         only if replace_dup = True
         """
-        from skyfield.api import load
-
-        ts = load.timescale()
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
 
         def check_for_duplicates(t, src, start_tol, ignore_src_mismatch=False):
@@ -446,7 +441,7 @@ class HolographyObservation(base_model):
 
             If no duplicate is found: None
             """
-            ts = load.timescale()
+            ts = ephemeris.skyfield_wrapper.timescale
 
             # precise only to one second; should be good enough for searching
             # database
@@ -486,7 +481,6 @@ class HolographyObservation(base_model):
                         # check possible.
 
                     if dup_found:
-                        tf = ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
                         print(
                             "Tried to add  :  {} {}; LST={:.3f}".format(
                                 src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
@@ -510,7 +504,6 @@ class HolographyObservation(base_model):
         if verbose:
             print(" ")
         addtodb = True
-        missing = False
 
         dup_entries = check_for_duplicates(dict["start_time"], dict["src"], start_tol)
 
@@ -827,9 +820,6 @@ class HolographyObservation(base_model):
         obs_list, dup_obs_list, missing = obs.create_from_post_reports(logs,
                 dryrun=False)
         """
-        from skyfield.api import load
-
-        ts = load.timescale()
 
         # check notes. Can be a string (in which case duplicate it), None (in
         # which case do nothing) or a list (in which case use it if same length

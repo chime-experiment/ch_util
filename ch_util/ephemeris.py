@@ -599,7 +599,7 @@ def solar_transit(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     return transit_times(sun, start_time, end_time)
 
@@ -622,7 +622,7 @@ def lunar_transit(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     return transit_times(moon, start_time, end_time)
 
@@ -789,7 +789,7 @@ def solar_setting(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
     return setting_times(sun, start_time, end_time, ang_diam=0.6)
@@ -813,7 +813,7 @@ def lunar_setting(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
     return setting_times(moon, start_time, end_time, ang_diam=0.6)
@@ -904,7 +904,7 @@ def solar_rising(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
     return rising_times(sun, start_time, end_time, ang_diam=0.6)
@@ -928,7 +928,7 @@ def lunar_rising(start_time, end_time=None):
 
     """
 
-    planets = skyfield_wrapper.load("de421.bsp")
+    planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
     return rising_times(moon, start_time, end_time, ang_diam=0.6)
@@ -997,9 +997,8 @@ def cirs_radec(body, date=None, deg=False):
 
     from skyfield.positionlib import Angle
     from skyfield.api import Star
-    from skyfield.api import load
 
-    ts = load.timescale()
+    ts = skyfield_wrapper.timescale
 
     epoch = ts.tt_jd(np.median(body.epoch))
 
