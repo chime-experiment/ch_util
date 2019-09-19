@@ -56,6 +56,8 @@ from chimedb.data_index import (
     WeatherFileInfo,
 )
 
+from chimedb.dataflag import DataFlagType, DataFlag
+
 from chimedb.data_index.util import (
     fname_atmel,
     md5sum_file,
@@ -115,8 +117,6 @@ from ._db_tables import (
     predef_subgraph_spec_param,
     user_permission_type,
     user_permission,
-    DataFlagType,
-    DataFlag,
     compare_connexion,
     add_global_flag,
     add_component,
