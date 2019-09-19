@@ -25,6 +25,7 @@ setup(
         "chimedb @ git+ssh://git@github.com/chime-experiment/chimedb.git",
         "chimedb.config @ git+ssh://git@github.com/chime-experiment/chimedb_config.git",
         "chimedb.data_index @ git+ssh://git@github.com/chime-experiment/chimedb_di.git",
+        "chimedb.dataflag @ git+ssh://git@github.com/chime-experiment/chimedb_dataflag.git",
         "caput @ git+https://github.com/radiocosmology/caput.git",
         "bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git",
         "numpy >= 1.15.1",
