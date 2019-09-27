@@ -17,7 +17,6 @@ from chimedb.core.connectdb import (
     MySQLConnector,
     SqliteConnector,
     tunnel_active,
-    create_tunnel,
     connected_mysql,
     close_mysql,
     connect,
