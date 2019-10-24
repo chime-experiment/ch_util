@@ -380,8 +380,7 @@ class HolographyObservation(base_model):
                     cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
                 else:
                     print(
-                        "No on source time found for {}\n{} {}\n"
-                        + "Min distance from source {:.1f} degrees".format(
+                        "No on source time found for {}\n{} {}\nMin distance from source {:.1f} degrees".format(
                             curlog,
                             post_report_params["src"].name,
                             post_report_params["start_time"].utc_strftime(
