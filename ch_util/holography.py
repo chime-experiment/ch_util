@@ -345,8 +345,7 @@ class HolographyObservation(base_model):
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
                         obs["quality_flag"] += QUALITY_OFFSOURCE
                         print(
-                            "Mean offset: {:.4f}. Std offset: {:.4f}. "
-                            + "Setting quality flag to {}.".format(
+                            "Mean offset: {:.4f}. Std offset: {:.4f}. Setting quality flag to {}.".format(
                                 meanoffset, stdoffset, QUALITY_OFFSOURCE
                             )
                         )
