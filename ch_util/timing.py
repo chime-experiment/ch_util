@@ -1142,9 +1142,15 @@ class TimingData(andata.CorrData, TimingCorrection):
 
         # Construct delay template
         res = construct_delay_template(corr_data, **cdt_kwargs)
-        tau, static_phi, w_static_phi, static_phi_fit, alpha, static_amp, w_static_amp = (
-            res
-        )
+        (
+            tau,
+            static_phi,
+            w_static_phi,
+            static_phi_fit,
+            alpha,
+            static_amp,
+            w_static_amp,
+        ) = res
 
         # Create datasets containing the timing correction
         param = ["intercept", "slope", "quad", "cube", "quart", "quint"]

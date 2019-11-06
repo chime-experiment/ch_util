@@ -2434,7 +2434,7 @@ def _timestamp_from_fpga_cpu(cpu_s, cpu_us, fpga_counts):
         timestamp_cpu = timestamp.copy()
         # Find discontinuities in the fpga_counts from wrapping.
         d_fpga_counts = np.diff(fpga_counts.astype(np.int64))
-        edge_inds, = np.where(d_fpga_counts != np.median(d_fpga_counts))
+        (edge_inds,) = np.where(d_fpga_counts != np.median(d_fpga_counts))
         edge_inds = np.concatenate(([0], edge_inds + 1, [ntime]))
         # Calculate a global slope.
         slope_num = 0
@@ -2880,7 +2880,15 @@ def andata_from_archive2(
             prod_sel = stack_sel
             stack_sel = None
 
-    stack_sel, stack_map, stack_rmap, prod_sel, prod_map, input_sel, input_map = _resolve_stack_prod_input_sel(
+    (
+        stack_sel,
+        stack_map,
+        stack_rmap,
+        prod_sel,
+        prod_map,
+        input_sel,
+        input_map,
+    ) = _resolve_stack_prod_input_sel(
         stack_sel, stack_map, stack_rmap, prod_sel, prod_map, input_sel, input_map
     )
 
@@ -3095,8 +3103,8 @@ def _remap_blanchard(afile):
     # Remap a blanchard correlator file
 
     BPC_END = (
-        1410586200.0
-    )  # 2014/09/13 05:30 UTC ~ when blanchard was moved into the crate
+        1410586200.0  # 2014/09/13 05:30 UTC ~ when blanchard was moved into the crate
+    )
     last_time = afile.time[-1]
 
     # Use time to check if blanchard was in the crate or not

@@ -270,8 +270,9 @@ class HolographyObservation(base_model):
                 output_params["src"] = srcnm
 
             output_params["finish_time"] = ephemeris.unix_to_skyfield_time(
-                    ephemeris.ensure_unix(output_params["start_time"])
-                    + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S )
+                ephemeris.ensure_unix(output_params["start_time"])
+                + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S
+            )
 
             output_params["quality_flag"] = QUALITY_GOOD
 
