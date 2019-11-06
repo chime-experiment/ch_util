@@ -175,17 +175,15 @@ from ch_util import ephemeris
 # CHIME geometry
 _CHIME_POS = [0.0, 0.0, 0.0]
 _CHIME_ROT = (
-    0.0
-)  # CHIME rotation from north. Anti-clockwise looking at the ground (degrees)
+    0.0  # CHIME rotation from north. Anti-clockwise looking at the ground (degrees)
+)
 
 # 26m geometry
 _26M_POS = [254.162124, 21.853934, 20.0]
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = (
-    1.986
-)  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
+_PF_ROT = 1.986  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 # Lat/Lon

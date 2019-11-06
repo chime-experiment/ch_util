@@ -395,7 +395,7 @@ class FeedLocator(object):
 
         # Gaussian function for fit:
         def gaus(x, A, mu, sig2):
-            return A * np.exp(-(x - mu) ** 2 / (2.0 * sig2))
+            return A * np.exp(-((x - mu) ** 2) / (2.0 * sig2))
 
         # FFT:
         # TODO: add check to see if length is multiple of 2

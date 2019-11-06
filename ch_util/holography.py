@@ -269,11 +269,9 @@ class HolographyObservation(base_model):
                 print("Missing", srcnm)
                 output_params["src"] = srcnm
 
-            output_params["finish_time"] = ts.utc(
-                ephemeris.unix_to_datetime(
-                    float(output_params["start_time"].utc_strftime("%s"))
-                    + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S
-                )
+            output_params["finish_time"] = ephemeris.unix_to_skyfield_time(
+                ephemeris.ensure_unix(output_params["start_time"])
+                + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S
             )
 
             output_params["quality_flag"] = QUALITY_GOOD
@@ -305,7 +303,7 @@ class HolographyObservation(base_model):
         from skyfield.positionlib import Angle
 
         ts = ephemeris.skyfield_wrapper.timescale
-        DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
+        DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %z"
 
         pr_list, al_list = cls.parse_ant_logs(logs, return_post_report_params=True)
 
@@ -345,8 +343,7 @@ class HolographyObservation(base_model):
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
                         obs["quality_flag"] += QUALITY_OFFSOURCE
                         print(
-                            "Mean offset: {:.4f}. Std offset: {:.4f}. "
-                            + "Setting quality flag to {}.".format(
+                            "Mean offset: {:.4f}. Std offset: {:.4f}. Setting quality flag to {}.".format(
                                 meanoffset, stdoffset, QUALITY_OFFSOURCE
                             )
                         )
@@ -380,8 +377,7 @@ class HolographyObservation(base_model):
                     cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
                 else:
                     print(
-                        "No on source time found for {}\n{} {}\n"
-                        + "Min distance from source {:.1f} degrees".format(
+                        "No on source time found for {}\n{} {}\nMin distance from source {:.1f} degrees".format(
                             curlog,
                             post_report_params["src"].name,
                             post_report_params["start_time"].utc_strftime(
@@ -443,9 +439,7 @@ class HolographyObservation(base_model):
             """
             ts = ephemeris.skyfield_wrapper.timescale
 
-            # precise only to one second; should be good enough for searching
-            # database
-            unixt = float(t.utc_strftime("%s"))
+            unixt = ephemeris.ensure_unix(t)
 
             dup_found = False
 
@@ -547,8 +541,8 @@ class HolographyObservation(base_model):
             else:
                 cls.create(
                     source=dict["src"],
-                    start_time=float(dict["start_time"].utc_strftime("%s")),
-                    finish_time=float(dict["finish_time"].utc_strftime("%s")),
+                    start_time=ephemeris.ensure_unix(dict["start_time"]),
+                    finish_time=ephemeris.ensure_unix(dict["finish_time"]),
                     quality_flag=dict["quality_flag"],
                     notes=notes,
                 )
