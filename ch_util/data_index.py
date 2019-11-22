@@ -139,8 +139,9 @@ from .finder import (
     DataInterval,
     HKDataInterval,
     WeatherDataInterval,
-    GainFlagDataInterval,
-    GainFlagDataInterval,
+    FlagInputDataInterval,
+    CalibrationGainDataInterval,
+    DigitalGainDataInterval,
     files_in_range,
     DataFlagged,
 )

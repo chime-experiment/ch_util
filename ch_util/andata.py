@@ -17,10 +17,16 @@ Classes
     HKData
     HKPData
     WeatherData
+    FlagInputData
+    CalibrationGainData
+    DigitalGainData
     BaseReader
     CorrReader
     HKReader
     WeatherReader
+    FlagInputReader
+    CalibrationGainReader
+    DigitalGainReader
     AnDataError
 
 Functions
@@ -1564,75 +1570,240 @@ class RawADCData(BaseData):
 
 
 class GainFlagData(BaseData):
-    """Subclass of :class:`BaseData` for gain and input flag acquisitions.
+    """Subclass of :class:`BaseData` for gain, digitalgain, and flag input acquisitions.
 
-    Aliases `self.index_map['update_time']` to `self.time` so can use `caput.tod` functionality.
-
+    These acquisitions consist of a collection of updates to the real-time pipeline ordered
+    chronologically.  In most cases the updates do not occur at a regular cadence.
+    The time that each update occured can be accessed via `self.index_map['update_time']`.
+    In addition, each update is given a unique update ID that can be accessed via
+    `self.datasets['update_id']` and can be searched using the `self.search_update_id` method.
     """
 
-    @property
-    def time(self):
-        return self.index_map["update_time"]
+    def resample(self, dataset, timestamp, transpose=False):
+        """Return a dataset resampled at specific times.
 
+        Parameters
+        ----------
+        dataset : string
+            Name of the dataset to resample.
+        timestamp : `np.ndarray`
+            Unix timestamps.
+        transpose : bool
+            Tranpose the data such that time is the fastest varying axis.
+            By default time will be the slowest varying axis.
 
-class GainFlagData(BaseData):
-    """Subclass of :class:`BaseData` for gain and input flag acquisitions.
-
-    Methods
-    -------
-    from_acq_h5
-
-    """
-
-    @property
-    def time(self):
-        return self.index_map["update_time"]
-
-    @classmethod
-    def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
-        andata_objs = [cls(d) for d in acq_files]
-        data = concatenate(
-            andata_objs, out_group=out_group, start=start, stop=stop, datasets=datasets
-        )
-        return data
-
-    @classmethod
-    def from_acq_h5(
-        cls, acq_files, start=None, stop=None, datasets=None, out_group=None
-    ):
-        """Convert acquisition format hdf5 data to analysis data object.
-
-        This method overloads the one in BaseData.
-
-        Reads hdf5 data produced by the acquisition system and converts it to
-        analysis format in memory.
-
-        Parameters:
-        -----------
-        acq_files : filename, `h5py.File` or list there-of or filename pattern
-            Files to convert from acquisition format to analysis format.
-            Filename patterns with wild cards (e.g. "foo*.h5") are supported.
-        start : integer, optional
-            What frame to start at in the full set of files.
-        stop : integer, optional
-            What frame to stop at in the full set of files.
-        datasets : list of strings
-            Names of datasets to include from acquisition files. Default is to
-            include all datasets found in the acquisition files.
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
-            Underlying hdf5 like container that will store the data for the
-            BaseData instance.
-
-        Examples
-        --------
-        Examples are analogous to those of :meth:`CorrData.from_acq_h5`.
+        Returns
+        -------
+        data : np.ndarray
+            The dataset resampled at the desired times and transposed if requested.
         """
-        return super(GainFlagData, cls).from_acq_h5(
-            acq_files=acq_files,
-            start=start,
-            stop=stop,
-            datasets=datasets,
-            out_group=out_group,
+        index = self.search_update_time(timestamp)
+        dset = self.datasets[dataset][index]
+        if transpose:
+            dset = np.moveaxis(dset, 0, -1)
+
+        return dset
+
+    def search_update_time(self, timestamp):
+        """Find the index into the `update_time` axis that is valid for specific times.
+
+        For each time returns the most recent update the occured before that time.
+
+        Parameters
+        ----------
+        timestamp : `np.ndarray` of unix timestamp
+            Unix timestamps.
+
+        Returns
+        -------
+        index : `np.ndarray` of `dtype = int`
+            Index into the `update_time` axis that will yield values
+            that are valid for the requested timestamps.
+        """
+        timestamp = np.atleast_1d(timestamp)
+
+        if np.min(timestamp) < np.min(self.time):
+            raise ValueError(
+                "Cannot request timestamps before the earliest update_time."
+            )
+
+        dmax = np.max(timestamp) - np.max(self.time)
+        if dmax > 0.0:
+            msg = (
+                "Requested timestamps are after the latest update_time "
+                "by as much as %0.2f hours." % (dmax / 3600.0,)
+            )
+            warnings.warn(msg)
+
+        index = np.digitize(timestamp, self.time, right=False) - 1
+
+        return index
+
+    def search_update_id(self, pattern, is_regex=False):
+        """Find the index into the `update_time` axis corresponding to a particular `update_id`.
+
+        Parameters
+        ----------
+        pattern : str
+            The desired `update_id` or a glob pattern to search.
+        is_regex : bool
+            Set to True if `pattern` is a regular expression.
+
+        Returns
+        -------
+        index : `np.ndarray` of `dtype = int`
+            Index into the `update_time` axis that will yield all
+            updates whose `update_id` matches the requested pattern.
+        """
+        import fnmatch
+
+        ptn = pattern if is_regex else fnmatch.translate(pattern)
+        regex = re.compile(ptn)
+        index = np.array(
+            [ii for ii, uid in enumerate(self.update_id[:]) if regex.match(uid)]
+        )
+        return index
+
+    @property
+    def time(self):
+        """Aliases `index_map['update_time']` to `time` for `caput.tod` functionality."""
+        return self.index_map["update_time"]
+
+    @property
+    def ntime(self):
+        """Number of updates."""
+        return len(self.index_map["update_time"])
+
+    @property
+    def input(self):
+        """Correlator inputs."""
+        return self.index_map["input"]
+
+    @property
+    def ninput(self):
+        """Number of correlator inputs."""
+        return len(self.index_map["input"])
+
+    @property
+    def update_id(self):
+        """Aliases the `update_id` dataset."""
+        return self.datasets["update_id"]
+
+
+class FlagInputData(GainFlagData):
+    """Subclass of :class:`GainFlagData` for flaginput acquisitions."""
+
+    @property
+    def flag(self):
+        """Aliases the `flag` dataset."""
+        return self.datasets["flag"]
+
+    @property
+    def source_flags(self):
+        """Dictionary that allow look up of source flags based on source name."""
+        if not hasattr(self, "_source_flags"):
+            out = {}
+            for kk, key in enumerate(self.index_map["source"]):
+                out[key] = self.datasets["source_flags"][:, kk, :]
+
+            self._source_flags = memh5.ro_dict(out)
+
+        return self._source_flags
+
+    def get_source_index(self, source_name):
+        """Index into the `source` axis for a given source name."""
+        return list(self.index_map["source"]).index(source_name)
+
+
+class GainData(GainFlagData):
+    """Subclass of :class:`GainFlagData` for gain and digitalgain acquisitions."""
+
+    @property
+    def freq(self):
+        """The spectral frequency axis as bin centres in MHz."""
+        return self.index_map["freq"]["centre"]
+
+    @property
+    def nfreq(self):
+        """Number of frequency bins."""
+        return len(self.index_map["freq"])
+
+
+class CalibrationGainData(GainData):
+    """Subclass of :class:`GainData` for gain acquisitions."""
+
+    @property
+    def source(self):
+        """Names of the sources of gains."""
+        return self.index_map["source"]
+
+    @property
+    def nsource(self):
+        """Number of sources of gains."""
+        return len(self.index_map["source"])
+
+    @property
+    def gain(self):
+        """Aliases the `gain` dataset."""
+        return self.datasets["gain"]
+
+    @property
+    def weight(self):
+        """Aliases the `weight` dataset."""
+        return self.datasets["weight"]
+
+    @property
+    def source_gains(self):
+        """Dictionary that allows look up of source gains based on source name."""
+        if not hasattr(self, "_source_gains"):
+            out = {}
+            for kk, key in enumerate(self.index_map["source"]):
+                out[key] = self.datasets["source_gains"][:, kk, :]
+
+            self._source_gains = memh5.ro_dict(out)
+
+        return self._source_gains
+
+    @property
+    def source_weights(self):
+        """Dictionary that allows look up of source weights based on source name."""
+        if not hasattr(self, "_source_weights"):
+            out = {}
+            for kk, key in enumerate(self.index_map["source"]):
+                out[key] = self.datasets["source_weights"][:, kk, :]
+
+            self._source_weights = memh5.ro_dict(out)
+
+        return self._source_weights
+
+    def get_source_index(self, source_name):
+        """Index into the `source` axis for a given source name."""
+        return list(self.index_map["source"]).index(source_name)
+
+
+class DigitalGainData(GainData):
+    """Subclass of :class:`GainData` for digitalgain acquisitions."""
+
+    @property
+    def gain_coeff(self):
+        """The coefficient of the digital gain applied to the channelized data."""
+        return self.datasets["gain_coeff"]
+
+    @property
+    def gain_exp(self):
+        """The exponent of the digital gain applied to the channelized data."""
+        return self.datasets["gain_exp"]
+
+    @property
+    def compute_time(self):
+        """Unix timestamp indicating when the digital gain was computed."""
+        return self.datasets["compute_time"]
+
+    @property
+    def gain(self):
+        """The digital gain applied to the channelized data."""
+        return self.datasets["gain_coeff"][:] * 2.0 ** (
+            self.datasets["gain_exp"][:, np.newaxis, :]
         )
 
 
@@ -2054,21 +2225,28 @@ class WeatherReader(BaseReader):
     data_class = WeatherData
 
 
-class GainFlagReader(BaseReader):
-    """Subclass of :class:`BaseReader` for gain and input flag data."""
+class FlagInputReader(BaseReader):
+    """Subclass of :class:`BaseReader` for input flag data."""
 
-    data_class = GainFlagData
+    data_class = FlagInputData
+
+
+class CalibrationGainReader(BaseReader):
+    """Subclass of :class:`BaseReader` for calibration gain data."""
+
+    data_class = CalibrationGainData
+
+
+class DigitalGainReader(BaseReader):
+    """Subclass of :class:`BaseReader` for digital gain data."""
+
+    data_class = DigitalGainData
 
 
 class RawADCReader(BaseReader):
     """Subclass of :class:`BaseReader` for raw ADC data."""
 
     data_class = RawADCData
-
-
-class GainFlagReader(BaseReader):
-
-    data_class = GainFlagData
 
 
 class AnDataError(Exception):

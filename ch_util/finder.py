@@ -32,6 +32,9 @@ High Level Index Searcher
     CorrDataInterval
     HKDataInterval
     WeatherDataInterval
+    FlagInputDataInterval
+    CalibrationGainDataInterval
+    DigitalGainDataInterval
 
 
 Routines
@@ -1306,12 +1309,12 @@ class Finder(object):
                 data_intervals.append(HKDataInterval(tup))
             elif acq.type == di.AcqType.weather():
                 data_intervals.append(WeatherDataInterval(tup))
-            elif (
-                acq.type == di.AcqType.gain()
-                or acq.type == di.AcqType.flaginput()
-                or acq.type == di.AcqType.digitalgain()
-            ):
-                data_intervals.append(GainFlagDataInterval(tup))
+            elif acq.type == di.AcqType.flaginput():
+                data_intervals.append(FlagInputDataInterval(tup))
+            elif acq.type == di.AcqType.gain():
+                data_intervals.append(CalibrationGainDataInterval(tup))
+            elif acq.type == di.AcqType.digitalgain():
+                data_intervals.append(DigitalGainDataInterval(tup))
             else:
                 data_intervals.append(BaseDataInterval(tup))
 
@@ -1677,59 +1680,37 @@ class WeatherDataInterval(BaseDataInterval):
         return andata.WeatherReader
 
 
-class GainFlagDataInterval(BaseDataInterval):
-    """Derived class from :class:`BaseDataInterval` for gain or input flag data."""
+class FlagInputDataInterval(BaseDataInterval):
+    """Derived class from :class:`BaseDataInterval` for flag input data."""
 
     @property
     def _reader_class(self):
         # only dynamic imports of andata allowed in this module.
         from . import andata
 
-        return andata.GainFlagReader
+        return andata.FlagInputReader
 
 
-class GainFlagDataInterval(BaseDataInterval):
+class DigitalGainDataInterval(BaseDataInterval):
+    """Derived class from :class:`BaseDataInterval` for digital gain data."""
 
-    """Derived class from :class:`BaseDataInterval` for gain or input flag data.
-
-    Methods
-    -------
-    as_reader
-    as_loaded_data
-
-    """
-
-    def as_reader(self):
-        """Get data interval as an :class:`andata.GainFlagReader` instance.
-
-        The :class:`andata.Reader` is initialized with the filename list part
-        of the data interval then the time range part of the data interval is
-        used as an arguments to :meth:`andata.Reader.select_time_range`.
-
-        Returns
-        -------
-        reader : :class:`andata.Reader`
-
-        """
+    @property
+    def _reader_class(self):
+        # only dynamic imports of andata allowed in this module.
         from . import andata
 
-        reader = andata.GainFlagReader(self[0])
-        reader.select_time_range(self[1][0], self[1][1])
-        return reader
+        return andata.DigitalGainReader
 
-    def as_loaded_data(self, datasets=None):
-        """Load data interval to memory as an :class:`andata.GainFlagData` instance
 
-        datasets : list of strings
-            Passed on to :meth:`andata.GainFlagData.from_acq_h5`
+class CalibrationGainDataInterval(BaseDataInterval):
+    """Derived class from :class:`BaseDataInterval` for calibration gain data."""
 
-        Returns
-        -------
-        data : :class:`andata.GainFlagData`
-            Data interval loaded into memory.
+    @property
+    def _reader_class(self):
+        # only dynamic imports of andata allowed in this module.
+        from . import andata
 
-        """
-        return super(GainFlagDataInterval, self).as_loaded_data(datasets=datasets)
+        return andata.CalibrationGainReader
 
 
 # Query routines
