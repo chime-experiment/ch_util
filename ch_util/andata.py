@@ -850,6 +850,9 @@ class CorrData(BaseData):
             "gain",
             "gain_coeff",
             "frac_lost",
+            "eval",
+            "evec",
+            "erms",
         ]
 
         # Initialise distributed container

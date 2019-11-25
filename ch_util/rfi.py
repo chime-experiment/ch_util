@@ -42,10 +42,17 @@ from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
 # === End Python 2/3 compatibility
 
+import warnings
+import logging
+
 import numpy as np
 import scipy.signal as sig
 
 from . import tools
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
 # Ranges of bad frequencies given by their start and end frequencies (in MHz)
@@ -143,6 +150,7 @@ def number_deviations(
     apply_static_mask=False,
     rolling=False,
     stack=False,
+    normalize=False,
     fill_value=None,
 ):
     """Calculate the number of median absolute deviations (MAD)
@@ -167,6 +175,9 @@ def number_deviations(
         Use a rolling window instead of distinct blocks.
     stack: bool
         Average over all autocorrelations.
+    normalize : bool
+        Normalize by the median value over time prior to averaging over
+        autocorrelations.  Only relevant if `stack` is True.
     fill_value: float
         Data that was already flagged as bad will be set to this value in
         the output array.  Should be a large positive value that is greater
@@ -203,17 +214,39 @@ def number_deviations(
         list(zip(*[(pp[0], ind) for ind, pp in enumerate(prod) if pp[0] == pp[1]]))
     )
 
-    auto_vis = data.vis[:, auto_pi, :].view(np.ndarray).real
+    auto_vis = data.vis[:, auto_pi, :].view(np.ndarray).copy().real
 
     # If requested, average over all inputs to construct the stacked autocorrelations
     # for the instrument (also known as the incoherent beam)
     if stack:
-        # Do not include bad inputs in the average
         weight = (data.weight[:, auto_pi, :].view(np.ndarray) > 0.0).astype(np.float32)
+
+        # Do not include bad inputs in the average
+        partial_stack = data.index_map["stack"].size < data.index_map["prod"].size
+
+        if not partial_stack and hasattr(data, "input_flags"):
+            input_flags = data.input_flags[:]
+            logger.info(
+                "There are on average %d good inputs."
+                % np.mean(np.sum(input_flags, axis=0), axis=-1)
+            )
+
+            if np.any(input_flags) and not np.all(input_flags):
+                logger.info("Applying input_flags to weight.")
+                weight *= input_flags[np.newaxis, auto_ii, :].astype(weight.dtype)
+
+        if normalize:
+            logger.info("Normalizing autocorrelations prior to stacking.")
+            med_auto = nanmedian(
+                np.where(weight, auto_vis, np.nan), axis=-1, keepdims=True
+            )
+            med_auto = np.where(np.isfinite(med_auto), med_auto, 0.0)
+            auto_vis *= tools.invert_no_zero(med_auto)
+
         norm = np.sum(weight, axis=1, keepdims=True)
 
         auto_vis = np.sum(
-            weight * auto_vis.view(np.ndarray), axis=1, keepdims=True
+            weight * auto_vis, axis=1, keepdims=True
         ) * tools.invert_no_zero(norm)
 
         auto_flag = norm > 0.0
@@ -397,7 +430,7 @@ def mad_cut_2d(data, fwidth=64, twidth=42, threshold=5.0, freq_flat=True, mask=T
         Mask or number of median absolute deviations for each sample.
     """
 
-    median = np.nanmedian if np.any(~np.isfinite(data)) else np.median
+    median = nanmedian if np.any(~np.isfinite(data)) else np.median
 
     flen = int(np.ceil(data.shape[0] * 1.0 / fwidth))
     tlen = int(np.ceil(data.shape[1] * 1.0 / twidth))
@@ -467,7 +500,7 @@ def mad_cut_1d(data, twidth=42, threshold=5.0, mask=True):
         Mask or number of median absolute deviations for each sample.
     """
 
-    median = np.nanmedian if np.any(~np.isfinite(data)) else np.median
+    median = nanmedian if np.any(~np.isfinite(data)) else np.median
 
     tlen = int(np.ceil(data.shape[1] * 1.0 / twidth))
 
@@ -554,7 +587,7 @@ def mad_cut_rolling(
 
     # If requested, flatten over the frequency direction.
     if freq_flat:
-        mfd = tools.invert_no_zero(np.nanmedian(data, axis=1))
+        mfd = tools.invert_no_zero(nanmedian(data, axis=1))
         data *= mfd[:, np.newaxis]
 
     # Make sure we have an odd number of samples
@@ -574,8 +607,8 @@ def mad_cut_rolling(
     win_data = _rolling_window(exp_data, (fwidth, twidth))
 
     # Compute the local median and median absolute deviation
-    med = np.nanmedian(win_data, axis=(-2, -1))
-    med_abs_dev = np.nanmedian(
+    med = nanmedian(win_data, axis=(-2, -1))
+    med_abs_dev = nanmedian(
         np.abs(win_data - med[..., np.newaxis, np.newaxis]), axis=(-2, -1)
     )
 
@@ -588,6 +621,13 @@ def mad_cut_rolling(
         madmask = (data - med) * inv_med_abs_dev
 
     return madmask
+
+
+def nanmedian(*args, **kwargs):
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
+        return np.nanmedian(*args, **kwargs)
 
 
 # Scale-invariant rank (SIR) functions

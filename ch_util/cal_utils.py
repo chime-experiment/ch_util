@@ -7,21 +7,32 @@ Tools for point source calibration (:mod:`cal_utils`)
 
 This module contains tools for performing point-source calibration.
 
-Functions
-========
+
+Classes
+=======
 
 .. autosummary::
     :toctree: generated/
 
-    fit_point_source_transit
-    func_point_source_transit
-    model_point_source_transit
+    FitPolyLogAmpPolyPhase
+    FitGaussAmpPolyPhase
+
+Functions
+=========
+
+.. autosummary::
+    :toctree: generated/
+
     fit_point_source_map
     func_2d_gauss
     func_2d_sinc_gauss
     func_dirty_gauss
     func_real_dirty_gauss
     guess_fwhm
+    estimate_directional_scale
+    fit_histogram
+    flag_outliers
+    interpolate_gain
 
 """
 # === Start Python 2/3 compatibility
@@ -31,250 +42,1152 @@ from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
 # === End Python 2/3 compatibility
 
+from future.utils import with_metaclass
+from abc import ABCMeta, abstractmethod
 import inspect
+import logging
+
 import numpy as np
+import scipy.stats
 from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
+from scipy.linalg import lstsq, inv
 
-from ch_util import ephemeris
+from ch_util import ephemeris, tools
+
+# Set up logging
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 
-def fit_point_source_transit(
-    ra, response, response_error, flag=None, fwhm=None, verbose=False
-):
-    """ Fits the complex point source response to a model that
-        consists of a gaussian in amplitude and a line in phase.
+class FitTransit(with_metaclass(ABCMeta, object)):
+    """Base class for fitting models to point source transits.
 
-    .. math::
-        g(ra) = peak_amplitude * \exp{-4 \ln{2} [(ra - centroid)/fwhm]^2} *
-                \exp{j [phase_intercept + phase_slope * (ra - centroid)]}
+    The `fit` method should be used to populate the `param`, `param_cov`, `chisq`,
+    and `ndof` attributes.  The `predict` and `uncertainty` methods can then be used
+    to obtain the model prediction for the response and uncertainty on this quantity
+    at a given hour angle.
 
-    Parameters
+    Attributes
     ----------
-    ra : np.ndarray[nra, ]
-        Transit right ascension.
-    response : np.ndarray[nfreq, ninput, nra]
-        Complex array that contains point source response.
-    response_error : np.ndarray[nfreq, ninput, nra]
-        Real array that contains 1-sigma error on
-        point source response.
-    flag : np.ndarray[nfreq, ninput, nra]
-        Boolean array that indicates which data points to fit.
+    param : np.ndarray[..., nparam]
+        Best-fit parameters.
+    param_cov : np.ndarray[..., nparam, nparam]
+        Covariance of the fit parameters.
+    chisq : np.ndarray[...]
+        Chi-squared of the fit.
+    ndof : np.ndarray[...]
+        Number of degrees of freedom.
 
-    Returns
+    Properties
+    ----------
+    param_corr : np.ndarray[..., nparam, nparam]
+        Correlation of the fit parameters.
+    parameter_names : np.ndarray[nparam,]
+        Names of the parameters.
+    N : tuple
+        Numpy-style shape indicating the number of
+        fits that the object contains.  Is None
+        if the object contains a single fit.
+    nparam :  int
+        Number of fit parameters.
+    ncomponent : int
+        Number of components (i.e, real and imag, amp and phase, complex)
+        that have been fit.
+
+    Abstract Methods
+    ----------------
+    Any subclass of FitTransit must define these methods:
+        peak
+        _fit
+        _model
+        _jacobian
+
+    Methods
     -------
-    param : np.ndarray[nfreq, ninput, nparam]
-        Best-fit parameters for each frequency and input:
-        [peak_amplitude, centroid, fwhm, phase_intercept, phase_slope].
-    param_cov: np.ndarray[nfreq, ninput, nparam, nparam]
-        Parameter covariance for each frequency and input.
+    predict
+    uncertainty
+    fit
+    tval
     """
 
-    # Check if boolean flag was input
-    if flag is None:
-        flag = np.ones(response.shape, dtype=np.bool)
-    elif flag.dtype != np.bool:
-        flag = flag.astype(np.bool)
+    _tval = {}
+    component = np.array(["complex"], dtype=np.string_)
 
-    # Create arrays to hold best-fit parameters and
-    # parameter covariance.  Initialize to NaN.
-    nfreq = response.shape[0]
-    ninput = response.shape[1]
-    nparam = 9
+    def __init__(self, *args, **kwargs):
+        """Instantiates a FitTransit object.
 
-    param = np.full([nfreq, ninput, nparam], np.nan, dtype=np.float64)
-    param_cov = np.full([nfreq, ninput, nparam, nparam], np.nan, dtype=np.float64)
+        Parameters
+        ----------
+        param : np.ndarray[..., nparam]
+            Best-fit parameters.
+        param_cov : np.ndarray[..., nparam, nparam]
+            Covariance of the fit parameters.
+        chisq : np.ndarray[..., ncomponent]
+            Chi-squared.
+        ndof : np.ndarray[..., ncomponent]
+            Number of degrees of freedom.
+        """
+        # Save keyword arguments as attributes
+        self.param = kwargs.pop("param", None)
+        self.param_cov = kwargs.pop("param_cov", None)
+        self.chisq = kwargs.pop("chisq", None)
+        self.ndof = kwargs.pop("ndof", None)
+        self.model_kwargs = kwargs
 
-    # Create initial guess at FWHM if one was not input
-    if fwhm is None:
-        fwhm = np.full([nfreq, ninput], 2.0, dtype=np.float64)
+    def predict(self, ha, elementwise=False):
+        """Predict the point source response.
 
-    # Iterate over frequency/inputs and fit point source transit
-    for ff in range(nfreq):
-        for ii in range(ninput):
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            The hour angle in degrees.
+        elementwise : bool
+            If False, then the model will be evaluated at the
+            requested hour angles for every set of parameters.
+            If True, then the model will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
 
-            this_flag = flag[ff, ii]
+        Returns
+        -------
+        model : np.ndarray[..., nha] or float
+            Model for the point source response at the requested
+            hour angles.  Complex valued.
+        """
+        with np.errstate(all="ignore"):
+            mdl = self._model(ha, elementwise=elementwise)
+        return np.where(np.isfinite(mdl), mdl, 0.0 + 0.0j)
 
-            # Only perform fit if there is enough data.
-            # Otherwise, leave parameter values as NaN.
-            if np.sum(this_flag) < 6:
+    def uncertainty(self, ha, alpha=0.32, elementwise=False):
+        """Predict the uncertainty on the point source response.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            The hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
+
+        Returns
+        -------
+        err : np.ndarray[..., nha]
+            Uncertainty on the point source response at the
+            requested hour angles.
+        """
+        x = np.atleast_1d(ha)
+        with np.errstate(all="ignore"):
+            err = _propagate_uncertainty(
+                self._jacobian(x, elementwise=elementwise),
+                self.param_cov,
+                self.tval(alpha, self.ndof),
+            )
+        return np.squeeze(np.where(np.isfinite(err), err, 0.0))
+
+    def fit(self, ha, resp, resp_err, width=5, absolute_sigma=False, **kwargs):
+        """Apply subclass defined `_fit` method to multiple transits.
+
+        This function can be used to fit the transit for multiple inputs
+        and frequencies.  Populates the `param`, `param_cov`, `chisq`, and `ndof`
+        attributes.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,]
+            Hour angle in degrees.
+        resp : np.ndarray[..., nha]
+            Measured response to the point source.  Complex valued.
+        resp_err : np.ndarray[..., nha]
+            Error on the measured response.
+        width : np.ndarray[...]
+            Initial guess at the width (sigma) of the transit in degrees.
+        absolute_sigma : bool
+            Set to True if the errors provided are absolute.  Set to False if
+            the errors provided are relative, in which case the parameter covariance
+            will be scaled by the chi-squared per degree-of-freedom.
+        """
+        shp = resp.shape[:-1]
+        dtype = ha.dtype
+
+        if not np.isscalar(width) and (width.shape != shp):
+            ValueError("Keyword with must be scalar or have shape %s." % str(shp))
+
+        self.param = np.full(shp + (self.nparam,), np.nan, dtype=dtype)
+        self.param_cov = np.full(shp + (self.nparam, self.nparam), np.nan, dtype=dtype)
+        self.chisq = np.full(shp + (self.ncomponent,), np.nan, dtype=dtype)
+        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=np.int)
+
+        with np.errstate(all="ignore"):
+
+            for ind in np.ndindex(*shp):
+
+                wi = width if np.isscalar(width) else width[ind[: width.ndim]]
+
+                err = resp_err[ind]
+                good = np.flatnonzero(err > 0.0)
+
+                if (good.size // 2) <= self.nparam:
+                    continue
+
+                try:
+                    param, param_cov, chisq, ndof = self._fit(
+                        ha[good],
+                        resp[ind][good],
+                        err[good],
+                        width=wi,
+                        absolute_sigma=absolute_sigma,
+                        **kwargs
+                    )
+                except Exception as error:
+                    logger.debug("Index %s failed with error: %s" % (str(ind), error))
+                    continue
+
+                self.param[ind] = param
+                self.param_cov[ind] = param_cov
+                self.chisq[ind] = chisq
+                self.ndof[ind] = ndof
+
+    @property
+    def parameter_names(self):
+        """Array of strings containing the name of the fit parameters."""
+        return np.array(["param%d" % p for p in range(self.nparam)], dtype=np.string_)
+
+    @property
+    def param_corr(self):
+        """Parameter correlation matrix."""
+        idiag = tools.invert_no_zero(
+            np.sqrt(np.diagonal(self.param_cov, axis1=-2, axis2=-1))
+        )
+        return self.param_cov * idiag[..., np.newaxis, :] * idiag[..., np.newaxis]
+
+    @property
+    def N(self):
+        """Number of independent transit fits contained in this object."""
+        if self.param is not None:
+            return self.param.shape[:-1] or None
+
+    @property
+    def nparam(self):
+        """Number of parameters."""
+        return self.param.shape[-1]
+
+    @property
+    def ncomponent(self):
+        """Number of components."""
+        return self.component.size
+
+    def __getitem__(self, val):
+        """Instantiates a new TransitFit object containing some subset of the fits."""
+
+        if self.N is None:
+            raise KeyError(
+                "Attempting to slice TransitFit object containing single fit."
+            )
+
+        return self.__class__(
+            param=self.param[val],
+            param_cov=self.param_cov[val],
+            ndof=self.ndof[val],
+            chisq=self.chisq[val],
+            **self.model_kwargs
+        )
+
+    @abstractmethod
+    def peak(self):
+        """Calculate the peak of the transit.
+
+        Any subclass of FitTransit must define this method.
+        """
+        return
+
+    @abstractmethod
+    def _fit(self, ha, resp, resp_err, width=None, absolute_sigma=False):
+        """Fit data to the model.
+
+        Any subclass of FitTransit must define this method.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,]
+            Hour angle in degrees.
+        resp : np.ndarray[nha,]
+            Measured response to the point source.  Complex valued.
+        resp_err : np.ndarray[nha,]
+            Error on the measured response.
+        width : np.ndarray
+            Initial guess at the width (sigma) of the transit in degrees.
+        absolute_sigma : bool
+            Set to True if the errors provided are absolute.  Set to False if
+            the errors provided are relative, in which case the parameter covariance
+            will be scaled by the chi-squared per degree-of-freedom.
+
+        Returns
+        -------
+        param : np.ndarray[nparam,]
+            Best-fit model parameters.
+        param_cov : np.ndarray[nparam, nparam]
+            Covariance of the best-fit model parameters.
+        chisq : float
+            Chi-squared of the fit.
+        ndof : int
+            Number of degrees of freedom of the fit.
+        """
+        return
+
+    @staticmethod
+    @abstractmethod
+    def _model(self, ha):
+        """Calculate the model for the point source response.
+
+        Any subclass of FitTransit must define this method.
+
+        Parameters
+        ----------
+        ha : np.ndarray
+            Hour angle in degrees.
+        """
+        return
+
+    @staticmethod
+    @abstractmethod
+    def _jacobian(self, ha):
+        """Calculate the jacobian of the model for the point source response.
+
+        Any subclass of FitTransit must define this method.
+
+        Parameters
+        ----------
+        ha : np.ndarray
+            Hour angle in degrees.
+
+        Returns
+        -------
+        jac : np.ndarray[..., nparam, nha]
+            The jacobian defined as
+            jac[..., i, j] = d(model(ha)) / d(param[i]) evaluated at ha[j]
+        """
+        return
+
+    @classmethod
+    def tval(cls, alpha, ndof):
+        """Quantile of a standardized Student's t random variable.
+
+        This quantity is slow to compute.  Past values will be cached
+        in a dictionary shared by all instances of the class.
+
+        Parameters
+        ----------
+        alpha : float
+            Calculate the quantile corresponding to the lower tail probability
+            1 - alpha / 2.
+        ndof : np.ndarray or int
+            Number of degrees of freedom of the Student's t variable.
+
+        Returns
+        -------
+        tval : np.ndarray or float
+            Quantile of a standardized Student's t random variable.
+        """
+        prob = 1.0 - 0.5 * alpha
+
+        arr_ndof = np.atleast_1d(ndof)
+        tval = np.zeros(arr_ndof.shape, dtype=np.float32)
+
+        for ind, nd in np.ndenumerate(arr_ndof):
+            key = (int(100.0 * prob), nd)
+            if key not in cls._tval:
+                cls._tval[key] = scipy.stats.t.ppf(prob, nd)
+            tval[ind] = cls._tval[key]
+
+        if np.isscalar(ndof):
+            tval = np.squeeze(tval)
+
+        return tval
+
+
+class FitPoly(FitTransit):
+    """Base class for fitting polynomials to point source transits.
+
+    Maps methods of np.polynomial to methods of the class for the
+    requested polynomial type.
+    """
+
+    def __init__(self, poly_type="standard", *args, **kwargs):
+        """Instantiates a FitPoly object.
+
+        Parameters
+        ----------
+        poly_type : str
+            Type of polynomial.  Can be 'standard', 'hermite', or 'chebyshev'.
+        """
+        super(FitPoly, self).__init__(poly_type=poly_type, *args, **kwargs)
+
+        self._set_polynomial_model(poly_type)
+
+    def _set_polynomial_model(self, poly_type):
+        """Map methods of np.polynomial to methods of the class."""
+        if poly_type == "standard":
+            self._vander = np.polynomial.polynomial.polyvander
+            self._eval = np.polynomial.polynomial.polyval
+            self._deriv = np.polynomial.polynomial.polyder
+            self._root = np.polynomial.polynomial.polyroots
+        elif poly_type == "hermite":
+            self._vander = np.polynomial.hermite.hermvander
+            self._eval = np.polynomial.hermite.hermval
+            self._deriv = np.polynomial.hermite.hermder
+            self._root = np.polynomial.hermite.hermroots
+        elif poly_type == "chebyshev":
+            self._vander = np.polynomial.chebyshev.chebvander
+            self._eval = np.polynomial.chebyshev.chebval
+            self._deriv = np.polynomial.chebyshev.chebder
+            self._root = np.polynomial.chebyshev.chebroots
+        else:
+            raise ValueError(
+                "Do not recognize polynomial type %s."
+                "Options are 'standard', 'hermite', or 'chebyshev'." % poly_type
+            )
+
+        self.poly_type = poly_type
+
+    def _fast_eval(self, ha, param=None, elementwise=False):
+        """Evaluate the polynomial at the requested hour angle."""
+        if param is None:
+            param = self.param
+
+        vander = self._vander(ha, param.shape[-1] - 1)
+
+        if elementwise:
+            out = np.sum(vander * param, axis=-1)
+        elif param.ndim == 1:
+            out = np.dot(vander, param)
+        else:
+            out = np.matmul(param, np.rollaxis(vander, -1))
+
+        return np.squeeze(out, axis=-1) if np.isscalar(ha) else out
+
+
+class FitAmpPhase(FitTransit):
+    """Base class for fitting models to the amplitude and phase during point source transit.
+
+    Assumes an independent fit to amplitude and phase, and provides methods for predicting the
+    uncertainty on each.
+
+    Methods
+    -------
+    uncertainty_amp
+    uncertainty_phi
+    """
+
+    def uncertainty_amp(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on amplitude at given hour angle(s).
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the amplitude in fractional units.
+        """
+        x = np.atleast_1d(ha)
+        err = _propagate_uncertainty(
+            self._jacobian_amp(x, elementwise=elementwise),
+            self.param_cov[..., : self.npara, : self.npara],
+            self.tval(alpha, self.ndofa),
+        )
+        return np.squeeze(err, axis=-1) if np.isscalar(ha) else err
+
+    def uncertainty_phi(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on phase at given hour angle(s).
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the phase in radians.
+        """
+        x = np.atleast_1d(ha)
+        err = _propagate_uncertainty(
+            self._jacobian_phi(x, elementwise=elementwise),
+            self.param_cov[..., self.npara :, self.npara :],
+            self.tval(alpha, self.ndofp),
+        )
+        return np.squeeze(err, axis=-1) if np.isscalar(ha) else err
+
+    def uncertainty(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on the response at given hour angle(s).
+
+        Returns the quadrature sum of the amplitude and phase uncertainty.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the response.
+        """
+        with np.errstate(all="ignore"):
+            err = np.abs(self._model(ha, elementwise=elementwise)) * np.sqrt(
+                self.uncertainty_amp(ha, alpha=alpha, elementwise=elementwise) ** 2
+                + self.uncertainty_phi(ha, alpha=alpha, elementwise=elementwise) ** 2
+            )
+        return err
+
+    @property
+    def nparam(self):
+        return self.npara + self.nparp
+
+
+class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
+    """Class that enables separate fits of a polynomial to log amplitude and phase.
+
+    Properties
+    ----------
+    ndofa : np.ndarray[...]
+        Number of degrees of freedom of the amplitude fit.
+    ndofp : np.ndarray[...]
+        Number of degrees of freedom of the phase fit.
+    """
+
+    component = np.array(["amplitude", "phase"], dtype=np.string_)
+
+    def __init__(self, poly_deg_amp=5, poly_deg_phi=5, *args, **kwargs):
+        """Instantiates a FitPolyLogAmpPolyPhase object.
+
+        Parameters
+        ----------
+        poly_deg_amp : int
+            Degree of the polynomial to fit to log amplitude.
+        poly_deg_phi : int
+            Degree of the polynomial to fit to phase.
+        """
+        super(FitPolyLogAmpPolyPhase, self).__init__(
+            poly_deg_amp=poly_deg_amp, poly_deg_phi=poly_deg_phi, *args, **kwargs
+        )
+
+        self.poly_deg_amp = poly_deg_amp
+        self.poly_deg_phi = poly_deg_phi
+
+        self.npara = poly_deg_amp + 1
+        self.nparp = poly_deg_phi + 1
+
+    def _fit(
+        self,
+        ha,
+        resp,
+        resp_err,
+        width=None,
+        absolute_sigma=False,
+        moving_window=0.3,
+        niter=5,
+    ):
+        """Fit polynomial to log amplitude and polynomial to phase.
+
+        Use weighted least squares.  The initial errors on log amplitude
+        are set to `resp_err / abs(resp)`.  If the niter parameter is greater than 1,
+        then those errors will be updated with `resp_err / model_amp`, where `model_amp`
+        is the best-fit model for the amplitude from the previous iteration.  The errors
+        on the phase are set to `resp_err / model_amp` where `model_amp` is the best-fit
+        model for the amplitude from the log amplitude fit.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,]
+            Hour angle in degrees.
+        resp : np.ndarray[nha,]
+            Measured response to the point source.  Complex valued.
+        resp_err : np.ndarray[nha,]
+            Error on the measured response.
+        width : float
+             Initial guess at the width (sigma) of the transit in degrees.
+        absolute_sigma : bool
+            Set to True if the errors provided are absolute.  Set to False if
+            the errors provided are relative, in which case the parameter covariance
+            will be scaled by the chi-squared per degree-of-freedom.
+        niter : int
+            Number of iterations for the log amplitude fit.
+        moving_window : float
+            Only fit hour angles within +/- window * width from the peak.
+            Note that the peak location is updated with each iteration.
+            Set to None to fit all hour angles where resp_err > 0.0.
+
+        Returns
+        -------
+        param : np.ndarray[nparam,]
+            Best-fit model parameters.
+        param_cov : np.ndarray[nparam, nparam]
+            Covariance of the best-fit model parameters.
+        chisq : np.ndarray[2,]
+            Chi-squared of the fit to amplitude and phase.
+        ndof : np.ndarray[2,]
+            Number of degrees of freedom of the fit to amplitude and phase.
+        """
+        min_nfit = min(self.npara, self.nparp) + 1
+
+        window = width * moving_window if (width and moving_window) else None
+
+        # Prepare amplitude data
+        model_amp = np.abs(resp)
+        w0 = tools.invert_no_zero(resp_err) ** 2
+
+        # Only perform fit if there is enough data.
+        this_flag = (model_amp > 0.0) & (w0 > 0.0)
+        ndata = int(np.sum(this_flag))
+        if ndata < min_nfit:
+            raise RuntimeError("Number of data points less than number of parameters.")
+
+        # Prepare amplitude data
+        ya = np.log(model_amp)
+
+        # Prepare phase data.
+        phi = np.angle(resp)
+        phi0 = phi[np.argmin(np.abs(ha))]
+
+        yp = phi - phi0
+        yp += (yp < -np.pi) * 2 * np.pi - (yp > np.pi) * 2 * np.pi
+        yp += phi0
+
+        # Calculate vandermonde matrix
+        A = self._vander(ha, self.poly_deg_amp)
+        center = 0.0
+
+        # Iterate to obtain model estimate for amplitude
+        for kk in range(niter):
+
+            wk = w0 * model_amp ** 2
+
+            if window is not None:
+
+                if kk > 0:
+                    center = self.peak(param=coeff)
+
+                if np.isnan(center):
+                    raise RuntimeError("No peak found.")
+
+                wk *= (np.abs(ha - center) <= window).astype(np.float)
+
+                ndata = int(np.sum(wk > 0.0))
+                if ndata < min_nfit:
+                    raise RuntimeError(
+                        "Number of data points less than number of parameters."
+                    )
+
+            C = np.dot(A.T, wk[:, np.newaxis] * A)
+            coeff = lstsq(C, np.dot(A.T, wk * ya))[0]
+
+            model_amp = np.exp(np.dot(A, coeff))
+
+        # Compute final value for amplitude
+        center = self.peak(param=coeff)
+
+        if np.isnan(center):
+            raise RuntimeError("No peak found.")
+
+        wf = w0 * model_amp ** 2
+        if window is not None:
+            wf *= (np.abs(ha - center) <= window).astype(np.float)
+
+            ndata = int(np.sum(wf > 0.0))
+            if ndata < min_nfit:
+                raise RuntimeError(
+                    "Number of data points less than number of parameters."
+                )
+
+        cova = inv(np.dot(A.T, wf[:, np.newaxis] * A))
+        coeffa = np.dot(cova, np.dot(A.T, wf * ya))
+
+        mamp = np.dot(A, coeffa)
+
+        # Compute final value for phase
+        A = self._vander(ha, self.poly_deg_phi)
+
+        covp = inv(np.dot(A.T, wf[:, np.newaxis] * A))
+        coeffp = np.dot(covp, np.dot(A.T, wf * yp))
+
+        mphi = np.dot(A, coeffp)
+
+        # Compute chisq per degree of freedom
+        ndofa = ndata - self.npara
+        ndofp = ndata - self.nparp
+
+        ndof = np.array([ndofa, ndofp])
+        chisq = np.array([np.sum(wf * (ya - mamp) ** 2), np.sum(wf * (yp - mphi) ** 2)])
+
+        # Scale the parameter covariance by chisq per degree of freedom.
+        # Equivalent to using RMS of the residuals to set the absolute error
+        # on the measurements.
+        if not absolute_sigma:
+            scale_factor = chisq * tools.invert_no_zero(ndof.astype(np.float32))
+            cova *= scale_factor[0]
+            covp *= scale_factor[1]
+
+        param = np.concatenate((coeffa, coeffp))
+
+        param_cov = np.zeros((self.nparam, self.nparam), dtype=np.float32)
+        param_cov[: self.npara, : self.npara] = cova
+        param_cov[self.npara :, self.npara :] = covp
+
+        return param, param_cov, chisq, ndof
+
+    def peak(self, param=None):
+        """Find the peak of the transit.
+
+        Parameters
+        ----------
+        param : np.ndarray[..., nparam]
+            Coefficients of the polynomial model for log amplitude.
+            Defaults to `self.param`.
+
+        Returns
+        -------
+        peak : np.ndarray[...]
+            Location of the maximum amplitude in degrees hour angle.
+            If the polynomial does not have a maximum, then NaN is returned.
+        """
+        if param is None:
+            param = self.param
+
+        der1 = self._deriv(param[..., : self.npara], m=1, axis=-1)
+        der2 = self._deriv(param[..., : self.npara], m=2, axis=-1)
+
+        shp = der1.shape[:-1]
+        peak = np.full(shp, np.nan, dtype=der1.dtype)
+
+        for ind in np.ndindex(*shp):
+
+            ider1 = der1[ind]
+
+            if np.any(~np.isfinite(ider1)):
                 continue
 
-            # We will fit the complex data.  Break n-element complex array g(ra)
-            # into 2n-element real array [Re{g(ra)}, Im{g(ra)}] for fit.
-            x = np.tile(ra[this_flag], 2)
-
-            y_complex = response[ff, ii, this_flag]
-            y = np.concatenate((y_complex.real, y_complex.imag))
-
-            y_error = np.tile(response_error[ff, ii, this_flag], 2)
-
-            # Initial estimate of parameter values:
-            # [peak_amplitude, centroid, fwhm,
-            #  phase_intercept, phase_slope,
-            #  phase_quad, phase_cube,
-            #  phase_quart, phase_quint]
-            p0 = np.array(
+            root = self._root(ider1)
+            xmax = np.real(
                 [
-                    np.max(np.nan_to_num(np.abs(y_complex))),
-                    np.median(x),
-                    fwhm[ff, ii],
-                    np.median(np.nan_to_num(np.angle(y_complex, deg=True))),
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
-                    0.0,
+                    rr
+                    for rr in root
+                    if (rr.imag == 0) and (self._eval(rr, der2[ind]) < 0.0)
                 ]
             )
 
-            # Perform the fit.  If there is an error,
-            # then we leave parameter values as NaN.
-            try:
-                popt, pcov = curve_fit(
-                    func_point_source_transit,
-                    x,
-                    y,
-                    p0=p0,
-                    sigma=y_error,
-                    absolute_sigma=True,
-                )
-            except Exception as error:
-                if verbose:
-                    print("Feed %d, Freq %d: %s" % (ii, ff, error))
-                continue
+            peak[ind] = xmax[np.argmin(np.abs(xmax))] if xmax.size > 0 else np.nan
 
-            # Save the results
-            param[ff, ii] = popt
-            param_cov[ff, ii] = pcov
+        return peak
 
-    # Return the best-fit parameters and parameter covariance
-    return param, param_cov
+    def _model(self, ha, elementwise=False):
+
+        amp = self._fast_eval(
+            ha, self.param[..., : self.npara], elementwise=elementwise
+        )
+        phi = self._fast_eval(
+            ha, self.param[..., self.npara :], elementwise=elementwise
+        )
+
+        return np.exp(amp) * (np.cos(phi) + 1.0j * np.sin(phi))
+
+    def _jacobian_amp(self, ha, elementwise=False):
+
+        jac = np.rollaxis(self._vander(ha, self.poly_deg_amp), -1)
+        if not elementwise and self.N is not None:
+            slc = (None,) * len(self.N)
+            jac = jac[slc]
+
+        return jac
+
+    def _jacobian_phi(self, ha, elementwise=False):
+
+        jac = np.rollaxis(self._vander(ha, self.poly_deg_phi), -1)
+        if not elementwise and self.N is not None:
+            slc = (None,) * len(self.N)
+            jac = jac[slc]
+
+        return jac
+
+    @property
+    def ndofa(self):
+        """Number of degrees of freedom for the amplitude fit."""
+        return self.ndof[..., 0]
+
+    @property
+    def ndofp(self):
+        """Number of degrees of freedom for the phase fit."""
+        return self.ndof[..., 1]
+
+    @property
+    def parameter_names(self):
+        """Array of strings containing the name of the fit parameters."""
+        return np.array(
+            ["%s_poly_amp_coeff%d" % (self.poly_type, p) for p in range(self.npara)]
+            + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
+            dtype=np.string_,
+        )
 
 
-def func_point_source_transit(
-    x,
-    peak_amplitude,
-    centroid,
-    fwhm,
-    phase_intercept,
-    phase_slope,
-    phase_quad,
-    phase_cube,
-    phase_quart,
-    phase_quint,
-):
-    """ Computes parameteric model for the point source transit.
-    Model consists of a gaussian in amplitude and a line in phase.
-    To be used within curve fitting routine.
+class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
+    """Class that enables fits of a gaussian to amplitude and a polynomial to phase.
 
-    .. math::
-        g(ra) = peak_amplitude * \exp{-4 \ln{2} [(ra - centroid)/fwhm]^2} *
-                \exp{j [phase_intercept + phase_slope * (ra - centroid)]}
+    Properties
+    ----------
+    ndofa : np.ndarray[...]
+        Number of degrees of freedom of the amplitude fit.
+    ndofp : np.ndarray[...]
+        Number of degrees of freedom of the phase fit.
+    """
+
+    component = np.array(["complex"], dtype=np.string_)
+    npara = 3
+
+    def __init__(self, poly_deg_phi=5, *args, **kwargs):
+        """Instantiates a FitGaussAmpPolyPhase object.
+
+        Parameters
+        ----------
+        poly_deg_phi : int
+            Degree of the polynomial to fit to phase.
+        """
+        super(FitGaussAmpPolyPhase, self).__init__(
+            poly_deg_phi=poly_deg_phi, *args, **kwargs
+        )
+
+        self.poly_deg_phi = poly_deg_phi
+        self.nparp = poly_deg_phi + 1
+
+    def _fit(self, ha, resp, resp_err, width=5, absolute_sigma=False, param0=None):
+        """Fit gaussian to amplitude and polynomial to phase.
+
+        Uses non-linear least squares (`scipy.optimize.curve_fit`) to
+        fit the model to the complex valued data.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,]
+            Hour angle in degrees.
+        resp : np.ndarray[nha,]
+            Measured response to the point source.  Complex valued.
+        resp_err : np.ndarray[nha,]
+            Error on the measured response.
+        width : float
+             Initial guess at the width (sigma) of the transit in degrees.
+        absolute_sigma : bool
+            Set to True if the errors provided are absolute.  Set to False if
+            the errors provided are relative, in which case the parameter covariance
+            will be scaled by the chi-squared per degree-of-freedom.
+        param0 : np.ndarray[nparam,]
+            Initial guess at the parameters for the Levenberg-Marquardt algorithm.
+            If these are not provided, then this function will make reasonable guesses.
+
+        Returns
+        -------
+        param : np.ndarray[nparam,]
+            Best-fit model parameters.
+        param_cov : np.ndarray[nparam, nparam]
+            Covariance of the best-fit model parameters.
+        chisq : float
+            Chi-squared of the fit.
+        ndof : int
+            Number of degrees of freedom of the fit.
+        """
+        if ha.size < (min(self.npara, self.nparp) + 1):
+            raise RuntimeError("Number of data points less than number of parameters.")
+
+        # We will fit the complex data.  Break n-element complex array y(x)
+        # into 2n-element real array [Re{y(x)}, Im{y(x)}] for fit.
+        x = np.tile(ha, 2)
+        y = np.concatenate((resp.real, resp.imag))
+        err = np.tile(resp_err, 2)
+
+        # Initial estimate of parameter values:
+        # [peak_amplitude, centroid, fwhm, phi_0, phi_1, phi_2, ...]
+        if param0 is None:
+            param0 = [np.max(np.nan_to_num(np.abs(resp))), 0.0, 2.355 * width]
+            param0.append(np.median(np.nan_to_num(np.angle(resp, deg=True))))
+            param0 += [0.0] * (self.nparp - 1)
+            param0 = np.array(param0)
+
+        # Perform the fit.
+        param, param_cov = curve_fit(
+            self._get_fit_func(),
+            x,
+            y,
+            sigma=err,
+            p0=param0,
+            absolute_sigma=absolute_sigma,
+            jac=self._get_fit_jac(),
+        )
+
+        chisq = np.sum(
+            (
+                np.abs(resp - self._model(ha, param=param))
+                * tools.invert_no_zero(resp_err)
+            )
+            ** 2
+        )
+        ndof = y.size - self.nparam
+
+        return param, param_cov, chisq, ndof
+
+    def peak(self):
+        """Return the peak of the transit.
+
+        Returns
+        -------
+        peak : float
+            Centroid of the gaussian fit to amplitude.
+        """
+        return self.param[..., 1]
+
+    def _get_fit_func(self):
+        """Generates a function that can be used by `curve_fit` to compute the model."""
+
+        def fit_func(x, *param):
+            """Function used by `curve_fit` to compute the model.
+
+            Parameters
+            ----------
+            x : np.ndarray[2 * nha,]
+                Hour angle in degrees replicated twice for the real
+                and imaginary components, i.e., `x = np.concatenate((ha, ha))`.
+            *param : floats
+                Parameters of the model.
+
+            Returns
+            -------
+            model : np.ndarray[2 * nha,]
+                Model for the complex valued point source response,
+                packaged as `np.concatenate((model.real, model.imag))`.
+            """
+            peak_amplitude, centroid, fwhm = param[:3]
+            poly_coeff = param[3:]
+
+            nreal = len(x) // 2
+            xr = x[:nreal]
+
+            dxr = _correct_phase_wrap(xr - centroid)
+
+            model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dxr / fwhm) ** 2)
+            model_phase = self._eval(xr, poly_coeff)
+
+            model = np.concatenate(
+                (model_amp * np.cos(model_phase), model_amp * np.sin(model_phase))
+            )
+
+            return model
+
+        return fit_func
+
+    def _get_fit_jac(self):
+        """Generates a function that can be used by `curve_fit` to compute jacobian of the model."""
+
+        def fit_jac(x, *param):
+            """Function used by `curve_fit` to compute the jacobian.
+
+            Parameters
+            ----------
+            x : np.ndarray[2 * nha,]
+                Hour angle in degrees.  Replicated twice for the real
+                and imaginary components, i.e., `x = np.concatenate((ha, ha))`.
+            *param : float
+                Parameters of the model.
+
+            Returns
+            -------
+            jac : np.ndarray[2 * nha, nparam]
+                The jacobian defined as
+                jac[i, j] = d(model(ha)) / d(param[j]) evaluated at ha[i]
+            """
+
+            peak_amplitude, centroid, fwhm = param[:3]
+            poly_coeff = param[3:]
+
+            nparam = len(param)
+            nx = len(x)
+            nreal = nx // 2
+
+            jac = np.empty((nx, nparam), dtype=x.dtype)
+
+            dx = _correct_phase_wrap(x - centroid)
+
+            dxr = dx[:nreal]
+            xr = x[:nreal]
+
+            model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dxr / fwhm) ** 2)
+            model_phase = self._eval(xr, poly_coeff)
+            model = np.concatenate(
+                (model_amp * np.cos(model_phase), model_amp * np.sin(model_phase))
+            )
+
+            dmodel_dphase = np.concatenate((-model[nreal:], model[:nreal]))
+
+            jac[:, 0] = tools.invert_no_zero(peak_amplitude) * model
+            jac[:, 1] = 8.0 * np.log(2.0) * dx * tools.invert_no_zero(fwhm) ** 2 * model
+            jac[:, 2] = (
+                8.0 * np.log(2.0) * dx ** 2 * tools.invert_no_zero(fwhm) ** 3 * model
+            )
+            jac[:, 3:] = (
+                self._vander(x, self.poly_deg_phi) * dmodel_dphase[:, np.newaxis]
+            )
+
+            return jac
+
+        return fit_jac
+
+    def _model(self, ha, param=None, elementwise=False):
+
+        if param is None:
+            param = self.param
+
+        # Evaluate phase
+        model_phase = self._fast_eval(
+            ha, param[..., self.npara :], elementwise=elementwise
+        )
+
+        # Evaluate amplitude
+        amp_param = param[..., : self.npara]
+        ndim1 = amp_param.ndim
+        if not elementwise and (ndim1 > 1) and not np.isscalar(ha):
+            ndim2 = ha.ndim
+            amp_param = amp_param[(slice(None),) * ndim1 + (None,) * ndim2]
+            ha = ha[(None,) * (ndim1 - 1) + (slice(None),) * ndim2]
+
+        slc = (slice(None),) * (ndim1 - 1)
+        peak_amplitude = amp_param[slc + (0,)]
+        centroid = amp_param[slc + (1,)]
+        fwhm = amp_param[slc + (2,)]
+
+        dha = _correct_phase_wrap(ha - centroid)
+
+        model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dha / fwhm) ** 2)
+
+        # Return complex valued quantity
+        return model_amp * (np.cos(model_phase) + 1.0j * np.sin(model_phase))
+
+    def _jacobian_amp(self, ha, elementwise=False):
+
+        amp_param = self.param[..., : self.npara]
+
+        shp = amp_param.shape
+        ndim1 = amp_param.ndim
+
+        if not elementwise:
+            shp = shp + ha.shape
+
+            if ndim1 > 1:
+                ndim2 = ha.ndim
+                amp_param = amp_param[(slice(None),) * ndim1 + (None,) * ndim2]
+                ha = ha[(None,) * (ndim1 - 1) + (slice(None),) * ndim2]
+
+        slc = (slice(None),) * (ndim1 - 1)
+        peak_amplitude = amp_param[slc + (0,)]
+        centroid = amp_param[slc + (1,)]
+        fwhm = amp_param[slc + (2,)]
+
+        dha = _correct_phase_wrap(ha - centroid)
+
+        jac = np.zeros(shp, dtype=ha.dtype)
+        jac[slc + (0,)] = tools.invert_no_zero(peak_amplitude)
+        jac[slc + (1,)] = 8.0 * np.log(2.0) * dha * tools.invert_no_zero(fwhm) ** 2
+        jac[slc + (2,)] = 8.0 * np.log(2.0) * dha ** 2 * tools.invert_no_zero(fwhm) ** 3
+
+        return jac
+
+    def _jacobian_phi(self, ha, elementwise=False):
+
+        jac = np.rollaxis(self._vander(ha, self.poly_deg_phi), -1)
+        if not elementwise and self.N is not None:
+            slc = (None,) * len(self.N)
+            jac = jac[slc]
+
+        return jac
+
+    @property
+    def parameter_names(self):
+        """Array of strings containing the name of the fit parameters."""
+        return np.array(
+            ["peak_amplitude", "centroid", "fwhm"]
+            + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
+            dtype=np.string_,
+        )
+
+    @property
+    def ndofa(self):
+        """Number of degrees of freedom for the amplitude fit."""
+        return self.ndof
+
+    @property
+    def ndofp(self):
+        """Number of degrees of freedom for the phase fit."""
+        return self.ndof
+
+
+def _propagate_uncertainty(jac, cov, tval):
+    """Propagate uncertainty on parameters to uncertainty on model prediction.
 
     Parameters
     ----------
-    x : np.ndarray[2*nra, ]
-        Right ascension in degrees, replicated twice to accomodate
-        the real and imaginary components of the response, i.e.,
-        x = [ra, ra].
-    peak_amplitude : float
-        Model parameter.  Normalization of the gaussian.
-    centroid : float
-        Model parameter.  Centroid of the gaussian in degrees RA.
-    fwhm : float
-        Model parameter.  Full width at half maximum of the gaussian
-        in degrees RA.
-    phase_intercept : float
-        Model parameter.  Phase at the centroid in units of degrees.
-    phase_slope : float
-        Model parameter.  Fringe rate in degrees phase per degrees RA.
+    jac : np.ndarray[..., nparam] (elementwise) or np.ndarray[..., nparam, nha]
+        The jacobian defined as
+        jac[..., i, j] = d(model(ha)) / d(param[i]) evaluated at ha[j]
+    cov : [..., nparam, nparam]
+        Covariance of model parameters.
+    tval : np.ndarray[...]
+        Quantile of a standardized Student's t random variable.
+        The 1-sigma uncertainties will be scaled by this value.
 
     Returns
     -------
-    model : np.ndarray[2*nra, ]
-        Model prediction for the complex point source response,
-        packaged as [real{g(ra)}, imag{g(ra)}].
+    err : np.ndarray[...] (elementwise) or np.ndarray[..., nha]
+        Uncertainty on the model.
     """
+    if jac.ndim == cov.ndim:
+        # Corresponds to non-elementwise analysis
+        df2 = np.sum(jac * np.matmul(cov, jac), axis=-2)
+    else:
+        # Corresponds to elementwise analysis
+        df2 = np.sum(jac * np.sum(cov * jac[..., np.newaxis], axis=-1), axis=-1)
 
-    model = np.empty_like(x)
-    nreal = len(x) // 2
+    # Expand the tval array so that it can be broadcast against
+    # the sum squared error df2
+    add_dim = df2.ndim - tval.ndim
+    if add_dim > 0:
+        tval = tval[(np.s_[...],) + (None,) * add_dim]
 
-    dx = x[:nreal] - centroid
-    dx = dx - (dx > 180.0) * 360.0 + (dx < -180.0) * 360.0
-
-    model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dx / fwhm) ** 2)
-    model_phase = np.deg2rad(
-        phase_intercept
-        + phase_slope * dx
-        + phase_quad * dx ** 2
-        + phase_cube * dx ** 3
-        + phase_quart * dx ** 4
-        + phase_quint * dx ** 5
-    )
-    model[:nreal] = model_amp * np.cos(model_phase)
-    model[nreal:] = model_amp * np.sin(model_phase)
-
-    return model
+    return tval * np.sqrt(df2)
 
 
-def model_point_source_transit(
-    x,
-    peak_amplitude,
-    centroid,
-    fwhm,
-    phase_intercept,
-    phase_slope,
-    phase_quad,
-    phase_cube,
-    phase_quart,
-    phase_quint,
-):
-    """ Computes parameteric model for the point source transit.
-    Model consists of a gaussian in amplitude and a line in phase.
-
-    .. math::
-        g(ra) = peak_amplitude * \exp{-4 \ln{2} [(ra - centroid)/fwhm]^2} *
-                \exp{j [phase_intercept + phase_slope * (ra - centroid)]}
+def _correct_phase_wrap(ha):
+    """Ensure hour angle is between -180 and 180 degrees.
 
     Parameters
     ----------
-    x : np.ndarray[nra, ]
-        Right ascension in degrees.
-    peak_amplitude : float
-        Model parameter.  Normalization of the gaussian.
-    centroid : float
-        Model parameter.  Centroid of the gaussian in degrees RA.
-    fwhm : float
-        Model parameter.  Full width at half maximum of the gaussian
-        in degrees RA.
-    phase_intercept : float
-        Model parameter.  Phase at the centroid in units of degrees.
-    phase_slope : float
-        Model parameter.  Fringe rate in degrees phase per degrees RA.
+    ha : np.ndarray or float
+        Hour angle in degrees.
 
     Returns
     -------
-    model : np.ndarray[nra, ]
-        Model prediction for the complex point source response,
-        packaged as complex numbers.
+    out : same as ha
+        Hour angle between -180 and 180 degrees.
     """
-
-    dx = x - centroid
-    dx = dx - (dx > 180.0) * 360.0 + (dx < -180.0) * 360.0
-
-    model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dx / fwhm) ** 2)
-    model_phase = np.deg2rad(
-        phase_intercept
-        + phase_slope * dx
-        + phase_quad * dx ** 2
-        + phase_cube * dx ** 3
-        + phase_quart * dx ** 4
-        + phase_quint * dx ** 5
-    )
-    model = model_amp * np.exp(1.0j * model_phase)
-
-    return model
+    return ((ha + 180.0) % 360.0) - 180.0
 
 
 def fit_point_source_map(
@@ -735,19 +1648,16 @@ def func_real_dirty_gauss(dirty_beam):
     return real_dirty_gauss
 
 
-def guess_fwhm(freq, pol="X", dec=None, sigma=False):
-    """ This function provides a rough estimate of the FWHM
-    of the primary antenna beam of a CHIME feed for a
-    given frequency and polarization.
+def guess_fwhm(freq, pol="X", dec=None, sigma=False, voltage=False, seconds=False):
+    """Provide rough estimate of the FWHM of the CHIME primary beam pattern.
 
-    It uses a linear fit to the median FWHM(nu) over all
-    feeds of a given polarization for CygA transits.
-    CasA and TauA transits also showed good agreement
-    with this relationship.
+    It uses a linear fit to the median FWHM(nu) over all feeds of a given
+    polarization for CygA transits.  CasA and TauA transits also showed
+    good agreement with this relationship.
 
     Parameters
     ----------
-    freq : float, list of floats
+    freq : float or np.ndarray
         Frequency in MHz.
     pol : string or bool
         Polarization, can be 'X'/'E' or 'Y'/'S'
@@ -759,33 +1669,448 @@ def guess_fwhm(freq, pol="X", dec=None, sigma=False):
     sigma : bool
         Return the standard deviation instead of the FWHM.
         Default is to return the FWHM.
+    voltage : bool
+        Return the value for a voltage beam, otherwise returns
+        value for a power beam.
+    seconds : bool
+        Convert to elapsed time in units of seconds.
+        Otherwise returns in units of degrees on the sky.
 
     Returns
     -------
-    fwhm : float, list of floats
+    fwhm : float or np.ndarray
         Rough estimate of the FWHM (or standard deviation if sigma=True).
     """
-
     # Define linear coefficients based on polarization
     if (pol == "Y") or (pol == "S"):
-        slope = -0.0025954
-        offset = 3.0311712
+        coeff = [1.226e-06, -0.004097, 3.790]
     else:
-        slope = -0.0039784
-        offset = 4.3951982
+        coeff = [7.896e-07, -0.003226, 3.717]
 
     # Estimate standard deviation
-    sig = offset + slope * freq
+    sig = np.polyval(coeff, freq)
 
     # Divide by declination to convert to degrees hour angle
     if dec is not None:
         sig /= np.cos(dec)
 
-    # If requested return standard deviation, otherwise return fwhm
-    if sigma:
-        return sig
-    else:
-        return 2.35482 * sig
+    # If requested, convert to seconds
+    if seconds:
+        earth_rotation_rate = 360.0 / (24.0 * 3600.0)
+        sig /= earth_rotation_rate
+
+    # If requested, convert to width of voltage beam
+    if voltage:
+        sig *= np.sqrt(2)
+
+    # If sigma not explicitely requested, then convert to FWHM
+    if not sigma:
+        sig *= 2.35482
+
+    return sig
+
+
+def estimate_directional_scale(z, c=2.1):
+    """Calculate robust, direction dependent estimate of scale.
+
+    Parameters
+    ----------
+    z: np.ndarray
+        1D array containing the data.
+    c: float
+        Cutoff in number of MAD.  Data points whose absolute value is
+        larger than c * MAD from the median are saturated at the
+        maximum value in the estimator.
+
+    Returns
+    -------
+    zmed : float
+        The median value of z.
+    sa : float
+        Estimate of scale for z <= zmed.
+    sb : float
+        Estimate of scale for z > zmed.
+    """
+    zmed = np.median(z)
+
+    x = z - zmed
+
+    xa = x[x <= 0.0]
+    xb = x[x >= 0.0]
+
+    def huber_rho(dx, c=2.1):
+
+        num = float(dx.size)
+
+        s0 = 1.4826 * np.median(np.abs(dx))
+
+        dx_sig0 = dx * tools.invert_no_zero(s0)
+
+        rho = (dx_sig0 / c) ** 2
+        rho[rho > 1.0] = 1.0
+
+        return 1.54 * s0 * np.sqrt(2.0 * np.sum(rho) / num)
+
+    sa = huber_rho(xa, c=c)
+    sb = huber_rho(xb, c=c)
+
+    return zmed, sa, sb
+
+
+def fit_histogram(
+    arr,
+    bins="auto",
+    rng=None,
+    no_weight=False,
+    test_normal=False,
+    return_histogram=False,
+):
+    """Fit a gaussian to a histogram of the data.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        1D array containing the data.  Arrays with more than one dimension are flattened.
+    bins : int or sequence of scalars or str
+        If `bins` is an int, it defines the number of equal-width bins in `rng`.
+        If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
+            including the rightmost edge, allowing for non-uniform bin widths.
+        If `bins` is a string, it defines a method for computing the bins.
+    rng : (float, float)
+        The lower and upper range of the bins.  If not provided, then the range spans
+        the minimum to maximum value of `arr`.
+    no_weight : bool
+        Give equal weighting to each histogram bin.  Otherwise use proper weights based
+        on number of counts observed in each bin.
+    test_normal : bool
+        Apply the Shapiro-Wilk and Anderson-Darling tests for normality to the data.
+    return_histogram : bool
+        Return the histogram.  Otherwise return only the best fit parameters and test statistics.
+
+    Returns
+    -------
+    results: dict
+        Dictionary containing the following fields:
+            indmin : int
+                Only bins whose index is greater than indmin were included in the fit.
+            indmax : int
+                Only bins whose index is less than indmax were included in the fit.
+            xmin : float
+                The data value corresponding to the centre of the `indmin` bin.
+            xmax : float
+                The data value corresponding to the centre of the `indmax` bin.
+            par: [float, float, float]
+                The parameters of the fit, ordered as [peak, mu, sigma].
+            chisq: float
+                The chi-squared of the fit.
+            ndof : int
+                The number of degrees of freedom of the fit.
+            pte : float
+                The probability to observe the chi-squared of the fit.
+
+        If `return_histogram` is True, then `results` will also contain the following fields:
+            bin_centre : np.ndarray
+                The bin centre of the histogram.
+            bin_count : np.ndarray
+                The bin counts of the histogram.
+
+        If `test_normal` is True, then `results` will also contain the following fields:
+            shapiro : dict
+                stat : float
+                    The Shapiro-Wilk test statistic.
+                pte : float
+                    The probability to observe `stat` if the data were drawn from a gaussian.
+            anderson : dict
+                stat : float
+                    The Anderson-Darling test statistic.
+                critical : list of float
+                    The critical values of the test statistic.
+                alpha : list of float
+                    The significance levels corresponding to each critical value.
+                past : list of bool
+                    Boolean indicating if the data passes the test for each critical value.
+    """
+    # Make sure the data is 1D
+    data = np.ravel(arr)
+
+    # Histogram the data
+    count, xbin = np.histogram(data, bins=bins, range=rng)
+    cbin = 0.5 * (xbin[0:-1] + xbin[1:])
+
+    # Form initial guess at parameter values using median and MAD
+    nparams = 3
+    par0 = np.zeros(nparams, dtype=np.float)
+    par0[0] = np.max(count)
+    par0[1] = np.median(data)
+    par0[2] = 1.48625 * np.median(np.abs(data - par0[1]))
+
+    # Find the first zero points on either side of the median
+    cont = True
+    indmin = np.argmin(np.abs(cbin - par0[1]))
+    while cont:
+        indmin -= 1
+        cont = (count[indmin] > 0.0) and (indmin > 0)
+    indmin += count[indmin] == 0.0
+
+    cont = True
+    indmax = np.argmin(np.abs(cbin - par0[1]))
+    while cont:
+        indmax += 1
+        cont = (count[indmax] > 0.0) and (indmax < (len(count) - 1))
+    indmax -= count[indmax] == 0.0
+
+    # Restrict range of fit to between zero points
+    x = cbin[indmin : indmax + 1]
+    y = count[indmin : indmax + 1]
+    yerr = np.sqrt(y * (1.0 - y.astype(np.float) / np.sum(y)))
+
+    sigma = None if no_weight else yerr
+
+    # Define the fitting function
+    def gauss(x, peak, mu, sigma):
+        return peak * np.exp(-((x - mu) ** 2) / (2.0 * sigma ** 2))
+
+    # Perform the fit
+    par, var_par = curve_fit(
+        gauss,
+        cbin[indmin : indmax + 1],
+        count[indmin : indmax + 1],
+        p0=par0,
+        sigma=sigma,
+    )
+
+    # Calculate quality of fit
+    chisq = np.sum(((y - gauss(x, *par)) / yerr) ** 2)
+    ndof = np.size(y) - nparams
+    pte = 1.0 - scipy.stats.chi2.cdf(chisq, ndof)
+
+    # Store results in dictionary
+    results_dict = {}
+    results_dict["indmin"] = indmin
+    results_dict["indmax"] = indmax
+    results_dict["xmin"] = cbin[indmin]
+    results_dict["xmax"] = cbin[indmax]
+    results_dict["par"] = par
+    results_dict["chisq"] = chisq
+    results_dict["ndof"] = ndof
+    results_dict["pte"] = pte
+
+    if return_histogram:
+        results_dict["bin_centre"] = cbin
+        results_dict["bin_count"] = count
+
+    # If requested, test normality of the main distribution
+    if test_normal:
+        flag = (data > cbin[indmin]) & (data < cbin[indmax])
+        shap_stat, shap_pte = scipy.stats.shapiro(data[flag])
+
+        results_dict["shapiro"] = {}
+        results_dict["shapiro"]["stat"] = shap_stat
+        results_dict["shapiro"]["pte"] = shap_pte
+
+        ander_stat, ander_crit, ander_signif = scipy.stats.anderson(
+            data[flag], dist="norm"
+        )
+
+        results_dict["anderson"] = {}
+        results_dict["anderson"]["stat"] = ander_stat
+        results_dict["anderson"]["critical"] = ander_crit
+        results_dict["anderson"]["alpha"] = ander_signif
+        results_dict["anderson"]["pass"] = ander_stat < ander_crit
+
+    # Return dictionary
+    return results_dict
+
+
+def _sliding_window(arr, window):
+
+    # Advanced numpy tricks
+    shape = arr.shape[:-1] + (arr.shape[-1] - window + 1, window)
+    strides = arr.strides + (arr.strides[-1],)
+    return np.lib.stride_tricks.as_strided(arr, shape=shape, strides=strides)
+
+
+def flag_outliers(raw, flag, window=25, nsigma=5.0):
+    """Flag outliers with respect to rolling median.
+
+    Parameters
+    ----------
+    raw : np.ndarray[nsample,]
+        Raw data sampled at fixed rate.  Use the `flag` parameter to indicate missing
+        or invalid data.
+    flag : np.ndarray[nsample,]
+        Boolean array where True indicates valid data and False indicates invalid data.
+    window : int
+        Window size (in number of samples) used to determine local median.
+    nsigma : float
+        Data is considered an outlier if it is greater than this number of median absolute
+        deviations away from the local median.
+    Returns
+    -------
+    not_outlier : np.ndarray[nsample,]
+        Boolean array where True indicates valid data and False indicates data that is
+        either an outlier or had flag = True.
+    """
+    # Make sure we have an even window size
+    if window % 2:
+        window += 1
+
+    hwidth = window // 2 - 1
+
+    nraw = raw.size
+    dtype = raw.dtype
+
+    # Replace flagged samples with nan
+    good = np.flatnonzero(flag)
+
+    data = np.full((nraw,), np.nan, dtype=dtype)
+    data[good] = raw[good]
+
+    # Expand the edges
+    expanded_data = np.concatenate(
+        (
+            np.full((hwidth,), np.nan, dtype=dtype),
+            data,
+            np.full((hwidth + 1,), np.nan, dtype=dtype),
+        )
+    )
+
+    # Apply median filter
+    smooth = np.nanmedian(_sliding_window(expanded_data, window), axis=-1)
+
+    # Calculate RMS of residual
+    resid = np.abs(data - smooth)
+
+    rwidth = 9 * window
+    hrwidth = rwidth // 2 - 1
+
+    expanded_resid = np.concatenate(
+        (
+            np.full((hrwidth,), np.nan, dtype=dtype),
+            resid,
+            np.full((hrwidth + 1,), np.nan, dtype=dtype),
+        )
+    )
+
+    sig = 1.4826 * np.nanmedian(_sliding_window(expanded_resid, rwidth), axis=-1)
+
+    not_outlier = resid < (nsigma * sig)
+
+    return not_outlier
+
+
+def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
+    """Replace gain at flagged frequencies with interpolated values.
+
+    Uses a gaussian process regression to perform the interpolation
+    with a Matern function describing the covariance between frequencies.
+
+    Parameters
+    ----------
+    freq : np.ndarray[nfreq,]
+        Frequencies in MHz.
+    gain : np.ndarray[nfreq, ninput]
+        Complex gain for each input and frequency.
+    weight : np.ndarray[nfreq, ninput]
+        Uncertainty on the complex gain, expressed as inverse variance.
+    flag : np.ndarray[nfreq, ninput]
+        Boolean array indicating the good (True) and bad (False) gains.
+        If not provided, then it will be determined by evaluating `weight > 0.0`.
+    length_scale : float
+        Correlation length in frequency in MHz.
+
+    Returns
+    -------
+    interp_gain : np.ndarray[nfreq, ninput]
+        For frequencies with `flag = True`, this will be equal to gain.  For frequencies with
+        `flag = False`, this will be an interpolation of the gains with `flag = True`.
+    interp_weight : np.ndarray[nfreq, ninput]
+        For frequencies with `flag = True`, this will be equal to weight.  For frequencies with
+        `flag = False`, this will be the expected uncertainty on the interpolation.
+    """
+    from sklearn import gaussian_process
+    from sklearn.gaussian_process.kernels import Matern, ConstantKernel
+
+    if flag is None:
+        flag = weight > 0.0
+
+    nfreq, ninput = gain.shape
+
+    interp_gain = gain.copy()
+    interp_weight = weight.copy()
+
+    alpha = tools.invert_no_zero(weight)
+
+    x = freq.reshape(-1, 1)
+
+    for ii in range(ninput):
+
+        train = np.flatnonzero(flag[:, ii])
+        test = np.flatnonzero(~flag[:, ii])
+
+        if train.size > 0:
+
+            xtest = x[test, :]
+
+            xtrain = x[train, :]
+            ytrain = np.hstack(
+                (gain[train, ii, np.newaxis].real, gain[train, ii, np.newaxis].imag)
+            )
+            # Mean subtract
+            ytrain_mu = np.mean(ytrain, axis=0, keepdims=True)
+            ytrain = ytrain - ytrain_mu
+
+            # Get initial estimate of variance
+            var = 0.5 * np.sum(
+                (
+                    1.4826
+                    * np.median(
+                        np.abs(ytrain - np.median(ytrain, axis=0, keepdims=True)),
+                        axis=0,
+                    )
+                )
+                ** 2
+            )
+            # Define kernel
+            kernel = ConstantKernel(var) * Matern(
+                length_scale=length_scale, length_scale_bounds="fixed", nu=1.5
+            )
+
+            # Regress against non-flagged data
+            gp = gaussian_process.GaussianProcessRegressor(
+                kernel=kernel, alpha=alpha[train, ii]
+            )
+            gp.fit(xtrain, ytrain)
+
+            # Predict error
+            ypred, err_ypred = gp.predict(xtest, return_std=True)
+
+            interp_gain[test, ii] = (ypred[:, 0] + ytrain_mu[:, 0]) + 1.0j * (
+                ypred[:, 1] + ytrain_mu[:, 1]
+            )
+            interp_weight[test, ii] = tools.invert_no_zero(err_ypred ** 2)
+
+        else:
+            # No valid data
+            interp_gain[:, ii] = 0.0 + 0.0j
+            interp_weight[:, ii] = 0.0
+
+    return interp_gain, interp_weight
+
+
+def interpolate_gain_quiet(*args, **kwargs):
+    """Call `interpolate_gain` with `ConvergenceWarnings` silenced.
+
+    Accepts and passes all arguments and keyword arguments for `interpolate_gain`.
+    """
+    import warnings
+    from sklearn.exceptions import ConvergenceWarning
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn")
+        results = interpolate_gain(*args, **kwargs)
+
+    return results
 
 
 def _el_to_dec(el):

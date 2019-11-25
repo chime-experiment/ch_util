@@ -98,7 +98,7 @@ FREQ_TO_OMEGA = 2.0 * np.pi * 1e-6
 FREQ_PIVOT = 600.0
 
 # Set up logging
-logger = logging.getLogger("timing")
+logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
@@ -370,7 +370,7 @@ class TimingCorrection(andata.BaseData):
         if val is not None:
             self.attrs["amp_to_delay"] = val
 
-    def set_global_reference_time(self, tref, interpolate=False, **kwargs):
+    def set_global_reference_time(self, tref, window=0.0, interpolate=False, **kwargs):
         """Normalize the delay and alpha template to the value at a single time.
 
         Useful for referencing the template to the value at the time that
@@ -379,20 +379,32 @@ class TimingCorrection(andata.BaseData):
         Parameters
         ----------
         tref : unix time
-            Reference the delays to the values at this time.
+            Reference the templates to the values at this time.
+        window: float
+            Reference the templates to the median value over a window (in seconds)
+            around tref.  If nonzero, this will override the interpolate keyword.
         interpolate : bool
             Interpolate the delay template to time tref.  Otherwise take the measured time
             nearest to tref.  The get_tau method is use to perform the interpolation, and
             kwargs for that method will be passed along.
         """
         tref = ephemeris.ensure_unix(tref)
+        tref_string = ephemeris.unix_to_datetime(tref).strftime("%Y-%m-%d %H:%M:%S %Z")
         if (tref < self.time[0]) or (tref > self.time[-1]):
-            InputError(
-                "Timing correction not available for time %s."
-                % ephemeris.unix_to_datetime(tref).strftime("%Y-%m-%d %H:%M:%S %Z")
+            InputError("Timing correction not available for time %s." % tref_string)
+        else:
+            logger.info(
+                "Referencing timing correction with respect to %s." % tref_string
             )
 
-        if interpolate:
+        if window > 0.0:
+            iref = np.flatnonzero(
+                (self.time >= (tref - window)) & (self.time <= (tref + window))
+            )
+            logger.info("Using median of %d samples around reference time." % iref.size)
+            tau_ref = np.median(self.tau[:, iref], axis=-1, keepdims=True)
+            alpha_ref = np.median(self.alpha[:, iref], axis=-1, keepdims=True)
+        elif interpolate:
             tau_ref = self.get_tau(np.atleast_1d(tref), ignore_amp=True, **kwargs)
             alpha_ref = self.get_alpha(np.atleast_1d(tref), **kwargs)
         else:
@@ -925,13 +937,23 @@ class TimingCorrection(andata.BaseData):
 
             vis = timestream.vis[:] if not copy else timestream.vis[:].copy()
 
-            freq = kwargs.pop("freq", timestream.freq[:])
-            prod = kwargs.pop("prod", timestream.index_map["prod"][:])
-            inputs = kwargs.pop("input", timestream.input[:])
-            timestamp = kwargs.pop("time", timestream.time[:])
-            stack = kwargs.pop("stack", timestream.stack[:])
-            reverse_stack = kwargs.pop(
-                "reverse_stack", timestream.reverse_map["stack"]["stack"][:]
+            freq = kwargs.pop("freq") if "freq" in kwargs else timestream.freq[:]
+            prod = (
+                kwargs.pop("prod")
+                if "prod" in kwargs
+                else timestream.index_map["prod"][:]
+            )
+            inputs = kwargs.pop("input") if "input" in kwargs else timestream.input[:]
+            timestamp = kwargs.pop("time") if "time" in kwargs else timestream.time[:]
+            stack = (
+                kwargs.pop("stack")
+                if "stack" in kwargs
+                else timestream.index_map["stack"][:]
+            )
+            reverse_stack = (
+                kwargs.pop("reverse_stack")
+                if "reverse_stack" in kwargs
+                else timestream.reverse_map["stack"]["stack"][:]
             )
 
         input_flags = kwargs.pop("input_flags", None)
@@ -944,6 +966,7 @@ class TimingCorrection(andata.BaseData):
         )
 
         if is_stack:
+            logger.info("Applying timing correction to stacked data.")
             # Visibilities have been stacked.  Stack the timing correction
             # before applying it.  Application is done for each frequency in this case.
             tau = self.get_stacked_tau(
@@ -960,6 +983,7 @@ class TimingCorrection(andata.BaseData):
                 vis[ff] *= np.exp(-1.0j * FREQ_TO_OMEGA * freq[ff] * tau)
 
         else:
+            logger.info("Applying timing correction to unstacked data.")
             # Visibilities have not been stacked yet.  Use the timing correction as is.
             # Determine which noise source to use for each input
             index = map_input_to_noise_source(inputs, self.noise_source)
