@@ -1837,9 +1837,12 @@ def fit_histogram(
     count, xbin = np.histogram(data, bins=bins, range=rng)
     cbin = 0.5 * (xbin[0:-1] + xbin[1:])
 
+    cbin = cbin.astype(np.float64)
+    count = count.astype(np.float64)
+
     # Form initial guess at parameter values using median and MAD
     nparams = 3
-    par0 = np.zeros(nparams, dtype=np.float)
+    par0 = np.zeros(nparams, dtype=np.float64)
     par0[0] = np.max(count)
     par0[1] = np.median(data)
     par0[2] = 1.48625 * np.median(np.abs(data - par0[1]))
@@ -1862,7 +1865,7 @@ def fit_histogram(
     # Restrict range of fit to between zero points
     x = cbin[indmin : indmax + 1]
     y = count[indmin : indmax + 1]
-    yerr = np.sqrt(y * (1.0 - y.astype(np.float) / np.sum(y)))
+    yerr = np.sqrt(y * (1.0 - y / np.sum(y)))
 
     sigma = None if no_weight else yerr
 
@@ -1877,6 +1880,7 @@ def fit_histogram(
         count[indmin : indmax + 1],
         p0=par0,
         sigma=sigma,
+        absolute_sigma=(not no_weight),
     )
 
     # Calculate quality of fit
