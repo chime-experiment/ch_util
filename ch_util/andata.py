@@ -501,6 +501,30 @@ class CorrData(BaseData):
         """The correlation product axis as channel pairs."""
         return self.index_map["stack"]
 
+    @property
+    def prodstack(self):
+        """A pair of input indices representative of those in the stack.
+
+        Note, these are correctly conjugated on return, and so calculations
+        of the baseline and polarisation can be done without additionally
+        looking up the stack conjugation.
+        """
+        if not self.is_stacked:
+            return self.prod
+
+        t = self.index_map["prod"][:][self.index_map["stack"]["prod"]]
+
+        prodmap = t.copy()
+        conj = self.stack["conjugate"]
+        prodmap["input_a"] = np.where(conj, t["input_b"], t["input_a"])
+        prodmap["input_b"] = np.where(conj, t["input_a"], t["input_b"])
+
+        return prodmap
+
+    @property
+    def is_stacked(self):
+        return "stack" in self.index_map and len(self.stack) != len(self.prod)
+
     @classmethod
     def _interpret_and_read(
         cls,
