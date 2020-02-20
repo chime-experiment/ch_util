@@ -34,10 +34,10 @@ Functions
 from __future__ import absolute_import, division, print_function, unicode_literals
 from future.builtins import *  # noqa  pylint: disable=W0401, W0614
 from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
+from past.builtins import basestring
 
 # === End Python 2/3 compatibility
 
-from past.builtins import basestring
 from abc import ABCMeta, abstractmethod
 import os, fnmatch
 import inspect
@@ -590,7 +590,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             self.measurements += meas
 
         # Sort internal list by frequency
-        isort = sorted(list(range(len(self))), key=freq.__getitem__)
+        isort = np.argsort(self.freq)
         self.measurements = [self.measurements[mm] for mm in isort]
 
     def fit_model(self):
@@ -683,9 +683,9 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         # Plot the measurements
         if catalog:
-            cat_uniq = np.unique(self.catalog)
+            cat_uniq = list(set(self.catalog))
         else:
-            cat_uniq = np.unique(self.citation)
+            cat_uniq = list(set(self.citation))
 
         # Loop over catalogs/citations
         for ii, cat in enumerate(cat_uniq):
@@ -855,7 +855,6 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
     def __len__(self):
         """ Returns the number of measurements of the source.
         """
-
         return len(self.measurements) if self.measurements is not None else 0
 
     def print_measurements(self):
@@ -1501,7 +1500,7 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 def _ensure_list(obj, num=None):
 
-    if hasattr(obj, "__iter__"):
+    if hasattr(obj, "__iter__") and not isinstance(obj, basestring):
         nnum = len(obj)
         if (num is not None) and (nnum != num):
             ValueError("Input list has wrong size.")
