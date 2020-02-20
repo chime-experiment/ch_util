@@ -1,0 +1,41 @@
+language: python
+os: linux
+sudo: required
+dist: bionic
+cache:
+    pip: true
+
+python:
+    - 2.7
+    - 3.8
+addons:
+    apt:
+        packages:
+            - libhdf5-serial-dev
+            - libopenmpi-dev
+            - openmpi-bin
+
+install:
+    # NOTE: numpy needs to be >=1.16 to get around some ABI change issues
+    - "pip install future mpi4py pytest numpy>=1.16"
+    - "pip install h5py --no-binary :all:"
+    - "pip install -U --upgrade-strategy only-if-needed -r requirements.txt"
+    - "python setup.py develop"
+
+jobs:
+    include:
+        - stage: code linting
+          python: 3.8
+          script:
+            - "pip install black"
+            - "black --check ."
+
+        - stage: doc build
+          python: 3.8
+          script:
+            - "pip install -r doc/requirements.txt"
+            - "sphinx-build -b html doc/ doc/_build/html"
+
+script:
+    # NOTE: can't connect to the db from Travis so skip the database connection tests
+    - pytest --ignore=test_db.py ch_util/tests/
