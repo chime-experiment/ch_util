@@ -6,7 +6,7 @@ General CHIME utilities.
 
 To get `ch_util`, use git to clone the repository:
 
-	$ git clone git@bitbucket.org:chime/ch_util.git
+	$ git clone git@github.com:chime-experiment/ch_util.git
 
 
 ## Python Installation
@@ -19,9 +19,9 @@ Or work in develop mode:
 
 	$ python setup.py develop [--user]
 
-Alternatively installation can be done by `pip` directly from the bitbucket repository:
+Alternatively installation can be done by `pip` directly from the GitHub repository:
 
-	$ pip install git+ssh://git@bitbucket.org/chime/ch_util.git
+    $ pip install git+https://github.com/chime-experiment/ch_util.git#egg=ch_util
 
 
 ## Connecting to the Database
