@@ -30,7 +30,7 @@ Classes
     AnDataError
 
 Functions
-========
+=========
 
 .. autosummary::
     :toctree: generated/
@@ -346,8 +346,8 @@ class BaseData(tod.TOData):
         Reads hdf5 data produced by the acquisition system and converts it to
         analysis format in memory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         acq_files : filename, `h5py.File` or list there-of or filename pattern
             Files to convert from acquisition format to analysis format.
             Filename patterns with wild cards (e.g. "foo*.h5") are supported.
@@ -419,7 +419,7 @@ class CorrData(BaseData):
     """Subclass of :class:`BaseData` for correlation data.
 
     Attributes
-    ---------
+    ----------
     vis
     nprod
     nfreq
@@ -654,8 +654,8 @@ class CorrData(BaseData):
         Reads hdf5 data produced by the acquisition system and converts it to
         analysis format in memory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         acq_files : filename, `h5py.File` or list there-of or filename pattern
             Files to convert from acquisition format to analysis format.
             Filename patterns with wild cards (e.g. "foo*.h5") are supported.
@@ -1220,8 +1220,8 @@ class HKData(BaseData):
         Reads hdf5 data produced by the acquisition system and converts it to
         analysis format in memory.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         acq_files : filename, `h5py.File` or list there-of or filename pattern
             Files to convert from acquisition format to analysis format.
             Filename patterns with wild cards (e.g. "foo*.h5") are supported.
@@ -1268,8 +1268,8 @@ class HKPData(memh5.MemDiskGroup):
         acq_files: list
             List of acquisition filenames.
 
-        Return
-        ------
+        Returns
+        -------
         metrics : list
         """
 

@@ -95,13 +95,9 @@ Time Utilities
     datetime_to_unix
     datetime_to_timestr
     timestr_to_datetime
-    leap_second_between
     unix_to_skyfield_time
     time_of_day
     csd
-
-
-
 """
 # === Start Python 2/3 compatibility
 from __future__ import absolute_import, division, print_function, unicode_literals

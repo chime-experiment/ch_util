@@ -38,8 +38,7 @@ print()
 # 'numpydoc' does not ship with sphinx. To get it use `pip install numpydoc`.
 extensions = [
     "sphinx.ext.autodoc",
-    "sphinx.ext.pngmath",
-    "sphinx.ext.mathjax",
+    "sphinxcontrib.katex",
     "numpydoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.intersphinx",
@@ -50,7 +49,9 @@ import glob
 
 autosummary_generate = glob.glob("*.rst")
 
-intersphinx_mapping = {"http://networkx.github.io/documentation/latest/": None}
+autodoc_mock_imports = ["networkx"]
+
+intersphinx_mapping = {"https://networkx.github.io/documentation/latest/": None}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

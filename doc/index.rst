@@ -13,10 +13,8 @@ Contents:
 
    andata
    connectdb
-   data_index
    ephemeris
    layout
-   plot
    tools
 
 Indices and tables
