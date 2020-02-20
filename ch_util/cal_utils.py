@@ -340,7 +340,6 @@ class FitTransit(with_metaclass(ABCMeta, object)):
         """
         return
 
-    @staticmethod
     @abstractmethod
     def _model(self, ha):
         """Calculate the model for the point source response.
@@ -354,7 +353,6 @@ class FitTransit(with_metaclass(ABCMeta, object)):
         """
         return
 
-    @staticmethod
     @abstractmethod
     def _jacobian(self, ha):
         """Calculate the jacobian of the model for the point source response.
@@ -553,6 +551,22 @@ class FitAmpPhase(FitTransit):
                 + self.uncertainty_phi(ha, alpha=alpha, elementwise=elementwise) ** 2
             )
         return err
+
+    def _jacobian(self, ha):
+        raise NotImplementedError(
+            "Fits to amplitude and phase are independent.  "
+            "Use _jacobian_amp and _jacobian_phi instead."
+        )
+
+    @abstractmethod
+    def _jacobian_amp(self, ha):
+        """Calculate the jacobian of the model for the amplitude."""
+        return
+
+    @abstractmethod
+    def _jacobian_phi(self, ha):
+        """Calculate the jacobian of the model for the phase."""
+        return
 
     @property
     def nparam(self):
