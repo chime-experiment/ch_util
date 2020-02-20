@@ -1216,7 +1216,9 @@ def get_source_dictionary(*args):
 
 
 # Common radio point sources
-source_dictionary = get_source_dictionary("primary_calibrators_perley2016")
+source_dictionary = get_source_dictionary(
+    "primary_calibrators_perley2016", "atnf_psrcat"
+)
 
 CasA = source_dictionary["CAS_A"]
 CygA = source_dictionary["CYG_A"]
