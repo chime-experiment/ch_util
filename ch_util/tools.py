@@ -174,9 +174,9 @@ from ch_util import ephemeris
 
 # CHIME geometry
 _CHIME_POS = [0.0, 0.0, 0.0]
-_CHIME_ROT = (
-    0.0  # CHIME rotation from north. Anti-clockwise looking at the ground (degrees)
-)
+# CHIME rotation from north. Anti-clockwise looking at the ground (degrees).
+# See DocLib #695 for more information.
+_CHIME_ROT = -0.071
 
 # 26m geometry
 _26M_POS = [254.162124, 21.853934, 20.0]
