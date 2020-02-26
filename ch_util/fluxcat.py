@@ -50,6 +50,7 @@ import numpy as np
 import base64
 import datetime, time
 
+from caput import misc
 from . import ephemeris
 from future.utils import with_metaclass
 
@@ -506,7 +507,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
             )
 
             # Populate the kwargs that were used
-            arg_list = inspect.getargspec(self.model_lookup[self.model].__init__)
+            arg_list = misc.getfullargspec(self.model_lookup[self.model].__init__)
             if len(arg_list.args) > 1:
                 keys = arg_list.args[1:]
                 for key in keys:
@@ -599,7 +600,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         'param', 'param_cov', and 'stats' attributes.
         """
 
-        arg_list = inspect.getargspec(self._model.fit).args[1:]
+        arg_list = misc.getfullargspec(self._model.fit).args[1:]
 
         args = [self.freq[self.flag], self.flux[self.flag], self.eflux[self.flag]]
 
@@ -774,7 +775,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         """
 
-        arg_list = inspect.getargspec(self._model.predict).args[1:]
+        arg_list = misc.getfullargspec(self._model.predict).args[1:]
 
         if (epoch is not None) and ("epoch" in arg_list):
             args = [freq, epoch]
@@ -804,7 +805,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         """
 
-        arg_list = inspect.getargspec(self._model.uncertainty).args[1:]
+        arg_list = misc.getfullargspec(self._model.uncertainty).args[1:]
 
         if (epoch is not None) and ("epoch" in arg_list):
             args = [freq, epoch]
@@ -1035,7 +1036,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
         """
 
-        arg_list = inspect.getargspec(cls.__init__).args[2:]
+        arg_list = misc.getfullargspec(cls.__init__).args[2:]
 
         kwargs = {
             field: flux_body_dict[field]
