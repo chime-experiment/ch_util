@@ -9,7 +9,7 @@ from future.utils import bytes_to_native_str
 
 from setuptools import setup, find_packages
 
-from ch_util import __version__
+import versioneer
 
 # TODO: Python 3 - work around for setuptools issues in Py 2.7
 ch_util_data = {
@@ -19,7 +19,8 @@ ch_util_data = {
 
 setup(
     name="ch_util",
-    version=__version__,
+    version=versioneer.get_version(),
+    cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
     install_requires=[
         "chimedb @ git+ssh://git@github.com/chime-experiment/chimedb.git",
