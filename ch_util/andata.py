@@ -147,6 +147,10 @@ class BaseData(tod.TOData):
 
     time_axes = CONCATENATION_AXES
 
+    # Convert strings to/from unicode on load and save
+    convert_attribute_strings = True
+    convert_dataset_strings = True
+
     def __new__(cls, h5_data=None, **kwargs):
         """Used to pick which subclass to instantiate based on attributes in
         data."""
@@ -331,7 +335,13 @@ class BaseData(tod.TOData):
 
         andata_objs = [cls(d) for d in acq_files]
         data = concatenate(
-            andata_objs, out_group=out_group, start=start, stop=stop, datasets=datasets
+            andata_objs,
+            out_group=out_group,
+            start=start,
+            stop=stop,
+            datasets=datasets,
+            convert_attribute_strings=cls.convert_attribute_strings,
+            convert_dataset_strings=cls.convert_dataset_strings,
         )
         for k, v in f_first["index_map"].attrs.items():
             data.create_index_map(k, v)
@@ -591,8 +601,9 @@ class CorrData(BaseData):
                 datasets,
                 out_group,
             )
+
+        # Generate the correct index_map/input for older files
         if versiontuple(archive_version) < versiontuple("2.1.0"):
-            # Generate the correct index_map/input for older files
             _remap_inputs(data)
 
         # Insert the gain dataset if requested, or datasets is not specified
@@ -883,7 +894,9 @@ class CorrData(BaseData):
         data = CorrData(distributed=True, comm=comm)
 
         # Copy over the attributes
-        memh5.copyattrs(local_data.attrs, data.attrs)
+        memh5.copyattrs(
+            local_data.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
+        )
 
         # Iterate over the datasets and copy them over
         for name, old_dset in local_data.datasets.items():
@@ -897,7 +910,11 @@ class CorrData(BaseData):
 
             # Create the new dataset and copy over attributes
             new_dset = data.create_dataset(name, data=array)
-            memh5.copyattrs(old_dset.attrs, new_dset.attrs)
+            memh5.copyattrs(
+                old_dset.attrs,
+                new_dset.attrs,
+                convert_strings=cls.convert_attribute_strings,
+            )
 
         # Iterate over the flags and copy them over
         for name, old_dset in local_data.flags.items():
@@ -911,7 +928,11 @@ class CorrData(BaseData):
 
             # Create the new dataset and copy over attributes
             new_dset = data.create_flag(name, data=array)
-            memh5.copyattrs(old_dset.attrs, new_dset.attrs)
+            memh5.copyattrs(
+                old_dset.attrs,
+                new_dset.attrs,
+                convert_strings=cls.convert_attribute_strings,
+            )
 
         # Copy over index maps
         for name, index_map in local_data.index_map.items():
@@ -1019,7 +1040,11 @@ class CorrData(BaseData):
                 dset = ad.create_dataset(ds_name, data=arr, distributed=True)
 
                 # Copy over the attributes
-                memh5.copyattrs(fh[ds_name].attrs, dset.attrs)
+                memh5.copyattrs(
+                    fh[ds_name].attrs,
+                    dset.attrs,
+                    convert_strings=cls.convert_attribute_strings,
+                )
 
         return ad
 
@@ -1191,7 +1216,9 @@ class HKData(BaseData):
                 for i in range(len(dataset)):
                     for j in range(len(dataset[i])):
                         data[j, i] = dataset[i][j]
-            memh5.copyattrs(dataset.attrs, data.attrs)
+            memh5.copyattrs(
+                dataset.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
+            )
             data.attrs["axis"] = (dataset.attrs["axis"][1], "time")
             return data
 
@@ -1203,7 +1230,10 @@ class HKData(BaseData):
             stop=stop,
             datasets=datasets,
             dataset_filter=dset_filter,
+            convert_attribute_strings=cls.convert_attribute_strings,
+            convert_dataset_strings=cls.convert_dataset_strings,
         )
+
         # Some index maps saved as attributes, so convert to datasets.
         for k, v in f_first["index_map"].attrs.items():
             data.create_index_map(k, v)
@@ -1574,7 +1604,11 @@ class RawADCData(BaseData):
                 data = dataset[:]
                 data.shape = (dataset.shape[0],)
                 data = memh5.MemDatasetCommon.from_numpy_array(data)
-                memh5.copyattrs(dataset.attrs, data.attrs)
+                memh5.copyattrs(
+                    dataset.attrs,
+                    data.attrs,
+                    convert_strings=cls.convert_attribute_strings,
+                )
             elif len(dataset.shape) == 2:
                 data = dataset
             else:
@@ -1592,6 +1626,8 @@ class RawADCData(BaseData):
             stop=stop,
             datasets=datasets,
             dataset_filter=dset_filter,
+            convert_attribute_strings=cls.convert_attribute_strings,
+            convert_dataset_strings=cls.convert_dataset_strings,
         )
         return data
 
@@ -3011,7 +3047,12 @@ def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_g
     data.attrs["acquisition_type"] = "corr"
     # Copy over the cal information if there is any.
     if "cal" in acq:
-        memh5.deep_group_copy(acq["cal"], data._data["cal"])
+        memh5.deep_group_copy(
+            acq["cal"],
+            data._data["cal"],
+            convert_attribute_strings=CorrData.convert_attribute_strings,
+            convert_dataset_strings=CorrData.convert_dataset_strings,
+        )
     # Now copy the datasets.
     if datasets is None:
         datasets = list(dtypes.keys())
@@ -3076,6 +3117,7 @@ def andata_from_archive2(
 
     prod_map = first_imap["prod"][:].view(np.ndarray).copy()
     input_map = first_imap["input"][:].view(np.ndarray).copy()
+    input_map = memh5.ensure_unicode(input_map)  # Convert string entries to unicode
     if "stack" in first_imap:
         stack_map = first_imap["stack"][:].view(np.ndarray).copy()
         stack_rmap = first_rmap["stack"][:].view(np.ndarray).copy()
@@ -3214,6 +3256,11 @@ def andata_from_archive2(
             dataset = np.empty(dataset.shape, dtype=np.complex64)
             dataset.real = data["r"]
             dataset.imag = data["i"]
+
+        # Convert any string types to unicode. At the moment this should only effect
+        # the dataset_id dataset
+        dataset = memh5.ensure_unicode(dataset)
+
         return dataset
 
     # The actual read, file by file.
@@ -3224,6 +3271,8 @@ def andata_from_archive2(
         stop=stop,
         datasets=datasets,
         dataset_filter=dset_filter,
+        convert_attribute_strings=cls.convert_attribute_strings,
+        convert_dataset_strings=cls.convert_dataset_strings,
     )
 
     # Andata (or memh5) should already do the right thing.
@@ -3257,7 +3306,7 @@ def _generate_input_map(serials, chans=None):
     # TODO: Python 3 string issues
     _imap_dtype = [
         (native_str("chan_id"), np.int64),
-        (native_str("correlator_input"), "a32"),
+        (native_str("correlator_input"), "U32"),
     ]
 
     # Add in channel numbers correctly
@@ -3456,25 +3505,27 @@ def _remap_inputs(afile):
     last_time = afile.time[-1]
     SA_END = 1397088000.0  # 2014/04/10 ~ last time stone and abbot were working
 
+    # h5py should return a byte string for the attribute and so we need to decode
+    # it
+    inst_name = memh5.bytes_to_unicode(afile.attrs.get("instrument_name", b""))
+    num_antenna = int(afile.history.get("acq", {}).get("n_antenna", "-1"))
+
     # Test if is abbot or stone
-    if (
-        last_time < SA_END and int(afile.history["acq"]["n_antenna"]) == 8
-    ):  # Relies upon old files having the acq history
-        return _remap_stone_abbot(afile)
+    if last_time < SA_END and num_antenna == 8:
+        # Relies upon old files having the acq history
+        _remap_stone_abbot(afile)
 
-    inst_name = afile.attrs["instrument_name"]
+    elif inst_name == "blanchard":
+        _remap_blanchard(afile)
 
-    if inst_name == "blanchard":
-        return _remap_blanchard(afile)
+    elif inst_name == "first9ucrate":
+        _remap_first9ucrate(afile)
 
-    if inst_name == "first9ucrate":
-        return _remap_first9ucrate(afile)
+    elif inst_name[:4] == "slot":
+        _remap_slotX(afile)
 
-    if inst_name[:4] == "slot":
-        return _remap_slotX(afile)
-
-    warnings.warn("I don't know what this data is.")
-    return afile
+    else:
+        warnings.warn("I don't know what this data is.")
 
 
 def _insert_gains(data, input_sel):
