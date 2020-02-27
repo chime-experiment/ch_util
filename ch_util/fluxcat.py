@@ -259,7 +259,7 @@ class CurvedPowerLaw(FitSpectrum):
     @staticmethod
     def _vandermonde(x, nparam):
 
-        return np.vstack((x ** rank for rank in range(nparam))).T
+        return np.vstack(tuple([x ** rank for rank in range(nparam)])).T
 
     @staticmethod
     def _fit_func(x, *param):
@@ -1243,6 +1243,19 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         """
         for cc in cls.available_collections():
             _print_collection_summary(*cc, verbose=verbose)
+
+    @classmethod
+    def loaded_collections(cls):
+        """ Return the collections that have been loaded.
+
+        Returns
+        -------
+        collections : list of (str, [str, ...])
+            List containing a tuple for each collection.  The tuple contains
+            the filename of the collection (str) and the sources it contains
+            (list of str).
+        """
+        return list(cls._collections.items())
 
     @classmethod
     def print_loaded_collections(cls, verbose=False):

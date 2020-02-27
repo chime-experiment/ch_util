@@ -1,13 +1,22 @@
 """Query the database for pulsar holography sources and compile them into a
 FluxCatalog-style JSON file based on the ATNF pulsar catalog.
 """
+import os
 
-import psrqpy
-from ch_util import holography as holo
-from chimedb.core import connect
-from ch_util.fluxcat import FluxCatalog, NumpyEncoder
 import numpy as np
-import json
+import psrqpy
+
+from chimedb.core import connect
+from ch_util import holography as holo
+from ch_util.fluxcat import FluxCatalog
+
+CATALOG_NAME = os.path.abspath("./atnf_psrcat.json")
+DEFAULT_FRAC_ERR = 0.20
+DEFAULT_NPARAM = 3
+
+# Delete any catalogs of radio bright sources that are loaded by default
+for cat, sources in FluxCatalog.loaded_collections():
+    FluxCatalog.delete_loaded_collection(cat)
 
 # Get list of pulsars in database
 connect()
@@ -20,11 +29,34 @@ pulsars = [
 print("Found {:d} pulsars in database.".format(len(pulsars)))
 
 # Query ATNF catalog
-psr_par = ["JNAME", "BNAME", "RAJD", "DECJD", "S400", "S600", "S700", "S900", "S800"]
+flux_fields = [
+    "S40",
+    "S50",
+    "S60",
+    "S80",
+    "S100",
+    "S150",
+    "S200",
+    "S300",
+    "S400",
+    "S600",
+    "S700",
+    "S800",
+    "S900",
+    "S1400",
+    "S1600",
+    "S2000",
+    "S3000",
+    "S4000",
+    "S5000",
+    "S6000",
+    "S8000",
+]
+
+psr_par = ["JNAME", "BNAME", "RAJD", "DECJD"] + flux_fields
 specs = psrqpy.QueryATNF(params=psr_par, psrs=pulsars)
 
 # Construct FluxCat formatted dict
-cat = {}
 for spec in specs.table:
     # Get possible pulsar names
     alt_names = [spec[n] for n in ["JNAME", "BNAME"] if not np.ma.is_masked(spec[n])]
@@ -51,17 +83,27 @@ for spec in specs.table:
         continue
 
     # Add flux measurements
+    nmeas = sum([not np.ma.is_masked(spec[m]) for m in flux_fields])
     entry = FluxCatalog(
-        name, ra=spec["RAJD"], dec=spec["DECJD"], alternate_names=alt_names
+        name,
+        ra=spec["RAJD"],
+        dec=spec["DECJD"],
+        alternate_names=alt_names,
+        model="CurvedPowerLaw",
+        model_kwargs={"nparam": min(DEFAULT_NPARAM, nmeas - 1)},
     )
-    for m in ["S400", "S600", "S700", "S900", "S800"]:
+    for m in flux_fields:
         # Add flux measurements if available
         if not np.ma.is_masked(spec[m]):
-            err = None if np.ma.is_masked(spec[m + "_ERR"]) else 1e-3 * spec[m + "_ERR"]
-            entry.add_measurement(float(m[1:]), 1e-3 * spec[m], err, True, "ATNF")
+            err = (
+                DEFAULT_FRAC_ERR * 1e-3 * spec[m]
+                if np.ma.is_masked(spec[m + "_ERR"])
+                else 1e-3 * spec[m + "_ERR"]
+            )
+            entry.add_measurement(float(m[1:]), 1e-3 * spec[m], err, True, u"ATNF")
 
-    cat[name] = entry.to_dict()
+    entry.fit_model()
 
-# Write to file
-with open("./atnf_psrcat.json", "w") as fh:
-    json.dump(cat, fh, cls=NumpyEncoder, indent=4)
+# Dump to file
+print("Saving catalog to: %s" % CATALOG_NAME)
+FluxCatalog.dump(CATALOG_NAME)
