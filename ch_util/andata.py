@@ -1032,6 +1032,9 @@ class CorrData(BaseData):
 
             for ds_name in DSETS_DIRECT:
 
+                if ds_name not in fh:
+                    continue
+
                 # Read dataset directly (distributed over input/product/stack axis) and add to container
                 arr = mpiarray.MPIArray.from_hdf5(
                     fh, ds_name, comm=comm, axis=1, sel=sel
