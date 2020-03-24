@@ -1001,7 +1001,7 @@ class TimingCorrection(andata.BaseData):
 
             # If andata object was input then update the gain
             # dataset so that we have record of what was done
-            if is_obj and not copy and hasattr(timestream, "gain"):
+            if is_obj and not copy and "gain" in timestream:
                 timestream.gain[:] *= gain[:, index, :]
 
         # If a copy was requested, then return the
