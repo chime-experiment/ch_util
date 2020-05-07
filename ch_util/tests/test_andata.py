@@ -10,6 +10,7 @@ from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 import unittest
 import os
 
+import json
 import numpy as np
 import h5py
 
@@ -236,21 +237,6 @@ class TestLoadSave(unittest.TestCase):
         self.assertFalse(F["timestamp_cpu_s"][10] == 12)
         F.close()
 
-    def test_on_file_fname_to_memory(self):
-        data = andata.AnData.from_file(self.test_fname, ondisk=True)
-        check_result(self, data, NTIME1)
-        # Now convert to being in memory.
-        data = data.to_memory()
-        self.assertFalse(data.ondisk)
-        check_result(self, data, NTIME1)
-
-    def test_on_file_FO(self):
-        F = h5py.File(self.test_fname, mode="r")
-        data = andata.AnData.from_file(F, ondisk=True)
-        check_result(self, data, NTIME1)
-        F.close()
-        self.assertRaises(Exception, data.__getattribute__, "vis")
-
     def tearDown(self):
         """Remove test data."""
 
@@ -369,8 +355,7 @@ def check_result(self, data, ntime):
     self.assertEqual(count_serial_adc, 8)
     # Make sure the cal data is acctually there.
     self.assertTrue(ATEL in data.cal)
-    # Check the fpga_hk dataset, as it is the only one that didn't need to
-    # be split.
+    # Check the fpga_hk dataset, as it is the only one that didn't need to be split.
     self.assertEqual(data.datasets["fpga_hk"].shape, (1, ntime))
     self.assertEqual(data.datasets["fpga_hk"].dtype, np.float32)
     # Check a few of the attributes for known values.
