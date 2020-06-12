@@ -72,7 +72,13 @@ class HolographyObservation(base_model):
     source = pw.ForeignKeyField(HolographySource, backref="observations")
     start_time = pw.DoubleField()
     finish_time = pw.DoubleField()
-    quality_flag = pw.IntegerField(null=True)
+
+    quality_flag = (
+        pw.BitField()
+    )  # maximum of 64 fields. If we need more, use BigBitField
+    off_source = quality_flag.flag(QUALITY_OFFSOURCE)
+    bad_gating = quality_flag.flag(QUALITY_BADGATING)
+
     notes = pw.TextField(null=True)
 
     @classmethod
@@ -98,6 +104,7 @@ class HolographyObservation(base_model):
             Hours and fraction of hours on a scale from 0-24.
         quality_flag : int, default : 0
             Flag for poor quality data. Good data is zero.
+            Sets a bitmask in the HolographyObservation instance.
         notes : string, optional
             Any notes on this observation.
         """
