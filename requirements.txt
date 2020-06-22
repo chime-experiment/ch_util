@@ -1,6 +1,5 @@
 future
 chimedb @ git+https://github.com/chime-experiment/chimedb.git
-chimedb.config @ git+https://github.com/chime-experiment/chimedb_config.git
 chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git
 chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git
 numpy >= 1.16

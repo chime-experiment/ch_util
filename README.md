@@ -23,11 +23,14 @@ Alternatively installation can be done by `pip` directly from the GitHub reposit
 
     $ pip install git+https://github.com/chime-experiment/ch_util.git#egg=ch_util
 
+### CHIME Database Configuration
 
-## Connecting to the Database
+To install the `ch_util` python package with configuration to connect to the CHIME database:
 
-Connection to the CHIME database from the standard locations should be automatic.  Standard
-locations include:
+    $ pip install .[chimedb_config]
+
+With this configuration, the connection to the CHIME database from the standard locations should
+be automatic. Standard locations include:
 
 * DRAO
 * `cedar`
