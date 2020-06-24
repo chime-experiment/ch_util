@@ -31,7 +31,7 @@ setup(
     extras_require={
         "chimedb_config": [
             "chimedb.config @ git+https://github.com/chime-experiment/chimedb_config.git"
-        ],
+        ]
     },
     package_data=ch_util_data,
     # metadata for upload to PyPI

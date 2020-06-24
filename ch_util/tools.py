@@ -161,6 +161,9 @@ import numpy as np
 import scipy.linalg as la
 import re
 
+from caput import pfb
+from caput.interferometry import projected_distance, fringestop_phase
+
 from ch_util import ephemeris
 
 # Currently the position between the Pathfinder and 26m have been
@@ -183,9 +186,7 @@ _26M_POS = [254.162124, 21.853934, 20.0]
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = (
-    1.986
-)  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
+_PF_ROT = 1.986  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 # Lat/Lon
@@ -2002,156 +2003,24 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
     return out
 
 
-def fringestop_phase(ha, lat, dec, u, v, w=0.0):
-    """Return the phase required to fringestop. All angle inputs are radians.
-
-    Parameter
-    ---------
-    ha : array_like
-        The Hour Angle of the source to fringestop too.
-    lat : array_like
-        The latitude of the observatory.
-    dec : array_like
-        The declination of the source.
-    u : array_like
-        The EW separation in wavelengths (increases to the E)
-    v : array_like
-        The NS separation in wavelengths (increases to the N)
-    w : array_like, optional
-        The vertical separation on wavelengths (increases to the sky!)
-
-    Returns
-    -------
-    phase : np.ndarray
-        The phase required to *correct* the fringeing. Shape is
-        given by the broadcast of the arguments together.
-    """
-
-    phase = u * (-1 * np.cos(dec) * np.sin(ha))
-    phase += v * (np.cos(lat) * np.sin(dec) - np.sin(lat) * np.cos(dec) * np.cos(ha))
-    phase += w * (np.sin(lat) * np.sin(dec) + np.cos(lat) * np.cos(dec) * np.cos(ha))
-    phase = -2.0j * np.pi * phase
-
-    return np.exp(phase, out=phase)
-
-
-def fringestop(timestream, ra, freq, feeds, src, date=None, wterm=False, prod_map=None):
-    """Fringestop timestream data to a fixed source.
-
-    .. warning::
-        Unless you have a good reason, you are recommended to use the
-        `fringestop_time` routine.
-
-    Parameters
-    ----------
-    timestream : np.ndarray[nfreq, nprod, nra]
-        Array containing the timestream.
-    ra : np.ndarray[nra]
-        The transit RA (LST) for each sample of the timstream (in degrees).
-    freq : np.ndarray[nfreq]
-        The frequencies in the array (in MHz).
-    feeds : list of CorrInputs
-        The feeds in the timestream.
-    src : ephem.FixedBody
-        A PyEphem object representing the source to fringestop.
-    date: float or datetime, optional
-        Time at which to determine RA of source. If None, use Jan 01 2018.
-    wterm: bool, optional
-        Include elevation information in the calculation.
-    prod_map: np.ndarray[nprod]
-        The products in the `timestream` array.
-
-    Returns
-    -------
-    fringestopped_timestream : np.ndarray[nfreq, nprod, nra]
-    """
-
-    import scipy.constants
-
-    # Calculate the hour angle
-    if date is None:
-        import warnings
-
-        warnings.warn(
-            "Calling fringestop without a date is rather inaccurate. "
-            "In future supplying a date will become mandatory."
-        )
-        date = datetime.datetime(2018, 1, 1)
-
-    date = date if date is not None else datetime.datetime(2018, 1, 1)
-    src_ra, src_dec = ephemeris.object_coords(src, date)
-    ha = (np.radians(ra) - src_ra)[np.newaxis, np.newaxis, :]
-
-    latitude = np.radians(ephemeris.CHIMELATITUDE)
-
-    # Get feed positions
-    feedpos = get_feed_positions(feeds, get_zpos=wterm)
-    nuv = feedpos.shape[-1]
-
-    # Check dimensions
-    nfeed = len(feeds)
-    nfreq = len(freq)
-    nprod = (nfeed * (nfeed + 1)) // 2 if prod_map is None else len(prod_map)
-
-    nvis = timestream.shape[1]
-    if nprod != nvis:
-        msg = (
-            "The shape of product map provided {0} is not the"
-            " same as the timestream product axis {1}"
-        )
-        raise ValueError(msg.format(nprod, nvis))
-
-    # Calculate wavelengths
-    wv = scipy.constants.c * 1e-6 / freq
-
-    # Allocate the uvw array
-    uvw = np.zeros((nuv, nfreq, nprod), dtype=np.float64)
-
-    # Calculate baseline separations and pack into product array
-    if prod_map is None:
-
-        wv = wv[:, np.newaxis]
-
-        for xi in range(nuv):
-            baseline = feedpos[:, xi][:, np.newaxis] - feedpos[:, xi][np.newaxis, :]
-            uvwl = fast_pack_product_array(baseline)
-            uvw[xi] = uvwl[np.newaxis, :] / wv
-
-    else:
-
-        wv = wv[np.newaxis, :]
-
-        for ii, pp in enumerate(prod_map):
-            baseline = feedpos[pp[0], :] - feedpos[pp[1], :]
-            uvw[:, :, ii] = baseline[:, np.newaxis] / wv
-
-    # Construct fringestop phase
-    fs_phase = fringestop_phase(ha, latitude, src_dec, *uvw[..., np.newaxis])
-
-    # Set any non CHIME feeds to have zero phase
-    fs_phase = np.nan_to_num(fs_phase, copy=False)
-
-    # multiply phases in place
-    fs_phase *= timestream
-    return fs_phase
-
-
-# Create a fringestop_pathfinder alias for backwards compatibility
-fringestop_pathfinder = fringestop
-
-
 def fringestop_time(
-    timestream, times, freq, feeds, src, wterm=False, prod_map=None, csd=False
+    timestream,
+    times,
+    freq,
+    feeds,
+    src,
+    wterm=False,
+    prod_map=None,
+    csd=False,
+    inplace=False,
+    static_delays=True,
 ):
     """Fringestop timestream data to a fixed source.
-
-    This routines takes an array of times (or CSDs) specifiying the samples
-    and is recommended over just using `fringestop`.
 
     Parameters
     ----------
     timestream : np.ndarray[nfreq, nprod, times]
-        Array containing the timestream.
+        Array containing the visibility timestream.
     times : np.ndarray[times]
         The UNIX time of each sample, or (if csd=True), the CSD of each sample.
     freq : np.ndarray[nfreq]
@@ -2166,20 +2035,185 @@ def fringestop_time(
         The products in the `timestream` array.
     csd: bool, optional
         Interpret the times parameter as CSDs.
+    inplace: bool, optional
+        Fringestop the visibilities in place. If not set, leave the originals intact.
+    static_delays: bool, optional
+        Correct for static cable delays in the system.
 
     Returns
     -------
     fringestopped_timestream : np.ndarray[nfreq, nprod, times]
     """
 
-    if csd:
-        ra = (times % 1.0) * 360.0
-        date = ephemeris.csd_to_unix(times.mean())
-    else:
-        ra = ephemeris.lsa(times)
-        date = times.mean()
+    # Check the shapes match
+    nfeed = len(feeds)
+    nprod = len(prod_map) if prod_map is not None else nfeed * (nfeed + 1) // 2
+    expected_shape = (len(freq), nprod, len(times))
 
-    return fringestop(timestream, ra, freq, feeds, src, date, wterm, prod_map)
+    if timestream.shape != expected_shape:
+        raise ValueError(
+            "The shape of the timestream %s does not match the expected shape %s"
+            % (timestream.shape, expected_shape)
+        )
+
+    delays = delay(
+        times,
+        feeds,
+        src,
+        wterm=wterm,
+        prod_map=prod_map,
+        csd=csd,
+        static_delays=static_delays,
+    )
+
+    # If modifying inplace, loop to try and save some memory on large datasets
+    if inplace:
+        for fi, fr in enumerate(freq):
+            fs_phase = np.exp(2.0j * np.pi * delays * fr * 1e6)
+            timestream[fi] *= fs_phase
+        fs_timestream = timestream
+    # Otherwise we might as well generate the entire phase array in onestop
+    else:
+        fs_timestream = 2.0j * np.pi * delays * freq[:, np.newaxis, np.newaxis] * 1e6
+        fs_timestream = np.exp(fs_timestream, out=fs_timestream)
+        fs_timestream *= timestream
+
+    return fs_timestream
+
+
+# Cache the PFB object
+_chime_pfb = pfb.PFB(4, 2048)
+
+
+def decorrelation(
+    timestream,
+    times,
+    feeds,
+    src,
+    wterm=True,
+    prod_map=None,
+    csd=False,
+    inplace=False,
+    static_delays=True,
+):
+    """Apply the decorrelation corrections to a timestream from observing a source.
+
+    Parameters
+    ----------
+    timestream : np.ndarray[nfreq, nprod, times]
+        Array containing the timestream.
+    times : np.ndarray[times]
+        The UNIX time of each sample, or (if csd=True), the CSD of each sample.
+    feeds : list of CorrInputs
+        The feeds in the timestream.
+    src : ephem.FixedBody
+        A PyEphem object representing the source to fringestop.
+    wterm: bool, optional
+        Include elevation information in the calculation.
+    prod_map: np.ndarray[nprod]
+        The products in the `timestream` array.
+    csd: bool, optional
+        Interpret the times parameter as CSDs.
+    inplace: bool, optional
+        Fringestop the visibilities in place. If not set, leave the originals intact.
+    static_delays: bool, optional
+        Correct for static cable delays in the system.
+
+    Returns
+    -------
+    corrected_timestream : np.ndarray[nfreq, nprod, times]
+    """
+
+    # Check the shapes match
+    nfeed = len(feeds)
+    nprod = len(prod_map) if prod_map is not None else nfeed * (nfeed + 1) // 2
+    expected_shape = (nprod, len(times))
+
+    if timestream.shape[1:] != expected_shape:
+        raise ValueError(
+            "The shape of the timestream %s does not match the expected shape %s"
+            % (timestream.shape, expected_shape)
+        )
+
+    delays = delay(
+        times,
+        feeds,
+        src,
+        wterm=wterm,
+        prod_map=prod_map,
+        csd=csd,
+        static_delays=static_delays,
+    )
+
+    ratio_correction = invert_no_zero(
+        _chime_pfb.decorrelation_ratio(delays * 800e6)[np.newaxis, ...]
+    )
+
+    if inplace:
+        timestream *= ratio_correction
+    else:
+        timestream = timestream * ratio_correction
+
+    return timestream
+
+
+def delay(times, feeds, src, wterm=True, prod_map=None, csd=False, static_delays=True):
+    """Calculate the delay in a visibilities observing a given source.
+
+    This includes both the geometric delay and static (cable) delays.
+
+    Parameters
+    ----------
+    times : np.ndarray[times]
+        The UNIX time of each sample, or (if csd=True), the CSD of each sample.
+    feeds : list of CorrInputs
+        The feeds in the timestream.
+    src : ephem.FixedBody
+        A PyEphem object representing the source to fringestop.
+    wterm: bool, optional
+        Include elevation information in the calculation.
+    prod_map: np.ndarray[nprod]
+        The products in the `timestream` array.
+    csd: bool, optional
+        Interpret the times parameter as CSDs.
+    static_delays: bool, optional
+        If set the returned value includes both geometric and static delays.
+        If `False` only geometric delays are included.
+
+    Returns
+    -------
+    delay : np.ndarray[nprod, nra]
+    """
+
+    import scipy.constants
+
+    ra = (times % 1.0) * 360.0 if csd else ephemeris.lsa(times)
+
+    src_ra, src_dec = ephemeris.object_coords(src, times.mean())
+    ha = (np.radians(ra) - src_ra)[np.newaxis, :]
+
+    latitude = np.radians(ephemeris.CHIMELATITUDE)
+
+    # Get feed positions / c
+    feedpos = get_feed_positions(feeds, get_zpos=wterm) / scipy.constants.c
+    feed_delays = np.array([f.delay for f in feeds])
+
+    # Calculate the geometric delay between the feed and the reference position
+    delay_ref = -projected_distance(ha, latitude, src_dec, *feedpos.T[..., np.newaxis])
+
+    # Add in the static delays
+    if static_delays:
+        delay_ref += feed_delays[:, np.newaxis]
+
+    # Calculate baseline separations and pack into product array
+    if prod_map is None:
+        delays = fast_pack_product_array(
+            delay_ref[:, np.newaxis] - delay_ref[np.newaxis, :]
+        )
+    else:
+        delays = delay_ref[prod_map[:, 0]] - delay_ref[prod_map[:, 1]]
+
+    return delays
 
 
 def invert_no_zero(x):
