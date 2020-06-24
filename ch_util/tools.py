@@ -183,7 +183,9 @@ _26M_POS = [254.162124, 21.853934, 20.0]
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = 1.986  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
+_PF_ROT = (
+    1.986
+)  # Pathfinder rotation from north. Anti-clockwise looking at the ground (degrees)
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 # Lat/Lon
@@ -282,7 +284,8 @@ class CorrInput(object):
     def _attribute_strings(self):
 
         prop = [
-            (k, getattr(self, k)) for k in ["id", "crate", "slot", "sma", "corr_order"]
+            (k, getattr(self, k))
+            for k in ["id", "crate", "slot", "sma", "corr_order", "delay"]
         ]
 
         kv = ["%s=%s" % (k, repr(v)) for k, v in prop if v is not None] + [
@@ -327,6 +330,17 @@ class CorrInput(object):
     @property
     def sma(self):
         return serial_to_location(self.input_sn)[3]
+
+    @property
+    def delay(self):
+        """The delay along the signal chain in seconds.
+
+        Postive delay values mean signals arriving later than the nominal value.
+
+        Note that these are always relative. Here CHIME inputs are chosen as
+        the delay=0 reference.
+        """
+        return getattr(self, "_delay", 0)
 
     input_sn = None
     corr = None
@@ -446,6 +460,10 @@ class PathfinderAntenna(ArrayAntenna):
     _rotation = _PF_ROT
     _offset = _PF_POS
 
+    # The delay relative to other inputs isn't really known. Set to NaN so we
+    # don't make any mistakes
+    _delay = np.nan
+
     powered = None
 
 
@@ -455,6 +473,7 @@ class CHIMEAntenna(ArrayAntenna):
 
     _rotation = _CHIME_ROT
     _offset = _CHIME_POS
+    _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
 class HolographyAntenna(Antenna):
@@ -471,6 +490,7 @@ class HolographyAntenna(Antenna):
 
     pos = None
     pol = None
+    _delay = 1.475e-6  # From doclib:1093
 
 
 # Private Functions
