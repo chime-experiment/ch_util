@@ -91,6 +91,7 @@ CONCATENATION_AXES = (
     "gated_time4",
     "snapshot",
     "update_time",
+    "station_time_blockhouse",
 )
 
 ANDATA_VERSION = "3.1.0"
@@ -1594,6 +1595,38 @@ class HKPData(memh5.MemDiskGroup):
 class WeatherData(BaseData):
     """Subclass of :class:`BaseData` for weather data."""
 
+    @property
+    def time(self):
+        """ Needs to be able to extrac times from both mingun_weather files 
+        and chime_weather files.
+        """
+        if "time" in self.index_map:
+            return self.index_map["time"]
+        else:
+            return self.index_map["station_time_blockhouse"]
+
+    @property
+    def temperature(self):
+        """ For easy access to outside weather station temperature.
+        Needs to be able to extrac temperatures from both mingun_weather files 
+        and chime_weather files.
+        """
+        if "blockhouse" in self.keys():
+            return self["blockhouse"]["outTemp"]
+        else:
+            return self["outTemp"]
+
+    def dataset_name_allowed(self, name):
+        """Permits datasets in the root and 'blockhouse' groups."""
+
+        parent_name, name = posixpath.split(name)
+        return True if parent_name == "/" or parent_name == "/blockhouse" else False
+
+    def group_name_allowed(self, name):
+        """Permits only the "blockhouse" group."""
+
+        return True if name == "/blockhouse" else False
+
 
 class RawADCData(BaseData):
     """Subclass of :class:`BaseData` for raw ADC data."""
@@ -2448,6 +2481,11 @@ def _get_dataset_names(f):
         for name in f.keys():
             if not memh5.is_group(f[name]):
                 dataset_names += (name,)
+        if "blockhouse" in f and memh5.is_group(f["blockhouse"]):
+            # chime_weather datasets are inside group "blockhouse"
+            for name in f["blockhouse"].keys():
+                if not memh5.is_group(f["blockhouse"][name]):
+                    dataset_names += ("blockhouse/" + name,)
         if "flags" in f and memh5.is_group(f["flags"]):
             for name in f["flags"].keys():
                 if not memh5.is_group(f["flags"][name]):

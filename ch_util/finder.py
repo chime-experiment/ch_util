@@ -561,6 +561,14 @@ class Finder(object):
         self._file_info = [di.WeatherFileInfo]
         self.filter_acqs(di.AcqType.name == "weather")
 
+    def only_chime_weather(self):
+        """Only include chime weather acquisitions in this search.
+           This excludes the old format mingun-weather."""
+        self._acq_info = []
+        self._file_info = [di.WeatherFileInfo]
+        self.filter_acqs(di.AcqType.name == "weather")
+        self.filter_acqs(di.ArchiveInst.name == "chime")
+
     def only_hkp(self):
         """Only include Prometheus housekeeping data in this search"""
         self._acq_info = []
