@@ -33,7 +33,8 @@ Functions
     fit_histogram
     flag_outliers
     interpolate_gain
-
+    interpolate_gain_quiet
+    thermal_amplitude
 """
 # === Start Python 2/3 compatibility
 from __future__ import absolute_import, division, print_function, unicode_literals
@@ -2129,6 +2130,29 @@ def interpolate_gain_quiet(*args, **kwargs):
         results = interpolate_gain(*args, **kwargs)
 
     return results
+
+
+def thermal_amplitude(delta_T, freq):
+    """ Computes the amplitude gain correction given a (set of) temperature 
+    difference and a (set of) frequency based on the thermal model.
+
+    Parameters
+    ----------
+    delta_T : float or array of foats
+        Temperature difference (T - T_0) for which to find a gain correction.
+    freq : float or array of foats
+        Frequencies in MHz
+
+    Returns
+    -------
+    g : float or array of floats
+        Gain amplitude corrections. Multiply by data
+        to correct it.
+    """
+    m_params = [-4.28268629e-09, 8.39576400e-06, -2.00612389e-03]
+    m = np.polyval(m_params, freq)
+
+    return 1.0 + m * delta_T
 
 
 def _el_to_dec(el):
