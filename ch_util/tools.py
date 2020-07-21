@@ -2066,6 +2066,9 @@ def fringestop_time(
         static_delays=static_delays,
     )
 
+    # Set any non CHIME feeds to have zero phase
+    delays = np.nan_to_num(delays, copy=False)
+
     # If modifying inplace, loop to try and save some memory on large datasets
     if inplace:
         for fi, fr in enumerate(freq):
@@ -2145,6 +2148,9 @@ def decorrelation(
         static_delays=static_delays,
     )
 
+    # Set any non CHIME feeds to have zero delay
+    delays = np.nan_to_num(delays, copy=False)
+
     ratio_correction = invert_no_zero(
         _chime_pfb.decorrelation_ratio(delays * 800e6)[np.newaxis, ...]
     )
@@ -2211,7 +2217,7 @@ def delay(times, feeds, src, wterm=True, prod_map=None, csd=False, static_delays
             delay_ref[:, np.newaxis] - delay_ref[np.newaxis, :]
         )
     else:
-        delays = delay_ref[prod_map[:, 0]] - delay_ref[prod_map[:, 1]]
+        delays = delay_ref[prod_map["input_a"]] - delay_ref[prod_map["input_b"]]
 
     return delays
 
