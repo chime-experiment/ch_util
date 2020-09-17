@@ -606,8 +606,7 @@ class ni_data(object):
     """
 
     def __init__(self, Reader_read_obj, Nadc_channels, adc_ch_ref=None, fbin_ref=None):
-        """Processes raw noise injection data so it is ready to compute gains.
-        """
+        """Processes raw noise injection data so it is ready to compute gains."""
 
         self.adc_channels = np.arange(Nadc_channels)
         self.Nadc_channels = Nadc_channels
@@ -689,8 +688,7 @@ class ni_data(object):
         pass
 
     def save(self):
-        """Save gain solutions
-        """
+        """Save gain solutions"""
 
         pass
 

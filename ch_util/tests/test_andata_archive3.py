@@ -35,8 +35,7 @@ class TestStack(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_load_data(self):
-        """Test that loaded data has the right shape and datatypes.
-        """
+        """Test that loaded data has the right shape and datatypes."""
         ad = andata.CorrData.from_acq_h5(self.file_list)
 
         # Check shapes
@@ -50,8 +49,7 @@ class TestStack(unittest.TestCase):
         self.assertEqual(ad.gain.dtype, np.complex64)
 
     def test_stack_sel(self):
-        """Test that loaded data has the right shape and datatypes.
-        """
+        """Test that loaded data has the right shape and datatypes."""
         ad = andata.CorrData.from_acq_h5(self.file_list, stack_sel=[0, 15])
 
         # Check the stack map properties
@@ -76,8 +74,7 @@ class TestStack(unittest.TestCase):
         self.assertEqual(ad.gain.shape, (2, 256, 12))
 
     def test_no_prod_input_sel(self):
-        """Test that you can't use input/prod sel on stacked data.
-        """
+        """Test that you can't use input/prod sel on stacked data."""
         with self.assertRaises(ValueError):
             ad = andata.CorrData.from_acq_h5(self.file_list, input_sel=[0, 15])
 

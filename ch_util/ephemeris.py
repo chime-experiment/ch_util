@@ -573,8 +573,7 @@ class SkyfieldObserverWrapper(Observer):
 
 
 def _get_chime():
-    """Create a SkyfieldObserverWrapper object for CHIME.
-    """
+    """Create a SkyfieldObserverWrapper object for CHIME."""
     chime = SkyfieldObserverWrapper(
         lon=CHIMELONGITUDE, lat=CHIMELATITUDE, alt=CHIMEALTITUDE
     )
@@ -1005,8 +1004,7 @@ def _is_skyfield_obj(body):
 
 
 def _ensure_skyfield_body(body):
-    """Ensure body is a Skyfield object, converting if needed.
-    """
+    """Ensure body is a Skyfield object, converting if needed."""
 
     if not _is_skyfield_obj(body):
         # Try and get out RA, DEC
@@ -1077,7 +1075,7 @@ def cirs_radec(body, date=None, deg=False):
 
 
 def object_coords(body, date=None, deg=False):
-    """ Calculates the RA and DEC of the source.
+    """Calculates the RA and DEC of the source.
 
     Gives the ICRS coordinates if no date is given (=J2000), or if a date is
     specified gives the CIRS coordinates at that epoch.
@@ -1133,7 +1131,7 @@ def object_coords(body, date=None, deg=False):
 
 
 def peak_RA(body, date=None, deg=False):
-    """ Calculates the RA where a source is expected to peak in the beam.
+    """Calculates the RA where a source is expected to peak in the beam.
     Note that this is not the same as the RA where the source is at
     transit, since the pathfinder is rotated with respect to north.
 
@@ -1175,7 +1173,7 @@ def peak_RA(body, date=None, deg=False):
 
 
 def get_source_dictionary(*args):
-    """ Returns a dictionary containing :class:`skyfield.starlib.Star`
+    """Returns a dictionary containing :class:`skyfield.starlib.Star`
     objects for common radio point sources.  This is useful for
     obtaining the skyfield representation of a source from a string
     containing its name.

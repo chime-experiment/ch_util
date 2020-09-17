@@ -502,8 +502,7 @@ class Finder(object):
 
     @property
     def data_flag_types(self):
-        """ Types of DataFlag to exclude from results.
-        """
+        """Types of DataFlag to exclude from results."""
         return self._data_flag_types
 
     # Setting up filters on the data
@@ -563,7 +562,7 @@ class Finder(object):
 
     def only_chime_weather(self):
         """Only include chime weather acquisitions in this search.
-           This excludes the old format mingun-weather."""
+        This excludes the old format mingun-weather."""
         self._acq_info = []
         self._file_info = [di.WeatherFileInfo]
         self.filter_acqs(di.AcqType.name == "weather")
@@ -915,7 +914,7 @@ class Finder(object):
         self.exclude_time_interval(start_time, end_time)
 
     def exclude_data_flag_type(self, flag_type):
-        """ Exclude times that overlap with DataFlags of this type.
+        """Exclude times that overlap with DataFlags of this type.
 
         Parameters
         ----------
@@ -972,7 +971,7 @@ class Finder(object):
         self.include_transits(mid_RA, time_delta=time_delta)
 
     def exclude_RA_interval(self, start_RA, end_RA):
-        """ Add time intervals to exclude passings of given right RA
+        """Add time intervals to exclude passings of given right RA
         intervals
 
         Parameters
@@ -1137,8 +1136,7 @@ class Finder(object):
             )
 
     def exclude_daytime(self):
-        """ Add time intervals to exclude all day time data.
-        """
+        """Add time intervals to exclude all day time data."""
 
         rise_times = ephemeris.solar_rising(
             self.time_range[0] - 24 * 3600.0, self.time_range[1]
@@ -1149,7 +1147,7 @@ class Finder(object):
             self.exclude_time_interval(rise_time, set_time)
 
     def exclude_sun(self, time_delta=4000.0, time_delta_rise_set=4000.0):
-        """ Add time intervals to exclude sunrise, sunset, and sun transit.
+        """Add time intervals to exclude sunrise, sunset, and sun transit.
 
         Parameters
         ----------
@@ -1380,9 +1378,7 @@ class Finder(object):
             print(row_proto % (ii, name, start, length, n_files))
 
     def print_results_summary(self):
-        """Print a summary of the search results.
-
-        """
+        """Print a summary of the search results."""
 
         row_proto = "%4d | %-36s | %7.f | %7.f | %4d | %6.f"
         total_data = 0.0

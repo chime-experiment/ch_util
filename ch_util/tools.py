@@ -348,8 +348,7 @@ class CorrInput(object):
 
 
 class Blank(CorrInput):
-    """Unconnected input.
-    """
+    """Unconnected input."""
 
     pass
 
@@ -374,15 +373,13 @@ class Antenna(CorrInput):
 
 
 class RFIAntenna(Antenna):
-    """RFI monitoring antenna
-    """
+    """RFI monitoring antenna"""
 
     pass
 
 
 class NoiseSource(CorrInput):
-    """Broad band noise calibration source.
-    """
+    """Broad band noise calibration source."""
 
     pass
 
@@ -450,7 +447,7 @@ class ArrayAntenna(Antenna):
 
 
 class PathfinderAntenna(ArrayAntenna):
-    """ Antenna that is part of the Pathfinder.
+    """Antenna that is part of the Pathfinder.
 
     Attributes
     ----------
@@ -469,8 +466,7 @@ class PathfinderAntenna(ArrayAntenna):
 
 
 class CHIMEAntenna(ArrayAntenna):
-    """ Antenna that is part of CHIME.
-    """
+    """Antenna that is part of CHIME."""
 
     _rotation = _CHIME_ROT
     _offset = _CHIME_POS
@@ -1271,17 +1267,17 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
 
 def change_pathfinder_location(rotation=None, location=None, default=False):
-    """ Change the orientation or location of Pathfinder.
+    """Change the orientation or location of Pathfinder.
 
-        Parameters
-        ----------
-        rotation : float
-            Rotation of the telescope from true north in degrees.
-        location: list
-            [x, y, z] of the telescope in meters,
-            where x is eastward, y is northward, and z is upward.
-        default:  bool
-            Set parameters back to default value.  Overides other keywords.
+    Parameters
+    ----------
+    rotation : float
+        Rotation of the telescope from true north in degrees.
+    location: list
+        [x, y, z] of the telescope in meters,
+        where x is eastward, y is northward, and z is upward.
+    default:  bool
+        Set parameters back to default value.  Overides other keywords.
     """
 
     if default:
@@ -1297,17 +1293,17 @@ def change_pathfinder_location(rotation=None, location=None, default=False):
 
 
 def change_chime_location(rotation=None, location=None, default=False):
-    """ Change the orientation or location of CHIME.
+    """Change the orientation or location of CHIME.
 
-        Parameters
-        ----------
-        rotation : float
-            Rotation of the telescope from true north in degrees.
-        location: list
-            [x, y, z] of the telescope in meters,
-            where x is eastward, y is northward, and z is upward.
-        default: bool
-            Set parameters back to default value.  Overides other keywords.
+    Parameters
+    ----------
+    rotation : float
+        Rotation of the telescope from true north in degrees.
+    location: list
+        [x, y, z] of the telescope in meters,
+        where x is eastward, y is northward, and z is upward.
+    default: bool
+        Set parameters back to default value.  Overides other keywords.
     """
 
     if default:
@@ -1486,8 +1482,8 @@ def get_noise_source_index(inputs):
 
 
 def get_noise_channel(inputs):
-    """ Returns the index of the noise source with
-        the lowest chan id (for backwards compatability).
+    """Returns the index of the noise source with
+    the lowest chan id (for backwards compatability).
     """
     noise_sources = get_noise_source_index(inputs)
     return (noise_sources or [None])[0]

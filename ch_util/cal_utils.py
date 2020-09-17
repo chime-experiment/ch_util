@@ -1216,7 +1216,7 @@ def fit_point_source_map(
     ra0=None,
     dec0=None,
 ):
-    """ Fits a map of a point source to a model.
+    """Fits a map of a point source to a model.
 
     Parameter
     ---------
@@ -1431,7 +1431,7 @@ def fit_point_source_map(
 def func_2d_gauss(
     coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
 ):
-    """ Returns a parameteric model for the map of a point source,
+    """Returns a parameteric model for the map of a point source,
     consisting of a 2-dimensional gaussian.
 
     Parameters
@@ -1475,7 +1475,7 @@ def func_2d_gauss(
 def func_2d_sinc_gauss(
     coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
 ):
-    """ Returns a parameteric model for the map of a point source,
+    """Returns a parameteric model for the map of a point source,
         consisting of a sinc function along the declination direction
         and gaussian along the right ascension direction.
 
@@ -1518,7 +1518,7 @@ def func_2d_sinc_gauss(
 
 
 def func_dirty_gauss(dirty_beam):
-    """ Returns a parameteric model for the map of a point source,
+    """Returns a parameteric model for the map of a point source,
     consisting of the interpolated dirty beam along the y-axis
     and a gaussian along the x-axis.
 
@@ -1539,7 +1539,7 @@ def func_dirty_gauss(dirty_beam):
     """
 
     def dirty_gauss(coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset):
-        """ Returns a parameteric model for the map of a point source,
+        """Returns a parameteric model for the map of a point source,
         consisting of the interpolated dirty beam along the y-axis
         and a gaussian along the x-axis.
 
@@ -1585,7 +1585,7 @@ def func_dirty_gauss(dirty_beam):
 
 
 def func_real_dirty_gauss(dirty_beam):
-    """ Returns a parameteric model for the map of a point source,
+    """Returns a parameteric model for the map of a point source,
     consisting of the interpolated dirty beam along the y-axis
     and a sinusoid with gaussian envelope along the x-axis.
 
@@ -1608,7 +1608,7 @@ def func_real_dirty_gauss(dirty_beam):
     def real_dirty_gauss(
         coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset, fringe_rate
     ):
-        """ Returns a parameteric model for the map of a point source,
+        """Returns a parameteric model for the map of a point source,
         consisting of the interpolated dirty beam along the y-axis
         and a sinusoid with gaussian envelope along the x-axis.
 
@@ -2133,7 +2133,7 @@ def interpolate_gain_quiet(*args, **kwargs):
 
 
 def thermal_amplitude(delta_T, freq):
-    """ Computes the amplitude gain correction given a (set of) temperature 
+    """Computes the amplitude gain correction given a (set of) temperature
     difference and a (set of) frequency based on the thermal model.
 
     Parameters
@@ -2156,14 +2156,12 @@ def thermal_amplitude(delta_T, freq):
 
 
 def _el_to_dec(el):
-    """ Convert from el = sin(zenith angle) to declination in degrees.
-    """
+    """Convert from el = sin(zenith angle) to declination in degrees."""
 
     return np.degrees(np.arcsin(el)) + ephemeris.CHIMELATITUDE
 
 
 def _dec_to_el(dec):
-    """ Convert from declination in degrees to el = sin(zenith angle).
-    """
+    """Convert from declination in degrees to el = sin(zenith angle)."""
 
     return np.sin(np.radians(dec - ephemeris.CHIMELATITUDE))

@@ -67,7 +67,7 @@ DEFAULT_COLLECTIONS = [
 
 # ==================================================================================
 class FitSpectrum(with_metaclass(ABCMeta, object)):
-    """ A base class for modeling and fitting spectra.  Any spectral model
+    """A base class for modeling and fitting spectra.  Any spectral model
     used by FluxCatalog should be derived from this class.
 
     The `fit` method should be used to populate the `param`, `param_cov`, and `stats`
@@ -100,23 +100,21 @@ class FitSpectrum(with_metaclass(ABCMeta, object)):
     """
 
     def __init__(self, param=None, param_cov=None, stats=None):
-        """ Instantiates a FitSpectrum object.
-        """
+        """Instantiates a FitSpectrum object."""
 
         self.param = param
         self.param_cov = param_cov
         self.stats = stats
 
     def predict(self, freq):
-        """ Predicts the flux density at a particular frequency.
-        """
+        """Predicts the flux density at a particular frequency."""
 
         x = self._get_x(freq)
 
         return self._fit_func(x, *self.param)
 
     def uncertainty(self, freq, alpha=0.32):
-        """ Predicts the uncertainty on the flux density at a
+        """Predicts the uncertainty on the flux density at a
         particular frequency.
         """
 
@@ -161,7 +159,7 @@ class FitSpectrum(with_metaclass(ABCMeta, object)):
 
 
 class CurvedPowerLaw(FitSpectrum):
-    """ Class to fit a spectrum to a polynomial in log-log space, given by
+    """Class to fit a spectrum to a polynomial in log-log space, given by
 
     .. math::
         \ln{S} = a_{0} + a_{1} \ln{\nu'} + a_{2} \ln{\nu'}^2 + a_{3} \ln{\nu'}^3 + \dots
@@ -186,8 +184,7 @@ class CurvedPowerLaw(FitSpectrum):
     """
 
     def __init__(self, freq_pivot=FREQ_NOMINAL, nparam=2, *args, **kwargs):
-        """ Instantiates a CurvedPowerLaw object.
-        """
+        """Instantiates a CurvedPowerLaw object."""
 
         super(CurvedPowerLaw, self).__init__(*args, **kwargs)
 
@@ -386,7 +383,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         measurements=None,
         overwrite=0,
     ):
-        """ Instantiates a FluxCatalog object for an astronomical source.
+        """Instantiates a FluxCatalog object for an astronomical source.
 
         Parameters / Attributes
         -----------------------
@@ -523,7 +520,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
     def add_measurement(
         self, freq, flux, eflux, flag=True, catalog=None, epoch=None, citation=None
     ):
-        """ Add entries to the list of measurements.  Each argument/keyword
+        """Add entries to the list of measurements.  Each argument/keyword
         can be a list of items with length equal to 'len(flux)', or
         alternatively a single item in which case the same value is used
         for all measurements.
@@ -595,7 +592,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         self.measurements = [self.measurements[mm] for mm in isort]
 
     def fit_model(self):
-        """ Fit the measurements stored in the 'measurements' attribute with the
+        """Fit the measurements stored in the 'measurements' attribute with the
         spectral model specified in the 'model' attribute. This populates the
         'param', 'param_cov', and 'stats' attributes.
         """
@@ -610,7 +607,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         self.param, self.param_cov, self.stats = self._model.fit(*args)
 
     def plot(self, legend=True, catalog=True, residuals=False):
-        """ Plot the measurements, best-fit model, and confidence interval.
+        """Plot the measurements, best-fit model, and confidence interval.
 
         Parameters
         ----------
@@ -757,7 +754,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         plt.title(ttl)
 
     def predict_flux(self, freq, epoch=None):
-        """ Predict the flux density of the source at a particular
+        """Predict the flux density of the source at a particular
         frequency and epoch.
 
         Parameters
@@ -787,7 +784,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         return flux
 
     def predict_uncertainty(self, freq, epoch=None):
-        """ Calculate the uncertainty in the estimate of the flux density
+        """Calculate the uncertainty in the estimate of the flux density
         of the source at a particular frequency and epoch.
 
         Parameters
@@ -817,7 +814,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         return flux_uncertainty
 
     def to_dict(self):
-        """ Returns an ordered dictionary containing attributes
+        """Returns an ordered dictionary containing attributes
         for this instance object.  Used to dump the information
         stored in the instance object to a file.
 
@@ -837,30 +834,30 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         return flux_body_dict
 
     def __str__(self):
-        """ Returns a string containing basic information about the source.
+        """Returns a string containing basic information about the source.
         Called by the print statement.
         """
-        source_string = "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
-            self.name,
-            self.ra,
-            self.dec,
-            len(self),
-            self.predict_flux(FREQ_NOMINAL),
-            100.0
-            * self.predict_uncertainty(FREQ_NOMINAL)
-            / self.predict_flux(FREQ_NOMINAL),
+        source_string = (
+            "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
+                self.name,
+                self.ra,
+                self.dec,
+                len(self),
+                self.predict_flux(FREQ_NOMINAL),
+                100.0
+                * self.predict_uncertainty(FREQ_NOMINAL)
+                / self.predict_flux(FREQ_NOMINAL),
+            )
         )
 
         return source_string
 
     def __len__(self):
-        """ Returns the number of measurements of the source.
-        """
+        """Returns the number of measurements of the source."""
         return len(self.measurements) if self.measurements is not None else 0
 
     def print_measurements(self):
-        """ Print all measurements.
-        """
+        """Print all measurements."""
 
         out = []
 
@@ -916,58 +913,53 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @property
     def skyfield(self):
-        """ Skyfield star representation :class:`skyfield.starlib.Star`
+        """Skyfield star representation :class:`skyfield.starlib.Star`
         for the source.
         """
         return ephemeris.skyfield_star_from_ra_dec(self.ra, self.dec, self.name)
 
     @property
     def freq(self):
-        """ Frequency of measurements in MHz.
-        """
+        """Frequency of measurements in MHz."""
         return np.array([meas[0] for meas in self.measurements])
 
     @property
     def flux(self):
-        """ Flux measurements in Jansky.
-        """
+        """Flux measurements in Jansky."""
         return np.array([meas[1] for meas in self.measurements])
 
     @property
     def eflux(self):
-        """ Error on the flux measurements in Jansky.
-        """
+        """Error on the flux measurements in Jansky."""
         return np.array([meas[2] for meas in self.measurements])
 
     @property
     def flag(self):
-        """ Boolean flag indicating what measurements are used
+        """Boolean flag indicating what measurements are used
         in the spectral fit.
         """
         return np.array([meas[3] for meas in self.measurements])
 
     @property
     def catalog(self):
-        """ Catalog from which each measurement originates.
-        """
+        """Catalog from which each measurement originates."""
         return np.array([meas[4] for meas in self.measurements])
 
     @property
     def epoch(self):
-        """ Year that each measurement occured.
-        """
+        """Year that each measurement occured."""
         return np.array([meas[5] for meas in self.measurements])
 
     @property
     def citation(self):
-        """ Citation where more information on each measurement
+        """Citation where more information on each measurement
         can be found.
         """
         return np.array([meas[6] for meas in self.measurements])
 
     @property
     def _sort_id(self):
-        """ Sources in the catalog are ordered according to this
+        """Sources in the catalog are ordered according to this
         property.  Currently use the predicted flux at FREQ_NOMINAL
         in descending order.
         """
@@ -983,8 +975,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def string(cls):
-        """ Print basic information about the sources in the catalog.
-        """
+        """Print basic information about the sources in the catalog."""
 
         catalog_string = []
 
@@ -1015,7 +1006,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def from_dict(cls, name, flux_body_dict):
-        """ Instantiates a FluxCatalog object for an astronomical source
+        """Instantiates a FluxCatalog object for an astronomical source
         from a dictionary of kwargs.  Used when loading sources from a
         JSON catalog file.
 
@@ -1048,7 +1039,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def get(cls, key):
-        """ Searches the catalog for a source.  First checks against the
+        """Searches the catalog for a source.  First checks against the
         'name' of each entry, then checks against the 'alternate_names'
         of each entry.
 
@@ -1090,7 +1081,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def delete(cls, source_name):
-        """ Deletes a source from the catalog.
+        """Deletes a source from the catalog.
 
         Parameters
         ----------
@@ -1111,7 +1102,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def sort(cls):
-        """ Sorts the entries in the catalog by their flux density
+        """Sorts the entries in the catalog by their flux density
         at FREQ_NOMINAL in descending order.
 
         Returns
@@ -1131,7 +1122,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def keys(cls):
-        """ Alias for sort.
+        """Alias for sort.
 
         Returns
         -------
@@ -1143,7 +1134,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def iter(cls):
-        """ Iterates through the sources in the catalog.
+        """Iterates through the sources in the catalog.
 
         Returns
         -------
@@ -1156,7 +1147,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def reversed(cls):
-        """ Iterates through the sources in the catalog
+        """Iterates through the sources in the catalog
         in reverse order.
 
         Returns
@@ -1171,7 +1162,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def iteritems(cls):
-        """ Iterates through the sources in the catalog.
+        """Iterates through the sources in the catalog.
 
         Returns
         -------
@@ -1184,7 +1175,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def len(cls):
-        """ Number of sources in the catalog.
+        """Number of sources in the catalog.
 
         Returns
         -------
@@ -1195,7 +1186,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def available_collections(cls):
-        """ Search the local directory for potential collections that
+        """Search the local directory for potential collections that
         can be loaded.
 
         Returns
@@ -1233,7 +1224,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def print_available_collections(cls, verbose=False):
-        """ Print information about the available collections.
+        """Print information about the available collections.
 
         Parameters
         ----------
@@ -1246,7 +1237,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def loaded_collections(cls):
-        """ Return the collections that have been loaded.
+        """Return the collections that have been loaded.
 
         Returns
         -------
@@ -1259,7 +1250,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def print_loaded_collections(cls, verbose=False):
-        """ Print information about the collection that have been loaded.
+        """Print information about the collection that have been loaded.
 
         Parameters
         ----------
@@ -1280,7 +1271,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def dump(cls, filename):
-        """ Dumps the contents of the catalog to a file.
+        """Dumps the contents of the catalog to a file.
 
         Parameters
         ----------
@@ -1321,7 +1312,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
 
     @classmethod
     def load(cls, filename, overwrite=0, set_globals=False, verbose=False):
-        """ Load the contents of a file into the catalog.
+        """Load the contents of a file into the catalog.
 
         Parameters
         ----------
@@ -1475,7 +1466,7 @@ def json_numpy_obj_hook(dct):
 
 
 def _print_collection_summary(collection_name, source_names, verbose=True):
-    """ This prints out information about a collection of sources
+    """This prints out information about a collection of sources
     in a standardized way.
 
     Parameters

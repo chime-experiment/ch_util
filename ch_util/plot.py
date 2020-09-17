@@ -87,7 +87,7 @@ def waterfall(
     >>> data = andata.AnData.from_acq("...")
     >>> med_filt_arg = ['old',bsln]
     >>> waterfall(data, prod_sel=21, med_filt=med_filt_arg)
-    
+
     To make a full day plot of 01/14/2014,
     rebinned to 4000 time bins:
     >>> data = andata.AnData.from_acq("...")
@@ -212,9 +212,7 @@ def waterfall(
 
 
 def spectra(data, freq_sel=None, prod_sel=None, time_sel=None, part_sel=None, **kwargs):
-    """Plots spectra at different times and for different correlation products.
-
-    """
+    """Plots spectra at different times and for different correlation products."""
 
     plt_data = _coerce_data_shape(data, freq_sel, prod_sel, time_sel, axes=())
     ntime = plt_data.shape[2]
@@ -227,9 +225,7 @@ def spectra(data, freq_sel=None, prod_sel=None, time_sel=None, part_sel=None, **
 def time_ordered(
     data, freq_sel=None, prod_sel=None, time_sel=None, part_sel=None, **kwargs
 ):
-    """Plots data vs time for different frequencies and corr-pords.
-
-    """
+    """Plots data vs time for different frequencies and corr-pords."""
 
     pass
 
@@ -257,18 +253,18 @@ def _coerce_data_shape(
         Selects what part of data to plot. If 'None', plot real part.
     axes : tuple or axis numbers
         Axes to eliminate
-    
+
     Returns
     -------
     plt_data : numpy array
-        The dimentionality of the array is guaranteed to be 
+        The dimentionality of the array is guaranteed to be
         ``plt_data == 3 - len(axes)``.
 
     Raises
     ------
     ValueError
         If data provided could not be coersed.
-    
+
     Examples
     --------
 
@@ -599,8 +595,8 @@ def _force_aspect(ax, aspect=1.0):
 
     Example
     -------
-   
-    data = np.ones((100,200)) 
+
+    data = np.ones((100,200))
     fig = plt.figure()
     ax = fig.add_subplot(111)
     ax.imshow(data)
@@ -617,7 +613,7 @@ def _force_aspect(ax, aspect=1.0):
 
 
 def _med_filter(data, n_bins=200, i_bin=0, filt_window=37):
-    """ Normalize a 2D array by its power spectrum averaged over 'n_bins' starting at 'i_bin'.
+    """Normalize a 2D array by its power spectrum averaged over 'n_bins' starting at 'i_bin'.
 
     Parameters
     ----------
@@ -638,7 +634,7 @@ def _med_filter(data, n_bins=200, i_bin=0, filt_window=37):
     -------
     rel_power : 2d array normalized by average power spectrum (baseline)
     medfilt_baseline : Average power spectrum
-    
+
     Issues
     ------
     Assumes frequency in first index and time in second index

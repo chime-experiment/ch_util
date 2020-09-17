@@ -46,7 +46,7 @@ _DEFAULT_NODE_SPOOF = {"scinet_online": "/scratch/k/krs/jrs65/chime/archive/onli
 
 
 class FeedLocator(object):
-    """ This class contains functions that do all the computations to
+    """This class contains functions that do all the computations to
     determine feed positions from data. It also determines the quality
     of data and returns a list of good inputs and frequencies.
 
@@ -103,8 +103,7 @@ class FeedLocator(object):
         pstns0,
         bsipts=None,
     ):
-        """ Basic initialization method
-        """
+        """Basic initialization method"""
         self.adj_freqs = False  # frequencies adjacent in data? (used for some tests)
         self.VERBOSE = False
         self.PATH = True  # True if Pathfinder, False if CHIME
@@ -158,8 +157,7 @@ class FeedLocator(object):
         self.bslins0_scrambled = False
 
     def set_bslns0(self):
-        """
-        """
+        """"""
         prods = self.prods
         pstns0 = self.pstns0
 
@@ -179,8 +177,7 @@ class FeedLocator(object):
         return c_bslns0, bslns0
 
     def phase_trans(self, vis, tm, tt):
-        """
-        """
+        """"""
         ph = np.zeros((self.Nfr, self.Npr))
         tridx = np.argmin(abs(tm - tt))  # Transit index
 
@@ -194,8 +191,7 @@ class FeedLocator(object):
         return ph
 
     def getphases_tr(self):
-        """
-        """
+        """"""
         self.ph1 = self.phase_trans(self.vis1, self.tm1, self.tt1)
         self.ph2 = self.phase_trans(self.vis2, self.tm2, self.tt2)
 
@@ -204,13 +200,11 @@ class FeedLocator(object):
     def get_c_ydist(
         self, ph1=None, ph2=None, good_freqs=None, tol=1.5, Nmax=20
     ):  # knl=3,dfacts=[5,11,17],rms_tol=1.):#,stptol=1.5,stpdev=1.):
-        """ N-S. Absolutelly assumes contiguous frequencies!!!
-        """
+        """N-S. Absolutelly assumes contiguous frequencies!!!"""
         # TODO: add test for contiguous freqs!!!
 
         def yparams(xx, yy):
-            """
-            """
+            """"""
             a, b = np.polyfit(xx, yy, 1)
 
             ydiff = np.diff(yy, axis=0)
@@ -304,8 +298,8 @@ class FeedLocator(object):
         return c_ydists
 
     def get_c_ydist_perfreq(self, ph1=None, ph2=None):
-        """ Old N-S dists function. TO be used only in case a continuum of
-            frequencies is not available
+        """Old N-S dists function. TO be used only in case a continuum of
+        frequencies is not available
         """
 
         if ph1 is None:
@@ -362,7 +356,7 @@ class FeedLocator(object):
 
     # TODO: change to 'yparams'
     def params_ft(self, tm, vis, dec, x0_shift=5.0):
-        """ Extract relevant parameters from source transit
+        """Extract relevant parameters from source transit
             visibility in two steps:
                 1) FFT visibility
                 2) Fit a gaussian to the transform
@@ -458,8 +452,7 @@ class FeedLocator(object):
 
     # TODO: change to 'get_yparams'
     def getparams_ft(self):
-        """
-        """
+        """"""
         # TODO: Add test to eliminate bad fits!
         self.ft_prms1 = self.params_ft(self.tm1, self.vis1, self.dec1)
         if self.source2 is not None:
@@ -472,8 +465,7 @@ class FeedLocator(object):
     # TODO: change all occurences of 'get_xdist' to 'xdists'
     # to make it more consistent
     def get_xdist(self, ft_prms, dec):
-        """ E-W
-        """
+        """E-W"""
         xdists = (
             -ft_prms[..., 1]
             * SD
@@ -490,8 +482,7 @@ class FeedLocator(object):
         return xdists
 
     def data_quality(self):
-        """
-        """
+        """"""
         if self.pass_xd1 is None:
             if self.source2 is not None:
                 self.xdist_test(
@@ -533,16 +524,14 @@ class FeedLocator(object):
             self.set_good_ipts(self.bsipts)  # good_prods to good_ipts
 
     def single_source_test(self):
-        """
-        """
+        """"""
         self.getparams_ft()
         self.xdists1 = self.get_xdist(self.ft_prms1, self.dec1)
 
         self.data_quality()
 
     def get_dists(self):
-        """
-        """
+        """"""
         # Get x distances in Earth coords (EW)
         self.getparams_ft()
         self.xdists1 = self.get_xdist(self.ft_prms1, self.dec1)
@@ -577,8 +566,7 @@ class FeedLocator(object):
         return self.c_xdists1, self.c_xdists2, self.c_ydists
 
     def set_good_ipts(self, base_ipts):
-        """ Good_prods to good_ipts
-        """
+        """Good_prods to good_ipts"""
         inp_list = [inpt for inpt in self.inputs]  # Full input list
         self.good_ipts = np.zeros(self.inputs.shape, dtype=bool)
         for ii, inprd in enumerate(self.inprds):
@@ -594,8 +582,7 @@ class FeedLocator(object):
             self.good_ipts[inp_list.index(bsip)] = True
 
     def solv_pos(self, dists, base_ipt):
-        """
-        """
+        """"""
         from scipy.linalg import svd
 
         # Matrix defining order of subtraction for baseline distances
@@ -621,8 +608,7 @@ class FeedLocator(object):
         return pstns
 
     def get_postns(self):
-        """
-        """
+        """"""
         self.c_xd1 = np.nanmedian(self.c_xdists1[self.good_freqs], axis=0)
         self.c_xd2 = np.nanmedian(self.c_xdists2[self.good_freqs], axis=0)
         # Solve positions:
@@ -635,13 +621,12 @@ class FeedLocator(object):
         return self.c_x1, self.c_x2, self.c_y
 
     def xdist_test(self, xds1, xds2=None, tol=2.0):
-        """
-        """
+        """"""
 
         def get_centre(xdists, tol):
-            """ Returns the median (across frequencies) of NS separation dists for each
-                baseline if this median is withing *tol* of a multiple of 22 meters. Else,
-                returns the multiple of 22 meters closest to this median (up to 3*22=66 meters)
+            """Returns the median (across frequencies) of NS separation dists for each
+            baseline if this median is withing *tol* of a multiple of 22 meters. Else,
+            returns the multiple of 22 meters closest to this median (up to 3*22=66 meters)
             """
             xmeds = np.nanmedian(xdists, axis=0)
             cylseps = np.arange(-1, 2) * 22.0 if self.PATH else np.arange(-3, 4) * 22.0
@@ -672,10 +657,10 @@ class FeedLocator(object):
         return self.pass_xd1, self.pass_xd2
 
     def continuity_test(self, tol=0.2, knl=5):
-        """ Call only if freqs are adjacent.
-            Uses xdists (Earth coords) instead of c_xdists (cylinder coords)
-            to allow for calling before ydists are computed. Doesn't make any
-            difference for this test. Results are used in computing y_dists.
+        """Call only if freqs are adjacent.
+        Uses xdists (Earth coords) instead of c_xdists (cylinder coords)
+        to allow for calling before ydists are computed. Doesn't make any
+        difference for this test. Results are used in computing y_dists.
         """
         from scipy.signal import medfilt
 
@@ -695,8 +680,8 @@ class FeedLocator(object):
     def good_prod_freq(
         self, pass_rst, tol_ch1=0.3, tol_ch2=0.7, tol_fr1=0.6, tol_fr2=0.7
     ):
-        """ Tries to determine overall bad products and overall bad frequencies
-            from a test_pass result.
+        """Tries to determine overall bad products and overall bad frequencies
+        from a test_pass result.
         """
 
         # First iteration:
@@ -716,7 +701,7 @@ class FeedLocator(object):
 
 
 class ChanMonitor(object):
-    """ This class provides the user interface to FeedLocator.
+    """This class provides the user interface to FeedLocator.
 
     It initializes instances of FeedLocator (normally one per polarization)
     and returns results combined lists of results (good channels and positions,
@@ -770,8 +755,7 @@ class ChanMonitor(object):
         bsep1=154,
         bsep2=218,
     ):
-        """ Here t1 and t2 have to be unix time (floats)
-        """
+        """Here t1 and t2 have to be unix time (floats)"""
         self.t1 = t1
         if t2 is None:
             self.t2 = self.t1 + SD
@@ -848,8 +832,7 @@ class ChanMonitor(object):
     # TODO: test for adjacent freqs to pass to FeedLocator
 
     def get_src_cndts(self):
-        """
-        """
+        """"""
         clr, ntt, srcs = self.get_sunfree_srcs()
 
         grd_dict = {"CygA": 4, "CasA": 4, "TauA": 3, "VirA": 1}
@@ -878,8 +861,7 @@ class ChanMonitor(object):
         return src_cndts
 
     def get_pol_prod_idx(self, pol_inpt_idx):
-        """
-        """
+        """"""
         pol_prod_idx = []
         for ii, prd in enumerate(self.prods):
             if (prd[0] in pol_inpt_idx) and (prd[1] in pol_inpt_idx):
@@ -888,8 +870,7 @@ class ChanMonitor(object):
         return pol_prod_idx
 
     def get_feedlocator(self, pol=1):
-        """
-        """
+        """"""
         if pol == 1:
             pol_inpt_idx = self.p1_idx
             bsipts = [self.bswp1, self.bsep1]
@@ -939,20 +920,17 @@ class ChanMonitor(object):
         return fl
 
     def init_feedloc_p1(self):
-        """
-        """
+        """"""
         self.flp1 = self.get_feedlocator()
         return self.flp1
 
     def init_feedloc_p2(self):
-        """
-        """
+        """"""
         self.flp2 = self.get_feedlocator(pol=2)
         return self.flp2
 
     def get_cyl_pol(self, corr_inputs, pwds):
-        """
-        """
+        """"""
         wchp1, wchp2, echp1, echp2 = [], [], [], []
         for ii, inpt in enumerate(corr_inputs):
             if pwds[ii]:
@@ -983,8 +961,7 @@ class ChanMonitor(object):
         return [wchp1, wchp2, echp1, echp2]
 
     def get_pos_pol(self, corr_inputs, pwds):
-        """
-        """
+        """"""
         Ninpts = len(pwds)
         p1_idx, p2_idx = [], []
         pstns = np.zeros((Ninpts, 2))  # In-cylinder positions
@@ -1019,8 +996,7 @@ class ChanMonitor(object):
         return pstns, p1_idx, p2_idx
 
     def set_metadata(self, tms, input_map):
-        """ Sets self.corr_inputs, self.pwds, self.pstns, self.p1_idx, self.p2_idx
-        """
+        """Sets self.corr_inputs, self.pwds, self.pstns, self.p1_idx, self.p2_idx"""
         from ch_util import tools
 
         # Get CHIME ON channels:
@@ -1041,8 +1017,7 @@ class ChanMonitor(object):
         self.gpu_node_flag = np.sum(node_on, axis=1) > frac_time_on * node_on.shape[1]
 
     def get_prod_sel(self, data):
-        """
-        """
+        """"""
         from ch_util import tools
 
         input_map = data.input
@@ -1092,8 +1067,7 @@ class ChanMonitor(object):
         return prod_sel, pwds
 
     def get_data(self):
-        """
-        """
+        """"""
         from ch_util import ni_utils
 
         self.set_acq_list()
@@ -1147,13 +1121,13 @@ class ChanMonitor(object):
         return self.source1, self.source2
 
     def get_results(self, src, tdelt=2800):
-        """ If self.finder exists, then it takes a deep copy of this object,
-            further restricts the time range to include only src transits,
-            and then queries the database to obtain a list of the acquisitions.
-            If self.finder does not exist, then it creates a finder object,
-            restricts the time range to include only src transits between
-            self.t1 and self.t2, and then queries the database to obtain a list
-            of the acquisitions.
+        """If self.finder exists, then it takes a deep copy of this object,
+        further restricts the time range to include only src transits,
+        and then queries the database to obtain a list of the acquisitions.
+        If self.finder does not exist, then it creates a finder object,
+        restricts the time range to include only src transits between
+        self.t1 and self.t2, and then queries the database to obtain a list
+        of the acquisitions.
         """
 
         if self.finder is not None:
@@ -1169,14 +1143,14 @@ class ChanMonitor(object):
         return f.get_results()
 
     def set_acq_list(self):
-        """ This method sets four attributes.  The first two attributes
-            are 'night_finder' and 'night_acq_list', which are the
-            finder object and list of acquisitions that
-            contain all night time data between self.t1 and self.t2.
-            The second two attributes are 'finder' and 'acq_list',
-            which are the finder object and list of acquisitions
-            that contain all data beween self.t1 and self.t2 with the
-            sunrise, sun transit, and sunset removed.
+        """This method sets four attributes.  The first two attributes
+        are 'night_finder' and 'night_acq_list', which are the
+        finder object and list of acquisitions that
+        contain all night time data between self.t1 and self.t2.
+        The second two attributes are 'finder' and 'acq_list',
+        which are the finder object and list of acquisitions
+        that contain all data beween self.t1 and self.t2 with the
+        sunrise, sun transit, and sunset removed.
         """
 
         # Create a Finder object and focus on time range
@@ -1213,13 +1187,13 @@ class ChanMonitor(object):
         self.acq_list = f.get_results()
 
     def get_sunfree_srcs(self, srcs=None):
-        """ This method uses the attributes 'night_acq_list' and
-            'acq_list' to determine the srcs that transit
-            in the available data.  If these attributes do not
-            exist, then the method 'set_acq_list' is called.
-            If srcs is not specified, then it defaults to the
-            brightest four radio point sources in the sky:
-            CygA, CasA, TauA, and VirA.
+        """This method uses the attributes 'night_acq_list' and
+        'acq_list' to determine the srcs that transit
+        in the available data.  If these attributes do not
+        exist, then the method 'set_acq_list' is called.
+        If srcs is not specified, then it defaults to the
+        brightest four radio point sources in the sky:
+        CygA, CasA, TauA, and VirA.
         """
 
         if self.acq_list is None:
@@ -1259,8 +1233,7 @@ class ChanMonitor(object):
         return clr, ntt, srcs
 
     def single_source_check(self):
-        """ Assumes self.source1 is NOT None
-        """
+        """Assumes self.source1 is NOT None"""
         Nipts = len(self.inputs)
         self.good_ipts = np.zeros(Nipts, dtype=bool)
         self.good_freqs = None
@@ -1302,8 +1275,7 @@ bswp2 and bsep2 arguments
         self.results_summary()
 
     def full_check(self):
-        """
-        """
+        """"""
         if self.source1 is None:
             self.get_data()
         if self.source2 is None:
@@ -1359,8 +1331,7 @@ bswp2 and bsep2 arguments
             self.results_summary()
 
     def results_summary(self):
-        """
-        """
+        """"""
         self.bad_ipts = self.input_map[np.logical_not(self.good_ipts)]
         self.deemed_bad_but_good = self.input_map[
             np.logical_and(np.logical_not(self.pwds), self.good_ipts)
@@ -1374,8 +1345,7 @@ bswp2 and bsep2 arguments
             self.wrong_position = self.input_map[self.pos_err > 1.0]
 
     def get_test_res(self, fl):
-        """
-        """
+        """"""
         for ii, ipt in enumerate(self.inputs):
             for jj, fl_ipt in enumerate(fl.inputs):
                 if fl_ipt == ipt:
@@ -1390,8 +1360,7 @@ bswp2 and bsep2 arguments
         return good_frac
 
     def get_res_sing_src(self, fl):
-        """
-        """
+        """"""
         for ii, ipt in enumerate(self.inputs):
             for jj, fl_ipt in enumerate(fl.inputs):
                 if fl_ipt == ipt:

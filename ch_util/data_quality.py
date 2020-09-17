@@ -275,7 +275,7 @@ def good_channels(
 
 
 def _check_ni(data, test_freq=0):
-    """ This is a quick and dirt function to determine if
+    """This is a quick and dirt function to determine if
         noise injection was ON or OFF for acquisitions
         older then ctime = 1435349183, when noise injection
         info started to be written to the h5py files
@@ -328,8 +328,8 @@ def _check_ni(data, test_freq=0):
 
 
 def _get_autos_index(prod_array):
-    """ Obtain auto-correlation indices from the 'prod' index map
-        returned by andata.
+    """Obtain auto-correlation indices from the 'prod' index map
+    returned by andata.
     """
     autos_index, autos_chan = [], []
     for ii in range(len(prod_array)):
@@ -341,7 +341,7 @@ def _get_autos_index(prod_array):
 
 
 def _get_prod_array(path):
-    """ Function to get visibility product array from file path
+    """Function to get visibility product array from file path
 
     Useful when desired file is known but not the time span, so that
     finder and as_reader are not useful. Or when file is not known
@@ -402,8 +402,8 @@ def _cut_non_chime(data, visi, chan_array, inputs=None):
 
 def _noise_test(visi, tmstp, n_samp, tol):
     """Calls radiom_noise to obtain radiometer statistics
-       and aplies the noise tolerance to get a list of
-       channels that pass the radiometer noise test
+    and aplies the noise tolerance to get a list of
+    channels that pass the radiometer noise test
     """
     Nchans = visi.shape[0]
     # Array to hold radiom noise fractions
@@ -456,8 +456,7 @@ def _noise_test(visi, tmstp, n_samp, tol):
 
 
 def _radiom_noise(trace, n_samp, wind=100):
-    """ Generates radiometer noise test statistics
-    """
+    """Generates radiometer noise test statistics"""
 
     # If window is < the length, use length of trace:
     wind = min(len(trace), wind)
@@ -504,8 +503,8 @@ def _radiom_noise(trace, n_samp, wind=100):
 
 def _cut_daytime(visi, tmstp):
     """Returns visibilities with night time only.
-       Returns an array if a single night is present.
-       Returns a list of arrays if multiple nights are present.
+    Returns an array if a single night is present.
+    Returns a list of arrays if multiple nights are present.
     """
 
     tstp = tmstp[1] - tmstp[0]  # Get time step
@@ -605,8 +604,7 @@ def _cut_daytime(visi, tmstp):
 
 
 def _gains_test(data, test_freq, test_chans, tol):
-    """ Test channels for excessive digital gains.
-    """
+    """Test channels for excessive digital gains."""
 
     input_map = [entry[0] for entry in data.input]
 
@@ -636,7 +634,7 @@ def _gains_test(data, test_freq, test_chans, tol):
 
 def _stats_print(good_noise, good_gains, good_fit, test_chans):
     """Generate a simple set of statistics for the test
-       and print them to screen.
+    and print them to screen.
     """
     print("\nFilter statistics:")
 
@@ -690,7 +688,7 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
 
 
 def _cut_sun_transit(cut_vis, tmstp, tcut=120.0):
-    """ Cut sun transit times from visibilities.
+    """Cut sun transit times from visibilities.
 
     Parameters
     ----------
@@ -733,8 +731,7 @@ def _cut_sun_transit(cut_vis, tmstp, tcut=120.0):
 
 
 def _median_filter(visi, ks=3):
-    """ Median filter visibilities for fit test.
-    """
+    """Median filter visibilities for fit test."""
     from scipy.signal import medfilt
 
     # Median filter visibilities:
@@ -745,9 +742,9 @@ def _median_filter(visi, ks=3):
 
 
 def _get_template(cut_vis_full, stand_chans):
-    """ Obtain template visibility through an SVD.
-        This template will be compared to the actual
-        visibilities in _fit_template.
+    """Obtain template visibility through an SVD.
+    This template will be compared to the actual
+    visibilities in _fit_template.
     """
 
     # Full copy of visibilities without sun:
@@ -846,8 +843,8 @@ def _get_template(cut_vis_full, stand_chans):
 
 
 def _fit_template(Ts, cut_vis, tol):
-    """ Fits template visibility to actual ones
-        to identify bad channels.
+    """Fits template visibility to actual ones
+    to identify bad channels.
     """
 
     from scipy.optimize import curve_fit
@@ -894,8 +891,8 @@ def _fit_template(Ts, cut_vis, tol):
 def _create_plot(
     visi, tmstp, cut_tmstp, sky, popt, test_chans, good_gains, good_noise, good_fit
 ):
-    """ Creates plot of the visibilities and the fits
-        with labels for those that fail the tests
+    """Creates plot of the visibilities and the fits
+    with labels for those that fail the tests
     """
     import matplotlib
 

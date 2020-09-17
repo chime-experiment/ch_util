@@ -303,9 +303,7 @@ class BaseData(tod.TOData):
 
     @property
     def ntime(self):
-        """Length of the time axis of the visibilities.
-
-        """
+        """Length of the time axis of the visibilities."""
 
         return len(self.index_map["time"])
 
@@ -1356,8 +1354,7 @@ class HKPData(memh5.MemDiskGroup):
         files = [cls.from_file(f, **kwargs) for f in acq_files]
 
         def filter_time_range(dset):
-            """ Trim dataset to the specified time range.
-            """
+            """Trim dataset to the specified time range."""
             data = dset[:]
             time = data["time"]
 
@@ -1374,7 +1371,7 @@ class HKPData(memh5.MemDiskGroup):
             return data[mask]
 
         def filter_file(f):
-            """ Filter a file's data down to the requested metrics
+            """Filter a file's data down to the requested metrics
             and time range.
             """
             metrics_to_copy = set(f.keys())
@@ -1388,7 +1385,7 @@ class HKPData(memh5.MemDiskGroup):
             return filtered_data
 
         def get_full_dtype(dset_name, filtered_data):
-            """ Returns a numpy.dtype object with the union of all columns
+            """Returns a numpy.dtype object with the union of all columns
             from all files. Also returns the total length of the data set
             (metric) including all files.
             """
@@ -1423,7 +1420,7 @@ class HKPData(memh5.MemDiskGroup):
             return data_dtype, length
 
         def get_full_attrs(dset_name, files):
-            """ Creates a 'full_attrs' dictionary of all attributes and all
+            """Creates a 'full_attrs' dictionary of all attributes and all
             possible values they can take, from all the files, for a
             particular data set (metric). Also returns an 'index_remap'
             list of dictionaries to remap indices of values in different
@@ -1452,7 +1449,7 @@ class HKPData(memh5.MemDiskGroup):
             return full_attrs, index_remap
 
         def get_full_data(length, data_dtype, index_remap, filtered_data, dset_name):
-            """ Returns the full data matrix as a structured array. Values are
+            """Returns the full data matrix as a structured array. Values are
             modified when necessary acording to 'index_remap' to correspond
             to the final positions in the 'full_attrs'.
             """
@@ -1597,7 +1594,7 @@ class WeatherData(BaseData):
 
     @property
     def time(self):
-        """ Needs to be able to extrac times from both mingun_weather files 
+        """Needs to be able to extrac times from both mingun_weather files
         and chime_weather files.
         """
         if "time" in self.index_map:
@@ -1607,8 +1604,8 @@ class WeatherData(BaseData):
 
     @property
     def temperature(self):
-        """ For easy access to outside weather station temperature.
-        Needs to be able to extrac temperatures from both mingun_weather files 
+        """For easy access to outside weather station temperature.
+        Needs to be able to extrac temperatures from both mingun_weather files
         and chime_weather files.
         """
         if "blockhouse" in self.keys():
@@ -2172,9 +2169,7 @@ class CorrReader(BaseReader):
         self.prod_sel = sel
 
     def select_prod_autos(self):
-        """Sets :attr:`~Reader.prod_sel` to only auto-correlations.
-
-        """
+        """Sets :attr:`~Reader.prod_sel` to only auto-correlations."""
 
         sel = []
         for ii, prod in enumerate(self.prod):
@@ -2619,8 +2614,7 @@ def versiontuple(v):
 
 
 def _renormalize(data):
-    """ Correct vis and vis_weight for lost packets.
-    """
+    """Correct vis and vis_weight for lost packets."""
     from ch_util import tools
 
     # Determine the datasets that need to be renormalized
@@ -2659,8 +2653,7 @@ def _renormalize(data):
 
 
 def _unwrap_fpga_counts(data):
-    """Unwrap 32-bit FPGA counts in a CorrData object.
-    """
+    """Unwrap 32-bit FPGA counts in a CorrData object."""
 
     import datetime
 
@@ -3241,13 +3234,11 @@ def andata_from_archive2(
             # Dynamically figure out the axis ordering.
             axis = memh5.bytes_to_unicode(attrs["axis"])
             ndim = len(dataset.shape)  # h5py datasets don't have ndim.
-            if (
-                ("freq" in axis and isinstance(freq_sel, np.ndarray))
-                + ("stack" in axis and isinstance(stack_sel, np.ndarray))
-                + ("prod" in axis and isinstance(prod_sel, np.ndarray))
-                + ("input" in axis and isinstance(input_sel, np.ndarray))
-                > 1
-            ):
+            if ("freq" in axis and isinstance(freq_sel, np.ndarray)) + (
+                "stack" in axis and isinstance(stack_sel, np.ndarray)
+            ) + ("prod" in axis and isinstance(prod_sel, np.ndarray)) + (
+                "input" in axis and isinstance(input_sel, np.ndarray)
+            ) > 1:
                 # At least two array slices. Incrementally down select.
                 # First freq.
                 dataset_sel = [slice(None)] * ndim
