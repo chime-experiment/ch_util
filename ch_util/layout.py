@@ -169,6 +169,7 @@ from ._db_tables import (
     _check_fail,
     _plural,
     _are,
+    AlreadyExists,
     NoSubgraph,
     BadSubgraph,
     DoesNotExist,

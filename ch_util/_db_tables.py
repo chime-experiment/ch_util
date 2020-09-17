@@ -15,6 +15,7 @@ import re
 
 import chimedb.core
 import chimedb.data_index
+from chimedb.core import AlreadyExistsError as AlreadyExists
 
 import peewee as pw
 import numpy as np
