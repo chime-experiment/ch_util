@@ -1,3 +1,21 @@
+# [20.10.0](https://github.com/chime-experiment/ch_util/compare/v20.5.0...v20.10.0) (2020-10-21)
+
+
+### Bug Fixes
+
+* **layout:** missing exception in layout db code ([b87de76](https://github.com/chime-experiment/ch_util/commit/b87de76bff058c7696c867bb0df4f3a9ebfd670a))
+* **tools:** Set non-CHIME input delays to zero, not NaN. ([a20e5f6](https://github.com/chime-experiment/ch_util/commit/a20e5f6bdac631da3b33a944cbaa2a2c285bd873))
+
+
+### Features
+
+* **chimeweather:** add support for chime_weather files ([#22](https://github.com/chime-experiment/ch_util/issues/22)) ([04d400c](https://github.com/chime-experiment/ch_util/commit/04d400ce45ded6812283e765d125e4c6545c576d))
+* **thermal:** Add amplitude thermal correction to cal_utils ([#25](https://github.com/chime-experiment/ch_util/issues/25)) ([ba36d37](https://github.com/chime-experiment/ch_util/commit/ba36d37294e32c8656eb1c9d44724a3e39b700b7))
+* **tools:** add a property to CorrInput to track static delays ([38991ab](https://github.com/chime-experiment/ch_util/commit/38991ab1eb1a5351ebbffe8234535076bda209e8))
+* **tools:** add delay calculation and decorrelation correction ([3c249e1](https://github.com/chime-experiment/ch_util/commit/3c249e1e19f84a6e2dc707920374911e4b937886))
+
+
+
 # [20.5.0](https://github.com/chime-experiment/ch_util/compare/v0.3.0...v20.5.0) (2020-05-07)
 
 Note: we have switched to calendar versioning for this release.
