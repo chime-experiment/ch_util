@@ -1291,6 +1291,10 @@ class HKPData(memh5.MemDiskGroup):
     select
     """
 
+    # Convert strings to/from unicode on load and save
+    convert_attribute_strings = True
+    convert_dataset_strings = True
+
     @staticmethod
     def metrics(acq_files):
         """Get the names of the metrics contained within the files.
@@ -1351,7 +1355,15 @@ class HKPData(memh5.MemDiskGroup):
             kwargs["ondisk"] = True
 
         acq_files = [acq_files] if isinstance(acq_files, str) else acq_files
-        files = [cls.from_file(f, **kwargs) for f in acq_files]
+        files = [
+            cls.from_file(
+                f,
+                convert_attribute_strings=cls.convert_attribute_strings,
+                convert_dataset_strings=cls.convert_dataset_strings,
+                **kwargs
+            )
+            for f in acq_files
+        ]
 
         def filter_time_range(dset):
             """Trim dataset to the specified time range."""
@@ -1501,7 +1513,7 @@ class HKPData(memh5.MemDiskGroup):
 
             # Populate attrs
             for att, values in full_attrs.items():
-                new_dset.attrs[att] = values
+                new_dset.attrs[att] = memh5.bytes_to_unicode(values)
 
         return hkp_data
 
