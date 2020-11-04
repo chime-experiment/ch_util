@@ -717,12 +717,12 @@ class component(event_table):
             If no property is set, then :obj:`None` is returned.
         """
         p = _graph_obj_iter(property, event, time, EVENT_AT, None, True).where(
-            property.comp == self
+            property.comp_sn == self.sn
         )
         if type:
             return p.where(property.type == type).get()
         else:
-            return p
+            return p.get()
 
     def set_property(self, type, value, time=datetime.datetime.now(), notes=None):
         """Set a property for this component.
