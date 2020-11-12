@@ -443,7 +443,7 @@ class HolographyObservation(base_model):
                 return None
 
         # DRAO longitude in hours
-        DRAO_lon = ephemeris._get_chime().longitude * 24.0 / 360.0
+        DRAO_lon = ephemeris.chime.longitude * 24.0 / 360.0
 
         if verbose:
             print(" ")
