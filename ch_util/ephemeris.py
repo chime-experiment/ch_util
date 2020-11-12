@@ -717,24 +717,10 @@ CSD_ZERO = chime_observer().lsd_start_day
 
 
 def transit_RA(time):
-    """transit_RA is now an alias for `lsa` which you should use instead.
-
-    The original version of transit_RA returned the J2000 coordinate of the
-    currently transiting point on the sky. While this accounted for *most* of
-    the spurious precession, there are better ways to achieve this. The best
-    option is to use the CIRS RA that is currently transiting, that is
-    equivalent to the Local Stellar Angle (`lsa`) which this function now
-    returns.
-    """
-
-    import warnings
-
-    warnings.warn(
-        "transit_RA is now an alias for `ephemeris.lsa`, please "
-        "use that directly instead."
+    """No longer supported. Use `lsa` instead."""
+    raise NotImplementedError(
+        "No longer supported. Use the better defined `lsa` instead."
     )
-
-    return lsa(time)
 
 
 def chime_local_datetime(*args):
