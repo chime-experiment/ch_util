@@ -2449,6 +2449,9 @@ def _ensure_1D_selection(selection):
                 raise ValueError("h5py requires sorted non-duplicate selections.")
         elif not issubclass(selection.dtype.type, np.bool_):
             raise ValueError("Array selections must be integer or boolean type.")
+        elif issubclass(selection.dtype.type, np.bool_):
+            # This is a workaround for h5py/h5py#1750
+            selection = selection.nonzero()[0]
 
     return selection
 
