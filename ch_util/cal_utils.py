@@ -822,19 +822,23 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
     def _jacobian_amp(self, ha, elementwise=False):
 
-        jac = np.rollaxis(self._vander(ha, self.poly_deg_amp), -1)
-        if not elementwise and self.N is not None:
-            slc = (None,) * len(self.N)
-            jac = jac[slc]
+        jac = self._vander(ha, self.poly_deg_amp)
+        if not elementwise:
+            jac = np.rollaxis(jac, -1)
+            if self.N is not None:
+                slc = (None,) * len(self.N)
+                jac = jac[slc]
 
         return jac
 
     def _jacobian_phi(self, ha, elementwise=False):
 
-        jac = np.rollaxis(self._vander(ha, self.poly_deg_phi), -1)
-        if not elementwise and self.N is not None:
-            slc = (None,) * len(self.N)
-            jac = jac[slc]
+        jac = self._vander(ha, self.poly_deg_phi)
+        if not elementwise:
+            jac = np.rollaxis(jac, -1)
+            if self.N is not None:
+                slc = (None,) * len(self.N)
+                jac = jac[slc]
 
         return jac
 
@@ -1127,10 +1131,12 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
 
     def _jacobian_phi(self, ha, elementwise=False):
 
-        jac = np.rollaxis(self._vander(ha, self.poly_deg_phi), -1)
-        if not elementwise and self.N is not None:
-            slc = (None,) * len(self.N)
-            jac = jac[slc]
+        jac = self._vander(ha, self.poly_deg_phi)
+        if not elementwise:
+            jac = np.rollaxis(jac, -1)
+            if self.N is not None:
+                slc = (None,) * len(self.N)
+                jac = jac[slc]
 
         return jac
 
@@ -1146,12 +1152,12 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
     @property
     def ndofa(self):
         """Number of degrees of freedom for the amplitude fit."""
-        return self.ndof
+        return self.ndof[..., 0]
 
     @property
     def ndofp(self):
         """Number of degrees of freedom for the phase fit."""
-        return self.ndof
+        return self.ndof[..., 0]
 
 
 def _propagate_uncertainty(jac, cov, tval):
