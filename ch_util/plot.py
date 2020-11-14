@@ -10,7 +10,7 @@ Functions
 
 .. autosummary::
     :toctree: generated/
-    
+
     waterfall
 
 Gerneral Information
@@ -35,7 +35,6 @@ import matplotlib.pyplot as plt
 import warnings
 import datetime
 import scipy.signal as sig
-import ephem
 from . import andata
 from . import ephemeris
 
@@ -441,21 +440,12 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
     print("Re-binning full day data to plot")
 
     if axis == "solar":
-        bin_width = float(2 * ephem.pi) / float(n_bins)
+        bin_width = float(2 * np.pi) / float(n_bins)
         bin_ranges = []
         for ii in range(n_bins):
             az1 = ii * bin_width
             az2 = az1 + bin_width
             bin_ranges.append([az1, az2])
-
-        # Set DRAO observer:
-        drao = ephem.Observer()
-        drao.lon = "{0}".format(ephemeris.CHIMELONGITUDE)
-        drao.lat = "{0}".format(ephemeris.CHIMELATITUDE)
-        # drao.elevation = ephemeris.CHIMEALTITUDE
-        drao.elevation = 545
-        drao.epoch = "2000"
-        # drao.pressure = 0 # To ignore the effects of atmospheric refraction
 
         values_to_sum = []
         for ii in range(n_bins):
@@ -469,10 +459,10 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
         for ii in range(len(tmstp)):
             in_range = (tmstp[ii] > start_range[0]) and (tmstp[ii] < end_range[1])
             if in_range:
-                eph_time = ephemeris.unix_to_ephem_time(tmstp[ii])
-                drao.date = ephem.Date(eph_time)
-                sun = ephem.Sun(drao)
-                azim = sun.az
+                sf_time = ephemeris.unix_to_skyfield_time(tmstp[ii])
+                sun = ephemeris.skyfield_wrapper.ephemeris["sun"]
+                obs = ephemeris.chime.skyfield_obs().at(sf_time)
+                azim = obs.observe(sun).apparent().altaz()[1].radians
 
                 in_start_range = (tmstp[ii] > start_range[0]) and (
                     tmstp[ii] < start_range[1]

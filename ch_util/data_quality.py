@@ -25,7 +25,6 @@ from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 # === End Python 2/3 compatibility
 
 import numpy as np
-import ephem
 
 import ch_util.ephemeris as ch_eph
 from ch_util import andata
@@ -706,9 +705,8 @@ def _cut_sun_transit(cut_vis, tmstp, tcut=120.0):
     # Stop looking for transits tcut minutes after end time:
     end_time = tmstp[-1] + tcut * 60.0
 
-    sun = ephem.Sun()  # Sun ephem object
     # Find Sun transits between start time and end time:
-    sun_trans = ch_eph.transit_times(sun, st_time, end_time)
+    sun_trans = ch_eph.solar_transit(st_time, end_time)
 
     cut_tmstp = tmstp  # Time stamps to be cut
     tstp = tmstp[1] - tmstp[0]  # Get time step
