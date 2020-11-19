@@ -1890,6 +1890,9 @@ def fit_histogram(
 
     sigma = None if no_weight else yerr
 
+    # Require positive values of amp and sigma
+    bnd = (np.array([0.0, -np.inf, 0.0]), np.array([np.inf, np.inf, np.inf]))
+
     # Define the fitting function
     def gauss(x, peak, mu, sigma):
         return peak * np.exp(-((x - mu) ** 2) / (2.0 * sigma ** 2))
@@ -1902,6 +1905,8 @@ def fit_histogram(
         p0=par0,
         sigma=sigma,
         absolute_sigma=(not no_weight),
+        bounds=bnd,
+        method="trf",
     )
 
     # Calculate quality of fit
