@@ -47,14 +47,7 @@ Routines
     files_in_range
 
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
-# === End Python 2/3 compatibility
-
-from past.builtins import basestring
 import logging
 import os
 from os import path
@@ -1475,7 +1468,7 @@ def _validate_gf_value(value):
 
 
 def _get_global_flag_times_by_name_event_id(flag):
-    if isinstance(flag, basestring):
+    if isinstance(flag, str):
         event = (
             layout.event.select()
             .where(layout.event.active == True)
@@ -1746,7 +1739,7 @@ def files_in_range(
 
     """
 
-    if isinstance(acq, basestring):
+    if isinstance(acq, str):
         acq_name = acq
         acq = di.ArchiveAcq.get(di.ArchiveAcq.name == acq).acq
     else:

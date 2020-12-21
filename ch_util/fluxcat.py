@@ -30,16 +30,10 @@ Functions
     varname
 
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
-from past.builtins import basestring
-
-# === End Python 2/3 compatibility
 
 from abc import ABCMeta, abstractmethod
-import os, fnmatch
+import os
+import fnmatch
 import inspect
 
 from collections import OrderedDict
@@ -48,11 +42,11 @@ import pickle
 
 import numpy as np
 import base64
-import datetime, time
+import datetime
+import time
 
 from caput import misc
 from . import ephemeris
-from future.utils import with_metaclass
 
 # Define nominal frequency. Sources in catalog are ordered according to
 # their predicted flux density at this frequency. Also acts as default
@@ -66,7 +60,7 @@ DEFAULT_COLLECTIONS = [
 ]
 
 # ==================================================================================
-class FitSpectrum(with_metaclass(ABCMeta, object)):
+class FitSpectrum(object, metaclass=ABCMeta):
     """A base class for modeling and fitting spectra.  Any spectral model
     used by FluxCatalog should be derived from this class.
 
@@ -318,7 +312,7 @@ class MetaFluxCatalog(type):
         return obj is not None
 
 
-class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
+class FluxCatalog(object, metaclass=MetaFluxCatalog):
     """Class for cataloging astronomical sources and predicting
     their flux density at radio frequencies based on spectral fits
     to previous measurements.
@@ -1057,7 +1051,7 @@ class FluxCatalog(with_metaclass(MetaFluxCatalog, object)):
         """
 
         # Check that key is a string
-        if not isinstance(key, basestring):
+        if not isinstance(key, str):
             TypeError("Input source name as string.")
 
         fkey = format_source_name(key)
@@ -1505,7 +1499,7 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 def _ensure_list(obj, num=None):
 
-    if hasattr(obj, "__iter__") and not isinstance(obj, basestring):
+    if hasattr(obj, "__iter__") and not isinstance(obj, str):
         nnum = len(obj)
         if (num is not None) and (nnum != num):
             ValueError("Input list has wrong size.")

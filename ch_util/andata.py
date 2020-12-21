@@ -38,15 +38,7 @@ Functions
     concatenate
 
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
-# === End Python 2/3 compatibility
-
-from future.utils import native_str
-from past.builtins import basestring
 import warnings
 import glob
 from os import path
@@ -57,7 +49,7 @@ import numpy as np
 import h5py
 from bitshuffle import h5
 
-tmp = h5  # To apease linters who complain about unused imports.
+tmp = h5  # To appease linters who complain about unused imports.
 
 # If the `caput` package is available, get `memh5` from there.  Otherwise, use
 # the version of memh5 that ships with `ch_util`, eliminating the dependancy.
@@ -1948,7 +1940,7 @@ class BaseReader(tod.Reader):
     def __init__(self, files):
 
         # If files is a filename, or pattern, turn into list of files.
-        if isinstance(files, basestring):
+        if isinstance(files, str):
             files = sorted(glob.glob(files))
 
         self._data_empty = self.data_class.from_acq_h5(files, datasets=())
@@ -2389,7 +2381,7 @@ def subclass_from_obj(cls, obj):
 
     """
     # If obj is a filename, open it and recurse.
-    if isinstance(obj, basestring):
+    if isinstance(obj, str):
         with h5py.File(obj, "r") as f:
             cls = subclass_from_obj(cls, f)
         return cls
@@ -3352,8 +3344,8 @@ def _generate_input_map(serials, chans=None):
     # Define datatype of input map array
     # TODO: Python 3 string issues
     _imap_dtype = [
-        (native_str("chan_id"), np.int64),
-        (native_str("correlator_input"), "U32"),
+        ("chan_id", np.int64),
+        ("correlator_input", "U32"),
     ]
 
     # Add in channel numbers correctly

@@ -140,14 +140,7 @@ Constants
   ORDER_ASC
   ORDER_DESC
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
-# === End Python 2/3 compatibility
-
-from past.builtins import basestring
 import datetime
 import inspect
 import logging
@@ -219,13 +212,8 @@ os.environ["TZ"] = "UTC"
 
 # Set default logging handler to avoid "No handlers could be found for logger
 # 'layout'" warnings.
-try:  # Python 2.7+
-    from logging import NullHandler
-except ImportError:
+from logging import NullHandler
 
-    class NullHandler(logging.Handler):
-        def emit(self, record):
-            pass
 
 
 # All peewee-generated logs are logged to this namespace.
@@ -1054,7 +1042,7 @@ class graph(nx.Graph):
         """
         # Get the start node and the list of candidate end nodes.
         one = False
-        if isinstance(comp, basestring) or isinstance(comp, component):
+        if isinstance(comp, str) or isinstance(comp, component):
             comp = [comp]
             one = True
 
@@ -1516,7 +1504,7 @@ def get_global_flag_times(flag):
 
     """
 
-    if isinstance(flag, basestring):
+    if isinstance(flag, str):
         query_ = global_flag.select().where(global_flag.name == flag)
     else:
         query_ = global_flag.select().where(global_flag.id == flag)

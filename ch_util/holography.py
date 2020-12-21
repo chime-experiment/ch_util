@@ -13,12 +13,6 @@ and the constants:
     ONSOURCE_DIST_TO_FLAG
 
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
-
-# === End Python 2/3 compatibility
 
 import os
 import zipfile
@@ -776,7 +770,7 @@ class HolographyObservation(base_model):
         if notes == None:
             print("Notes is None")
             notesarr = [None] * len(logs)
-        elif isinstance(notes, basestring):
+        elif isinstance(notes, str):
             notesarr = [notes] * len(logs)
         else:
             assert len(notes) == len(
@@ -825,7 +819,7 @@ class HolographyObservation(base_model):
 
                 # if the source was found, src would be a HolographySource
                 # object otherwise (ie the source is missing), it's a string
-                if isinstance(src, basestring):
+                if isinstance(src, str):
                     missing = True
                     missing_sources.append(src)
                     missing_obs_list.append(obs)

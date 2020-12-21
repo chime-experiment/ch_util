@@ -148,14 +148,7 @@ Miscellaneous
 
     invert_no_zero
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
-# === End Python 2/3 compatibility
-
-from past.builtins import basestring
 import datetime
 import numpy as np
 import scipy.linalg as la
@@ -1154,7 +1147,6 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
     """
 
     from ch_util import layout
-    import datetime
     import networkx as nx
     from chimedb.core.connectdb import connect_this_rank
 
@@ -1173,7 +1165,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
     ]
 
     # Replace 'pathfinder' or 'chime' with serial number
-    if isinstance(correlator, basestring):
+    if isinstance(correlator, str):
         if correlator.lower() == "pathfinder":
             correlator = "K7BP16-0004"
         elif correlator.lower() == "chime":
@@ -1336,7 +1328,8 @@ def get_feed_positions(feeds, get_zpos=False):
         to the N). Non CHIME feeds get set to `NaN`.
     """
 
-    # Extract positions for all array antennas or holographic antennas, fill other inputs with NaNs
+    # Extract positions for all array antennas or holographic antennas, fill other
+    # inputs with NaNs
     pos = np.array(
         [
             feed.pos if (is_array(feed) or is_holographic(feed)) else [np.nan] * 3

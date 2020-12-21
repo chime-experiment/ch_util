@@ -36,14 +36,7 @@ Functions
     interpolate_gain_quiet
     thermal_amplitude
 """
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function, unicode_literals
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
 
-# === End Python 2/3 compatibility
-
-from future.utils import with_metaclass
 from abc import ABCMeta, abstractmethod
 import inspect
 import logging
@@ -61,7 +54,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class FitTransit(with_metaclass(ABCMeta, object)):
+class FitTransit(object, metaclass=ABCMeta):
     """Base class for fitting models to point source transits.
 
     The `fit` method should be used to populate the `param`, `param_cov`, `chisq`,
