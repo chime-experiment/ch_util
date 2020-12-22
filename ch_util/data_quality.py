@@ -888,7 +888,7 @@ def _create_plot(
     """
     import matplotlib
 
-    matplotlib.use("PDF", warn=False)  # Speeds up 'savefig' considerably
+    matplotlib.use("PDF")
     import matplotlib.pyplot as plt
     import time
 
