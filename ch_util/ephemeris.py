@@ -156,6 +156,8 @@ chime = Observer(
 
 
 def _get_chime():
+    import warnings
+
     warnings.warn("Use `ephemeris.chime` instead.", DeprecationWarning)
     return chime
 
