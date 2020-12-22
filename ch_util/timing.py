@@ -727,9 +727,9 @@ class TimingCorrection(andata.BaseData):
             for each noise source input.  If None, then will reference with respect
             to the average alpha over the full time series.
         interpolate : bool
-            Interpolate the delay template to times tref.  Otherwise take the measured times
-            nearest to tref.  The get_tau method is use to perform the interpolation, and
-            kwargs for that method will be passed along.
+            Interpolate the delay template to times tref. Otherwise take the measured
+            times nearest to tref. The get_tau method is use to perform the
+            interpolation, and kwargs for that method will be passed along.
         """
         tref = np.atleast_1d(ephemeris.ensure_unix(tref))
 
@@ -750,7 +750,7 @@ class TimingCorrection(andata.BaseData):
             if tau_init.size == tau_ref.shape[0]:
                 tau_init = tau_init[:, np.newaxis]
             else:
-                InputError(
+                raise ValueError(
                     "Initial tau has size %d, but there are %d noise sources."
                     % (tau_init.size, tau_ref.shape[0])
                 )
@@ -761,7 +761,7 @@ class TimingCorrection(andata.BaseData):
             if alpha_init.size == alpha_ref.shape[0]:
                 alpha_init = alpha_init[:, np.newaxis]
             else:
-                InputError(
+                raise ValueError(
                     "Initial alpha has size %d, but there are %d noise sources."
                     % (alpha_init.size, alpha_ref.shape[0])
                 )
@@ -1431,7 +1431,7 @@ class TimingCorrection(andata.BaseData):
             # If andata object was input then update the gain
             # dataset so that we have record of what was done
             if is_obj and not copy and "gain" in timestream:
-                timestream.gain[:] *= gain[:, index, :]
+                timestream.gain[:] *= gain
 
         # If a copy was requested, then return the
         # new vis with phase correction applied
