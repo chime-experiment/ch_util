@@ -1957,12 +1957,12 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
     """
 
     nprod = vis.shape[axis]
-    ninput = gain.shape[axis]
+    ninput = signal.shape[axis]
 
     if prod_map is None and nprod != (ninput * (ninput + 1) // 2):
         raise Exception("Number of inputs does not match the number of products.")
 
-    if not prod_map is None:
+    if prod_map is not None:
         if len(prod_map) != nprod:
             msg = "Length of *prod_map* does not match number of input products."
             raise ValueError(msg)
@@ -1976,18 +1976,18 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
     elif out.shape != vis.shape:
         raise Exception("Output array is wrong shape.")
 
-    # Iterate over input pairs and set gains
+    # Iterate over input pairs and set signals
     for pp in range(nprod):
 
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
-        # Fetch the gains
-        gi = gain[:, ii]
-        gj = gain[:, ij].conj()
+        # Fetch the signals
+        si = signal[:, ii]
+        sj = signal[:, ij].conj()
 
-        # Apply the gains and save into the output array.
-        out[:, pp] = vis[:, pp] - gi * gj
+        # Apply the signals and save into the output array.
+        out[:, pp] = vis[:, pp] - si * sj
 
     return out
 
