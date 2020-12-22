@@ -1596,42 +1596,6 @@ def compare_connexion(conn1, conn2):
         return False
 
 
-def add_global_flag(
-    name,
-    start_time=datetime.datetime.now(),
-    end_time=None,
-    notes=None,
-    start_notes=None,
-    end_notes=None,
-):
-    """Add a global flag.
-
-    A global flag is an event that labels the configuration over a specified time
-    for future reference.
-
-    Parameters
-    ----------
-    name : string
-        The name for the flag.
-    start_time : datetime.datetime
-        The time at which the flag starts.
-    end_time : datetime.datetime
-        The time at which the flag ends. It can be set to :obj:`None` to leave the
-        flag open-ended.
-    notes : string
-        Any notes for the flag.
-    start_notes : string
-        Any notes for the start timestamp.
-    end_notes : string
-        Any notes for the end timestamp.
-
-    Returns
-    -------
-    The global flag object :obj:`global_flag`.
-    """
-    return t
-
-
 def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
     """Make one or more components available with a common timestamp.
 

@@ -194,7 +194,6 @@ from ._db_tables import (
     user_permission_type,
     user_permission,
     compare_connexion,
-    add_global_flag,
     add_component,
     remove_component,
     set_property,
@@ -213,7 +212,6 @@ os.environ["TZ"] = "UTC"
 # Set default logging handler to avoid "No handlers could be found for logger
 # 'layout'" warnings.
 from logging import NullHandler
-
 
 
 # All peewee-generated logs are logged to this namespace.

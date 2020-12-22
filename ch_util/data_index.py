@@ -112,7 +112,6 @@ from ._db_tables import (
     user_permission_type,
     user_permission,
     compare_connexion,
-    add_global_flag,
     add_component,
     remove_component,
     set_property,
