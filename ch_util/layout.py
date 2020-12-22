@@ -1084,7 +1084,7 @@ class graph(nx.Graph):
         for start in start_list:
 
             try:
-                path = nx.shortest_path(graph, start, tn)[:-1]
+                path = nx.shortest_path(graph, source=start, target=tn)[:-1]
             except (nx.NetworkXError, nx.NetworkXNoPath):
                 path = None
 
@@ -1314,35 +1314,6 @@ def _id_from_multi(cls, o):
 # ================
 
 from ._db_tables import connect_peewee_tables as connect_database
-
-
-def compare_connexion(conn1, conn2):
-    """See if two connexions are the same.
-    Because the :class:`connexion` could store the two components in different
-    orders, or have different instances of the same component object, direct
-    comparison may fail. This function explicitly compares both possible
-    combinations of serial numbers.
-
-    Parameters
-    ----------
-    conn1 : :obj:`connexion`
-      The first connexion object.
-    conn2 : :obj:`connexion`
-      The second connexion object.
-
-    Returns
-    -------
-    :obj:`True` if the connexions are the same, :obj:`False` otherwise.
-    """
-    sn11 = conn1.comp1.sn
-    sn12 = conn1.comp2.sn
-    sn21 = conn2.comp1.sn
-    sn22 = conn2.comp2.sn
-
-    if (sn11 == sn21 and sn12 == sn22) or (sn11 == sn22 and sn12 == sn21):
-        return True
-    else:
-        return False
 
 
 def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
