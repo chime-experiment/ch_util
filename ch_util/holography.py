@@ -15,6 +15,7 @@ and the constants:
 """
 
 import os
+import warnings
 import zipfile
 import numpy as np
 import peewee as pw
@@ -291,14 +292,14 @@ class HolographyObservation(base_model):
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
                         obs["quality_flag"] += QUALITY_OFFSOURCE
                         print(
-                            "Mean offset: {:.4f}. Std offset: {:.4f}. "
-                            + "Setting quality flag to {}.".format(
-                                meanoffset, stdoffset, QUALITY_OFFSOURCE
-                            )
+                            (
+                                "Mean offset: {:.4f}. Std offset: {:.4f}. "
+                                "Setting quality flag to {}."
+                            ).format(meanoffset, stdoffset, QUALITY_OFFSOURCE)
                         )
-                        noteout = "Questionable on source. "
-                        +"Mean, STD(offset) : {:.3f}, {:.3f}. {}".format(
-                            meanoffset, stdoffset, noteout
+                        noteout = (
+                            "Questionable on source. Mean, STD(offset) : "
+                            "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
                         )
                     if verbose:
                         print(
@@ -326,8 +327,10 @@ class HolographyObservation(base_model):
                     cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
                 else:
                     print(
-                        "No on source time found for {}\n{} {}\n"
-                        + "Min distance from source {:.1f} degrees".format(
+                        (
+                            "No on source time found for {}\n{} {}\n"
+                            "Min distance from source {:.1f} degrees"
+                        ).format(
                             curlog,
                             post_report_params["src"].name,
                             post_report_params["start_time"].utc_strftime(
@@ -763,11 +766,10 @@ class HolographyObservation(base_model):
         obs_list, dup_obs_list, missing = obs.create_from_post_reports(logs,
                 dryrun=False)
         """
-
         # check notes. Can be a string (in which case duplicate it), None (in
         # which case do nothing) or a list (in which case use it if same length
         # as logs, otherwise crash)
-        if notes == None:
+        if notes is None:
             print("Notes is None")
             notesarr = [None] * len(logs)
         elif isinstance(notes, str):
@@ -781,7 +783,6 @@ class HolographyObservation(base_model):
         for log, note in zip(logs, notesarr):
             if verbose:
                 print("Working on {}".format(log))
-            addtodb = True
             filename = log.split("/")[-1]
             # basedir = '/'.join(log.split('/')[:-1]) + '/'
             basedir = "/tmp/"
@@ -794,7 +795,7 @@ class HolographyObservation(base_model):
             if extension == "zip":
                 try:
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
-                except:
+                except Exception:
                     print(
                         "failed to find {}. Moving right along...".format(
                             post_report_file
@@ -807,23 +808,20 @@ class HolographyObservation(base_model):
                 )
 
             if doobs:
-                missing = False
 
                 # Read the post report file and pull out the HolographySource
                 # object, start time (LST), and duration (in LST hours) of the
                 # observation
                 output_params = cls.parse_post_report(basedir + post_report_file)
-                DURATION = output_params["DURATION"]
                 t = output_params["start_time"]
                 src = output_params["src"]
 
                 # if the source was found, src would be a HolographySource
                 # object otherwise (ie the source is missing), it's a string
                 if isinstance(src, str):
-                    missing = True
-                    missing_sources.append(src)
-                    missing_obs_list.append(obs)
-                    addtodb = False
+                    warnings.warn(
+                        f"Source {src} was not found for observation at time {t}."
+                    )
                 else:
                     cls.create_from_dict(
                         output_params,
