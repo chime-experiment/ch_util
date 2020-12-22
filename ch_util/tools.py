@@ -397,7 +397,6 @@ class ArrayAntenna(Antenna):
     _offset = [0.0] * 3
 
     cyl = None
-    pos = None
     pol = None
     flag = None
 
@@ -1129,7 +1128,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     Parameters
     ----------
-    lay_time : int, layout.graph or datetime
+    lay_time : layout.graph or datetime
         layout.graph object, layout tag id, or datetime.
     correlator : str, optional
         Fetch only for specified correlator. Use the serial number in database,
@@ -1180,12 +1179,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     # Fetch layout_tag start time if we received a layout num
     if isinstance(lay_time, int):
-        try:
-            t = layout.layout_tag.get(layout_id=lay_time)
-        except:
-            raise ValueError("Invalid layout id=%i" % lay_time)
-        dt = t.event().first().start.time
-        layout_graph = layout.graph.from_db(dt)
+        raise ValueError("Layout IDs are no longer supported.")
     elif isinstance(lay_time, datetime.datetime):
         layout_graph = layout.graph.from_db(lay_time)
     elif isinstance(lay_time, layout.graph):
