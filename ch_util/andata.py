@@ -52,7 +52,7 @@ from bitshuffle import h5
 tmp = h5  # To appease linters who complain about unused imports.
 
 # If the `caput` package is available, get `memh5` from there.  Otherwise, use
-# the version of memh5 that ships with `ch_util`, eliminating the dependancy.
+# the version of memh5 that ships with `ch_util`, eliminating the dependency.
 try:
     from caput import memh5, tod
 except ImportError:
@@ -66,7 +66,7 @@ ni_msg = "Ask Kiyo to implement this."
 # Variable only used for legacy archive version 1.
 ACQ_VIS_SHAPE_DATASETS = ("vis", "vis_flag", "vis_weight")
 
-# Datasets in the Acq files that are visibilities or gated visibilties
+# Datasets in the Acq files that are visibilities or gated visibilities
 ACQ_VIS_DATASETS = "^vis$|^gated_vis[0-9]$"
 
 # Datasets in the HK files that are data.
@@ -1026,7 +1026,8 @@ class CorrData(BaseData):
                 if ds_name not in fh:
                     continue
 
-                # Read dataset directly (distributed over input/product/stack axis) and add to container
+                # Read dataset directly (distributed over input/product/stack axis) and
+                # add to container
                 arr = mpiarray.MPIArray.from_hdf5(
                     fh, ds_name, comm=comm, axis=1, sel=sel
                 )
