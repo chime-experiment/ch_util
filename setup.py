@@ -28,6 +28,6 @@ setup(
     author="CHIME collaboration",
     author_email="richard@phas.ubc.ca",
     description="Utilities for CHIME.",
-    license="GPL v3.0",
+    license="MIT",
     url="https://bitbucket.org/chime/ch_util",
 )
