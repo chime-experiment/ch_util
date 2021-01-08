@@ -3,7 +3,6 @@ from setuptools import setup, find_packages
 import versioneer
 
 ch_util_data = {
-    "ch_util.tests": ["data/*/*"],
     "ch_util": ["catalogs/*.json"],
 }
 

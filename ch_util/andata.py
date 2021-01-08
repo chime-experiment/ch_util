@@ -718,7 +718,7 @@ class CorrData(BaseData):
 
         >>> import os
         >>> import glob
-        >>> from ch_util.tests import test_andata
+        >>> from . import test_andata
         >>> os.chdir(test_andata.data_path)
         >>> print(glob.glob('test_acq.h5*'))
         ['test_acq.h5.0001', 'test_acq.h5.0002']

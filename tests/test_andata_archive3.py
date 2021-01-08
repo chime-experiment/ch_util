@@ -11,7 +11,7 @@ import h5py
 
 from ch_util import andata
 from caput.memh5 import MemGroup
-from ch_util.tests import data_paths
+import data_paths
 
 tempdir = tempfile.mkdtemp()
 tarfile.open(data_paths.archive3_1).extractall(tempdir)

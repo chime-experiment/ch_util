@@ -56,7 +56,7 @@ jobs:
         pip install pytest
 
     - name: Run tests
-      run: pytest --ignore=test_db.py ch_util/tests/
+      run: pytest --ignore=test_db.py tests/
 
 
   build-docs:

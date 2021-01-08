@@ -222,7 +222,7 @@ If this succeeds, the next step to to run any unit tests that might have
 shipped with the package::
     
     $ python path/to/caput/caput/tests/test_memh5.py
-    $ python path/to/ch_util/python/ch_util/tests/test_andata.py
+    $ python path/to/ch_util/python/tests/test_andata.py
     $ # etc.
 
 

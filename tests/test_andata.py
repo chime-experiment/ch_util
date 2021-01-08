@@ -12,7 +12,7 @@ from ch_util import andata
 
 # from ch_util.andata import MemGroup
 from caput.memh5 import MemGroup
-from ch_util.tests import data_paths
+import data_paths
 
 # All the test data file names.
 acq_fname_list = data_paths.paths1_0

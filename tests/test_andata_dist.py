@@ -10,7 +10,7 @@ import numpy as np
 import h5py
 from mpi4py import MPI
 from ch_util import andata
-from ch_util.tests import data_paths
+import data_paths
 
 comm = MPI.COMM_WORLD
 

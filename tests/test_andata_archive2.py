@@ -8,7 +8,7 @@ import h5py
 
 from ch_util import andata
 from caput.memh5 import MemGroup
-from ch_util.tests import data_paths
+import data_paths
 
 # archive_acq_dir = ("/scratch/k/krs/jrs65/chime_archive/20140913T055455Z_blanchard_corr/")
 # archive_acq_fname_list = []
