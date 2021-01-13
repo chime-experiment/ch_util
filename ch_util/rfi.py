@@ -1,9 +1,4 @@
-"""
-============================================
-Tools for RFI flagging (:mod:`~ch_util.rfi`)
-============================================
-
-.. currentmodule:: ch_util.rfi
+"""Tools for RFI flagging
 
 This module contains tools for finding and removing Radio Frequency Interference
 (RFI).
@@ -16,24 +11,18 @@ the remainder are :obj:`True`.
 
 There are general purpose routines for flagging RFI in `andata` like datasets:
 
-.. autosummary::
-    :toctree: generated/
-
-    flag_dataset
-    number_deviations
+- :py:meth:`flag_dataset`
+- :py:meth:`number_deviations`
 
 For more control there are specific routines that can be called:
 
-.. autosummary::
-    :toctree: generated/
-
-    mad_cut_2d
-    mad_cut_1d
-    mad_cut_rolling
-    spectral_cut
-    frequency_mask
-    sir1d
-    sir
+- :py:meth:`mad_cut_2d`
+- :py:meth:`mad_cut_1d`
+- :py:meth:`mad_cut_rolling`
+- :py:meth:`spectral_cut`
+- :py:meth:`frequency_mask`
+- :py:meth:`sir1d`
+- :py:meth:`sir`
 """
 
 import warnings

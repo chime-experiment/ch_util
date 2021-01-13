@@ -1,10 +1,4 @@
 """
-============================
-(:mod:`~ch_util.data_index`)
-============================
-
-.. currentmodule:: ch_util.data_index
-
 This module is deprecated.
 
 * for the Data Index tables,           use :mod:`~chimedb.data_index`.

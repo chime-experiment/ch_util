@@ -1,9 +1,5 @@
 """
-================================================
-Tools for CHIME analysis (:mod:`~ch_util.tools`)
-================================================
-
-.. currentmodule:: ch_util.tools
+Tools for CHIME analysis
 
 A collection of miscellaneous utility routines.
 
@@ -16,44 +12,38 @@ of correlator inputs. This is done by calling the routine
 :func:`get_correlator_inputs`, which returns a list of the inputs. Routines
 such as :func:`get_feed_positions` operate on this list.
 
-.. autosummary::
-    :toctree: generated/
-
-    get_correlator_inputs
-    get_feed_positions
-    get_feed_polarisations
-    is_array
-    is_array_x
-    is_array_y
-    is_array_on
-    is_chime
-    is_pathfinder
-    is_holographic
-    is_noise_source
-    reorder_correlator_inputs
-    redefine_stack_index_map
-    serial_to_id
-    serial_to_location
-    parse_chime_serial
-    parse_pathfinder_serial
-    parse_old_serial
-    get_noise_source_index
-    get_holographic_index
-    change_pathfinder_location
-    change_chime_location
+- :py:meth:`get_correlator_inputs`
+- :py:meth:`get_feed_positions`
+- :py:meth:`get_feed_polarisations`
+- :py:meth:`is_array`
+- :py:meth:`is_array_x`
+- :py:meth:`is_array_y`
+- :py:meth:`is_array_on`
+- :py:meth:`is_chime`
+- :py:meth:`is_pathfinder`
+- :py:meth:`is_holographic`
+- :py:meth:`is_noise_source`
+- :py:meth:`reorder_correlator_inputs`
+- :py:meth:`redefine_stack_index_map`
+- :py:meth:`serial_to_id`
+- :py:meth:`serial_to_location`
+- :py:meth:`parse_chime_serial`
+- :py:meth:`parse_pathfinder_serial`
+- :py:meth:`parse_old_serial`
+- :py:meth:`get_noise_source_index`
+- :py:meth:`get_holographic_index`
+- :py:meth:`change_pathfinder_location`
+- :py:meth:`change_chime_location`
 
 This can determine if we are connected to any of the following:
 
-.. autosummary::
-    :toctree: generated/
-
-    HolographyAntenna
-    ArrayAntenna
-    PathfinderAntenna
-    CHIMEAntenna
-    RFIAntenna
-    NoiseSource
-    Blank
+- :py:class:`HolographyAntenna`
+- :py:class:`ArrayAntenna`
+- :py:class:`PathfinderAntenna`
+- :py:class:`CHIMEAntenna`
+- :py:class:`RFIAntenna`
+- :py:class:`NoiseSource`
+- :py:class:`Blank`
 
 Example
 -------
@@ -77,22 +67,16 @@ Housekeeping Inputs
 Functions
 ---------
 
-.. autosummary::
-    :toctree: generated/
-
-    antenna_to_lna
-    calibrate_temperature
-    hk_to_sensor
-    lna_to_antenna
-    sensor_to_hk
+- :py:meth:`antenna_to_lna`
+- :py:meth:`calibrate_temperature`
+- :py:meth:`hk_to_sensor`
+- :py:meth:`lna_to_antenna`
+- :py:meth:`sensor_to_hk`
 
 Classes
 -------
 
-.. autosummary::
-    :toctree: generated/
-
-    HKInput
+- :py:class:`HKInput`
 
 
 Product Array Mapping
@@ -101,14 +85,11 @@ Product Array Mapping
 Tools for mapping between products stored in upper triangular format, and the
 underlying pairs of inputs.
 
-.. autosummary::
-    :toctree: generated/
-
-    cmap
-    icmap
-    fast_pack_product_array
-    pack_product_array
-    unpack_product_array
+- :py:meth:`cmap`
+- :py:meth:`icmap`
+- :py:meth:`fast_pack_product_array`
+- :py:meth:`pack_product_array`
+- :py:meth:`unpack_product_array`
 
 
 Matrix Factorisation
@@ -116,14 +97,11 @@ Matrix Factorisation
 
 A few useful routines for factorising matrices, usually for calibration.
 
-.. autosummary::
-    :toctree: generated/
-
-    eigh_no_diagonal
-    rankN_approx
-    normalise_correlations
-    apply_gain
-    subtract_rank1_signal
+- :py:meth:`eigh_no_diagonal`
+- :py:meth:`rankN_approx`
+- :py:meth:`normalise_correlations`
+- :py:meth:`apply_gain`
+- :py:meth:`subtract_rank1_signal`
 
 
 Fringestopping
@@ -134,19 +112,13 @@ routine :func:`fringestop` is an easy to use routine for fringestopping data
 given a list of the feeds in the data. For more advanced usage
 :func:`fringestop_phase` can be used.
 
-.. autosummary::
-    :toctree: generated/
-
-    fringestop_phase
-    fringestop
+- :py:meth:`fringestop_phase`
+- :py:meth:`fringestop`
 
 Miscellaneous
 =============
 
-.. autosummary::
-    :toctree: generated/
-
-    invert_no_zero
+- :py:meth:`invert_no_zero`
 """
 
 import datetime
@@ -242,8 +214,6 @@ class CorrInput(object):
 
     Attributes
     ----------
-    id : int
-        Channel id. Calculated from the serial.
     input_sn : str
         Unique serial number of input.
     corr : str
@@ -298,6 +268,11 @@ class CorrInput(object):
     def id(self):
         """Channel ID. Automatically calculated from the serial number
         if id is not explicitly set.
+
+        Returns
+        -------
+        id : int
+            Channel id. Calculated from the serial.
         """
         if hasattr(self, "_id"):
             return self._id
@@ -1521,11 +1496,11 @@ def reorder_correlator_inputs(input_map, corr_inputs):
         List of :class:`CorrInput` objects, e.g. the output from
         :func:`get_correlator_inputs`.
 
-    Returns:
-    --------
+    Returns
+    -------
     corr_input_list: list
         List of :class:`CorrInput` instances in the new order. Returns `None`
-        where the serial number had no matching entry in :arg:`corr_inputs`.
+        where the serial number had no matching entry in parameter ``corr_inputs``.
     """
     serials = input_map["correlator_input"]
 

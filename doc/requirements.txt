@@ -1,10 +1,6 @@
-Sphinx
+Sphinx==3.4.2
 numpydoc
 sphinx_rtd_theme
 sphinxcontrib-katex
-# funcsigs required by mock, which apparently does not have its dependancies
-# setup correctly.
-funcsigs
 mock
 PyYAML
-numpy

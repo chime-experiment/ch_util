@@ -1,15 +1,11 @@
 """
-====================================================
-Data quality routines (:mod:`~ch_util.data_quality`)
-====================================================
+Data quality routines
+
 
 Data quality functions
 ======================
+- :py:meth:`good_channels`
 
-.. autosummary::
-    :toctree: generated/
-
-    good_channels
 
 Issues
 ======

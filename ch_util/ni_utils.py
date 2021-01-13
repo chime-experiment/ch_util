@@ -1,19 +1,4 @@
-"""
-=========================================================
-Tools for noise injection data (:mod:`~ch_util.ni_utils`)
-=========================================================
-
-.. currentmodule:: ch_util.ni_utils
-
-
-Utility Functions
-=================
-
-.. autosummary::
-    :toctree: generated/
-
-    process_synced_data
-"""
+"""Tools for noise injection data"""
 
 import numpy as np
 import os
@@ -43,17 +28,18 @@ def process_synced_data(data, ni_params=None, only_off=False):
     ni_params : dict
         Dictionary with the noise injection parameters. Optional
         for data after ctime=1435349183. ni_params has the following keys
-            ni_period: Noise injection period in GPU integrations. It is
-                assummed to be the same for all the enabled noise sources
-            ni_on_bins: A list of lists, one per enabled noise source,
-                with the corresponding ON gates (within a period). For each
-                noise source, the list contains the indices of the time frames
-                for which the source is ON.
-
+        - ni_period: Noise injection period in GPU integrations.
+        It is assummed to be the same for all the enabled noise sources
+        - ni_on_bins: A list of lists, one per enabled noise source,
+        with the corresponding ON gates (within a period). For each
+        noise source, the list contains the indices of the time frames
+        for which the source is ON.
         Example: For 3 GPU integration period (3 gates: 0, 1, 2), two enabled
-            noise sources, one ON during gate 0, the other ON during gate 1,
-            and both OFF during gate 2, then
-            ni_params = {'ni_period':3, 'ni_on_bins':[[0], [1]]}
+        noise sources, one ON during gate 0, the other ON during gate 1,
+        and both OFF during gate 2, then
+        ```
+        ni_params = {'ni_period':3, 'ni_on_bins':[[0], [1]]}
+        ```
     only_off : boolean
         Only return the off dataset.  Do not return gated datasets.
 
@@ -748,14 +734,15 @@ def mat2utvec(A):
 
 
 def utvec2mat(n, utvec):
-    """Recovers a hermitian matrix a from its upper triangle vectorized version.
+    """
+    Recovers a hermitian matrix a from its upper triangle vectorized version.
 
-     Parameters
-     ----------
-     n : int
-         order of the output hermitian matrix
-     utvec : 1d array
-         vectorized form of upper triangle of output matrix
+    Parameters
+    ----------
+    n : int
+        order of the output hermitian matrix
+    utvec : 1d array
+        vectorized form of upper triangle of output matrix
 
     Returns
     -------

@@ -1,7 +1,5 @@
 """
-==============================================
-Ephemeris routines (:mod:`~ch_util.ephemeris`)
-==============================================
+Ephemeris routines
 
 The precession of the Earth's axis gives noticeable shifts in object
 positions over the life time of CHIME. To minimise the effects of this we
@@ -53,64 +51,52 @@ Constants
 Telescope Instances
 ===================
 
-.. autosummary::
-    :toctree: generated/
-
-    chime
+- :const:`chime`
 
 
 Ephemeris Functions
 ===================
 
-.. autosummary::
-    :toctree: generated/
-
-    skyfield_star_from_ra_dec
-    transit_times
-    solar_transit
-    lunar_transit
-    setting_times
-    solar_setting
-    lunar_setting
-    rising_times
-    solar_rising
-    lunar_rising
-    _is_skyfield_obj
-    peak_RA
-    get_source_dictionary
-    lsa
+- :py:meth:`skyfield_star_from_ra_dec`
+- :py:meth:`transit_times`
+- :py:meth:`solar_transit`
+- :py:meth:`lunar_transit`
+- :py:meth:`setting_times`
+- :py:meth:`solar_setting`
+- :py:meth:`lunar_setting`
+- :py:meth:`rising_times`
+- :py:meth:`solar_rising`
+- :py:meth:`lunar_rising`
+- :py:meth:`_is_skyfield_obj`
+- :py:meth:`peak_RA`
+- :py:meth:`get_source_dictionary`
+- :py:meth:`lsa`
 
 
 Time Utilities
 ==============
 
-.. autosummary::
-    :toctree: generated/
-
-    ensure_unix
-    chime_local_datetime
-    unix_to_datetime
-    datetime_to_unix
-    datetime_to_timestr
-    timestr_to_datetime
-    unix_to_skyfield_time
-    skyfield_time_to_unix
-    time_of_day
-    csd
-    csd_to_unix
-    unix_to_csd
-    parse_date
+- :py:meth:`ensure_unix`
+- :py:meth:`chime_local_datetime`
+- :py:meth:`unix_to_datetime`
+- :py:meth:`datetime_to_unix`
+- :py:meth:`datetime_to_timestr`
+- :py:meth:`timestr_to_datetime`
+- :py:meth:`unix_to_skyfield_time`
+- :py:meth:`skyfield_time_to_unix`
+- :py:meth:`time_of_day`
+- :py:meth:`csd`
+- :py:meth:`csd_to_unix`
+- :py:meth:`unix_to_csd`
+- :py:meth:`parse_date`
 
 
 Miscellaneous Utilities
 =======================
 
-.. autosummary::
-    :toctree: generated/
-
-    galt_pointing_model_ha
-    galt_pointing_model_dec
-    sphdist
+- :py:meth:`galt_pointing_model_ha`
+- :py:meth:`galt_pointing_model_dec`
+- :py:meth:`sphdist`
 """
 
 from datetime import datetime
@@ -139,10 +125,16 @@ from caput.time import (
 )
 
 
-# Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
+#: CHIME's latitude [degrees].
+#: Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
 CHIMELATITUDE = 49.32  # degrees
+
+#: CHIME's longitude [degrees].
+#: Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
 CHIMELONGITUDE = -119.62  # degrees
-# Mateus looked this up on Wikipedia. Should replace with 'official' number.
+
+#: CHIME's altitude [metres].
+#: Mateus looked this up on Wikipedia. Should replace with 'official' number.
 CHIMEALTITUDE = 545.0  # metres
 
 
@@ -748,9 +740,16 @@ source_dictionary = get_source_dictionary(
     "primary_calibrators_perley2016", "atnf_psrcat"
 )
 
+#: :class:`skyfield.starlib.Star` representing Cassiopeia A.
 CasA = source_dictionary["CAS_A"]
+
+#: :class:`skyfield.starlib.Star` representing Cygnus A.
 CygA = source_dictionary["CYG_A"]
+
+#: :class:`skyfield.starlib.Star` representing Taurus A.
 TauA = source_dictionary["TAU_A"]
+
+#: :class:`skyfield.starlib.Star` representing Virgo A.
 VirA = source_dictionary["VIR_A"]
 
 

@@ -1,33 +1,8 @@
 """Tools for timing jitter and delay corrections.
 
-.. currentmodule:: timing
-
 This module contains tools for using noise sources to correct
 timing jitter and timing delay.
 
-Functions
-=========
-
-.. autosummary::
-    :toctree: generated/
-
-    load_timing_correction
-    construct_delay_template
-    map_input_to_noise_source
-    eigen_decomposition
-    fit_poly_to_phase
-    func_poly_phase
-    model_poly_phase
-
-Classes
-=======
-
-.. autosummary::
-    :toctree: generated/
-
-    TimingCorrection
-    TimingData
-    TimingInterpolator
 
 Example
 =======
@@ -117,55 +92,16 @@ logger.addHandler(logging.NullHandler())
 
 
 class TimingCorrection(andata.BaseData):
-    """Container that holds a timing correction.
+    """
+    Container that holds a timing correction.
 
     Provides methods for applying that correction to other datasets.
-
-    Attributes
-    ----------
-    freq
-    noise_source
-    input
-    time
-    tau
-    weight_tau
-    static_phi
-    weight_static_phi
-    static_phi_fit
-    alpha
-    weight_alpha
-    static_amp
-    weight_static_amp
-    num_freq
-    has_num_freq
-    coeff_tau
-    has_coeff_tau
-    coeff_alpha
-    has_coeff_alpha
-    amp_to_delay
-    has_amplitude
-    reference_noise_source
-    zero_delay_noise_source
-
-    Methods
-    -------
-    from_dict
-    set_coeff
-    search_input
-    set_global_reference_time
-    set_reference_time
-    get_tau
-    get_alpha
-    get_stacked_tau
-    get_stacked_alpha
-    get_timing_correction
-    get_gain
-    apply_timing_correction
     """
 
     @classmethod
     def from_dict(self, **kwargs):
-        """Instantiate a TimingCorrection object.
+        """
+        Instantiate a TimingCorrection object.
 
         Parameters
         ----------
@@ -187,7 +123,7 @@ class TimingCorrection(andata.BaseData):
         static_phi: np.ndarray[nfreq, nsource]
             The phase that was subtracted from each frequency and input prior to
             fitting for the timing correction.  This is necessary to remove the
-             approximately static ripple pattern caused by reflections.
+            approximately static ripple pattern caused by reflections.
         weight_static_phi: np.ndarray[nfreq, nsource]
             Inverse variance on static_phi.
         static_phi_fit: np.ndarray[nparam, nsource]
@@ -1494,15 +1430,12 @@ class TimingCorrection(andata.BaseData):
 
 
 class TimingData(andata.CorrData, TimingCorrection):
-    """Subclass of :class:`andata.CorrData` for timing data.
+    """
+    Subclass of :class:`andata.CorrData` for timing data.
 
     Automatically computes the timing correction when data is loaded and
     inherits the methods of :class:`TimingCorrection` that enable the application
     of that correction to other datasets.
-
-    Methods
-    -------
-    from_acq_h5
     """
 
     @classmethod
@@ -1697,7 +1630,7 @@ class TimingData(andata.CorrData, TimingCorrection):
 class TimingInterpolator(object):
     """Interpolation that is aware of flagged data and weights.
 
-    Flagged data is ignored during the interpolation.  The weights from
+    Flagged data is ignored during the interpolation. The weights from
     the data are propagated to obtain weights for the interpolated points.
     """
 
@@ -1721,7 +1654,7 @@ class TimingInterpolator(object):
             String that specifies the kind of interpolation.
             The value `nearest`, `previous`, `next`, and `linear` will use
             custom methods that propagate uncertainty to obtain the interpolated
-            weights.  The value 'zero', 'slinear', 'quadratic', and `cubic'
+            weights. The value `zero`, `slinear`, `quadratic`, and `cubic`
             will use spline interpolation from scipy.interpolation.interp1d
             and use the weight from the nearest point.
 

@@ -1,50 +1,40 @@
 """
-======================================================
-Data Index Searcher for CHIME (:mod:`~ch_util.finder`)
-======================================================
-
-.. currentmodule:: ch_util.finder
+Data Index Searcher for CHIME
 
 Search routines for locating data withing the CHIME data index.
 
 Data tables
 ===========
 
-    DataFlag
-    DataFlagType
+- :py:class:`DataFlag`
+- :py:class:`DataFlagType`
 
 
 Exceptions
 ==========
 
-    DataFlagged
+- :py:class:`DataFlagged`
 
 
 High Level Index Searcher
 =========================
 
-.. autosummary::
-    :toctree: generated/
-
-    Finder
-    DataIntervalList
-    BaseDataInterval
-    CorrDataInterval
-    HKDataInterval
-    WeatherDataInterval
-    FlagInputDataInterval
-    CalibrationGainDataInterval
-    DigitalGainDataInterval
+- :py:class:`Finder`
+- :py:class:`DataIntervalList`
+- :py:class:`BaseDataInterval`
+- :py:class:`CorrDataInterval`
+- :py:class:`HKDataInterval`
+- :py:class:`WeatherDataInterval`
+- :py:class:`FlagInputDataInterval`
+- :py:class:`CalibrationGainDataInterval`
+- :py:class:`DigitalGainDataInterval`
 
 
 Routines
 ========
 
-.. autosummary::
-    :toctree: generated/
-
-    connect_database
-    files_in_range
+- :py:meth:`connect_database`
+- :py:meth:`files_in_range`
 
 """
 
@@ -105,7 +95,7 @@ class Finder(object):
     necessary to resort to the lower level interface.
 
     Searching the index
-    -------------------
+    ===================
 
     There are four ways that a search can be modified which may be combined in
     any way.
@@ -133,7 +123,7 @@ class Finder(object):
        returning only a subset of files from each acquisition.
 
     Getting results
-    ---------------
+    ===============
 
     Results of the search can be retrieved using methods whose names begin with
     ``get_results`` An individual search result is constituted of a list of file
@@ -151,43 +141,6 @@ class Finder(object):
         host. If you are on a machine that is cross-mounted, though, you can
         enter a dictionary of "node_name": "mnt_root" pairs, specifying the
         nodes to search and where they are mounted on your host.
-
-    Attributes
-    ----------
-    acqs
-    time_range
-    time_intervals
-    min_interval
-    time_exclusions
-    global_flag_mode
-    data_flag_types
-
-    Methods
-    -------
-    set_time_range
-    set_time_range_global_flag
-    filter_acqs
-    filter_acqs_by_files
-    only_corr
-    only_hk
-    only_rawadc
-    update_global_flag_mode
-    accept_all_global_flags
-    only_weather
-    print_acq_info
-    include_time_interval
-    include_transits
-    include_global_flag
-    include_RA_interval
-    exclude_time_interval
-    exclude_transits
-    exclude_RA_interval
-    exclude_global_flag
-    exclude_data_flag_type
-    get_results_acq
-    get_results
-    set_hk_input
-    print_results_summary
 
     Examples
     --------
@@ -593,8 +546,7 @@ class Finder(object):
         condition : :mod:`peewee` comparison
             Condition on any on :class:`chimedb.data_index.ArchiveAcq` or any
             class joined to :class:`chimedb.data_index.ArchiveAcq`: using the
-            syntax from the :mod:`peewee` module (See link in `References`_
-            below).
+            syntax from the :mod:`peewee` module [1]_.
 
         Examples
         --------
@@ -610,10 +562,11 @@ class Finder(object):
 
         :meth:`Finder.filter_acqs_by_files`
 
+
         References
         ----------
 
-        http://peewee.readthedocs.org/en/latest/peewee/querying.html
+        .. [1] http://peewee.readthedocs.org/en/latest/peewee/querying.html
 
         """
 
@@ -644,7 +597,7 @@ class Finder(object):
             Condition on any on :class:`chimedb.data_index.ArchiveAcq`,
             :class:`chimedb.data_index.ArchiveFile` or any class joined to
             :class:`chimedb.data_index.ArchiveFile` using the syntax from the
-            :mod:`peewee` module (See link in `References`_ below).
+            :mod:`peewee` module [2]_.
 
         See Also
         --------
@@ -657,7 +610,7 @@ class Finder(object):
         References
         ----------
 
-        http://peewee.readthedocs.org/en/latest/peewee/querying.html
+        .. [2] http://peewee.readthedocs.org/en/latest/peewee/querying.html
 
         """
         # Get the acquisitions currently included.
@@ -1494,11 +1447,6 @@ class DataIntervalList(list):
     Just a normal python list of :class:`DataInterval`-derived objects with
     some helper methods. Instances are created by calls to
     :meth:`Finder.get_results`.
-
-    Methods
-    -------
-    iter_reader
-    iter_loaded_data
     """
 
     def iter_reader(self):
@@ -1559,11 +1507,6 @@ class BaseDataInterval(tuple):
 
     You should generally only use the classes derived from this one (i.e.,
     :class:`CorrDataInterval`, etc.)
-
-    Methods
-    -------
-    as_reader
-    as_loaded_data
     """
 
     @property
@@ -1613,13 +1556,7 @@ class BaseDataInterval(tuple):
 
 
 class CorrDataInterval(BaseDataInterval):
-    """Derived class from :class:`BaseDataInterval` for correlator data.
-
-    Methods
-    -------
-    as_loaded_data
-
-    """
+    """Derived class from :class:`BaseDataInterval` for correlator data."""
 
     @property
     def _reader_class(self):

@@ -3,14 +3,14 @@ Holography observation tables.
 
 This module defines the tables:
 
-    HolographyObservation
-    HolographySource
+- :py:class:`HolographyObservation`
+- :py:class:`HolographySource`
 
 and the constants:
 
-    QUALITY_GOOD
-    QUALITY_OFFSOURCE
-    ONSOURCE_DIST_TO_FLAG
+- :py:const:`QUALITY_GOOD`
+- :py:const:`QUALITY_OFFSOURCE`
+- :py:const:`ONSOURCE_DIST_TO_FLAG`
 
 """
 
@@ -52,7 +52,8 @@ class HolographySource(base_model):
 
 
 class HolographyObservation(base_model):
-    """A peewee model for the holographic observations.
+    """
+    A peewee model for the holographic observations.
 
     Attributes
     ----------
@@ -89,7 +90,7 @@ class HolographyObservation(base_model):
         """Method to initialize a HolographyObservation from a start day,
         start LST, and a stop day, stop LST.
 
-        Attributes
+        Parameters
         ----------
         source : HolographySource
             An instance of HolographySource.
@@ -357,12 +358,21 @@ class HolographyObservation(base_model):
         replace_dup=False,
         verbose=False,
     ):
-        """Create a holography database entry from a dictionary containing:
-            src: a HolographySource object for the source
-            start_time: start time as a Skyfield Time object
-            finish_time: finish time as a Skyfield Time object
+        """
+        Create a holography database entry from a dictionary
+
         This routine checks for duplicates and overwrites duplicates if and
-        only if replace_dup = True
+        only if `replace_dup = True`
+
+        Parameters
+        ----------
+        dict : dict
+            src : :py:class:`HolographySource`
+                A HolographySource object for the source
+            start_time
+                Start time as a Skyfield Time object
+            finish_time
+                Finish time as a Skyfield Time object
         """
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
 
@@ -385,7 +395,7 @@ class HolographyObservation(base_model):
 
             Outputs
             -------
-            If a duplicate is found: HolographyObservation object for the
+            If a duplicate is found: :py:class:`HolographyObservation` object for the
             existing entry in the database
 
             If no duplicate is found: None
@@ -763,8 +773,7 @@ class HolographyObservation(base_model):
 
         obs = hl.HolographyObservation
         logs = glob.glob('/path/to/logs/*JUN18*.zip')
-        obs_list, dup_obs_list, missing = obs.create_from_post_reports(logs,
-                dryrun=False)
+        obs_list, dup_obs_list, missing = obs.create_from_post_reports(logs, dryrun=False)
         """
         # check notes. Can be a string (in which case duplicate it), None (in
         # which case do nothing) or a list (in which case use it if same length

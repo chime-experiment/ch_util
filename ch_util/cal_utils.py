@@ -1,40 +1,7 @@
 """
-===============================================================
-Tools for point source calibration (:mod:`cal_utils`)
-===============================================================
-
-.. currentmodule:: cal_utils
+Tools for point source calibration
 
 This module contains tools for performing point-source calibration.
-
-
-Classes
-=======
-
-.. autosummary::
-    :toctree: generated/
-
-    FitPolyLogAmpPolyPhase
-    FitGaussAmpPolyPhase
-
-Functions
-=========
-
-.. autosummary::
-    :toctree: generated/
-
-    fit_point_source_map
-    func_2d_gauss
-    func_2d_sinc_gauss
-    func_dirty_gauss
-    func_real_dirty_gauss
-    guess_fwhm
-    estimate_directional_scale
-    fit_histogram
-    flag_outliers
-    interpolate_gain
-    interpolate_gain_quiet
-    thermal_amplitude
 """
 
 from abc import ABCMeta, abstractmethod
@@ -73,22 +40,6 @@ class FitTransit(object, metaclass=ABCMeta):
     ndof : np.ndarray[...]
         Number of degrees of freedom.
 
-    Properties
-    ----------
-    param_corr : np.ndarray[..., nparam, nparam]
-        Correlation of the fit parameters.
-    parameter_names : np.ndarray[nparam,]
-        Names of the parameters.
-    N : tuple
-        Numpy-style shape indicating the number of
-        fits that the object contains.  Is None
-        if the object contains a single fit.
-    nparam :  int
-        Number of fit parameters.
-    ncomponent : int
-        Number of components (i.e, real and imag, amp and phase, complex)
-        that have been fit.
-
     Abstract Methods
     ----------------
     Any subclass of FitTransit must define these methods:
@@ -96,13 +47,6 @@ class FitTransit(object, metaclass=ABCMeta):
         _fit
         _model
         _jacobian
-
-    Methods
-    -------
-    predict
-    uncertainty
-    fit
-    tval
     """
 
     _tval = {}
@@ -249,12 +193,26 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def parameter_names(self):
-        """Array of strings containing the name of the fit parameters."""
+        """
+        Array of strings containing the name of the fit parameters.
+
+        Returns
+        -------
+        parameter_names : np.ndarray[nparam,]
+            Names of the parameters.
+        """
         return np.array(["param%d" % p for p in range(self.nparam)], dtype=np.string_)
 
     @property
     def param_corr(self):
-        """Parameter correlation matrix."""
+        """
+        Parameter correlation matrix.
+
+        Returns
+        -------
+        param_corr : np.ndarray[..., nparam, nparam]
+            Correlation of the fit parameters.
+        """
         idiag = tools.invert_no_zero(
             np.sqrt(np.diagonal(self.param_cov, axis1=-2, axis2=-1))
         )
@@ -262,18 +220,41 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def N(self):
-        """Number of independent transit fits contained in this object."""
+        """
+        Number of independent transit fits contained in this object.
+
+        Returns
+        -------
+        N : tuple
+            Numpy-style shape indicating the number of
+            fits that the object contains.  Is None
+            if the object contains a single fit.
+        """
         if self.param is not None:
             return self.param.shape[:-1] or None
 
     @property
     def nparam(self):
-        """Number of parameters."""
+        """
+        Number of parameters.
+
+        Returns
+        -------
+        nparam :  int
+            Number of fit parameters.
+        """
         return self.param.shape[-1]
 
     @property
     def ncomponent(self):
-        """Number of components."""
+        """
+        Number of components.
+
+        Returns
+        -------
+        ncomponent : int
+            Number of components (i.e, real and imag, amp and phase, complex) that have been fit.
+        """
         return self.component.size
 
     def __getitem__(self, val):
@@ -465,15 +446,11 @@ class FitPoly(FitTransit):
 
 
 class FitAmpPhase(FitTransit):
-    """Base class for fitting models to the amplitude and phase during point source transit.
+    """
+    Base class for fitting models to the amplitude and phase during point source transit.
 
     Assumes an independent fit to amplitude and phase, and provides methods for predicting the
     uncertainty on each.
-
-    Methods
-    -------
-    uncertainty_amp
-    uncertainty_phi
     """
 
     def uncertainty_amp(self, ha, alpha=0.32, elementwise=False):
@@ -568,15 +545,7 @@ class FitAmpPhase(FitTransit):
 
 
 class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
-    """Class that enables separate fits of a polynomial to log amplitude and phase.
-
-    Properties
-    ----------
-    ndofa : np.ndarray[...]
-        Number of degrees of freedom of the amplitude fit.
-    ndofp : np.ndarray[...]
-        Number of degrees of freedom of the phase fit.
-    """
+    """Class that enables separate fits of a polynomial to log amplitude and phase."""
 
     component = np.array(["amplitude", "phase"], dtype=np.string_)
 
@@ -837,12 +806,26 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofa(self):
-        """Number of degrees of freedom for the amplitude fit."""
+        """
+        Number of degrees of freedom for the amplitude fit.
+
+        Returns
+        -------
+        ndofa : np.ndarray[...]
+            Number of degrees of freedom of the amplitude fit.
+        """
         return self.ndof[..., 0]
 
     @property
     def ndofp(self):
-        """Number of degrees of freedom for the phase fit."""
+        """
+        Number of degrees of freedom for the phase fit.
+
+        Returns
+        -------
+        ndofp : np.ndarray[...]
+            Number of degrees of freedom of the phase fit.
+        """
         return self.ndof[..., 1]
 
     @property
@@ -856,15 +839,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
 
 class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
-    """Class that enables fits of a gaussian to amplitude and a polynomial to phase.
-
-    Properties
-    ----------
-    ndofa : np.ndarray[...]
-        Number of degrees of freedom of the amplitude fit.
-    ndofp : np.ndarray[...]
-        Number of degrees of freedom of the phase fit.
-    """
+    """Class that enables fits of a gaussian to amplitude and a polynomial to phase."""
 
     component = np.array(["complex"], dtype=np.string_)
     npara = 3
@@ -1144,12 +1119,26 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofa(self):
-        """Number of degrees of freedom for the amplitude fit."""
+        """
+        Number of degrees of freedom for the amplitude fit.
+
+        Returns
+        -------
+        ndofa : np.ndarray[...]
+            Number of degrees of freedom of the amplitude fit.
+        """
         return self.ndof[..., 0]
 
     @property
     def ndofp(self):
-        """Number of degrees of freedom for the phase fit."""
+        """
+        Number of degrees of freedom for the phase fit.
+
+        Returns
+        -------
+        ndofp : np.ndarray[...]
+            Number of degrees of freedom of the phase fit.
+        """
         return self.ndof[..., 0]
 
 
@@ -1217,8 +1206,8 @@ def fit_point_source_map(
 ):
     """Fits a map of a point source to a model.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     ra : np.ndarray[nra, ]
         Transit right ascension.
     dec : np.ndarray[ndec, ]
@@ -1524,8 +1513,8 @@ def func_dirty_gauss(dirty_beam):
     This function is a wrapper that defines the interpolated
     dirty beam.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     dirty_beam : scipy.interpolate.interp1d
         Interpolation function that takes as an argument el = sin(za)
         and outputs an np.ndarray[nel, nra] that represents the dirty
@@ -1591,8 +1580,8 @@ def func_real_dirty_gauss(dirty_beam):
     This function is a wrapper that defines the interpolated
     dirty beam.
 
-    Parameter
-    ---------
+    Parameters
+    ----------
     dirty_beam : scipy.interpolate.interp1d
         Interpolation function that takes as an argument el = sin(za)
         and outputs an np.ndarray[nel, nra] that represents the dirty
@@ -1779,17 +1768,18 @@ def fit_histogram(
     test_normal=False,
     return_histogram=False,
 ):
-    """Fit a gaussian to a histogram of the data.
+    """
+    Fit a gaussian to a histogram of the data.
 
     Parameters
     ----------
     arr : np.ndarray
         1D array containing the data.  Arrays with more than one dimension are flattened.
     bins : int or sequence of scalars or str
-        If `bins` is an int, it defines the number of equal-width bins in `rng`.
-        If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
-            including the rightmost edge, allowing for non-uniform bin widths.
-        If `bins` is a string, it defines a method for computing the bins.
+        - If `bins` is an int, it defines the number of equal-width bins in `rng`.
+        - If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
+          including the rightmost edge, allowing for non-uniform bin widths.
+        - If `bins` is a string, it defines a method for computing the bins.
     rng : (float, float)
         The lower and upper range of the bins.  If not provided, then the range spans
         the minimum to maximum value of `arr`.
@@ -1805,44 +1795,46 @@ def fit_histogram(
     -------
     results: dict
         Dictionary containing the following fields:
-            indmin : int
-                Only bins whose index is greater than indmin were included in the fit.
-            indmax : int
-                Only bins whose index is less than indmax were included in the fit.
-            xmin : float
-                The data value corresponding to the centre of the `indmin` bin.
-            xmax : float
-                The data value corresponding to the centre of the `indmax` bin.
-            par: [float, float, float]
-                The parameters of the fit, ordered as [peak, mu, sigma].
-            chisq: float
-                The chi-squared of the fit.
-            ndof : int
-                The number of degrees of freedom of the fit.
+    indmin : int
+        Only bins whose index is greater than indmin were included in the fit.
+    indmax : int
+        Only bins whose index is less than indmax were included in the fit.
+    xmin : float
+        The data value corresponding to the centre of the `indmin` bin.
+    xmax : float
+        The data value corresponding to the centre of the `indmax` bin.
+    par: [float, float, float]
+        The parameters of the fit, ordered as [peak, mu, sigma].
+    chisq: float
+        The chi-squared of the fit.
+    ndof : int
+        The number of degrees of freedom of the fit.
+    pte : float
+        The probability to observe the chi-squared of the fit.
+
+    If `return_histogram` is True, then `results` will also contain the following fields:
+
+        bin_centre : np.ndarray
+            The bin centre of the histogram.
+        bin_count : np.ndarray
+            The bin counts of the histogram.
+
+    If `test_normal` is True, then `results` will also contain the following fields:
+
+        shapiro : dict
+            stat : float
+                The Shapiro-Wilk test statistic.
             pte : float
-                The probability to observe the chi-squared of the fit.
-
-        If `return_histogram` is True, then `results` will also contain the following fields:
-            bin_centre : np.ndarray
-                The bin centre of the histogram.
-            bin_count : np.ndarray
-                The bin counts of the histogram.
-
-        If `test_normal` is True, then `results` will also contain the following fields:
-            shapiro : dict
-                stat : float
-                    The Shapiro-Wilk test statistic.
-                pte : float
-                    The probability to observe `stat` if the data were drawn from a gaussian.
-            anderson : dict
-                stat : float
-                    The Anderson-Darling test statistic.
-                critical : list of float
-                    The critical values of the test statistic.
-                alpha : list of float
-                    The significance levels corresponding to each critical value.
-                past : list of bool
-                    Boolean indicating if the data passes the test for each critical value.
+                The probability to observe `stat` if the data were drawn from a gaussian.
+        anderson : dict
+            stat : float
+                The Anderson-Darling test statistic.
+            critical : list of float
+                The critical values of the test statistic.
+            alpha : list of float
+                The significance levels corresponding to each critical value.
+            past : list of bool
+                Boolean indicating if the data passes the test for each critical value.
     """
     # Make sure the data is 1D
     data = np.ravel(arr)

@@ -11,11 +11,7 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
-   andata
-   connectdb
-   ephemeris
-   layout
-   tools
+   reference
 
 Indices and tables
 ==================

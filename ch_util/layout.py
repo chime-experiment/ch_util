@@ -1,9 +1,5 @@
 """
-======================================================================
-Interface to the CHIME components and graphs (:mod:`~ch_util.layout`)
-======================================================================
-
-.. currentmodule:: ch_util.layout
+Interface to the CHIME components and graphs
 
 This module interfaces to the layout tables in the CHIME database.
 
@@ -65,80 +61,70 @@ create a global flag                          :meth:`global_flag.start`
 
 Functions
 =========
-.. autosummary::
-  :toctree: generated/
 
-  add_component
-  compare_connexion
-  connect_database
-  enter_ltf
-  make_connexion
-  remove_component
-  set_user
-  sever_connexion
-  global_flags_between
-  get_global_flag_times
+- :py:meth:`ch_util._db_tables.add_component`
+- :py:meth:`compare_connexion`
+- :py:meth:`connect_database`
+- :py:meth:`enter_ltf`
+- :py:meth:`make_connexion`
+- :py:meth:`remove_component`
+- :py:meth:`set_user`
+- :py:meth:`sever_connexion`
+- :py:meth:`global_flags_between`
+- :py:meth:`get_global_flag_times`
 
 Classes
 =======
-.. autosummary::
-  :toctree: generated/
 
-  subgraph_spec
-  graph
+- :py:class:`subgraph_spec`
+- :py:class:`graph`
 
 Database Models
 ===============
-.. autosummary::
-  :toctree: generated/
 
-  component
-  component_history
-  component_type
-  component_type_rev
-  component_doc
-  connexion
-  external_repo
-  event
-  event_type
-  graph_obj
-  global_flag
-  predef_subgraph_spec
-  predef_subgraph_spec_param
-  property
-  property_component
-  property_type
-  timestamp
-  user_permission
-  user_permission_type
+- :py:class:`component`
+- :py:class:`component_history`
+- :py:class:`component_type`
+- :py:class:`component_type_rev`
+- :py:class:`component_doc`
+- :py:class:`connexion`
+- :py:class:`external_repo`
+- :py:class:`event`
+- :py:class:`event_type`
+- :py:class:`graph_obj`
+- :py:class:`global_flag`
+- :py:class:`predef_subgraph_spec`
+- :py:class:`predef_subgraph_spec_param`
+- :py:class:`property`
+- :py:class:`property_component`
+- :py:class:`property_type`
+- :py:class:`timestamp`
+- :py:class:`user_permission`
+- :py:class:`user_permission_type`
 
 Exceptions
 ==========
-.. autosummary::
-  :toctree: generated/
 
-  NoSubgraph
-  BadSubgraph
-  DoesNotExist
-  UnknownUser
-  NoPermission
-  LayoutIntegrity
-  PropertyType
-  PropertyUnchanged
-  ClosestDraw
-  NotFound
+- :py:class:`NoSubgraph`
+- :py:class:`BadSubgraph`
+- :py:class:`DoesNotExist`
+- :py:class:`UnknownUser`
+- :py:class:`NoPermission`
+- :py:class:`LayoutIntegrity`
+- :py:class:`PropertyType`
+- :py:class:`PropertyUnchanged`
+- :py:class:`ClosestDraw`
+- :py:class:`NotFound`
 
 Constants
 =========
-.. autosummary::
-  :toctree: generated/
 
-  EVENT_AT
-  EVENT_BEFORE
-  EVENT_AFTER
-  EVENT_ALL
-  ORDER_ASC
-  ORDER_DESC
+- :py:const:`EVENT_AT`
+- :py:const:`EVENT_BEFORE`
+- :py:const:`EVENT_AFTER`
+- :py:const:`EVENT_ALL`
+- :py:const:`ORDER_ASC`
+- :py:const:`ORDER_DESC`
 """
 
 import datetime
@@ -245,17 +231,6 @@ class subgraph_spec(object):
     hide : list of integers, of :obj:`component_type` or of strings
       Component types for components that should be hidden and skipped over in
       the subgraph.
-
-    Attributes
-    ----------
-    start
-    terminate
-    oneway
-    hide
-
-    Methods
-    -------
-    from_predef
 
     Examples
     --------
@@ -462,23 +437,6 @@ class graph(nx.Graph):
     ----------
     time : datetime.datetime
       The time at which the graph is valid. Default is now().
-
-    Attributes
-    ----------
-    time
-    sg_spec
-    sg_spec_start
-
-    Methods
-    -------
-    closest_of_type
-    shortest_path_to_type
-    component
-    from_db
-    from_graph
-    ltf
-    neighbour_of_type
-    node_property
 
     Examples
     --------

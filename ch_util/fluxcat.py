@@ -1,34 +1,9 @@
 """
-=============================================================================
-Catalog the measured flux densities of astronomical sources. (:mod:`fluxcat`)
-=============================================================================
-
-.. currentmodule:: fluxcat
+Catalog the measured flux densities of astronomical sources
 
 This module contains tools for cataloging astronomical sources
 and predicting their flux density at radio frequencies based on
 previous measurements.
-
-Classes
-=======
-
-.. autosummary::
-    :toctree: generated/
-
-    FitSpectrum
-    CurvedPowerLaw
-    FluxCatalog
-
-Functions
-=========
-
-.. autosummary::
-    :toctree: generated/
-
-    get_epoch
-    format_source_name
-    varname
-
 """
 
 from abc import ABCMeta, abstractmethod
@@ -85,12 +60,6 @@ class FitSpectrum(object, metaclass=ABCMeta):
         _get_x
         _fit_func
         _deriv_fit_func
-
-    Methods
-    -------
-    predict
-    uncertainty
-
     """
 
     def __init__(self, param=None, param_cov=None, stats=None):
@@ -153,13 +122,14 @@ class FitSpectrum(object, metaclass=ABCMeta):
 
 
 class CurvedPowerLaw(FitSpectrum):
-    """Class to fit a spectrum to a polynomial in log-log space, given by
+    """
+    Class to fit a spectrum to a polynomial in log-log space, given by
 
     .. math::
-        \ln{S} = a_{0} + a_{1} \ln{\nu'} + a_{2} \ln{\nu'}^2 + a_{3} \ln{\nu'}^3 + \dots
+        \\ln{S} = a_{0} + a_{1} \\ln{\\nu'} + a_{2} \\ln{\\nu'}^2 + a_{3} \\ln{\\nu'}^3 + \\dots
 
-    where S is the flux density, nu' is the (normalized) frequency,
-    and a_{i} are the fit parameters.
+    where :math:`S` is the flux density, :math:`\\nu'` is the (normalized) frequency,
+    and :math:`a_{i}` are the fit parameters.
 
     Parameters
     ----------
@@ -167,18 +137,12 @@ class CurvedPowerLaw(FitSpectrum):
         Number of parameters.  This sets the order of the polynomial.
         Default is 2 (powerlaw).
     freq_pivot : float
-        The pivot frequency:
-        .. math:: \nu' = \nu / freq_pivot
-        Default is flux.FREQ_NOMINAL.
-
-    Methods
-    -------
-    fit
-
+        The pivot frequency :math:`\\nu' = \\nu / freq_pivot`.
+        Default is :py:const:`FREQ_NOMINAL`.
     """
 
     def __init__(self, freq_pivot=FREQ_NOMINAL, nparam=2, *args, **kwargs):
-        """Instantiates a CurvedPowerLaw object."""
+        """Instantiates a CurvedPowerLaw object"""
 
         super(CurvedPowerLaw, self).__init__(*args, **kwargs)
 
@@ -313,7 +277,8 @@ class MetaFluxCatalog(type):
 
 
 class FluxCatalog(object, metaclass=MetaFluxCatalog):
-    """Class for cataloging astronomical sources and predicting
+    """
+    Class for cataloging astronomical sources and predicting
     their flux density at radio frequencies based on spectral fits
     to previous measurements.
 
@@ -327,23 +292,10 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
     fields : list
         List of attributes that are read-from and written-to the
         JSON catalog files.
-
     model_lookup : dict
         Dictionary that provides access to the various models that
         can be fit to the spectrum.  These models should be
         subclasses of FitSpectrum.
-
-    Methods
-    -------
-    from_dict
-    get
-    sort
-    iteritems
-    iter
-    len
-    dump
-    load
-
     """
 
     fields = [
@@ -377,10 +329,11 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         measurements=None,
         overwrite=0,
     ):
-        """Instantiates a FluxCatalog object for an astronomical source.
+        """
+        Instantiates a FluxCatalog object for an astronomical source.
 
-        Parameters / Attributes
-        -----------------------
+        Parameters
+        ----------
         name : string
             Name of the source.  The convention for the source name is to
             use the MAIN_ID in the SIMBAD database in all uppercase letters
@@ -418,30 +371,10 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         overwrite : int between 0 and 2
             Action to take in the event that this source is already in the catalog:
-                0 - Return the existing entry.
-                1 - Add the measurements to the existing entry.
-                2 - Overwrite the existing entry.
+            - 0 - Return the existing entry.
+            - 1 - Add the measurements to the existing entry.
+            - 2 - Overwrite the existing entry.
             Default is 0.
-
-        Methods
-        -------
-        add_measurment
-        fit_model
-        plot
-        predict_flux
-        predict_uncertainty
-        to_dict
-
-        Properties
-        ----------
-        freq
-        flux
-        eflux
-        flag
-        catalog
-        epoch
-        citation
-
         """
 
         # The name argument is a unique identifier into the catalog.
@@ -1306,28 +1239,25 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
     @classmethod
     def load(cls, filename, overwrite=0, set_globals=False, verbose=False):
-        """Load the contents of a file into the catalog.
+        """
+        Load the contents of a file into the catalog.
 
         Parameters
         ----------
         filename : str
             Valid path name.  Should have .json or .pickle extension.
-
         overwrite : int between 0 and 2
             Action to take in the event that this source is already in the catalog:
-                0 - Return the existing entry.
-                1 - Add any measurements to the existing entry.
-                2 - Overwrite the existing entry.
+            - 0 - Return the existing entry.
+            - 1 - Add any measurements to the existing entry.
+            - 2 - Overwrite the existing entry.
             Default is 0.
-
         set_globals : bool
             If True, this creates a variable in the global space
             for each source in the file.  Default is False.
-
         verbose : bool
             If True, print some basic info about the contents of
             the file as it is loaded. Default is False.
-
         """
 
         # Parse filename

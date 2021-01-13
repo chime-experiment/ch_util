@@ -1,43 +1,4 @@
-"""
-=============================================
-Analysis data format (:mod:`~ch_util.andata`)
-=============================================
-
-.. currentmodule:: ch_util.andata
-
-Classes
-=======
-
-.. autosummary::
-    :toctree: generated/
-
-    BaseData
-    CorrData
-    RawADCData
-    HKData
-    HKPData
-    WeatherData
-    FlagInputData
-    CalibrationGainData
-    DigitalGainData
-    BaseReader
-    CorrReader
-    HKReader
-    WeatherReader
-    FlagInputReader
-    CalibrationGainReader
-    DigitalGainReader
-    AnDataError
-
-Functions
-=========
-
-.. autosummary::
-    :toctree: generated/
-
-    concatenate
-
-"""
+"""Analysis data format"""
 
 import warnings
 import glob
@@ -109,33 +70,6 @@ class BaseData(tod.TOData):
     h5_data : h5py.Group, memh5.MemGroup or hdf5 filename, optional
         Underlying h5py like data container where data will be stored. If not
         provided a new :class:`caput.memh5.MemGroup` instance will be created.
-
-    Attributes
-    ----------
-    attrs
-    datasets
-    index_map
-    cal
-    history
-    ondisk
-    time
-    ntime
-
-    Methods
-    -------
-    __getitem__
-    __setitem__
-    from_acq_h5
-    create_dataset
-    create_flag
-    create_indexmap
-    create_cal
-    to_memory
-    to_disk
-    flush
-    close
-    save
-
     """
 
     time_axes = CONCATENATION_AXES
@@ -417,21 +351,7 @@ class BaseData(tod.TOData):
 
 
 class CorrData(BaseData):
-    """Subclass of :class:`BaseData` for correlation data.
-
-    Attributes
-    ----------
-    vis
-    nprod
-    nfreq
-    prod
-    freq
-
-    Methods
-    -------
-    from_acq_h5
-
-    """
+    """Subclass of :class:`BaseData` for correlation data."""
 
     @property
     def vis(self):
@@ -1049,21 +969,7 @@ AnData = CorrData
 
 
 class HKData(BaseData):
-    """Subclass of :class:`BaseData` for housekeeping data.
-
-    Attributes
-    ----------
-    atmel
-    nmux
-    mux
-
-    Methods
-    -------
-    from_acq_h5
-    mux
-    nchan
-    chan
-    """
+    """Subclass of :class:`BaseData` for housekeeping data."""
 
     @property
     def atmel(self):
@@ -1275,14 +1181,7 @@ class HKData(BaseData):
 
 
 class HKPData(memh5.MemDiskGroup):
-    """Subclass of :class:`BaseData` for housekeeping data.
-
-    Methods
-    -------
-    metrics
-    from_acq_h5
-    select
-    """
+    """Subclass of :class:`BaseData` for housekeeping data."""
 
     # Convert strings to/from unicode on load and save
     convert_attribute_strings = True
@@ -1922,18 +1821,6 @@ class BaseReader(tod.Reader):
     files : filename, `h5py.File` or list there-of or filename pattern
         Files containing data. Filename patterns with wild cards (e.g.
         "foo*.h5") are supported.
-
-    Attributes
-    ----------
-    files
-    time_sel
-    time
-
-    Methods
-    -------
-    select_time_range
-    read
-
     """
 
     data_class = BaseData
@@ -2007,27 +1894,7 @@ class BaseReader(tod.Reader):
 
 
 class CorrReader(BaseReader):
-    """Subclass of :class:`BaseReader` for correlator data.
-
-    Attributes
-    ----------
-    prod
-    input
-    freq
-    prod_sel
-    input_sel
-    freq_sel
-
-    Methods
-    -------
-    read
-    select_prod_pairs
-    select_prod_autos
-    select_prod_by_input
-    select_freq_range
-    select_freq_physical
-
-    """
+    """Subclass of :class:`BaseReader` for correlator data."""
 
     data_class = CorrData
 

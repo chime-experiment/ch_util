@@ -1,27 +1,4 @@
-"""
-=======================================================
-Plotting routines for CHIME data (:mod:`~ch_util.plot`)
-=======================================================
-
-.. currentmodule:: ch_util.plot
-
-Functions
-=========
-
-.. autosummary::
-    :toctree: generated/
-
-    waterfall
-
-Gerneral Information
-====================
-
-
-Development Notes
-=================
-
-
-"""
+"""Plotting routines for CHIME data"""
 
 import numpy as np
 import scipy as sp

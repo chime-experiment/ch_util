@@ -1,23 +1,4 @@
-"""
-===============================================================
-Channel quality monitor routines (:mod:`chan_monitor`)
-===============================================================
-
-Classes
-=======
-
-.. autosummary::
-    :toctree: generated/
-
-    FeedLocator
-    ChanMonitor
-
-
-Issues
-======
-
-
-"""
+"""Channel quality monitor routines"""
 
 import numpy as np
 import copy
@@ -59,28 +40,6 @@ class FeedLocator(object):
     pstns0 : positions of inputs as obtained from the layout database
     bsipts : base inputs used to determine cross correlations loaded
              (might become unecessary in the future)
-
-    Methods
-    -------
-    __init__
-    set_bslns0
-    phase_trans
-    getphases_tr
-    get_c_ydist
-    get_c_ydist_perfreq
-    params_ft
-    getparams_ft
-    get_xdist
-    data_quality
-    single_source_test
-    get_dists
-    set_good_ipts
-    solv_pos
-    get_postns
-    xdist_test
-    continuity_test
-    good_prod_freq
-
     """
 
     def __init__(
@@ -712,30 +671,6 @@ class ChanMonitor(object):
               set to 1 sideral day after t1
     freq_sel
     prod_sel
-
-    Methods
-    -------
-    __init__
-    fromdate
-    fromdata
-    get_src_cndts
-    get_pol_prod_idx
-    get_feedlocator
-    init_feedloc_p1
-    init_feedloc_p2
-    get_cyl_pol
-    get_pos_pol
-    set_metadata
-    get_prod_sel
-    get_data
-    get_results
-    get_sunfree_srcs
-    single_source_check
-    full_check
-    results_summary
-    get_test_res
-    get_res_sing_src
-
     """
 
     def __init__(
