@@ -20,7 +20,7 @@ setup(
     install_requires=requires,
     extras_require={
         "chimedb_config": [
-            "chimedb.config @ git+https://github.com/chime-experiment/chimedb_config.git"
+            "chimedb.config @ git+ssh://git@github.com/chime-experiment/chimedb_config.git"
         ]
     },
     package_data=ch_util_data,
