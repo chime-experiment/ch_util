@@ -1,11 +1,12 @@
 """Unit tests for analysis data format."""
 
-
-import pytest
-import os
-
-import numpy as np
+from functools import wraps
 import h5py
+import numpy as np
+import os
+import pytest
+import warnings
+
 
 from ch_util import andata
 
@@ -17,15 +18,9 @@ acq_fname_list = data_paths.paths1_0
 acq_fname = acq_fname_list[0]
 acq_fname_root = data_paths.dir1_0
 
+
 # Old testdata is known to create warnings due to missing gain information.
 # Unfortunately, this kill warnings for all modules, not just this one.
-import warnings
-
-
-from functools import wraps
-
-
-# warnings.filterwarnings("ignore")
 def ignore_warnings(test_func):
     @wraps(test_func)
     def do_test(*args, **kwargs):
