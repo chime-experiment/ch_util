@@ -39,6 +39,5 @@ be automatic. Standard locations include:
 
 By default, connections from everywhere else use a restricted account called `chunnel` on the
 database server to tunnel the database connection to your local computer.  To use this tunnel, send
-your SSH public key (the contents of `~/.ssh/id_rsa.pub`) to the `bao` sysadmins (an email to
-`***REMOVED***` should suffice) and ask to have your public key added to the list of
-chunnel authorized keys.
+your SSH public key (the contents of `~/.ssh/id_rsa.pub`) to the `bao` sysadmins
+and ask to have your public key added to the list of chunnel authorized keys.
