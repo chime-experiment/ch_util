@@ -21,6 +21,9 @@ setup(
     extras_require={
         "chimedb_config": [
             "chimedb.config @ git+ssh://git@github.com/chime-experiment/chimedb_config.git"
+        ],
+        "bitshuffle": [
+            "bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git"
         ]
     },
     package_data=ch_util_data,

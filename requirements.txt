@@ -7,7 +7,6 @@ scipy
 networkx >= 2.0
 h5py
 peewee >= 3.10
-bitshuffle @ git+https://github.com/kiyo-masui/bitshuffle.git
 caput @ git+https://github.com/radiocosmology/caput.git
 skyfield >= 1.10
 mpi4py
