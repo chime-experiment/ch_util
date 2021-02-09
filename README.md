@@ -41,3 +41,7 @@ By default, connections from everywhere else use a restricted account called `ch
 database server to tunnel the database connection to your local computer.  To use this tunnel, send
 your SSH public key (the contents of `~/.ssh/id_rsa.pub`) to the `bao` sysadmins
 and ask to have your public key added to the list of chunnel authorized keys.
+
+## Documentation
+
+https://chime-experiment.github.io/ch_util
