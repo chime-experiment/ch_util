@@ -1238,14 +1238,14 @@ class TimingCorrection(andata.BaseData):
         Parameters
         ----------
         timestream : andata.CorrData / equivalent or np.ndarray[nfreq, nprod, ntime]
-            or mpiarray.MPIArray.
+            or mpiarray.MPIArray[nfreq, nprod, ntime].
             If timestream is an np.ndarray containing the visiblities, then you
             must also pass the corresponding freq, prod, input, and time axis as kwargs.
             Otherwise these quantities are obtained from the attributes of CorrData.
             If the visibilities have been stacked, then you must additionally pass the
             stack and reverse_stack axis as kwargs, and (optionally) the input flags.
-            If timestream has an MPIArray containing the visibilities, make sure the
-            nfreq, nprod, ntime reflect the local array. Calculations will only be
+            If timestream has an MemDatasetDistributed or MPIArray containing the visibilities,
+            make sure the nfreq, nprod, ntime reflect the local array. Calculations will only be
             performed on the local array.
         copy : bool
             Create a copy of the input visibilities.  Apply the timing correction to
@@ -1292,9 +1292,9 @@ class TimingCorrection(andata.BaseData):
             if isinstance(timestream, mpiarray.MPIArray):
                 # with MPIArray, we want to explicitly perform
                 # the calculations only on the local portions of it
-                vis = timestream.local_array if not copy else timestream.local_array.copy()
+                vis = timestream.local_array[:] if not copy else timestream.local_array.copy()
             else:
-                vis = timestream if not copy else timestream.copy()
+                vis = timestream[:] if not copy else timestream.copy()
 
             freq = kwargs.pop("freq")
             prod = kwargs.pop("prod")
@@ -1305,11 +1305,10 @@ class TimingCorrection(andata.BaseData):
 
         else:
             is_obj = True
-
-            if isinstance(timestream.vis, mpiarray.MPIArray):
+            if isinstance(timestream.vis, memh5.MemDatasetDistributed):
                 # with MPIArray, we want to explicitly perform
                 # the calculations only on the local portions of it
-                vis = timestream.vis[:].local_array if not copy else timestream.vis[:].local_array.copy()
+                vis = timestream.vis.local_data[:] if not copy else timestream.vis.local_data[:].copy()
             else:
                 vis = timestream.vis[:] if not copy else timestream.vis[:].copy()
 
@@ -1388,7 +1387,10 @@ class TimingCorrection(andata.BaseData):
         if copy:
             if isinstance(timestream, mpiarray.MPIArray):
                 return mpiarray.MPIArray.wrap(vis, timestream.axis, timestream.comm)
-            return vis
+            elif isinstance(timestream.vis, memh5.MemDatasetDistributed):
+                return memh5.MemDatasetDistributed.from_mpi_array(vis, timestream.vis._chunks, timestream.vis._compression, timestream._compression_opts)
+            else:
+                return vis
 
     def summary(self):
         """Provide a summary of the timing correction.
