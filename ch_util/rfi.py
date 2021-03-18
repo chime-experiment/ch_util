@@ -197,12 +197,12 @@ def number_deviations(
         list(zip(*[(pp[0], ind) for ind, pp in enumerate(prod) if pp[0] == pp[1]]))
     )
 
-    auto_vis = data.vis.view(np.ndarray)[:, auto_pi, :].copy().real
+    auto_vis = data.vis.local_data[:, auto_pi, :].copy().real
 
     # If requested, average over all inputs to construct the stacked autocorrelations
     # for the instrument (also known as the incoherent beam)
     if stack:
-        weight = (data.weight.view(np.ndarray)[:, auto_pi, :] > 0.0).astype(np.float32)
+        weight = (data.weight.local_data[:, auto_pi, :] > 0.0).astype(np.float32)
 
         # Do not include bad inputs in the average
         partial_stack = data.index_map["stack"].size < data.index_map["prod"].size
@@ -236,7 +236,7 @@ def number_deviations(
         auto_ii = np.zeros(1, dtype=np.int)
 
     else:
-        auto_flag = data.weight.view(np.ndarray)[:, auto_pi, :] > 0.0
+        auto_flag = data.weight.local_data[:, auto_pi, :] > 0.0
 
     # Convert back to an MPIArray distributed over the freq axis
     if parallel:
@@ -271,8 +271,8 @@ def number_deviations(
     for ind in range(auto_vis.shape[1]):
 
         # Create a quick copy
-        flg = static_flag & auto_flag.view(np.ndarray)[:, ind]
-        arr = auto_vis.view(np.ndarray)[:, ind].copy()
+        flg = static_flag & auto_flag.local_array[:, ind]
+        arr = auto_vis.local_array[:, ind].copy()
 
         # Use NaNs to ignore previously flagged data when computing the MAD
         arr = np.where(flg, arr.real, np.nan)
