@@ -1292,7 +1292,11 @@ class TimingCorrection(andata.BaseData):
             if isinstance(timestream, mpiarray.MPIArray):
                 # with MPIArray, we want to explicitly perform
                 # the calculations only on the local portions of it
-                vis = timestream.local_array[:] if not copy else timestream.local_array.copy()
+                vis = (
+                    timestream.local_array[:]
+                    if not copy
+                    else timestream.local_array.copy()
+                )
             else:
                 vis = timestream[:] if not copy else timestream.copy()
 
@@ -1308,7 +1312,11 @@ class TimingCorrection(andata.BaseData):
             if isinstance(timestream.vis, memh5.MemDatasetDistributed):
                 # with MPIArray, we want to explicitly perform
                 # the calculations only on the local portions of it
-                vis = timestream.vis.local_data[:] if not copy else timestream.vis.local_data[:].copy()
+                vis = (
+                    timestream.vis.local_data[:]
+                    if not copy
+                    else timestream.vis.local_data[:].copy()
+                )
             else:
                 vis = timestream.vis[:] if not copy else timestream.vis[:].copy()
 
@@ -1388,7 +1396,12 @@ class TimingCorrection(andata.BaseData):
             if isinstance(timestream, mpiarray.MPIArray):
                 return mpiarray.MPIArray.wrap(vis, timestream.axis, timestream.comm)
             elif isinstance(timestream.vis, memh5.MemDatasetDistributed):
-                return memh5.MemDatasetDistributed.from_mpi_array(vis, timestream.vis._chunks, timestream.vis._compression, timestream._compression_opts)
+                return memh5.MemDatasetDistributed.from_mpi_array(
+                    vis,
+                    timestream.vis._chunks,
+                    timestream.vis._compression,
+                    timestream._compression_opts,
+                )
             else:
                 return vis
 
