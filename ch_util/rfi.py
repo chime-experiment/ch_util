@@ -202,7 +202,7 @@ def number_deviations(
     # If requested, average over all inputs to construct the stacked autocorrelations
     # for the instrument (also known as the incoherent beam)
     if stack:
-        weight = (data.weight.view(np.ndarray)[:, auto_pi, :]) > 0.0).astype(np.float32)
+        weight = (data.weight.view(np.ndarray)[:, auto_pi, :] > 0.0).astype(np.float32)
 
         # Do not include bad inputs in the average
         partial_stack = data.index_map["stack"].size < data.index_map["prod"].size
