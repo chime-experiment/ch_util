@@ -31,7 +31,8 @@ FREQ_NOMINAL = 600.0
 # Define the source collections that should be loaded when this module is imported.
 DIR_COLLECTIONS = os.path.join(os.path.dirname(__file__), "catalogs")
 DEFAULT_COLLECTIONS = [
-    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json")
+    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json"),
+    os.path.join(DIR_COLLECTIONS, "specfind_v2_5Jy_vollmer2009.json"),
 ]
 
 # ==================================================================================
@@ -381,7 +382,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         # Check if there is already a source in the catalog with the
         # input name.  If there is, then the behavior is set by the
         # overwrite argument.
-        if (name in FluxCatalog) and (overwrite < 2):
+        if (overwrite < 2) and (name in FluxCatalog):
 
             # Return existing entry
             print("%s already has an entry in catalog." % name, end=" ")
