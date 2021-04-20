@@ -10,6 +10,7 @@ from abc import ABCMeta, abstractmethod
 import os
 import fnmatch
 import inspect
+import warnings
 
 from collections import OrderedDict
 import json
@@ -31,7 +32,8 @@ FREQ_NOMINAL = 600.0
 # Define the source collections that should be loaded when this module is imported.
 DIR_COLLECTIONS = os.path.join(os.path.dirname(__file__), "catalogs")
 DEFAULT_COLLECTIONS = [
-    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json")
+    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json"),
+    os.path.join(DIR_COLLECTIONS, "specfind_v2_5Jy_vollmer2009.json"),
 ]
 
 # ==================================================================================
@@ -314,6 +316,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
     _entries = {}
     _collections = {}
+    _alternate_name_lookup = {}
 
     def __init__(
         self,
@@ -381,7 +384,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         # Check if there is already a source in the catalog with the
         # input name.  If there is, then the behavior is set by the
         # overwrite argument.
-        if (name in FluxCatalog) and (overwrite < 2):
+        if (overwrite < 2) and (name in FluxCatalog):
 
             # Return existing entry
             print("%s already has an entry in catalog." % name, end=" ")
@@ -443,6 +446,16 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
             # Save to class dictionary
             self._entries[self.name] = self
+
+            # Add alternate names to class dictionary so they can be searched quickly
+            for alt_name in self.alternate_names:
+                if alt_name in self._alternate_name_lookup:
+                    warnings.warn(
+                        "The alternate name %s is already held by the source %s."
+                        % (alt_name, self._alternate_name_lookup[alt_name])
+                    )
+                else:
+                    self._alternate_name_lookup[alt_name] = self.name
 
     def add_measurement(
         self, freq, flux, eflux, flag=True, catalog=None, epoch=None, citation=None
@@ -985,7 +998,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Check that key is a string
         if not isinstance(key, str):
-            TypeError("Input source name as string.")
+            raise TypeError("Provide source name as string.")
 
         fkey = format_source_name(key)
 
@@ -994,14 +1007,13 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Next check alternate names
         if obj is None:
-            for name, body in cls._entries.items():
-                if fkey in body.alternate_names:
-                    obj = body
-                    break
+            afkey = cls._alternate_name_lookup.get(fkey, None)
+            if afkey is not None:
+                obj = cls._entries.get(afkey)
 
         # Check if the object was found
         if obj is None:
-            KeyError("%s was not found." % fkey)
+            raise KeyError("%s was not found." % fkey)
 
         # Return the body corresponding to this source
         return obj
@@ -1019,12 +1031,17 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         try:
             obj = cls.get(source_name)
-            key = obj.name
         except KeyError:
             key = None
+        else:
+            key = obj.name
 
         if key is not None:
             obj = cls._entries.pop(key)
+
+            for akey in obj.alternate_names:
+                cls._alternate_name_lookup.pop(akey, None)
+
             del obj
 
     @classmethod
@@ -1213,7 +1230,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         ext = os.path.splitext(filename)[1]
 
         if ext not in [".pickle", ".json"]:
-            ValueError("Do not recognize '%s' extension." % ext)
+            raise ValueError("Do not recognize '%s' extension." % ext)
 
         try:
             os.makedirs(path)
@@ -1267,10 +1284,10 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Check if the file actually exists and has the correct extension
         if not os.path.isfile(filename):
-            ValueError("%s does not exist." % filename)
+            raise ValueError("%s does not exist." % filename)
 
         if ext not in [".pickle", ".json"]:
-            ValueError("Do not recognize '%s' extension." % ext)
+            raise ValueError("Do not recognize '%s' extension." % ext)
 
         # Load contents of file into a dictionary
         with open(filename, "r") as fp:
@@ -1432,7 +1449,7 @@ def _ensure_list(obj, num=None):
     if hasattr(obj, "__iter__") and not isinstance(obj, str):
         nnum = len(obj)
         if (num is not None) and (nnum != num):
-            ValueError("Input list has wrong size.")
+            raise ValueError("Input list has wrong size.")
     else:
         if num is not None:
             obj = [obj] * num
