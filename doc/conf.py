@@ -65,7 +65,7 @@ napoleon_custom_sections = [
 
 autoclass_content = "both"  # include both class docstring and __init__
 autodoc_default_options = {
-    # Make sure that any autodoc declarations show the right members
+    # Make sure that autodoc declarations show the right members
     "members": True,
     "show-inheritance": True,
 }
@@ -77,6 +77,7 @@ numpydoc_show_class_members = False
 autodoc_mock_imports = ["networkx"]
 
 intersphinx_mapping = {"https://networkx.github.io/documentation/latest/": None}
+# TODO: add "chimedb.core": ("http://todo/", None)}
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]

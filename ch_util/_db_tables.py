@@ -1,6 +1,7 @@
 """
-Private module for defining the DB tables with the peewee ORM. These are
-imported into the layout and finder modules.
+Private module for defining the DB tables with the peewee ORM.
+
+These are imported into the layout and finder modules.
 """
 
 import datetime
@@ -91,12 +92,7 @@ from chimedb.core.orm import JSONDictField, EnumField, base_model, name_table
 
 
 class event_table(base_model):
-    """Baseclass for all models which are linked to the event class.
-
-    Methods
-    -------
-    event
-    """
+    """Baseclass for all models which are linked to the event class."""
 
     def event(
         self,
@@ -113,15 +109,15 @@ class event_table(base_model):
         Parameters
         ----------
         time : datetime.datetime
-          |event_time|
+          Event time.
         type : :obj:`event_type`
           Only get events of the specified type.
         when : int
-          |event_when|
+          Event when.
         order : int or :obj:`None`
-          |event_order|
+          Event order.
         active : bool
-          |event_active|
+          Event active.
 
         Returns
         -------
@@ -479,18 +475,6 @@ class component(event_table):
         The component type.
     type_rev : foreign key
         The revision of this component.
-
-    Methods
-    -------
-    get_connexion
-    get_history
-    get_doc
-    add
-    remove
-    add_history
-    add_doc
-    get_property
-    set_property
     """
 
     id = pw.ForeignKeyField(
@@ -525,13 +509,13 @@ class component(event_table):
             If this parameter is set, then search for connexions between this
             component and *comp*.
         time : datetime.datetime
-            |event_time|
+            Event time.
         when : int
-            |event_when|
+            Event when.
         order : int
-            |event_order|
+            Event order.
         active : bool
-            |event_active|
+            Event active.
 
         Returns
         -------
@@ -553,13 +537,13 @@ class component(event_table):
         Parameters
         ----------
         time : datetime.datetime
-            |event_time|
+            Event time.
         when : int
-            |event_when|
+            Event when.
         order : int
-            |event_order|
+            Event order.
         active : bool
-            |event_active|
+            Event active.
 
         Returns
         -------
@@ -805,15 +789,6 @@ class connexion(event_table):
         The first component in the connexion.
     comp2 : foreign key
         The second component in the connexion.
-
-    Methods
-    -------
-    from_pair
-    is_connected
-    is_permanent
-    make
-    other_comp
-    sever
     """
 
     id = pw.ForeignKeyField(
@@ -1192,10 +1167,6 @@ class event(base_model):
         The timestamp for the event start.
     end : foreign key
         The timestamp for the event end.
-
-    Methods
-    -------
-    deactivate
     """
 
     active = pw.BooleanField(default=True)
