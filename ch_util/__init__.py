@@ -7,6 +7,7 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
+    _db_tables
     andata
     cal_utils
     chan_monitor

@@ -43,33 +43,33 @@ Choose Your Own Adventure
 If you want to ...                            ... then see
 ============================================= ==================================
 retrieve and examine layout graphs            :class:`graph`
-add components                                :meth:`component.add`,
-                                              :func:`add_component`
-remove components                             :meth:`component.remove`,
-                                              :func:`remove_component`
-make connexions                               :func:`make_connexion`
-sever connexions                              :func:`sever_connexion`
-set component properties                      :meth:`component.set_property`
-                                              :func:`set_property`
-get component properties                      :meth:`component.get_property`
+add components                                :meth:`component.add<ch_util._db_tables.component.add>`,
+                                              :func:`add_component<ch_util._db_tables.add_component>`
+remove components                             :meth:`component.remove<ch_util._db_tables.component.remove>`,
+                                              :func:`remove_component<ch_util._db_tables.remove_component>`
+make connexions                               :func:`make_connexion<ch_util._db_tables.make_connexion>`
+sever connexions                              :func:`sever_connexion<ch_util._db_tables.sever_connexion>`
+set component properties                      :meth:`component.set_property<ch_util._db_tables.component.set_property>`
+                                              :func:`set_property<ch_util._db_tables.set_property>`
+get component properties                      :meth:`component.get_property<ch_util._db_tables.component.get_property>`
 make/sever many connexions and set many       :func:`enter_ltf`
 component properties at the same time
-add component history notes                   :meth:`component.add_history`
-add link to component documentation           :meth:`component.add_doc`
-create a global flag                          :meth:`global_flag.start`
+add component history notes                   :meth:`component.add_history<ch_util._db_tables.component.add_history>`
+add link to component documentation           :meth:`component.add_doc<ch_util._db_tables.component.add_doc>`
+create a global flag                          :meth:`global_flag.start<ch_util._db_tables.global_flag.start>`
 ============================================= ==================================
 
 Functions
 =========
 
-- :py:meth:`ch_util._db_tables.add_component`
-- :py:meth:`compare_connexion`
-- :py:meth:`connect_database`
+- :py:meth:`add_component<ch_util._db_tables.add_component>`
+- :py:meth:`compare_connexion<ch_util._db_tables.compare_connexion>`
+- :py:meth:`connect_database<ch_util._db_tables.connect_peewee_tables>`
 - :py:meth:`enter_ltf`
-- :py:meth:`make_connexion`
-- :py:meth:`remove_component`
-- :py:meth:`set_user`
-- :py:meth:`sever_connexion`
+- :py:meth:`make_connexion<ch_util._db_tables.make_connexion>`
+- :py:meth:`remove_component<ch_util._db_tables.remove_component>`
+- :py:meth:`set_user<ch_util._db_tables.set_user>`
+- :py:meth:`sever_connexion<ch_util._db_tables.sever_connexion>`
 - :py:meth:`global_flags_between`
 - :py:meth:`get_global_flag_times`
 
@@ -82,39 +82,39 @@ Classes
 Database Models
 ===============
 
-- :py:class:`component`
-- :py:class:`component_history`
-- :py:class:`component_type`
-- :py:class:`component_type_rev`
-- :py:class:`component_doc`
-- :py:class:`connexion`
-- :py:class:`external_repo`
-- :py:class:`event`
-- :py:class:`event_type`
-- :py:class:`graph_obj`
-- :py:class:`global_flag`
-- :py:class:`predef_subgraph_spec`
-- :py:class:`predef_subgraph_spec_param`
-- :py:class:`property`
-- :py:class:`property_component`
-- :py:class:`property_type`
-- :py:class:`timestamp`
-- :py:class:`user_permission`
-- :py:class:`user_permission_type`
+- :py:class:`component<ch_util._db_tables.component>`
+- :py:class:`component_history<ch_util._db_tables.component_history>`
+- :py:class:`component_type<ch_util._db_tables.component_type>`
+- :py:class:`component_type_rev<ch_util._db_tables.component_type_rev>`
+- :py:class:`component_doc<ch_util._db_tables.component_doc>`
+- :py:class:`connexion<ch_util._db_tables.connexion>`
+- :py:class:`external_repo<ch_util._db_tables.external_repo>`
+- :py:class:`event<ch_util._db_tables.event>`
+- :py:class:`event_type<ch_util._db_tables.event_type>`
+- :py:class:`graph_obj<ch_util._db_tables.graph_obj>`
+- :py:class:`global_flag<ch_util._db_tables.global_flag>`
+- :py:class:`predef_subgraph_spec<ch_util._db_tables.predef_subgraph_spec>`
+- :py:class:`predef_subgraph_spec_param<ch_util._db_tables.predef_subgraph_spec_param>`
+- :py:class:`property<ch_util._db_tables.property>`
+- :py:class:`property_component<ch_util._db_tables.property_component>`
+- :py:class:`property_type<ch_util._db_tables.property_type>`
+- :py:class:`timestamp<ch_util._db_tables.timestamp>`
+- :py:class:`user_permission<ch_util._db_tables.user_permission>`
+- :py:class:`user_permission_type<ch_util._db_tables.user_permission_type>`
 
 Exceptions
 ==========
 
-- :py:class:`NoSubgraph`
-- :py:class:`BadSubgraph`
-- :py:class:`DoesNotExist`
-- :py:class:`UnknownUser`
-- :py:class:`NoPermission`
-- :py:class:`LayoutIntegrity`
-- :py:class:`PropertyType`
-- :py:class:`PropertyUnchanged`
-- :py:class:`ClosestDraw`
-- :py:class:`NotFound`
+- :py:class:`NoSubgraph<ch_util._db_tables.NoSubgraph>`
+- :py:class:`BadSubgraph<ch_util._db_tables.BadSubgraph>`
+- :py:class:`DoesNotExist<ch_util._db_tables.DoesNotExist>`
+- :py:class:`UnknownUser<ch_util._db_tables.UnknownUser>`
+- :py:class:`NoPermission<ch_util._db_tables.NoPermission>`
+- :py:class:`LayoutIntegrity<ch_util._db_tables.LayoutIntegrity>`
+- :py:class:`PropertyType<ch_util._db_tables.PropertyType>`
+- :py:class:`PropertyUnchanged<ch_util._db_tables.PropertyUnchanged>`
+- :py:class:`ClosestDraw<ch_util._db_tables.ClosestDraw>`
+- :py:class:`NotFound<chimedb.core.NotFoundError>`
 
 Constants
 =========
