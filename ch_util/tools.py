@@ -2032,6 +2032,7 @@ def fringestop_time(
     csd=False,
     inplace=False,
     static_delays=True,
+    obs=ephemeris.chime,
 ):
     """Fringestop timestream data to a fixed source.
 
@@ -2082,6 +2083,7 @@ def fringestop_time(
         prod_map=prod_map,
         csd=csd,
         static_delays=static_delays,
+        obs=obs,
     )
 
     # Set any non CHIME feeds to have zero phase
@@ -2181,7 +2183,16 @@ def decorrelation(
     return timestream
 
 
-def delay(times, feeds, src, wterm=True, prod_map=None, csd=False, static_delays=True):
+def delay(
+    times,
+    feeds,
+    src,
+    wterm=True,
+    prod_map=None,
+    csd=False,
+    static_delays=True,
+    obs=ephemeris.chime,
+):
     """Calculate the delay in a visibilities observing a given source.
 
     This includes both the geometric delay and static (cable) delays.
@@ -2211,17 +2222,13 @@ def delay(times, feeds, src, wterm=True, prod_map=None, csd=False, static_delays
 
     import scipy.constants
 
-    ra = (times % 1.0) * 360.0 if csd else ephemeris.lsa(times)
-
-    src_ra, src_dec = ephemeris.object_coords(src, times.mean())
+    ra = (times % 1.0) * 360.0 if csd else obs.unix_to_lsa(times)
+    src_ra, src_dec = ephemeris.object_coords(src, times.mean(), obs=obs)
     ha = (np.radians(ra) - src_ra)[np.newaxis, :]
-
-    latitude = np.radians(ephemeris.CHIMELATITUDE)
-
+    latitude = np.radians(obs.latitude)
     # Get feed positions / c
     feedpos = get_feed_positions(feeds, get_zpos=wterm) / scipy.constants.c
     feed_delays = np.array([f.delay for f in feeds])
-
     # Calculate the geometric delay between the feed and the reference position
     delay_ref = -projected_distance(ha, latitude, src_dec, *feedpos.T[..., np.newaxis])
 
