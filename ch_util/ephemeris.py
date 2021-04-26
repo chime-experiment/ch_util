@@ -153,6 +153,13 @@ chime = Observer(
     lsd_start=datetime(2013, 11, 15),
 )
 
+tone = Observer(
+    lon=TONELONGITUDE,
+    lat=TONELATITUDE,
+    alt=TONEALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
 
 def _get_chime():
     import warnings
