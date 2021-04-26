@@ -68,7 +68,8 @@ def test_transit_against_transit_ra():
 def test_csd():
     """Test CHIME sidereal day definition."""
     # csd_zero = 1384489290.908534
-    csd_zero = 1384489290.224582
+    # csd_zero = 1384489290.224582
+    csd_zero = 1384489291.0995445
     et1 = ephemeris.datetime_to_unix(datetime(2013, 11, 14))
 
     # Check the zero of CSD (1e-7 accuracy ~ 10 milliarcsec)
