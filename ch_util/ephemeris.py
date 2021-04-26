@@ -124,19 +124,26 @@ from caput.time import (
     STELLAR_S,
 )
 
+# Calvin derived the horizontal position of the geometric center of the focal lines and the elevation of the focal line from survey coordinates:
+CHIMELATITUDE = 49.3207092194
+CHIMELONGITUDE = -119.6236774310
+CHIMEALTITUDE = 555.372
 
-#: CHIME's latitude [degrees].
-#: Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
-CHIMELATITUDE = 49.32  # degrees
+# Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
+# CHIMELATITUDE = 49.32  # degrees
+# CHIMELONGITUDE = -119.62  # degrees
+# Mateus looked this up on Wikipedia. Should replace with 'official' number.
+# CHIMEALTITUDE = 545.0  # metres
+# Calvin replaced old coordinates with the position of the geometric center of the focal lines derived from survey coordinates: see https://bao.chimenet.ca/doc/documents/1327
+CHIMELATITUDE = 49.3207092194
+CHIMELONGITUDE = -119.6236774310
+CHIMEALTITUDE = 555.372
 
-#: CHIME's longitude [degrees].
-#: Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
-CHIMELONGITUDE = -119.62  # degrees
-
-#: CHIME's altitude [metres].
-#: Mateus looked this up on Wikipedia. Should replace with 'official' number.
-CHIMEALTITUDE = 545.0  # metres
-
+# Calvin also positioned the GBO/TONE Outrigger similatly.
+# GBO/TONE Outrigger
+TONELATITUDE = 38.4292962636
+TONELONGITUDE = -79.8451625395
+TONEALTITUDE = 810.000
 
 # Create the Observer instances for CHIME and outriggers
 chime = Observer(
