@@ -297,7 +297,7 @@ def parse_date(datestring):
     return datetime.strptime(datestring, "%Y%m%d") - timedelta(hours=tzoffset)
 
 
-def utc_lst_to_mjd(datestring, lst):
+def utc_lst_to_mjd(datestring, lst, obs=chime):
     """Convert datetime string and LST to corresponding modified Julian Day
 
     Parameters
@@ -306,6 +306,7 @@ def utc_lst_to_mjd(datestring, lst):
         Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]
     lst : float
         Local sidereal time at DRAO (CHIME) in decimal hours
+    obs : caput.Observer object
 
     Returns
     -------
@@ -314,7 +315,7 @@ def utc_lst_to_mjd(datestring, lst):
     """
     return (
         unix_to_skyfield_time(
-            chime.lsa_to_unix(lst * 360 / 24, datetime_to_unix(parse_date(datestring)))
+            obs.lsa_to_unix(lst * 360 / 24, datetime_to_unix(parse_date(datestring)))
         ).tt
         - 2400000.5
     )
@@ -356,7 +357,7 @@ def sphdist(long1, lat1, long2, lat2):
     return Angle(radians=2 * dist)
 
 
-def solar_transit(start_time, end_time=None):
+def solar_transit(start_time, end_time=None, obs=chime):
     """Find the Solar transits between two times for CHIME.
 
     Parameters
@@ -376,10 +377,10 @@ def solar_transit(start_time, end_time=None):
 
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
-    return chime.transit_times(sun, start_time, end_time)
+    return obs.transit_times(sun, start_time, end_time)
 
 
-def lunar_transit(start_time, end_time=None):
+def lunar_transit(start_time, end_time=None, obs=chime):
     """Find the Lunar transits between two times for CHIME.
 
     Parameters
@@ -399,7 +400,7 @@ def lunar_transit(start_time, end_time=None):
 
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
-    return chime.transit_times(moon, start_time, end_time)
+    return obs.transit_times(moon, start_time, end_time)
 
 
 # Create CHIME specific versions of various calls.
@@ -449,7 +450,7 @@ def chime_local_datetime(*args):
     return dt_aware.replace(tzinfo=None) - dt_aware.utcoffset()
 
 
-def solar_setting(start_time, end_time=None):
+def solar_setting(start_time, end_time=None, obs=chime):
     """Find the Solar settings between two times for CHIME.
 
     Parameters
@@ -470,10 +471,10 @@ def solar_setting(start_time, end_time=None):
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
-    return chime.set_times(sun, start_time, end_time, diameter=0.6)
+    return obs.set_times(sun, start_time, end_time, diameter=0.6)
 
 
-def lunar_setting(start_time, end_time=None):
+def lunar_setting(start_time, end_time=None, obs=chime):
     """Find the Lunar settings between two times for CHIME.
 
     Parameters
@@ -494,10 +495,10 @@ def lunar_setting(start_time, end_time=None):
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
-    return chime.set_times(moon, start_time, end_time, diameter=0.6)
+    return obs.set_times(moon, start_time, end_time, diameter=0.6)
 
 
-def solar_rising(start_time, end_time=None):
+def solar_rising(start_time, end_time=None, obs=chime):
     """Find the Solar risings between two times for CHIME.
 
     Parameters
@@ -518,10 +519,10 @@ def solar_rising(start_time, end_time=None):
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
-    return chime.rise_times(sun, start_time, end_time, diameter=0.6)
+    return obs.rise_times(sun, start_time, end_time, diameter=0.6)
 
 
-def lunar_rising(start_time, end_time=None):
+def lunar_rising(start_time, end_time=None, obs=chime):
     """Find the Lunar risings between two times for CHIME.
 
     Parameters
@@ -542,7 +543,7 @@ def lunar_rising(start_time, end_time=None):
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
-    return chime.rise_times(moon, start_time, end_time, diameter=0.6)
+    return obs.rise_times(moon, start_time, end_time, diameter=0.6)
 
 
 def _is_skyfield_obj(body):
@@ -575,7 +576,7 @@ def Star_cirs(ra, dec, epoch):
     return cirs_radec(Star(ra=ra, dec=dec, epoch=epoch))
 
 
-def cirs_radec(body, date=None, deg=False):
+def cirs_radec(body, date=None, deg=False, obs=chime):
     """Converts a Skyfield body in CIRS coordinates at a given epoch to
     ICRS coordinates observed from CHIME
 
@@ -597,7 +598,7 @@ def cirs_radec(body, date=None, deg=False):
 
     epoch = ts.tt_jd(np.median(body.epoch))
 
-    pos = chime.skyfield_obs().at(epoch).observe(body)
+    pos = obs.skyfield_obs().at(epoch).observe(body)
 
     # Matrix CT transforms from CIRS to ICRF (https://rhodesmill.org/skyfield/time.html)
     r_au, dec, ra = skyfield.functions.to_polar(
@@ -609,7 +610,7 @@ def cirs_radec(body, date=None, deg=False):
     )
 
 
-def object_coords(body, date=None, deg=False, obs=None):
+def object_coords(body, date=None, deg=False, obs=chime):
     """Calculates the RA and DEC of the source.
 
     Gives the ICRS coordinates if no date is given (=J2000), or if a date is
@@ -648,9 +649,6 @@ def object_coords(body, date=None, deg=False, obs=None):
             )
 
     else:  # Calculate CIRS position with all corrections
-
-        if obs is None:
-            obs = chime
 
         date = unix_to_skyfield_time(date)
         radec = obs.skyfield_obs().at(date).observe(body).apparent().cirs_radec(date)
