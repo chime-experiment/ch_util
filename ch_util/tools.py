@@ -159,6 +159,7 @@ _LAT_LON = {
     "chime": [49.3207125, -119.623670],
     "pathfinder": [49.3202245, -119.6183635],
     "galt_26m": [49.320909, -119.620174],
+    "gbo_tone": [38.4292962636, -79.8451625395],
 }
 
 # Classes
@@ -438,6 +439,16 @@ class CHIMEAntenna(ArrayAntenna):
     _rotation = _CHIME_ROT
     _offset = _CHIME_POS
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
+
+
+class TONEAntenna(ArrayAntenna):
+    """Antenna that is part of GBO/TONE Outrigger.
+    Let's allow for a global rotation and offset.
+    """
+
+    _rotation = 0.00
+    _offset = [0.00, 0.00, 0.00]
+    _delay = 0
 
 
 class HolographyAntenna(Antenna):
@@ -1109,6 +1120,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
         Fetch only for specified correlator. Use the serial number in database,
         or `pathfinder` or `chime`, which will substitute the correct serial.
         If `None` return for all correlators.
+        Option `tone` added for GBO 12 dish outrigger prototype array.
     connect : bool, optional
         Connect to database and set the user to Jrs65 prior to query.
         Default is True.
@@ -1144,6 +1156,12 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             correlator = "K7BP16-0004"
         elif correlator.lower() == "chime":
             correlator = "FCC"
+        elif correlator.lower() == "tone":
+            # A hack to return GBO correlator inputs
+            correlator = "tone"
+            connect = False
+            laytime = 0
+            return fake_tone_database()
 
     if not connect_this_rank():
         return None
@@ -1311,6 +1329,48 @@ def get_feed_positions(feeds, get_zpos=False):
         pos = pos[:, 0:2]
 
     return pos
+
+
+def fake_tone_database():
+    positions_and_polarizations = [
+        ("S", [15.08, -1.61]),
+        ("E", [15.08, -1.61]),
+        ("S", [-9.19, -15.24]),
+        ("E", [-9.19, -15.24]),
+        ("S", [7.02, 14.93]),
+        ("E", [7.02, 14.93]),
+        ("S", [9.01, -5.02]),
+        ("E", [9.01, -5.02]),
+        ("S", [2.8, 2.67]),
+        ("E", [2.8, 2.67]),
+        ("S", [-1.66, 10.38]),
+        ("E", [-1.66, 10.38]),
+        ("S", [-7.63, -0.79]),
+        ("E", [-7.63, -0.79]),
+        ("S", [-15.43, -5.33]),
+        ("E", [-15.43, -5.33]),
+    ]
+    inputs = []
+    for id, pol_ns_ew in enumerate(positions_and_polarizations):
+        inputs.append(
+            TONEAntenna(
+                id=id,
+                crate=0,
+                slot=0,
+                sma=0,
+                corr_order=0,
+                input_sn=f"TONE{id:04}",
+                corr="tone",
+                reflector=None,
+                antenna=f"ANT{id//2:04}",
+                rf_thru="N/A",
+                cyl=0,
+                pol=pol_ns_ew[0],
+                flag=True,
+                pos=[pol_ns_ew[1][0], pol_ns_ew[1][1], 0],
+            )
+        )
+    return inputs
 
 
 def get_feed_polarisations(feeds):
