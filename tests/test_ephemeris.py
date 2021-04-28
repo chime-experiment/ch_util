@@ -81,7 +81,8 @@ def test_csd():
     )
 
     # Check a specific precalculated CSD
-    csd1 = -1.1848347442894998
+    csd1 = -1.1848449724498247
+
     assert ephemeris.csd(et1) == approx(csd1, abs=1e-7)
 
     # Check vectorization
