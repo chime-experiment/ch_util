@@ -285,9 +285,7 @@ class HolographyObservation(base_model):
                         "finish_time": ant_log["t"][onsource[-1]],
                         "quality_flag": QUALITY_GOOD,
                     }
-                    noteout = "from .ANT log " + ts.now().utc_strftime(
-                        DATE_FMT_STR
-                    )
+                    noteout = "from .ANT log " + ts.now().utc_strftime(DATE_FMT_STR)
                     if notes is not None:
                         noteout = notes + " " + noteout
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
@@ -609,7 +607,8 @@ class HolographyObservation(base_model):
                 try:
                     zipfile.ZipFile(log).extract(ant_file, path=basedir)
                 except:
-                    print("Failed to extract {} into {}. Moving right along...".format(
+                    print(
+                        "Failed to extract {} into {}. Moving right along...".format(
                             ant_file, basedir
                         )
                     )
