@@ -285,7 +285,7 @@ class HolographyObservation(base_model):
                         "finish_time": ant_log["t"][onsource[-1]],
                         "quality_flag": QUALITY_GOOD,
                     }
-                    noteout = "Added by create_from_ant_logs " + ts.now().utc_strftime(
+                    noteout = "from .ANT log " + ts.now().utc_strftime(
                         DATE_FMT_STR
                     )
                     if notes is not None:
@@ -549,7 +549,7 @@ class HolographyObservation(base_model):
         Files
         -----
         the .ANT and .POST_REPORT files in the input .zip archive are
-        extracted into /tmp/
+        extracted into /tmp/26mlog/<loginname>/
         """
 
         from skyfield.positionlib import Angle
@@ -591,7 +591,7 @@ class HolographyObservation(base_model):
             doobs = True
 
             filename = log.split("/")[-1]
-            basedir = "/tmp/"
+            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
             basename, extension = filename.split(".")
             post_report_file = basename + ".POST_REPORT"
             ant_file = basename + ".ANT"
@@ -601,15 +601,18 @@ class HolographyObservation(base_model):
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except:
                     print(
-                        "failed to find {}. Moving right along...".format(
-                            post_report_file
+                        "Failed to extract {} into {}. Moving right along...".format(
+                            post_report_file, basedir
                         )
                     )
                     doobs = False
                 try:
                     zipfile.ZipFile(log).extract(ant_file, path=basedir)
                 except:
-                    print("failed to find {}. Moving right along...".format(ant_file))
+                    print("Failed to extract {} into {}. Moving right along...".format(
+                            ant_file, basedir
+                        )
+                    )
                     doobs = False
 
             if doobs:
