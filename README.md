@@ -12,11 +12,18 @@ To get `ch_util`, use git to clone the repository:
 ## Python Installation
 `ch_util` is availaible as python package in the following flavors with increasing dependency requirements.
 
-|                          Availaible Modules                         |         Local Installation         | PIP                                                                     |
-|:-------------------------------------------------------------------:|:----------------------------------:|-------------------------------------------------------------------------|
+|                          Availaible Modules                        |         Local Installation        | PIP                                                                     |
+|:-------------------------------------------------------------------|:----------------------------------|-------------------------------------------------------------------------|
 | cal_utils, ephemeris, fluxcat, tools, rfi                           | poetry install                     | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util                 |
 | andata, timing, data_quality, ni_utils, plot                        | poetry install -E data             | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util[data]           |
 | _db_tables, chan_monitor, connectdb, data_index, finder, holography | poetry install -E data -E database | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util[data, database] |
+
+### Database Access
+In order to actually communicate with CHIME databases, you additionally also need to install `chimedb_config`. This repository has restricted access and as a result is opaque to the dependency resolution process for any downstream projects. Hence, it is excluded from the dependency management process. To install it,
+
+```bash
+pip install git+ssh://git@github.com/chime-experiment/chimedb_config.git
+```
 
 ### Additional Requirements
 

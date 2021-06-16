@@ -174,25 +174,6 @@ reference = "master"
 resolved_reference = "b9c3d450d54ea17301d302f58f7bcf6bc8996da5"
 
 [[package]]
-name = "chimedb.config"
-version = "21.1.0"
-description = "CHIME-specific database connection configuration"
-category = "main"
-optional = true
-python-versions = "*"
-develop = false
-
-[package.dependencies]
-chimedb = "branch master"
-future = "*"
-
-[package.source]
-type = "git"
-url = "ssh://git@github.com/chime-experiment/chimedb_config.git"
-reference = "master"
-resolved_reference = "3dbc274470ac3b8cccedb5d28771495d8cc5f0c0"
-
-[[package]]
 name = "chimedb.data-index"
 version = "21.3.1"
 description = "CHIME data index (alpenhorn) ORM"
@@ -701,7 +682,7 @@ mpi = ["mpi4py"]
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "1f4ac036b25aa3f94692c2fc58fa8c5916d1f446b050aad0e19b2bdcebc336d5"
+content-hash = "5534dd4d73afcd8390d8e9de2eb9575a8d35f5baf1130d3d3bff2f5fa95ce786"
 
 [metadata.files]
 ansimarkup = [
@@ -795,7 +776,6 @@ cffi = [
     {file = "cffi-1.14.5.tar.gz", hash = "sha256:fd78e5fee591709f32ef6edb9a015b4aa1a5022598e36227500c8f4e02328d9c"},
 ]
 chimedb = []
-"chimedb.config" = []
 "chimedb.data-index" = []
 "chimedb.dataflag" = []
 click = [

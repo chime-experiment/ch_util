@@ -23,8 +23,8 @@ matplotlib = {version = "^3.4.2", optional = true}
 bitshuffle = {git = "https://github.com/kiyo-masui/bitshuffle.git", optional = true}
 chimedb = {git = "https://github.com/chime-experiment/chimedb.git", optional = true}
 "chimedb.data-index" = {git = "https://github.com/chime-experiment/chimedb_di.git", optional = true}
+#"chimedb.config" = {git = "ssh://git@github.com/chime-experiment/chimedb_config.git", optional = true}
 "chimedb.dataflag" = {git = "https://github.com/chime-experiment/chimedb_dataflag.git", optional = true}
-"chimedb.config" = {git = "ssh://git@github.com/chime-experiment/chimedb_config.git", optional = true}
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2.4"
