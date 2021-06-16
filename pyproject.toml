@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "ch_util"
-version = "0.1.0"
+version = "20.10.0+46.gc45b389"
 description = "Utilities for CHIME."
 authors = ["CHIME Collaboration <richard@phas.ubc.ca>"]
 packages = [
