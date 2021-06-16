@@ -1,6 +1,6 @@
 # ch_util
 
-General CHIME utilities.
+General CHIME Utilities.
 
 ## Obtaining `ch_util`
 
@@ -10,18 +10,31 @@ To get `ch_util`, use git to clone the repository:
 
 
 ## Python Installation
+`ch_util` is availaible as python package in the following flavors with increasing dependency requirements.
 
-To install the `ch_util` python package:
+|                          Availaible Modules                         |         Local Installation         | PIP                                                                     |
+|:-------------------------------------------------------------------:|:----------------------------------:|-------------------------------------------------------------------------|
+| cal_utils, ephemeris, fluxcat, tools, rfi                           | poetry install                     | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util                 |
+| andata, timing, data_quality, ni_utils, plot                        | poetry install -E data             | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util[data]           |
+| _db_tables, chan_monitor, connectdb, data_index, finder, holography | poetry install -E data -E database | pip install git@github.com:CHIMEFRB/ch_util.git#ch_util[data, database] |
 
-	$ python setup.py install [--user]
+### Additional Requirements
 
-Or work in develop mode:
+```bash
+# Linux Packages Required
+sudo apt-get install libmysqlclient-dev libopenmpi-dev libhdf5-dev -y
+```
 
-	$ python setup.py develop [--user]
+```bash
+# Environment Variables
+HDF5_DIR="/usr/lib/x86_64-linux-gnu/hdf5/serial/"
+```
+
+
 
 Alternatively installation can be done by `pip` directly from the GitHub repository:
 
-    $ pip install git+https://github.com/chime-experiment/ch_util.git#egg=ch_util
+    $ pip install git+https://github.com/chime-experiment/ch_util.git
 
 ### CHIME Database Configuration
 
@@ -41,6 +54,7 @@ By default, connections from everywhere else use a restricted account called `ch
 database server to tunnel the database connection to your local computer.  To use this tunnel, send
 your SSH public key (the contents of `~/.ssh/id_rsa.pub`) to the `bao` sysadmins
 and ask to have your public key added to the list of chunnel authorized keys.
+
 
 ## Documentation
 
