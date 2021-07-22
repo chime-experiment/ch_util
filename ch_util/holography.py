@@ -796,7 +796,7 @@ class HolographyObservation(base_model):
                 print("Working on {}".format(log))
             filename = log.split("/")[-1]
             # basedir = '/'.join(log.split('/')[:-1]) + '/'
-            basedir = "/tmp/"
+            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
 
             basename, extension = filename.split(".")
 
@@ -808,8 +808,8 @@ class HolographyObservation(base_model):
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except Exception:
                     print(
-                        "failed to find {}. Moving right along...".format(
-                            post_report_file
+                        "Failed to extract {} into {}. Moving right along...".format(
+                            post_report_file, basedir
                         )
                     )
                     doobs = False
