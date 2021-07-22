@@ -15,6 +15,7 @@ and the constants:
 """
 
 import os
+from getpass import getuser
 import warnings
 import zipfile
 import numpy as np
@@ -589,7 +590,7 @@ class HolographyObservation(base_model):
             doobs = True
 
             filename = log.split("/")[-1]
-            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
+            basedir = "/tmp/26mlog/{}/".format(getuser())
             basename, extension = filename.split(".")
             post_report_file = basename + ".POST_REPORT"
             ant_file = basename + ".ANT"
@@ -795,8 +796,7 @@ class HolographyObservation(base_model):
             if verbose:
                 print("Working on {}".format(log))
             filename = log.split("/")[-1]
-            # basedir = '/'.join(log.split('/')[:-1]) + '/'
-            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
+            basedir = "/tmp/26mlog/{}/".format(getuser())
 
             basename, extension = filename.split(".")
 
