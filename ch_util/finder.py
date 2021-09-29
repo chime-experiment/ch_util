@@ -253,7 +253,7 @@ class Finder(object):
             for n in (
                 di.StorageNode.select()
                 .where(di.StorageNode.host == host)
-                .where(di.StorageNode.mounted)
+                .where(di.StorageNode.active)
             ):
                 self._my_node.append(n)
         else:
