@@ -125,6 +125,9 @@ import datetime
 import numpy as np
 import scipy.linalg as la
 import re
+import pickle
+import os
+import requests
 
 from caput import pfb
 from caput.interferometry import projected_distance, fringestop_phase
@@ -1199,7 +1202,7 @@ def serial_to_location(serial):
     return default
 
 
-def get_correlator_inputs(lay_time, correlator=None, connect=True):
+def get_correlator_inputs(lay_time, correlator=None, connect=True, use_backend=False, pklfile=None):
     """Get the information for all channels in a layout.
 
     Parameters
@@ -1214,6 +1217,13 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
     connect : bool, optional
         Connect to database and set the user to Jrs65 prior to query.
         Default is True.
+    use_backend : bool, optional
+        Pull correlator input list from the API at DRAO. This uses the backend defined in
+        CHIMEFRB/externals.
+        Default is False.
+    pklfile : str
+        If given, load input data from file.
+        If the file does not exist, it will pull from the backend first then write it.
 
     Returns
     -------
@@ -1254,6 +1264,28 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             connect = False
             laytime = 0
             return fake_tone_database()
+
+    # Load saved information from pickle file instead.
+    usefile = pklfile is not None
+    if usefile and os.path.exists(usefile):
+        return pickle.load(open(pklfile, 'r'))
+
+    # Use frb backend to request inputs.
+    if use_backend:
+        try:
+            url = "https://frb.chimenet.ca/maestro/externals/layoutdb/correlator-inputs"
+            payload = {
+                "time": date.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                "correlator": correlator,
+            }
+            response = requests.get(url, stream=True, json=payload)
+            inputlist = pickle.loads(response.raw.data)
+            if usefile:
+                with open(pklfile, 'w') as ofile:
+                    pickle.dump(inputs, ofile)
+            return inputlist
+        except requests.exceptions.RequestException as error:
+            raise error
 
     if not connect_this_rank():
         return None
@@ -1333,6 +1365,11 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     # Sort by channel ID
     inputlist.sort(key=lambda input_: input_.id)
+
+    # Save data to file if requested
+    if usefile:
+        with open(pklfile, 'w') as ofile:
+            pickle.dump(inputs, ofile)
 
     return inputlist
 
