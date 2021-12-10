@@ -226,7 +226,9 @@ def _check_user(perm):
             )
             raise NoPermission("You do not have the permissions to %s." % p.long_name)
         except pw.DoesNotExist:
-            raise RuntimeError("Internal error: {} is missing from the loaded permissions".format(perm))
+            raise RuntimeError(
+                "Internal error: {} is missing from the loaded permissions".format(perm)
+            )
 
 
 def _peewee_get_current_user():
