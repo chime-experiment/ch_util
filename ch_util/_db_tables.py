@@ -172,7 +172,11 @@ def set_user(u):
     Parameters
     ----------
     u : string or integer
-      Your user identifier: the integer id, the username, or the full name.
+      One of:
+        - your CHIMEwiki username (string).  Use an initial capital letter.
+          This is the recommended input.
+        - the name entered into the "real name" field in your CHIMEwiki profile
+        - your CHIMEwiki integer user_id (not easy to find)
 
     Raises
     ------
@@ -222,7 +226,7 @@ def _check_user(perm):
             )
             raise NoPermission("You do not have the permissions to %s." % p.long_name)
         except pw.DoesNotExist:
-            raise RuntimeError("Wow, code is broken.")
+            raise RuntimeError("Internal error: {} is missing from the loaded permissions".format(perm))
 
 
 def _peewee_get_current_user():
