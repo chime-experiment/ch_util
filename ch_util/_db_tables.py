@@ -227,7 +227,9 @@ def _check_user(perm):
             raise NoPermission("You do not have the permissions to %s." % p.long_name)
         except pw.DoesNotExist:
             raise RuntimeError(
-                "Internal error: {} is missing from the loaded permissions".format(perm)
+                "Internal error: _check_user called with unknown permission: {}".format(
+                    perm
+                )
             )
 
 
