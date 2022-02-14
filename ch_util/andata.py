@@ -3109,13 +3109,11 @@ def andata_from_archive2(
             # Dynamically figure out the axis ordering.
             axis = memh5.bytes_to_unicode(attrs["axis"])
             ndim = len(dataset.shape)  # h5py datasets don't have ndim.
-            if (
-                ("freq" in axis and isinstance(freq_sel, np.ndarray))
-                + ("stack" in axis and isinstance(stack_sel, np.ndarray))
-                + ("prod" in axis and isinstance(prod_sel, np.ndarray))
-                + ("input" in axis and isinstance(input_sel, np.ndarray))
-                > 1
-            ):
+            if ("freq" in axis and isinstance(freq_sel, np.ndarray)) + (
+                "stack" in axis and isinstance(stack_sel, np.ndarray)
+            ) + ("prod" in axis and isinstance(prod_sel, np.ndarray)) + (
+                "input" in axis and isinstance(input_sel, np.ndarray)
+            ) > 1:
                 # At least two array slices. Incrementally down select.
                 # First freq.
                 dataset_sel = [slice(None)] * ndim
