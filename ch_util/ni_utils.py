@@ -879,7 +879,7 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
             LA.pinv(np.dot(C, np.dot(G.conj().T, W_pow2GC)).conj() * W_pow2),
             np.dot(
                 ktrprod(W_pow2GC, W_pow2).conj().T,
-                (R - N).reshape(Nchannels ** 2, order="F"),
+                (R - N).reshape(Nchannels**2, order="F"),
             ),
         )
 

@@ -234,7 +234,7 @@ class TimingCorrection(andata.BaseData):
         asc = amp_ref * _amplitude_scaling(freq[:, np.newaxis, np.newaxis])
 
         alpha = np.sum(weight * asc * damp, axis=0) * tools.invert_no_zero(
-            np.sum(weight * asc ** 2, axis=0)
+            np.sum(weight * asc**2, axis=0)
         )
 
         for tt, obj in enumerate(objs):
@@ -788,8 +788,8 @@ class TimingCorrection(andata.BaseData):
             # Extract the weights
             weight_corrected = _weight_propagation_addition(
                 self.weight_tau[:],
-                self.weight_alpha[:] / self.amp_to_delay ** 2,
-                self.weight_alpha[iref, np.newaxis, :] / self.amp_to_delay ** 2,
+                self.weight_alpha[:] / self.amp_to_delay**2,
+                self.weight_alpha[iref, np.newaxis, :] / self.amp_to_delay**2,
             )
 
             # Interpolate to the requested times
@@ -1170,7 +1170,7 @@ class TimingCorrection(andata.BaseData):
                 # The delay for each input is a linear combination of the
                 # delay from the noise source inputs
                 tau = np.matmul(C, tau)
-                vartau = np.matmul(C ** 2, vartau)
+                vartau = np.matmul(C**2, vartau)
 
             else:
                 # Find the reference for the requested inputs
@@ -1182,7 +1182,7 @@ class TimingCorrection(andata.BaseData):
 
                 tau = np.matmul(C, tau) - sumC * tau[iref, :]
 
-                vartau = np.matmul(C ** 2, vartau) + sumC ** 2 * vartau[iref, :]
+                vartau = np.matmul(C**2, vartau) + sumC**2 * vartau[iref, :]
 
             # Check if we need to correct the delay using the noise source amplitude
             if self.has_amplitude and self.has_coeff_alpha:
@@ -1199,7 +1199,7 @@ class TimingCorrection(andata.BaseData):
                 # amplitude from the noise source inputs
                 tau += np.matmul(Calpha, alpha)
 
-                vartau += np.matmul(Calpha ** 2, varalpha)
+                vartau += np.matmul(Calpha**2, varalpha)
 
             # Scale by 2 pi nu to convert to gain
             gain = np.exp(
@@ -2179,12 +2179,12 @@ def construct_delay_template(
 
         # Construct alpha template
         alpha = np.sum(weight_amp * asc * damp, axis=0) * tools.invert_no_zero(
-            np.sum(weight_amp * asc ** 2, axis=0)
+            np.sum(weight_amp * asc**2, axis=0)
         )
 
         # Construct delay template
         tau = np.sum(weight_phi * omega * dphi, axis=0) * tools.invert_no_zero(
-            np.sum(weight_phi * omega ** 2, axis=0)
+            np.sum(weight_phi * omega**2, axis=0)
         )
 
         # Calculate amplitude residuals
@@ -2234,8 +2234,8 @@ def construct_delay_template(
     num_freq = np.sum(weight_amp > 0.0, axis=0, dtype=np.int)
 
     # Calculate the uncertainties on the fit parameters
-    weight_tau = np.sum(weight_phi * omega ** 2, axis=0)
-    weight_alpha = np.sum(weight_amp * asc ** 2, axis=0)
+    weight_tau = np.sum(weight_phi * omega**2, axis=0)
+    weight_alpha = np.sum(weight_amp * asc**2, axis=0)
 
     # Calculate the average delay over this period using non-linear
     # least squares that is insensitive to phase wrapping
@@ -2501,7 +2501,7 @@ def model_poly_phase(freq, *param):
 
     model_phase = np.zeros_like(freq)
     for pp, par in enumerate(param):
-        model_phase += par * x ** pp
+        model_phase += par * x**pp
 
     model_phase = model_phase % (2.0 * np.pi)
     model_phase -= 2.0 * np.pi * (model_phase > np.pi)
@@ -2547,7 +2547,7 @@ def _func_poly_phase(freq, *param):
 
     model_phase = np.zeros(x.size, dtype=x.dtype)
     for pp, par in enumerate(param):
-        model_phase += par * x ** pp
+        model_phase += par * x**pp
 
     return np.concatenate((np.cos(model_phase), np.sin(model_phase)))
 
@@ -2644,7 +2644,7 @@ def _interpolation_linear(x, y, var, xeval):
     a2 = adx1 * norm
 
     yeval = a1 * y[ind1] + a2 * y[ind2]
-    weval = tools.invert_no_zero(a1 ** 2 * var[ind1] + a2 ** 2 * var[ind2])
+    weval = tools.invert_no_zero(a1**2 * var[ind1] + a2**2 * var[ind2])
 
     return yeval, weval
 

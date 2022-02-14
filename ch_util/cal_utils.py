@@ -652,7 +652,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         # Iterate to obtain model estimate for amplitude
         for kk in range(niter):
 
-            wk = w0 * model_amp ** 2
+            wk = w0 * model_amp**2
 
             if window is not None:
 
@@ -681,7 +681,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         if np.isnan(center):
             raise RuntimeError("No peak found.")
 
-        wf = w0 * model_amp ** 2
+        wf = w0 * model_amp**2
         if window is not None:
             wf *= (np.abs(ha - center) <= window).astype(np.float)
 
@@ -1028,7 +1028,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
             jac[:, 0] = tools.invert_no_zero(peak_amplitude) * model
             jac[:, 1] = 8.0 * np.log(2.0) * dx * tools.invert_no_zero(fwhm) ** 2 * model
             jac[:, 2] = (
-                8.0 * np.log(2.0) * dx ** 2 * tools.invert_no_zero(fwhm) ** 3 * model
+                8.0 * np.log(2.0) * dx**2 * tools.invert_no_zero(fwhm) ** 3 * model
             )
             jac[:, 3:] = (
                 self._vander(x, self.poly_deg_phi) * dmodel_dphase[:, np.newaxis]
@@ -1093,7 +1093,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         jac = np.zeros(shp, dtype=ha.dtype)
         jac[slc + (0,)] = tools.invert_no_zero(peak_amplitude)
         jac[slc + (1,)] = 8.0 * np.log(2.0) * dha * tools.invert_no_zero(fwhm) ** 2
-        jac[slc + (2,)] = 8.0 * np.log(2.0) * dha ** 2 * tools.invert_no_zero(fwhm) ** 3
+        jac[slc + (2,)] = 8.0 * np.log(2.0) * dha**2 * tools.invert_no_zero(fwhm) ** 3
 
         return jac
 
@@ -1880,7 +1880,7 @@ def fit_histogram(
 
     # Define the fitting function
     def gauss(x, peak, mu, sigma):
-        return peak * np.exp(-((x - mu) ** 2) / (2.0 * sigma ** 2))
+        return peak * np.exp(-((x - mu) ** 2) / (2.0 * sigma**2))
 
     # Perform the fit
     par, var_par = curve_fit(
@@ -2103,7 +2103,7 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
             interp_gain[test, ii] = (ypred[:, 0] + ytrain_mu[:, 0]) + 1.0j * (
                 ypred[:, 1] + ytrain_mu[:, 1]
             )
-            interp_weight[test, ii] = tools.invert_no_zero(err_ypred ** 2)
+            interp_weight[test, ii] = tools.invert_no_zero(err_ypred**2)
 
         else:
             # No valid data

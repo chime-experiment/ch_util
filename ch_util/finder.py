@@ -1361,7 +1361,7 @@ class Finder(object):
                     )
                 size_q = size_q.where(cond & info_cond)
                 try:
-                    s = float(size_q.scalar()) / 1024 ** 2  # MB.
+                    s = float(size_q.scalar()) / 1024**2  # MB.
                 except TypeError:
                     s = 0
                 info = (interval_number, acq.name, offset, length, n_files, s)
