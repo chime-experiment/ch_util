@@ -777,17 +777,15 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         """Returns a string containing basic information about the source.
         Called by the print statement.
         """
-        source_string = (
-            "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
-                self.name,
-                self.ra,
-                self.dec,
-                len(self),
-                self.predict_flux(FREQ_NOMINAL),
-                100.0
-                * self.predict_uncertainty(FREQ_NOMINAL)
-                / self.predict_flux(FREQ_NOMINAL),
-            )
+        source_string = "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
+            self.name,
+            self.ra,
+            self.dec,
+            len(self),
+            self.predict_flux(FREQ_NOMINAL),
+            100.0
+            * self.predict_uncertainty(FREQ_NOMINAL)
+            / self.predict_flux(FREQ_NOMINAL),
         )
 
         return source_string
