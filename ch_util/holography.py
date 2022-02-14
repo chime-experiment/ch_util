@@ -232,8 +232,13 @@ class HolographyObservation(base_model):
 
     @classmethod
     def create_from_ant_logs(
-        cls, logs, verbose=False, onsource_dist=0.1, notes=None,
-        quality_flag=0, **kwargs
+        cls,
+        logs,
+        verbose=False,
+        onsource_dist=0.1,
+        notes=None,
+        quality_flag=0,
+        **kwargs,
     ):
         """
         Read John Galt Telescope log files and create an entry in the
