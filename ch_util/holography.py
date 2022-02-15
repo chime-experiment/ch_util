@@ -308,7 +308,7 @@ class HolographyObservation(base_model):
                             "Questionable on source. Mean, STD(offset) : "
                             "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
                         )
-                    obs["quality_flag"] += quality_flag
+                    obs["quality_flag"] |= quality_flag
                     if verbose:
                         print(
                             "Times in .ANT log    : {} {}".format(
