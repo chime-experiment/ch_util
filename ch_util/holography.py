@@ -29,6 +29,7 @@ from ch_util import ephemeris
 QUALITY_GOOD = 0
 QUALITY_OFFSOURCE = 1
 QUALITY_BADGATING = 2
+QUALITY_NOISEOFF = 4
 ONSOURCE_DIST_TO_FLAG = 0.1
 
 # Tables in the for tracking Holography observations
@@ -74,6 +75,7 @@ class HolographyObservation(base_model):
     )  # maximum of 64 fields. If we need more, use BigBitField
     off_source = quality_flag.flag(QUALITY_OFFSOURCE)
     bad_gating = quality_flag.flag(QUALITY_BADGATING)
+    noise_off = quality_flag.flag(QUALITY_NOISEOFF)
 
     notes = pw.TextField(null=True)
 
@@ -230,7 +232,13 @@ class HolographyObservation(base_model):
 
     @classmethod
     def create_from_ant_logs(
-        cls, logs, verbose=False, onsource_dist=0.1, notes=None, **kwargs
+        cls,
+        logs,
+        verbose=False,
+        onsource_dist=0.1,
+        notes=None,
+        quality_flag=0,
+        **kwargs,
     ):
         """
         Read John Galt Telescope log files and create an entry in the
@@ -300,6 +308,7 @@ class HolographyObservation(base_model):
                             "Questionable on source. Mean, STD(offset) : "
                             "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
                         )
+                    obs["quality_flag"] |= quality_flag
                     if verbose:
                         print(
                             "Times in .ANT log    : {} {}".format(

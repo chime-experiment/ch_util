@@ -328,7 +328,7 @@ def _coerce_data_shape(
     elif part_sel == "imag":
         data = data.imag
     elif part_sel == "mag":
-        data = (data.real ** 2 + data.imag ** 2) ** (0.5)
+        data = (data.real**2 + data.imag**2) ** (0.5)
     elif part_sel == "phase":
         data = np.arctan(data.imag / data.real)
     elif part_sel == "complex":
