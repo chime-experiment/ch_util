@@ -100,7 +100,7 @@ for spec in specs.table:
                 if np.ma.is_masked(spec[m + "_ERR"])
                 else 1e-3 * spec[m + "_ERR"]
             )
-            entry.add_measurement(float(m[1:]), 1e-3 * spec[m], err, True, u"ATNF")
+            entry.add_measurement(float(m[1:]), 1e-3 * spec[m], err, True, "ATNF")
 
     entry.fit_model()
 

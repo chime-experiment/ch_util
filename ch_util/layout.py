@@ -30,11 +30,12 @@ For most uses, you probably want to import the following:
 
 If you will be altering the layouts, you will need to register as a user:
 
->>> layout.set_user("Adam Hincks")
+>>> layout.set_user("Ahincks")
 
-Your user account is shared with the CHIME wiki. Note that different users have
-different permissions, stored in the :class:`user_permission` table. If you are
-simply reading from the layout, there is no need to register as a user.
+Use your CHIME wiki username here.  Make sure it starts with a capital letter.
+Note that different users have different permissions, stored in the
+:class:`user_permission` table. If you are simply reading from the layout,
+there is no need to register as a user.
 
 Choose Your Own Adventure
 =========================

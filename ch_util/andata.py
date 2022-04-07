@@ -2549,7 +2549,7 @@ def _unwrap_fpga_counts(data):
 
     # Calculate the length of an FPGA count and the time it takes to wrap
     seconds_per_count = 2.0 * nfreq / (samp_freq_MHz * 1e6)
-    wrap_time = 2 ** 32.0 * seconds_per_count
+    wrap_time = 2**32.0 * seconds_per_count
 
     # Estimate the FPGA initial zero time from the timestamp in the acquisition
     # name, if the acq name is not there, or of the correct format just silently return
@@ -2567,7 +2567,7 @@ def _unwrap_fpga_counts(data):
     num_wraps = np.round((last_wrap - acq_start) / wrap_time).astype(np.uint64)
 
     # Correct the FPGA counts by adding on the counts lost by wrapping
-    fpga_corrected = time_map["fpga_count"] + num_wraps * 2 ** 32
+    fpga_corrected = time_map["fpga_count"] + num_wraps * 2**32
 
     # Create an array to represent the new time dataset, and fill in the corrected values
     _time_dtype = [("fpga_count", np.uint64), ("ctime", np.float64)]
@@ -2604,7 +2604,7 @@ def _timestamp_from_fpga_cpu(cpu_s, cpu_us, fpga_counts):
             diff_cpu = timestamp_cpu[sl] - mean_cpu
             diff_fpga = fpga_counts[sl] - mean_fpga
             slope_num += np.sum(diff_cpu * diff_fpga)
-            slope_den += np.sum(diff_fpga ** 2)
+            slope_den += np.sum(diff_fpga**2)
         slope = slope_num / slope_den
         # Calculate offset in each section.
         for ii in range(len(edge_inds) - 1):
@@ -3522,7 +3522,7 @@ def _insert_gains(data, input_sel):
                 g_real, g_imag = g_data[1:-1:2], g_data[2:-1:2]
                 g_exp = g_data[-1]
 
-                g_full = (g_real + 1.0j * g_imag) * 2 ** g_exp
+                g_full = (g_real + 1.0j * g_imag) * 2**g_exp
 
                 # Select frequencies that are loaded from the file
                 g_sel = g_full[fsel]
