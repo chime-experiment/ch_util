@@ -1849,6 +1849,12 @@ class TimingData(andata.CorrData, TimingCorrection):
         return summary
 
 
+class TimingReader(andata.BaseReader):
+    """Subclass of :class:`BaseReader` for timing data."""
+
+    data_class = TimingData
+
+
 class TimingInterpolator:
     """Interpolation that is aware of flagged data and weights.
 
