@@ -1275,7 +1275,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True, use_backend=F
         try:
             url = "https://frb.chimenet.ca/maestro/externals/layoutdb/correlator-inputs"
             payload = {
-                "time": date.strftime("%Y-%m-%d %H:%M:%S.%f"),
+                "time": lay_time.strftime("%Y-%m-%d %H:%M:%S.%f"),
                 "correlator": correlator,
             }
             response = requests.get(url, stream=True, json=payload)
