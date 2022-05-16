@@ -1279,6 +1279,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True, use_backend=F
                 "correlator": correlator,
             }
             response = requests.get(url, stream=True, json=payload)
+            response.raise_for_status()
             inputlist = pickle.loads(response.raw.data)
             if usefile:
                 with open(pklfile, 'w') as ofile:
