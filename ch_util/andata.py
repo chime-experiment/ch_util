@@ -904,7 +904,7 @@ class CorrData(BaseData):
 
         ## Datasets to read, if it's not listed here, it's not read at all
         # Datasets read by andata (should be small)
-        DSET_CORE = ["flags/inputs", "flags/frac_lost"]
+        DSET_CORE = ["flags/inputs", "flags/frac_lost", "flags/dataset_id"]
         # Datasets read directly and then inserted after the fact
         # (should have an input/product/stack axis, as axis=1)
         DSETS_DIRECT = ["vis", "gain", "flags/vis_weight"]
