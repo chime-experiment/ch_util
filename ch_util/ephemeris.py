@@ -742,7 +742,11 @@ def get_source_dictionary(*args):
             catalog = json.load(handler)
 
         for name, info in catalog.items():
-            src_dict[name] = skyfield_star_from_ra_dec(info["ra"], info["dec"], name)
+            src_dict[name] = skyfield_star_from_ra_dec(
+                info["ra"],
+                info["dec"],
+                info["alternate_names"],
+            )
 
     return src_dict
 
