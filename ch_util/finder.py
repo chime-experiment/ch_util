@@ -500,6 +500,12 @@ class Finder(object):
         self._file_info = [di.RawadcFileInfo]
         self.filter_acqs(True)
 
+    def only_hfb(self):
+        """Only include HFB acquisitions in this search."""
+        self._acq_info = [di.HFBAcqInfo]
+        self._file_info = [di.HFBFileInfo]
+        self.filter_acqs(True)
+
     def only_weather(self):
         """Only include weather acquisitions in this search."""
         self._acq_info = []
