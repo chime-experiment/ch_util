@@ -443,7 +443,7 @@ class CHIMEAntenna(ArrayAntenna):
 
 class AllenbyAntenna(ArrayAntenna):
     """Allenby outrigger antenna for the CHIME/FRB project."""
-    
+
     _rotation = 0.00
     _offset = [0.00, 0.00, 0.00]
     _delay = 0
@@ -539,7 +539,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
     # Check if the correlator input component contains a chan_id property
     corr_prop = lay.node_property(corr_input)
     chan_id = int(corr_prop["chan_id"].value) if "chan_id" in corr_prop else None
-    
+
     rfl = None
     cas = None
     slt = None
@@ -647,7 +647,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
     cyl = pos_dict[rfl.sn]
 
     # Different conventions for CHIME and Pathfinder
-    if (cyl >= 2 and cyl <= 5):
+    if cyl >= 2 and cyl <= 5:
 
         # Dealing with a CHIME feed
 
@@ -684,7 +684,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    elif (cyl == 0 or cyl == 1):
+    elif cyl == 0 or cyl == 1:
 
         # Dealing with a pathfinder feed
 
@@ -736,14 +736,14 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             powered=pwd,
             flag=flag,
         )
-    
-    elif (cyl == 6):
+
+    elif cyl == 6:
 
         # Dealing with an Allenby feed
-        
+
         # Temporary setting until this is defined
         pos = None
-        
+
         # Return AllenbyAntenna object
         return AllenbyAntenna(
             id=chan_id,
@@ -757,8 +757,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             rf_thru=rft_sn,
             flag=flag,
         )
-    
-    elif (cyl == 7):
+
+    elif cyl == 7:
 
         # Dealing with a GBO feed
 
@@ -778,8 +778,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             rf_thru=rft_sn,
             flag=flag,
         )
-    
-    elif (cyl == 8):
+
+    elif cyl == 8:
 
         # Dealing with a HCRO feed
 
@@ -799,7 +799,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             rf_thru=rft_sn,
             flag=flag,
         )
-
 
 
 # Public Functions
@@ -1312,20 +1311,20 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
     # Perform nearly all the graph queries in one huge batcn to speed things up,
     # and pass the results into _get_input_props for further processing
     corrs = layout_graph.closest_of_type(inputs, "correlator", type_exclude=coax_type)
-    
+
     rfls = layout_graph.shortest_path_to_type(inputs, "reflector", type_exclude=block)
-    
+
     block.append("reflector")
     rfi_ants = layout_graph.closest_of_type(inputs, "RFI antenna", type_exclude=block)
     noise_sources = layout_graph.closest_of_type(
         inputs, "noise source", type_exclude=block
     )
-    
+
     inputlist = [
         _get_input_props(layout_graph, *args)
         for args in zip(inputs, corrs, rfls, rfi_ants, noise_sources)
     ]
-    
+
     # Filter to include only inputs attached to the given correlator. In theory
     # this shouldn't be necessary if the earlier filtering worked, but I think
     # it'll help catch some odd cases
@@ -1334,7 +1333,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
 
     # Sort by channel ID
     inputlist.sort(key=lambda input_: input_.id)
-    
+
     return inputlist
 
 
