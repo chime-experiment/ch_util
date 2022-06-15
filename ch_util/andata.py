@@ -269,7 +269,7 @@ class BaseData(tod.TOData):
             convert_dataset_strings=cls.convert_dataset_strings,
         )
         for k, v in f_first["index_map"].attrs.items():
-            data.create_index_map(k, v)
+            data.create_index_map(k, memh5.ensure_unicode(v) if cls.convert_dataset_strings else v)
         return data
 
     @classmethod
