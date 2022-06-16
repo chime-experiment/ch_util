@@ -253,12 +253,18 @@ class BaseData(tod.TOData):
             return time
 
     @classmethod
-    def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
+    def _interpret_and_read(
+        cls, acq_files, start, stop, datasets, out_group, freq_sel=None
+    ):
         # Save a reference to the first file to get index map information for
         # later.
         f_first = acq_files[0]
 
-        andata_objs = [cls(d) for d in acq_files]
+        if freq_sel is None:
+            andata_objs = [cls(d) for d in acq_files]
+        else:
+            andata_objs = [_read_freq_sel(cls, d, freq_sel) for d in acq_files]
+
         data = concatenate(
             andata_objs,
             out_group=out_group,
@@ -269,12 +275,22 @@ class BaseData(tod.TOData):
             convert_dataset_strings=cls.convert_dataset_strings,
         )
         for k, v in f_first["index_map"].attrs.items():
-            data.create_index_map(k, memh5.ensure_unicode(v) if cls.convert_dataset_strings else v)
+            data.create_index_map(
+                k, memh5.ensure_unicode(v) if cls.convert_dataset_strings else v
+            )
         return data
 
     @classmethod
     def from_acq_h5(
-        cls, acq_files, start=None, stop=None, datasets=None, out_group=None, **kwargs
+        cls,
+        acq_files,
+        start=None,
+        stop=None,
+        datasets=None,
+        out_group=None,
+        distributed=False,
+        comm=None,
+        **kwargs,
     ):
         """Convert acquisition format hdf5 data to analysis data object.
 
@@ -296,12 +312,36 @@ class BaseData(tod.TOData):
         out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
+        distributed : bool
+            Read into a distributed array if `True`.
+        comm : mpi4py.MPI.Comm
+            MPI communicator to use.
 
         Examples
         --------
         Examples are analogous to those of :meth:`CorrData.from_acq_h5`.
 
         """
+
+        if distributed:
+            return cls._from_acq_h5_distributed(
+                acq_files, start, stop, datasets, comm, **kwargs
+            )
+        else:
+            return cls._from_acq_h5(
+                acq_files, start, stop, datasets, out_group, **kwargs
+            )
+
+    @classmethod
+    def _from_acq_h5(
+        cls,
+        acq_files,
+        start=None,
+        stop=None,
+        datasets=None,
+        out_group=None,
+        **kwargs,
+    ):
 
         # Make sure the input is a sequence and that we have at least one file.
         acq_files = tod.ensure_file_list(acq_files)
@@ -323,7 +363,7 @@ class BaseData(tod.TOData):
                 stop=stop,
                 datasets=datasets,
                 out_group=out_group,
-                **kwargs
+                **kwargs,
             )
 
         finally:
@@ -331,6 +371,144 @@ class BaseData(tod.TOData):
             for ii in range(len(acq_files)):
                 if len(to_close) > ii and to_close[ii]:
                     acq_files[ii].close()
+
+        return data
+
+    @classmethod
+    def _from_acq_h5_distributed(
+        cls,
+        acq_files,
+        start,
+        stop,
+        datasets,
+        comm,
+        **kwargs,
+    ):
+
+        from mpi4py import MPI
+        from caput import mpiutil, mpiarray, memh5
+
+        # Turn into actual list of files
+        files = tod.ensure_file_list(acq_files)
+
+        # Construct communicator to use.
+        if comm is None:
+            comm = MPI.COMM_WORLD
+
+        # Determine the total number of frequencies
+        nfreq = None
+        if comm.rank == 0:
+            with h5py.File(files[0], "r") as f:
+                nfreq = len(f["index_map/freq"][:])
+        nfreq = comm.bcast(nfreq, root=0)
+
+        # Calculate the global frequency selection
+        freq_sel = kwargs.pop("freq_sel", None)
+        freq_sel = _ensure_1D_selection(freq_sel)
+        if isinstance(freq_sel, slice):
+            freq_sel = list(range(*freq_sel.indices(nfreq)))
+        nfreq = len(freq_sel)
+
+        # Calculate the local frequency selection
+        n_local, f_start, f_end = mpiutil.split_local(nfreq)
+        local_freq_sel = _ensure_1D_selection(
+            _convert_to_slice(freq_sel[f_start:f_end])
+        )
+
+        # Load just the local part of the data.
+        local_data = cls._from_acq_h5(
+            acq_files=acq_files,
+            start=start,
+            stop=stop,
+            freq_sel=local_freq_sel,
+            datasets=datasets,
+            out_group=None,
+            **kwargs,
+        )
+
+        # Datasets that we should convert into distribute ones
+        _DIST_DSETS = [
+            "vis",
+            "vis_flag",
+            "vis_weight",
+            "gain",
+            "gain_coeff",
+            "frac_lost",
+            "eval",
+            "evec",
+            "erms",
+        ]
+
+        # Initialise distributed container
+        data = cls(distributed=True, comm=comm)
+
+        # Copy over the attributes
+        memh5.copyattrs(
+            local_data.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
+        )
+
+        # Iterate over the datasets and copy them over
+        for name, old_dset in local_data.datasets.items():
+
+            # If this should be distributed, extract the sections and turn them into an MPIArray
+            if name in _DIST_DSETS:
+                dist_ax = list(old_dset.attrs["axis"]).index("freq")
+                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ax, comm=comm)
+            # Otherwise just copy copy out the old dataset
+            else:
+                array = old_dset[:]
+
+            # Create the new dataset and copy over attributes
+            new_dset = data.create_dataset(name, data=array)
+            memh5.copyattrs(
+                old_dset.attrs,
+                new_dset.attrs,
+                convert_strings=cls.convert_attribute_strings,
+            )
+
+        # Iterate over the flags and copy them over
+        for name, old_dset in local_data.flags.items():
+
+            # If this should be distributed, extract the sections and turn them into an MPIArray
+            if name in _DIST_DSETS:
+                dist_ax = list(old_dset.attrs["axis"]).index("freq")
+                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ax, comm=comm)
+            # Otherwise just copy copy out the old dataset
+            else:
+                array = old_dset[:]
+
+            # Create the new dataset and copy over attributes
+            new_dset = data.create_flag(name, data=array)
+            memh5.copyattrs(
+                old_dset.attrs,
+                new_dset.attrs,
+                convert_strings=cls.convert_attribute_strings,
+            )
+
+        # Copy over index maps
+        for name, index_map in local_data.index_map.items():
+
+            # Get reference to actual array
+            index_map = index_map[:]
+
+            # We need to explicitly stitch the frequency map back together
+            if name == "freq":
+
+                # Gather all frequencies onto all nodes and stich together
+                freq_gather = comm.allgather(index_map)
+                index_map = np.concatenate(freq_gather)
+
+            # Create index map
+            data.create_index_map(name, index_map)
+
+        # Copy over reverse maps
+        for name, reverse_map in local_data.reverse_map.items():
+
+            # Get reference to actual array
+            reverse_map = reverse_map[:]
+
+            # Create index map
+            data.create_reverse_map(name, reverse_map)
 
         return data
 
@@ -714,7 +892,7 @@ class CorrData(BaseData):
                 comm=comm,
             )
 
-        return super(CorrData, cls).from_acq_h5(
+        return cls._from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -727,150 +905,6 @@ class CorrData(BaseData):
             apply_gain=apply_gain,
             renormalize=renormalize,
         )
-
-    @classmethod
-    def _from_acq_h5_distributed(
-        cls,
-        acq_files,
-        start,
-        stop,
-        stack_sel,
-        prod_sel,
-        input_sel,
-        freq_sel,
-        datasets,
-        apply_gain,
-        renormalize,
-        comm,
-    ):
-
-        from mpi4py import MPI
-        from caput import mpiutil, mpiarray, memh5
-
-        # Turn into actual list of files
-        files = tod.ensure_file_list(acq_files)
-
-        # Construct communicator to use.
-        if comm is None:
-            comm = MPI.COMM_WORLD
-
-        # Determine the total number of frequencies
-        nfreq = None
-        if comm.rank == 0:
-            with h5py.File(files[0], "r") as f:
-                nfreq = len(f["index_map/freq"][:])
-        nfreq = comm.bcast(nfreq, root=0)
-
-        # Calculate the global frequency selection
-        freq_sel = _ensure_1D_selection(freq_sel)
-        if isinstance(freq_sel, slice):
-            freq_sel = list(range(*freq_sel.indices(nfreq)))
-        nfreq = len(freq_sel)
-
-        # Calculate the local frequency selection
-        n_local, f_start, f_end = mpiutil.split_local(nfreq)
-        local_freq_sel = _ensure_1D_selection(
-            _convert_to_slice(freq_sel[f_start:f_end])
-        )
-
-        # Load just the local part of the data.
-        local_data = super(CorrData, cls).from_acq_h5(
-            acq_files=acq_files,
-            start=start,
-            stop=stop,
-            datasets=datasets,
-            out_group=None,
-            stack_sel=stack_sel,
-            prod_sel=prod_sel,
-            input_sel=input_sel,
-            freq_sel=local_freq_sel,
-            apply_gain=apply_gain,
-            renormalize=renormalize,
-        )
-
-        # Datasets that we should convert into distribute ones
-        _DIST_DSETS = [
-            "vis",
-            "vis_flag",
-            "vis_weight",
-            "gain",
-            "gain_coeff",
-            "frac_lost",
-            "eval",
-            "evec",
-            "erms",
-        ]
-
-        # Initialise distributed container
-        data = CorrData(distributed=True, comm=comm)
-
-        # Copy over the attributes
-        memh5.copyattrs(
-            local_data.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
-        )
-
-        # Iterate over the datasets and copy them over
-        for name, old_dset in local_data.datasets.items():
-
-            # If this should be distributed, extract the sections and turn them into an MPIArray
-            if name in _DIST_DSETS:
-                array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
-            else:
-                array = old_dset[:]
-
-            # Create the new dataset and copy over attributes
-            new_dset = data.create_dataset(name, data=array)
-            memh5.copyattrs(
-                old_dset.attrs,
-                new_dset.attrs,
-                convert_strings=cls.convert_attribute_strings,
-            )
-
-        # Iterate over the flags and copy them over
-        for name, old_dset in local_data.flags.items():
-
-            # If this should be distributed, extract the sections and turn them into an MPIArray
-            if name in _DIST_DSETS:
-                array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
-            else:
-                array = old_dset[:]
-
-            # Create the new dataset and copy over attributes
-            new_dset = data.create_flag(name, data=array)
-            memh5.copyattrs(
-                old_dset.attrs,
-                new_dset.attrs,
-                convert_strings=cls.convert_attribute_strings,
-            )
-
-        # Copy over index maps
-        for name, index_map in local_data.index_map.items():
-
-            # Get reference to actual array
-            index_map = index_map[:]
-
-            # We need to explicitly stitch the frequency map back together
-            if name == "freq":
-
-                # Gather all frequencies onto all nodes and stich together
-                freq_gather = comm.allgather(index_map)
-                index_map = np.concatenate(freq_gather)
-
-            # Create index map
-            data.create_index_map(name, index_map)
-
-        # Copy over reverse maps
-        for name, reverse_map in local_data.reverse_map.items():
-
-            # Get reference to actual array
-            reverse_map = reverse_map[:]
-
-            # Create index map
-            data.create_reverse_map(name, reverse_map)
-
-        return data
 
     @classmethod
     def from_acq_h5_fast(cls, fname, comm=None, freq_sel=None, start=None, stop=None):
@@ -1252,7 +1286,7 @@ class HKPData(memh5.MemDiskGroup):
                 f,
                 convert_attribute_strings=cls.convert_attribute_strings,
                 convert_dataset_strings=cls.convert_dataset_strings,
-                **kwargs
+                **kwargs,
             )
             for f in acq_files
         ]
@@ -1866,7 +1900,7 @@ class BaseReader(tod.Reader):
             start_time=start_time, stop_time=stop_time
         )
 
-    def read(self, out_group=None):
+    def read(self, out_group=None, distributed=False, comm=None):
         """Read the selected data.
 
         Parameters
@@ -1874,6 +1908,8 @@ class BaseReader(tod.Reader):
         out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
+        distributed : bool
+            Read into a distributed array if `True`.
 
         Returns
         -------
@@ -1890,6 +1926,8 @@ class BaseReader(tod.Reader):
             stop=self.time_sel[1],
             datasets=self.dataset_sel,
             out_group=out_group,
+            distributed=distributed,
+            comm=comm,
         )
 
 
@@ -3558,6 +3596,39 @@ def _insert_gains(data, input_sel):
     # Add gain dataset to object, and create axis attribute
     gain_dset = data.create_dataset("gain", data=gain)
     gain_dset.attrs["axis"] = np.array(["freq", "input", "time"])
+
+
+def _read_freq_sel(cls, d, freq_sel):
+    # create selections dict
+    def walk_tree(g):
+        sel = {}
+        for key in g:
+            if isinstance(g[key], (h5py.Group, memh5.MemGroup)):
+                sel.update(walk_tree(g[key]))
+            axis = [
+                a.decode() if isinstance(a, bytes) else a
+                for a in g[key].attrs.get("axis", [])
+            ]
+            if "freq" in axis:
+                fi = axis.index("freq")
+                s = [slice(None)] * len(g[key].shape)
+                s[fi] = freq_sel
+                sel[key] = tuple(s)
+        return sel
+
+    sel = walk_tree(d)
+
+    new = memh5.MemGroup()
+
+    memh5.deep_group_copy(
+        d,
+        new,
+        selections=sel,
+        convert_dataset_strings=cls.convert_dataset_strings,
+        convert_attribute_strings=cls.convert_attribute_strings,
+    )
+
+    return cls(new)
 
 
 if __name__ == "__main__":
