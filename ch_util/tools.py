@@ -441,8 +441,8 @@ class CHIMEAntenna(ArrayAntenna):
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
-class AllenbyAntenna(ArrayAntenna):
-    """Allenby outrigger antenna for the CHIME/FRB project."""
+class PCOAntenna(ArrayAntenna):
+    """PCO outrigger antenna for the CHIME/FRB project."""
 
     _rotation = 0.00
     _offset = [0.00, 0.00, 0.00]
@@ -639,14 +639,14 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         "cylinder_B": 3,
         "cylinder_C": 4,
         "cylinder_D": 5,
-        "allenby_cylinder": 6,
+        "pco_cylinder": 6,
         "gbo_cylinder": 7,
         "hcro_cylinder": 8,
     }
 
     cyl = pos_dict[rfl.sn]
 
-    # Different conventions for CHIME and Pathfinder
+    # Different conventions for CHIME, PCO, GBO, HCRO, and Pathfinder
     if cyl >= 2 and cyl <= 5:
 
         # Dealing with a CHIME feed
@@ -739,13 +739,13 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     elif cyl == 6:
 
-        # Dealing with an Allenby feed
+        # Dealing with an PCO feed
 
         # Temporary setting until this is defined
         pos = None
 
-        # Return AllenbyAntenna object
-        return AllenbyAntenna(
+        # Return PCOAntenna object
+        return PCOAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
             corr=corr_sn,
@@ -1246,7 +1246,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             correlator = "K7BP16-0004"
         elif correlator.lower() == "chime":
             correlator = "FCC"
-        elif correlator.lower() == "allenby":
+        elif correlator.lower() == "pco":
             correlator = "FCA"
         elif correlator.lower() == "tone":
             # A hack to return GBO correlator inputs
