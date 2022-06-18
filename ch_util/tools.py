@@ -441,6 +441,30 @@ class CHIMEAntenna(ArrayAntenna):
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
+class PCOAntenna(ArrayAntenna):
+    """PCO outrigger antenna for the CHIME/FRB project."""
+
+    _rotation = 0.00
+    _offset = [0.00, 0.00, 0.00]
+    _delay = 0
+
+
+class GBOAntenna(ArrayAntenna):
+    """GBO outrigger antenna for the CHIME/FRB project."""
+
+    _rotation = 0.00
+    _offset = [0.00, 0.00, 0.00]
+    _delay = 0
+
+
+class HCROAntenna(ArrayAntenna):
+    """HCRO outrigger antenna for the CHIME/FRB project."""
+
+    _rotation = 0.00
+    _offset = [0.00, 0.00, 0.00]
+    _delay = 0
+
+
 class TONEAntenna(ArrayAntenna):
     """Antenna that is part of GBO/TONE Outrigger.
     Let's allow for a global rotation and offset.
@@ -615,12 +639,15 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         "cylinder_B": 3,
         "cylinder_C": 4,
         "cylinder_D": 5,
+        "pco_cylinder": 6,
+        "gbo_cylinder": 7,
+        "hcro_cylinder": 8,
     }
 
     cyl = pos_dict[rfl.sn]
 
-    # Different conventions for CHIME and Pathfinder
-    if cyl >= 2:
+    # Different conventions for CHIME, PCO, GBO, HCRO, and Pathfinder
+    if cyl >= 2 and cyl <= 5:
 
         # Dealing with a CHIME feed
 
@@ -657,7 +684,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    else:
+    elif cyl == 0 or cyl == 1:
 
         # Dealing with a pathfinder feed
 
@@ -707,6 +734,69 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             antenna=ant.sn,
             rf_thru=rft_sn,
             powered=pwd,
+            flag=flag,
+        )
+
+    elif cyl == 6:
+
+        # Dealing with an PCO feed
+
+        # Temporary setting until this is defined
+        pos = None
+
+        # Return PCOAntenna object
+        return PCOAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            cyl=cyl,
+            pos=pos,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
+            flag=flag,
+        )
+
+    elif cyl == 7:
+
+        # Dealing with a GBO feed
+
+        # Temporary setting until this is defined
+        pos = None
+
+        # Return GBOAntenna object
+        return GBOAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            cyl=cyl,
+            pos=pos,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
+            flag=flag,
+        )
+
+    elif cyl == 8:
+
+        # Dealing with a HCRO feed
+
+        # Temporary setting until this is defined
+        pos = None
+
+        # Return HCROAntenna object
+        return HCROAntenna(
+            id=chan_id,
+            input_sn=corr_input.sn,
+            corr=corr_sn,
+            reflector=rfl.sn,
+            cyl=cyl,
+            pos=pos,
+            pol=pdir,
+            antenna=ant.sn,
+            rf_thru=rft_sn,
             flag=flag,
         )
 
@@ -1156,6 +1246,8 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             correlator = "K7BP16-0004"
         elif correlator.lower() == "chime":
             correlator = "FCC"
+        elif correlator.lower() == "pco":
+            correlator = "FCA"
         elif correlator.lower() == "tone":
             # A hack to return GBO correlator inputs
             correlator = "tone"
