@@ -1297,7 +1297,11 @@ class TimingCorrection(andata.BaseData):
         else:
             is_obj = True
 
-            vis = timestream.vis[:] if not copy else timestream.vis[:].copy()
+            # This works for both distributed and non-distributed datasets
+            vis = timestream.vis[:].view(np.ndarray)
+
+            if copy:
+                vis = vis.copy()
 
             freq = kwargs.pop("freq") if "freq" in kwargs else timestream.freq[:]
             prod = (
