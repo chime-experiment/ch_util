@@ -2051,6 +2051,8 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
 
     nfreq, ninput = gain.shape
 
+    iscomplex = np.any(np.iscomplex(gain))
+
     interp_gain = gain.copy()
     interp_weight = weight.copy()
 
@@ -2068,9 +2070,13 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
             xtest = x[test, :]
 
             xtrain = x[train, :]
-            ytrain = np.hstack(
-                (gain[train, ii, np.newaxis].real, gain[train, ii, np.newaxis].imag)
-            )
+            if iscomplex:
+                ytrain = np.hstack(
+                    (gain[train, ii, np.newaxis].real, gain[train, ii, np.newaxis].imag)
+                )
+            else:
+                ytrain = gain[train, ii, np.newaxis].real
+
             # Mean subtract
             ytrain_mu = np.mean(ytrain, axis=0, keepdims=True)
             ytrain = ytrain - ytrain_mu
@@ -2086,23 +2092,26 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
                 )
                 ** 2
             )
+
             # Define kernel
-            kernel = ConstantKernel(var) * Matern(
-                length_scale=length_scale, length_scale_bounds="fixed", nu=1.5
-            )
+            kernel = ConstantKernel(
+                constant_value=var, constant_value_bounds=(0.1 * var, 100.0 * var)
+            ) * Matern(length_scale=length_scale, length_scale_bounds="fixed", nu=1.5)
 
             # Regress against non-flagged data
             gp = gaussian_process.GaussianProcessRegressor(
                 kernel=kernel, alpha=alpha[train, ii]
             )
+
             gp.fit(xtrain, ytrain)
 
             # Predict error
             ypred, err_ypred = gp.predict(xtest, return_std=True)
 
-            interp_gain[test, ii] = (ypred[:, 0] + ytrain_mu[:, 0]) + 1.0j * (
-                ypred[:, 1] + ytrain_mu[:, 1]
-            )
+            interp_gain[test, ii] = ypred[:, 0] + ytrain_mu[:, 0]
+            if iscomplex:
+                interp_gain[test, ii] += 1.0j * (ypred[:, 1] + ytrain_mu[:, 1])
+
             interp_weight[test, ii] = tools.invert_no_zero(err_ypred**2)
 
         else:
