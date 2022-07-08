@@ -613,6 +613,171 @@ def nanmedian(*args, **kwargs):
         return np.nanmedian(*args, **kwargs)
 
 
+# Iterative HPF masking for identifying narrow-band features in gains or spectra
+def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
+    """Construct a high-pass delay filter.
+
+    The stop band will range from [-tau_cut, tau_cut].
+
+    Parameters
+    ----------
+    freq : np.ndarray[nfreq,]
+        Frequency in MHz.
+    tau_cut : float
+        The half width of the stop band in micro-seconds.
+    flag : np.ndarray[nfreq,]
+        Boolean flag that indicates what frequencies are valid.
+    epsilon : float
+        The stop-band rejection of the filter.
+
+    Returns
+    -------
+    pinv : np.ndarray[ntime_uniq, nfreq, nfreq]
+        High pass delay filter.
+    """
+
+    nfreq = freq.size
+    assert (flag.ndim == 1) and (flag.size == nfreq)
+
+    mflag = (flag[:, np.newaxis] & flag[np.newaxis, :]).astype(np.float64)
+
+    cov = np.eye(nfreq, dtype=np.float64)
+    cov += (
+        np.sinc(2.0 * tau_cut * (freq[:, np.newaxis] - freq[np.newaxis, :])) / epsilon
+    )
+
+    pinv = np.linalg.pinv(cov * mflag, hermitian=True) * mflag
+
+    return pinv
+
+
+def iterative_hpf_masking(
+    freq,
+    y,
+    flag=None,
+    tau_cut=0.60,
+    epsilon=1e-10,
+    window=65,
+    threshold=6.0,
+    nperiter=1,
+    niter=40,
+):
+    """Mask features in a spectrum that have significant power at high delays.
+
+    Uses the following iterative procedure to generate the mask:
+
+        - Apply a high-pass filter to the spectrum.
+        - For each frequency channel, calculate the median absolute
+          deviation of nearby frequency channels to get an estimate
+          of the noise.  Divide the high-pass filtered spectrum by
+          the noise estimate.
+        - Mask excursions with the largest signal to noise.
+        - Regenerate the high-pass filter using the new mask.
+        - Repeat.
+
+    The procedure stops when the maximum number of iterations is reached
+    or there are no excursions beyond some threshold.
+
+    Parameters
+    ----------
+    freq: np.ndarray[nfreq,]
+        Frequency in MHz.
+    y: np.ndarray[nfreq,]
+        Spectrum to search for narrowband features.
+    flag: np.ndarray[nfreq,]
+        Boolean flag where True indicates valid data.
+    tau_cut: float
+        Cutoff of the high-pass filter in microseconds.
+    epsilon: float
+        Stop-band rejection of the filter.
+    threshold: float
+        Number of median absolute deviations beyond which
+        a frequency channel is considered an outlier.
+    window: int
+        Width of the window used to estimate the noise
+        (by calculating a local median absolute deviation).
+    nperiter: int
+        Maximum number of frequency channels to flag
+        on any iteration.
+    niter: int
+        Maximum number of iterations.
+
+    Returns
+    -------
+    yhpf: np.ndarray[nfreq,]
+        The high-pass filtered spectrum generated using
+        the mask from the last iteration.
+    flag: np.ndarray[nfreq,]
+        Boolean flag where True indicates valid data.
+        This is the logical complement to the mask
+        from the last iteration.
+    rsigma: np.ndarray[nfreq,]
+        The local median absolute deviation from the last
+        iteration.
+    """
+
+    from caput import weighted_median
+
+    assert y.ndim == 1
+
+    # Make sure the frequencies are float64, otherwise
+    # can have problems with construction of filter
+    freq = freq.astype(np.float64)
+
+    # Make sure the size of the window is odd
+    window = window + int(not (window % 2))
+
+    # If an initial flag was not provided, then use the static rfi mask.
+    if flag is None:
+        flag = ~frequency_mask(freq)
+
+    # We will be updating the flags on each iteration.  Make a copy of
+    # the input so that we do not overwrite.
+    new_flag = flag.copy()
+
+    # Iterate
+    itt = 0
+    while itt < niter:
+
+        # Construct the filter using the current mask
+        NF, index = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
+
+        # Apply the filter
+        yhpf = np.matmul(NF, y)
+
+        # Calculate the local median absolute deviation
+        ry = np.ascontiguousarray(yhpf.astype(np.float64))
+        w = np.ascontiguousarray(new_flag.astype(np.float64))
+
+        rsigma = 1.48625 * weighted_median.moving_weighted_median(
+            np.abs(ry), w, window, method="split"
+        )
+
+        # Calculate the signal to noise
+        rs2n = np.abs(yhpf * tools.invert_no_zero(rsigma))
+
+        # Identify frequency channels that are above the signal to noise threshold
+        above_threshold = np.flatnonzero(rs2n > threshold)
+
+        if above_threshold.size == 0:
+            break
+
+        # Find the largest nperiter frequency channels that are above the threshold
+        ibad = above_threshold[np.argsort(-np.abs(yhpf[above_threshold]))[0:nperiter]]
+
+        # Flag those frequency channels, increment the counter
+        new_flag[ibad] = False
+
+        itt += 1
+
+    # Construct and apply the filter using the final flag
+    NF, index = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
+
+    yhpf = np.matmul(NF, y)
+
+    return yhpf, new_flag, rsigma
+
+
 # Scale-invariant rank (SIR) functions
 def sir1d(basemask, eta=0.2):
     """Numpy implementation of the scale-invariant rank (SIR) operator.
