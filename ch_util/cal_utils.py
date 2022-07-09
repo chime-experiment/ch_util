@@ -5,9 +5,10 @@ This module contains tools for performing point-source calibration.
 """
 
 from abc import ABCMeta, abstractmethod
+from datetime import datetime
 import inspect
 import logging
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 import numpy as np
 import scipy.stats
@@ -15,7 +16,9 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from scipy.linalg import lstsq, inv
 
-from caput import memh5
+from caput import memh5, time as ctime
+from chimedb import dataset as ds
+from chimedb.dataset.utils import state_id_of_type, unique_unmasked_entry
 from ch_util import ephemeris, tools
 
 # Set up logging
@@ -182,7 +185,7 @@ class FitTransit(object, metaclass=ABCMeta):
                         err[good],
                         width=wi,
                         absolute_sigma=absolute_sigma,
-                        **kwargs
+                        **kwargs,
                     )
                 except Exception as error:
                     logger.debug("Index %s failed with error: %s" % (str(ind), error))
@@ -272,7 +275,7 @@ class FitTransit(object, metaclass=ABCMeta):
             param_cov=self.param_cov[val],
             ndof=self.ndof[val],
             chisq=self.chisq[val],
-            **self.model_kwargs
+            **self.model_kwargs,
         )
 
     @abstractmethod
@@ -2332,3 +2335,152 @@ def get_reference_times_file(
     }
 
     return result
+
+
+def get_reference_times_dataset_id(
+    times: np.ndarray,
+    dataset_ids: np.ndarray,
+    logger: Optional[logging.Logger] = None,
+) -> Dict[str, Union[np.ndarray, Dict]]:
+    """Calculate the relevant calibration reference times from the dataset IDs.
+
+    .. warning::
+        Dataset IDs before 2020/10/10 are corrupt so this routine won't work.
+
+    Parameters
+    ----------
+    times
+        Unix times of data points to be calibrated as floats.
+    dataset_ids
+        The dataset IDs as an array of strings.
+    logger
+        A logging object to use for messages. If not provided, use a module level
+        logger.
+
+    Returns
+    -------
+    reftime_result
+        A dictionary containing the results. See `get_reference_times_file` for a
+        description of the contents.
+    """
+    if logger is None:
+        logger = logging.getLogger(__name__)
+
+    # Dataset IDs before this date are untrustworthy
+    ds_start = ephemeris.datetime_to_unix(datetime(2020, 11, 1))
+    if (times < ds_start).any():
+        raise ValueError(
+            "Dataset IDs before 2020/11/01 are corrupt, so this method won't work. "
+            f"You passed in a time as early as {ctime.unix_to_datetime(times.min())}."
+        )
+
+    # The CHIME calibration sources
+    _source_dict = {
+        "cyga": ephemeris.CygA,
+        "casa": ephemeris.CasA,
+        "taua": ephemeris.TauA,
+        "vira": ephemeris.VirA,
+    }
+
+    # Get the set of gain IDs for each time stamp
+    gain_ids = state_id_of_type(dataset_ids, "gains")
+    collapsed_ids = unique_unmasked_entry(gain_ids, axis=0)
+    unique_gains_ids = np.unique(collapsed_ids.compressed())
+
+    gain_info_dict = {}
+
+    # For each gain update extract all the relevant information
+    for state_id in unique_gains_ids:
+
+        d = {}
+        gain_info_dict[state_id] = d
+
+        # Extract the update ID
+        update_id = ds.DatasetState.from_id(state_id).data["data"]["update_id"]
+
+        # Parse the ID for the required information
+        split_id = update_id.split("_")
+        # After restart we sometimes have only a timing update without a source
+        # reference. These aren't valid for our purposes here, and can be distinguished
+        # at the update_id doesn't contain source information, and is thus shorter
+        d["valid"] = any([src in split_id for src in _source_dict.keys()])
+        d["interpolated"] = "transition" in split_id
+        # If it's not a valid update we shouldn't try to extract everything else
+        if not d["valid"]:
+            continue
+
+        d["gen_time"] = ctime.datetime_to_unix(ctime.timestr_to_datetime(split_id[1]))
+        d["source_name"] = split_id[2].lower()
+
+        # Calculate the source transit time, and sanity check it
+        source = _source_dict[d["source_name"]]
+        d["source_transit"] = ephemeris.transit_times(
+            source, d["gen_time"] - 24 * 3600.0
+        )
+        cal_diff_hours = (d["gen_time"] - d["source_transit"]) / 3600
+        if cal_diff_hours > 3:
+            logger.warn(
+                f"Transit time ({ctime.unix_to_datetime(d['source_transit'])}) "
+                f"for source {d['source_name']} was a surprisingly long time "
+                f"before the gain update time ({cal_diff_hours} hours)."
+            )
+
+    # Array to store the extracted times in
+    reftime = np.zeros(len(collapsed_ids), dtype=np.float64)
+    reftime_prev = np.zeros(len(collapsed_ids), dtype=np.float64)
+    interp_start = np.zeros(len(collapsed_ids), dtype=np.float64)
+    interp_stop = np.zeros(len(collapsed_ids), dtype=np.float64)
+
+    # Iterate forward through the updates, setting transit times, and keeping track of
+    # the last valid update. This is used to set the previous source transit and the
+    # interpolation start time for all blended updates
+    last_valid_non_interpolated = None
+    last_non_interpolated = None
+    for ii, state_id in enumerate(collapsed_ids):
+
+        valid_id = not np.ma.is_masked(state_id)
+        update = gain_info_dict[state_id] if valid_id else {}
+        valid = valid_id and update["valid"]
+
+        if valid:
+            reftime[ii] = update["source_transit"]
+        elif last_valid_non_interpolated is not None:
+            reftime[ii] = reftime[last_valid_non_interpolated]
+        else:
+            reftime[ii] = np.nan
+
+        if valid and update["interpolated"] and last_valid_non_interpolated is not None:
+            reftime_prev[ii] = reftime[last_valid_non_interpolated]
+            interp_start[ii] = times[last_non_interpolated]
+        else:
+            reftime_prev[ii] = np.nan
+            interp_start[ii] = np.nan
+
+        if valid and not update["interpolated"]:
+            last_valid_non_interpolated = ii
+        if valid_id and not update["interpolated"]:
+            last_non_interpolated = ii
+    # To identify the end of the interpolation periods we need to iterate
+    # backwards in time. As before we need to keep track of the last valid update
+    # we see, and then we set the interpolation end in the same manner.
+    last_non_interpolated = None
+    for ii, state_id in list(enumerate(collapsed_ids))[::-1]:
+        valid_id = not np.ma.is_masked(state_id)
+        update = gain_info_dict[state_id] if valid_id else {}
+        valid = valid_id and update.get("valid", False)
+
+        if valid and update["interpolated"] and last_non_interpolated is not None:
+            interp_stop[ii] = times[last_non_interpolated]
+        else:
+            interp_stop[ii] = np.nan
+
+        if valid_id and not update["interpolated"]:
+            last_non_interpolated = ii
+
+    return {
+        "reftime": reftime,
+        "reftime_prev": reftime_prev,
+        "interp_start": interp_start,
+        "interp_stop": interp_stop,
+        "update_info": gain_info_dict,
+    }
