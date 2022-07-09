@@ -7,6 +7,7 @@ This module contains tools for performing point-source calibration.
 from abc import ABCMeta, abstractmethod
 import inspect
 import logging
+from typing import Dict, Optional
 
 import numpy as np
 import scipy.stats
@@ -14,6 +15,7 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from scipy.linalg import lstsq, inv
 
+from caput import memh5
 from ch_util import ephemeris, tools
 
 # Set up logging
@@ -2161,3 +2163,172 @@ def _dec_to_el(dec):
     """Convert from declination in degrees to el = sin(zenith angle)."""
 
     return np.sin(np.radians(dec - ephemeris.CHIMELATITUDE))
+
+
+def get_reference_times_file(
+    times: np.ndarray,
+    cal_file: memh5.MemGroup,
+    logger: Optional[logging.Logger] = None,
+) -> Dict[str, np.ndarray]:
+    """For a given set of times determine when and how they were calibrated.
+
+    This uses the pre-calculated calibration time reference files.
+
+    Parameters
+    ----------
+    times
+        Unix times of data points to be calibrated as floats.
+    cal_file
+        memh5 container which containes the reference times for calibration source
+        transits.
+    logger
+        A logging object to use for messages. If not provided, use a module level
+        logger.
+
+    Returns
+    -------
+    reftime_result : dict
+        A dictionary containing four entries:
+
+        - reftime: Unix time of same length as `times`. Reference times of transit of the
+          source used to calibrate the data at each time in `times`. Returns `NaN` for
+          times without a reference.
+        - reftime_prev: The Unix time of the previous gain update. Only set for time
+          samples that need to be interpolated, otherwise `NaN`.
+        - interp_start: The Unix time of the start of the interpolation period. Only
+          set for time samples that need to be interpolated, otherwise `NaN`.
+        - interp_stop: The Unix time of the end of the interpolation period. Only
+          set for time samples that need to be interpolated, otherwise `NaN`.
+    """
+
+    if logger is None:
+        logger = logging.getLogger(__name__)
+
+    # Data from calibration file.
+    is_restart = cal_file["is_restart"][:]
+    tref = cal_file["tref"][:]
+    tstart = cal_file["tstart"][:]
+    tend = cal_file["tend"][:]
+    # Length of calibration file and of data points
+    n_cal_file = len(tstart)
+    ntimes = len(times)
+
+    # Len of times, indices in cal_file.
+    last_start_index = np.searchsorted(tstart, times, side="right") - 1
+    # Len of times, indices in cal_file.
+    last_end_index = np.searchsorted(tend, times, side="right") - 1
+    # Check for times before first update or after last update.
+    too_early = last_start_index < 0
+    n_too_early = np.sum(too_early)
+    if n_too_early > 0:
+        msg = (
+            "{0} out of {1} time entries have no reference update."
+            + "Cannot correct gains for those entries."
+        )
+        logger.warning(msg.format(n_too_early, ntimes))
+    # Fot times after the last update, I cannot be sure the calibration is valid
+    # (could be that the cal file is incomplete. To be conservative, raise warning.)
+    too_late = (last_start_index >= (n_cal_file - 1)) & (
+        last_end_index >= (n_cal_file - 1)
+    )
+    n_too_late = np.sum(too_late)
+    if n_too_late > 0:
+        msg = (
+            "{0} out of {1} time entries are beyond calibration file time values."
+            + "Cannot correct gains for those entries."
+        )
+        logger.warning(msg.format(n_too_late, ntimes))
+
+    # Array to contain reference times for each entry.
+    # NaN for entries with no reference time.
+    reftime = np.full(ntimes, np.nan, dtype=np.float)
+    # Array to hold reftimes of previous updates
+    # (for entries that need interpolation).
+    reftime_prev = np.full(ntimes, np.nan, dtype=np.float)
+    # Arrays to hold start and stop times of gain transition
+    # (for entries that need interpolation).
+    interp_start = np.full(ntimes, np.nan, dtype=np.float)
+    interp_stop = np.full(ntimes, np.nan, dtype=np.float)
+
+    # Acquisition restart. We load an old gain.
+    acqrestart = is_restart[last_start_index] == 1
+    reftime[acqrestart] = tref[last_start_index][acqrestart]
+
+    # FPGA restart. Data not calibrated.
+    # There shouldn't be any time points here. Raise a warning if there are.
+    fpga_restart = is_restart[last_start_index] == 2
+    n_fpga_restart = np.sum(fpga_restart)
+    if n_fpga_restart > 0:
+        msg = (
+            "{0} out of {1} time entries are after an FPGA restart but before the "
+            + "next kotekan restart. Cannot correct gains for those entries."
+        )
+        logger.warning(msg.format(n_fpga_restart, ntimes))
+
+    # This is a gain update
+    gainupdate = is_restart[last_start_index] == 0
+
+    # This is the simplest case. Last update was a gain update and
+    # it is finished. No need to interpolate.
+    calrange = (last_start_index == last_end_index) & gainupdate
+    reftime[calrange] = tref[last_start_index][calrange]
+
+    # The next cases might need interpolation. Last update was a gain
+    # update and it is *NOT* finished. Update is in transition.
+    gaintrans = last_start_index == (last_end_index + 1)
+
+    # This update is in gain transition and previous update was an
+    # FPGA restart. Just use new gain, no interpolation.
+    prev_is_fpga = is_restart[last_start_index - 1] == 2
+    prev_is_fpga = prev_is_fpga & gaintrans & gainupdate
+    reftime[prev_is_fpga] = tref[last_start_index][prev_is_fpga]
+
+    # The next two cases need interpolation of gain corrections.
+    # It's not possible to correct interpolated gains because the
+    # products have been stacked. Just interpolate the gain
+    # corrections to avoide a sharp transition.
+
+    # This update is in gain transition and previous update was a
+    # Kotekan restart. Need to interpolate gain corrections.
+    prev_is_kotekan = is_restart[last_start_index - 1] == 1
+    to_interpolate = prev_is_kotekan & gaintrans & gainupdate
+
+    # This update is in gain transition and previous update was a
+    # gain update. Need to interpolate.
+    prev_is_gain = is_restart[last_start_index - 1] == 0
+    to_interpolate = to_interpolate | (prev_is_gain & gaintrans & gainupdate)
+
+    # Reference time of this update
+    reftime[to_interpolate] = tref[last_start_index][to_interpolate]
+    # Reference time of previous update
+    reftime_prev[to_interpolate] = tref[last_start_index - 1][to_interpolate]
+    # Start and stop times of gain transition.
+    interp_start[to_interpolate] = tstart[last_start_index][to_interpolate]
+    interp_stop[to_interpolate] = tend[last_start_index][to_interpolate]
+
+    # For times too early or too late, don't correct gain.
+    # This might mean we don't correct gains right after the last update
+    # that could in principle be corrected. But there is no way to know
+    # If the calibration file is up-to-date and the last update applies
+    # to all entries that come after it.
+    reftime[too_early | too_late] = np.nan
+
+    # Test for un-identified NaNs
+    known_bad_times = (too_early) | (too_late) | (fpga_restart)
+    n_bad_times = np.sum(~np.isfinite(reftime[~known_bad_times]))
+    if n_bad_times > 0:
+        msg = (
+            "{0} out of {1} time entries don't have a reference calibration time "
+            + "without an identifiable cause. Cannot correct gains for those entries."
+        )
+        logger.warning(msg.format(n_bad_times, ntimes))
+
+    # Bundle result in dictionary
+    result = {
+        "reftime": reftime,
+        "reftime_prev": reftime_prev,
+        "interp_start": interp_start,
+        "interp_stop": interp_stop,
+    }
+
+    return result
