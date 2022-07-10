@@ -740,7 +740,7 @@ def iterative_hpf_masking(
     while itt < niter:
 
         # Construct the filter using the current mask
-        NF, index = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
+        NF = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
 
         # Apply the filter
         yhpf = np.matmul(NF, y)
@@ -771,7 +771,7 @@ def iterative_hpf_masking(
         itt += 1
 
     # Construct and apply the filter using the final flag
-    NF, index = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
+    NF = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
 
     yhpf = np.matmul(NF, y)
 
