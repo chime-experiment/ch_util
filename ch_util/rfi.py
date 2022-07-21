@@ -632,7 +632,7 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
 
     Returns
     -------
-    pinv : np.ndarray[ntime_uniq, nfreq, nfreq]
+    pinv : np.ndarray[nfreq, nfreq]
         High pass delay filter.
     """
 

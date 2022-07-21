@@ -2095,7 +2095,7 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
 
             # Define kernel
             kernel = ConstantKernel(
-                constant_value=var, constant_value_bounds=(0.1 * var, 100.0 * var)
+                constant_value=var, constant_value_bounds=(0.01 * var, 100.0 * var)
             ) * Matern(length_scale=length_scale, length_scale_bounds="fixed", nu=1.5)
 
             # Regress against non-flagged data
