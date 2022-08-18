@@ -253,7 +253,7 @@ class Finder(object):
             for n in (
                 di.StorageNode.select()
                 .where(di.StorageNode.host == host)
-                .where(di.StorageNode.mounted)
+                .where(di.StorageNode.active)
             ):
                 self._my_node.append(n)
         else:
@@ -498,6 +498,12 @@ class Finder(object):
         """Only include raw ADC acquisitions in this search."""
         self._acq_info = [di.RawadcAcqInfo]
         self._file_info = [di.RawadcFileInfo]
+        self.filter_acqs(True)
+
+    def only_hfb(self):
+        """Only include HFB acquisitions in this search."""
+        self._acq_info = [di.HFBAcqInfo]
+        self._file_info = [di.HFBFileInfo]
         self.filter_acqs(True)
 
     def only_weather(self):
@@ -1361,7 +1367,7 @@ class Finder(object):
                     )
                 size_q = size_q.where(cond & info_cond)
                 try:
-                    s = float(size_q.scalar()) / 1024 ** 2  # MB.
+                    s = float(size_q.scalar()) / 1024**2  # MB.
                 except TypeError:
                     s = 0
                 info = (interval_number, acq.name, offset, length, n_files, s)

@@ -1,0 +1,14 @@
+chimedb @ git+https://github.com/chime-experiment/chimedb.git
+chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git
+chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git
+chimedb.dataset @ git+https://github.com/chime-experiment/chimedb_dataset.git
+matplotlib
+numpy >= 1.16
+scipy
+networkx >= 2.0
+h5py
+peewee >= 3.14.1
+bitshuffle
+caput[compression] @ git+https://github.com/radiocosmology/caput.git
+skyfield >= 1.10
+mpi4py

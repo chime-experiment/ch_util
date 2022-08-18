@@ -29,6 +29,7 @@ from ch_util import ephemeris
 QUALITY_GOOD = 0
 QUALITY_OFFSOURCE = 1
 QUALITY_BADGATING = 2
+QUALITY_NOISEOFF = 4
 ONSOURCE_DIST_TO_FLAG = 0.1
 
 # Tables in the for tracking Holography observations
@@ -74,6 +75,7 @@ class HolographyObservation(base_model):
     )  # maximum of 64 fields. If we need more, use BigBitField
     off_source = quality_flag.flag(QUALITY_OFFSOURCE)
     bad_gating = quality_flag.flag(QUALITY_BADGATING)
+    noise_off = quality_flag.flag(QUALITY_NOISEOFF)
 
     notes = pw.TextField(null=True)
 
@@ -230,7 +232,13 @@ class HolographyObservation(base_model):
 
     @classmethod
     def create_from_ant_logs(
-        cls, logs, verbose=False, onsource_dist=0.1, notes=None, **kwargs
+        cls,
+        logs,
+        verbose=False,
+        onsource_dist=0.1,
+        notes=None,
+        quality_flag=0,
+        **kwargs,
     ):
         """
         Read John Galt Telescope log files and create an entry in the
@@ -285,9 +293,7 @@ class HolographyObservation(base_model):
                         "finish_time": ant_log["t"][onsource[-1]],
                         "quality_flag": QUALITY_GOOD,
                     }
-                    noteout = "Added by create_from_ant_logs " + ts.now().utc_strftime(
-                        DATE_FMT_STR
-                    )
+                    noteout = "from .ANT log " + ts.now().utc_strftime(DATE_FMT_STR)
                     if notes is not None:
                         noteout = notes + " " + noteout
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
@@ -302,6 +308,7 @@ class HolographyObservation(base_model):
                             "Questionable on source. Mean, STD(offset) : "
                             "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
                         )
+                    obs["quality_flag"] |= quality_flag
                     if verbose:
                         print(
                             "Times in .ANT log    : {} {}".format(
@@ -549,7 +556,7 @@ class HolographyObservation(base_model):
         Files
         -----
         the .ANT and .POST_REPORT files in the input .zip archive are
-        extracted into /tmp/
+        extracted into /tmp/26mlog/<loginname>/
         """
 
         from skyfield.positionlib import Angle
@@ -591,7 +598,7 @@ class HolographyObservation(base_model):
             doobs = True
 
             filename = log.split("/")[-1]
-            basedir = "/tmp/"
+            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
             basename, extension = filename.split(".")
             post_report_file = basename + ".POST_REPORT"
             ant_file = basename + ".ANT"
@@ -601,15 +608,19 @@ class HolographyObservation(base_model):
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except:
                     print(
-                        "failed to find {}. Moving right along...".format(
-                            post_report_file
+                        "Failed to extract {} into {}. Moving right along...".format(
+                            post_report_file, basedir
                         )
                     )
                     doobs = False
                 try:
                     zipfile.ZipFile(log).extract(ant_file, path=basedir)
                 except:
-                    print("failed to find {}. Moving right along...".format(ant_file))
+                    print(
+                        "Failed to extract {} into {}. Moving right along...".format(
+                            ant_file, basedir
+                        )
+                    )
                     doobs = False
 
             if doobs:

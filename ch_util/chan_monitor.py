@@ -381,7 +381,7 @@ class FeedLocator(object):
             ]
         )
         # 1 deg => dt = 1*(pi/180)*(24*3600/2*pi) = 240s
-        sigsqr0 = 1.0 / (4.0 * np.pi ** 2 * (240.0 * np.cos(dec)) ** 2)
+        sigsqr0 = 1.0 / (4.0 * np.pi**2 * (240.0 * np.cos(dec)) ** 2)
         p0 = np.array(
             [
                 [[A0[ii, jj], mu0[ii, jj], sigsqr0] for jj in range(self.Npr)]

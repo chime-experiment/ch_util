@@ -204,7 +204,7 @@ class CurvedPowerLaw(FitSpectrum):
             if not isinstance(self.stats, dict):
                 self.stats = {}
             self.stats["ndof"] = len(x) - self.nparam
-            self.stats["chisq"] = np.sum(resid ** 2 / np.diag(C))
+            self.stats["chisq"] = np.sum(resid**2 / np.diag(C))
 
         # Return results
         return self.param, self.param_cov, self.stats
@@ -216,7 +216,7 @@ class CurvedPowerLaw(FitSpectrum):
     @staticmethod
     def _vandermonde(x, nparam):
 
-        return np.vstack(tuple([x ** rank for rank in range(nparam)])).T
+        return np.vstack(tuple([x**rank for rank in range(nparam)])).T
 
     @staticmethod
     def _fit_func(x, *param):
@@ -236,7 +236,7 @@ class CurvedPowerLaw(FitSpectrum):
             )
         )
 
-        dfdp = np.array([z * x ** rank for rank in range(len(param))])
+        dfdp = np.array([z * x**rank for rank in range(len(param))])
         dfdp[0] /= param[0]
 
         return dfdp
@@ -584,7 +584,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         fplot = np.logspace(*xrng, num=nplot)
 
-        xrng = [10.0 ** xx for xx in xrng]
+        xrng = [10.0**xx for xx in xrng]
 
         if residuals:
             flux_hat = self.predict_flux(self.freq)

@@ -51,7 +51,7 @@ jobs:
         pip install mpi4py
         pip install numpy
         pip install cython
-        pip install h5py --no-binary :all:
+        pip install h5py
         pip install --use-deprecated=legacy-resolver -e .
         pip install pytest
 
@@ -80,7 +80,7 @@ jobs:
         pip install mpi4py
         pip install numpy
         pip install cython
-        pip install h5py --no-binary :all:
+        pip install h5py
         pip install --use-deprecated=legacy-resolver -e .
         pip install -r doc/requirements.txt
 
