@@ -3,9 +3,9 @@ name = "ch_util"
 version = "20.10.0+46.gc45b389"
 description = "Utilities for CHIME."
 authors = ["CHIME Collaboration <richard@phas.ubc.ca>"]
-packages = [
-    { include = "ch_util_data" },
-] 
+#packages = [
+#    { include = "ch_util_data" },
+#] 
 include = ["ch_util/catalogs/*.json"]
 readme = "README.md"
 repository = "https://github.com/chime-experiment/ch_util"
