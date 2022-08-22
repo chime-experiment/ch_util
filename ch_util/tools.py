@@ -148,6 +148,7 @@ _CHIME_ROT = -0.071
 
 # 26m geometry
 _26M_POS = [254.162124, 21.853934, 20.0]
+_26M_B = 2.14 # m
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
@@ -2120,6 +2121,7 @@ def fringestop_time(
     feeds,
     src,
     wterm=False,
+    bterm=False,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2142,6 +2144,8 @@ def fringestop_time(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for the geometry of the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2172,6 +2176,7 @@ def fringestop_time(
         feeds,
         src,
         wterm=wterm,
+        bterm=bterm,
         prod_map=prod_map,
         csd=csd,
         static_delays=static_delays,
@@ -2206,6 +2211,7 @@ def decorrelation(
     feeds,
     src,
     wterm=True,
+    bterm=False,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2225,6 +2231,8 @@ def decorrelation(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for the geometry of the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2255,6 +2263,7 @@ def decorrelation(
         feeds,
         src,
         wterm=wterm,
+        bterm=bterm,
         prod_map=prod_map,
         csd=csd,
         static_delays=static_delays,
@@ -2280,6 +2289,7 @@ def delay(
     feeds,
     src,
     wterm=True,
+    bterm=False,
     prod_map=None,
     csd=False,
     static_delays=True,
@@ -2299,6 +2309,8 @@ def delay(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for the geometry of the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2327,6 +2339,10 @@ def delay(
     # Add in the static delays
     if static_delays:
         delay_ref += feed_delays[:, np.newaxis]
+
+    # Add in the 26m b-term for holographic timestreams
+    if bterm:
+        delay_ref += _26M_B / scipy.constants.c * np.cos(src_dec)
 
     # Calculate baseline separations and pack into product array
     if prod_map is None:
