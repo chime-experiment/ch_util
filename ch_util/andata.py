@@ -254,17 +254,17 @@ class BaseData(tod.TOData):
             return time
 
     @classmethod
-    def _interpret_and_read(
-        cls, acq_files, start, stop, datasets, out_group, freq_sel=None
-    ):
+    def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group, sel=None):
+        """Read and concatenate the list of files. Optionally specify one axis on which to make
+        selections with a tuple like `("axis", selection)`"""
         # Save a reference to the first file to get index map information for
         # later.
         f_first = acq_files[0]
 
-        if freq_sel is None:
+        if sel is None:
             andata_objs = [cls(d) for d in acq_files]
         else:
-            andata_objs = [_read_freq_sel(cls, d, freq_sel) for d in acq_files]
+            andata_objs = [_read_axis_sel(cls, d, sel[0], sel[1]) for d in acq_files]
 
         data = concatenate(
             andata_objs,
@@ -341,6 +341,7 @@ class BaseData(tod.TOData):
         stop=None,
         datasets=None,
         out_group=None,
+        sel=None,
         **kwargs,
     ):
 
@@ -364,6 +365,7 @@ class BaseData(tod.TOData):
                 stop=stop,
                 datasets=datasets,
                 out_group=out_group,
+                sel=sel,
                 **kwargs,
             )
 
@@ -383,6 +385,7 @@ class BaseData(tod.TOData):
         stop,
         datasets,
         comm,
+        sel=None,
         **kwargs,
     ):
 
@@ -391,6 +394,7 @@ class BaseData(tod.TOData):
                 f"The container {cls} does not have a distributed axis "
                 "defined but a distributed read was requested."
             )
+        ax = cls.distributed_axis
 
         from mpi4py import MPI
         from caput import mpiutil, mpiarray, memh5
@@ -402,24 +406,32 @@ class BaseData(tod.TOData):
         if comm is None:
             comm = MPI.COMM_WORLD
 
-        # Determine the total number of frequencies
-        nfreq = None
+        # Determine the size of the distributed axis
+        ndist = None
         if comm.rank == 0:
             with h5py.File(files[0], "r") as f:
-                nfreq = len(f["index_map/freq"][:])
-        nfreq = comm.bcast(nfreq, root=0)
+                ndist = len(f["index_map/" + ax][:])
+        ndist = comm.bcast(ndist, root=0)
 
-        # Calculate the global frequency selection
-        freq_sel = kwargs.pop("freq_sel", None)
-        freq_sel = _ensure_1D_selection(freq_sel)
-        if isinstance(freq_sel, slice):
-            freq_sel = list(range(*freq_sel.indices(nfreq)))
-        nfreq = len(freq_sel)
+        # Calculate the global distributed selection
+        if sel is not None:
+            if sel[0] != ax:
+                raise ValueError(
+                    "For distributed reads, selections are only allowed on the distributed axis. "
+                    f"The distributed axis is {ax} and a selection was passed for {sel[0]}."
+                )
+            dist_sel = sel[1]
+        else:
+            dist_sel = None
+        dist_sel = _ensure_1D_selection(dist_sel)
+        if isinstance(dist_sel, slice):
+            dist_sel = list(range(*dist_sel.indices(ndist)))
+        ndist = len(dist_sel)
 
-        # Calculate the local frequency selection
-        n_local, f_start, f_end = mpiutil.split_local(nfreq)
-        local_freq_sel = _ensure_1D_selection(
-            _convert_to_slice(freq_sel[f_start:f_end])
+        # Calculate the local selection
+        n_local, d_start, d_end = mpiutil.split_local(ndist)
+        local_dist_sel = _ensure_1D_selection(
+            _convert_to_slice(dist_sel[d_start:d_end])
         )
 
         # Load just the local part of the data.
@@ -427,9 +439,9 @@ class BaseData(tod.TOData):
             acq_files=acq_files,
             start=start,
             stop=stop,
-            freq_sel=local_freq_sel,
             datasets=datasets,
             out_group=None,
+            sel=(ax, local_dist_sel),
             **kwargs,
         )
 
@@ -459,8 +471,8 @@ class BaseData(tod.TOData):
 
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
-                dist_ax = list(old_dset.attrs["axis"]).index("freq")
-                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ax, comm=comm)
+                dist_ind = list(old_dset.attrs["axis"]).index(ax)
+                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ind, comm=comm)
             # Otherwise just copy copy out the old dataset
             else:
                 array = old_dset[:]
@@ -478,8 +490,8 @@ class BaseData(tod.TOData):
 
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
-                dist_ax = list(old_dset.attrs["axis"]).index("freq")
-                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ax, comm=comm)
+                dist_ind = list(old_dset.attrs["axis"]).index(ax)
+                array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ind, comm=comm)
             # Otherwise just copy copy out the old dataset
             else:
                 array = old_dset[:]
@@ -498,12 +510,12 @@ class BaseData(tod.TOData):
             # Get reference to actual array
             index_map = index_map[:]
 
-            # We need to explicitly stitch the frequency map back together
-            if name == "freq":
+            # We need to explicitly stitch the distributed axis map back together
+            if name == ax:
 
-                # Gather all frequencies onto all nodes and stich together
-                freq_gather = comm.allgather(index_map)
-                index_map = np.concatenate(freq_gather)
+                # Gather onto all nodes and stich together
+                dist_gather = comm.allgather(index_map)
+                index_map = np.concatenate(dist_gather)
 
             # Create index map
             data.create_index_map(name, index_map)
@@ -3613,7 +3625,8 @@ def _insert_gains(data, input_sel):
     gain_dset.attrs["axis"] = np.array(["freq", "input", "time"])
 
 
-def _read_freq_sel(cls, d, freq_sel):
+def _read_axis_sel(cls, d, ax, ax_sel):
+    """Read from a Group, making selections along a given axis."""
     # create selections dict
     def walk_tree(g):
         sel = {}
@@ -3624,10 +3637,10 @@ def _read_freq_sel(cls, d, freq_sel):
                 a.decode() if isinstance(a, bytes) else a
                 for a in g[key].attrs.get("axis", [])
             ]
-            if "freq" in axis:
-                fi = axis.index("freq")
+            if ax in axis:
+                ai = axis.index(ax)
                 s = [slice(None)] * len(g[key].shape)
-                s[fi] = freq_sel
+                s[ai] = ax_sel
                 sel[key] = tuple(s)
         return sel
 
