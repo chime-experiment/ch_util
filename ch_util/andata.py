@@ -75,6 +75,19 @@ class BaseData(tod.TOData):
     time_axes = CONCATENATION_AXES
     distributed_axis = None
 
+    # Datasets that we should convert into distribute ones
+    _DIST_DSETS = [
+        "vis",
+        "vis_flag",
+        "vis_weight",
+        "gain",
+        "gain_coeff",
+        "frac_lost",
+        "eval",
+        "evec",
+        "erms",
+    ]
+
     # Convert strings to/from unicode on load and save
     convert_attribute_strings = True
     convert_dataset_strings = True
@@ -450,19 +463,6 @@ class BaseData(tod.TOData):
             **kwargs,
         )
 
-        # Datasets that we should convert into distribute ones
-        _DIST_DSETS = [
-            "vis",
-            "vis_flag",
-            "vis_weight",
-            "gain",
-            "gain_coeff",
-            "frac_lost",
-            "eval",
-            "evec",
-            "erms",
-        ]
-
         # Initialise distributed container
         data = cls(distributed=True, comm=comm)
 
@@ -475,7 +475,7 @@ class BaseData(tod.TOData):
         for name, old_dset in local_data.datasets.items():
 
             # If this should be distributed, extract the sections and turn them into an MPIArray
-            if name in _DIST_DSETS:
+            if name in cls._DIST_DSETS:
                 dist_ind = list(old_dset.attrs["axis"]).index(ax)
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ind, comm=comm)
             # Otherwise just copy copy out the old dataset
@@ -494,7 +494,7 @@ class BaseData(tod.TOData):
         for name, old_dset in local_data.flags.items():
 
             # If this should be distributed, extract the sections and turn them into an MPIArray
-            if name in _DIST_DSETS:
+            if name in cls._DIST_DSETS:
                 dist_ind = list(old_dset.attrs["axis"]).index(ax)
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=dist_ind, comm=comm)
             # Otherwise just copy copy out the old dataset
