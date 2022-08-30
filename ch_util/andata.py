@@ -344,6 +344,8 @@ class BaseData(tod.TOData):
         sel=None,
         **kwargs,
     ):
+        """Load and concatenate the list of acquisition files into a local array. Optionally
+        specify one axis on which to make selections with a tuple like `("axis", selection)`"""
 
         # Make sure the input is a sequence and that we have at least one file.
         acq_files = tod.ensure_file_list(acq_files)
@@ -388,6 +390,9 @@ class BaseData(tod.TOData):
         sel=None,
         **kwargs,
     ):
+        """Load and concatenate the list of acquisition files into a distributed array. Optionally
+        specify a selection on the distributed axis with a tuple like `("axis", selection)`. Note
+        that selections are only allowed along the distributed axis."""
 
         if cls.distributed_axis is None:
             raise RuntimeError(
