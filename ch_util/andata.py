@@ -329,12 +329,12 @@ class BaseData(tod.TOData):
                 acq_files, start, stop, datasets, comm, **kwargs
             )
         else:
-            return cls._from_acq_h5(
+            return cls._from_acq_h5_single(
                 acq_files, start, stop, datasets, out_group, **kwargs
             )
 
     @classmethod
-    def _from_acq_h5(
+    def _from_acq_h5_single(
         cls,
         acq_files,
         start=None,
@@ -423,7 +423,7 @@ class BaseData(tod.TOData):
         )
 
         # Load just the local part of the data.
-        local_data = cls._from_acq_h5(
+        local_data = cls._from_acq_h5_single(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -901,7 +901,7 @@ class CorrData(BaseData):
                 comm=comm,
             )
 
-        return cls._from_acq_h5(
+        return cls._from_acq_h5_single(
             acq_files=acq_files,
             start=start,
             stop=stop,
