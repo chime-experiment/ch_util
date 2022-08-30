@@ -73,6 +73,7 @@ class BaseData(tod.TOData):
     """
 
     time_axes = CONCATENATION_AXES
+    distributed_axis = None
 
     # Convert strings to/from unicode on load and save
     convert_attribute_strings = True
@@ -530,6 +531,8 @@ class BaseData(tod.TOData):
 
 class CorrData(BaseData):
     """Subclass of :class:`BaseData` for correlation data."""
+
+    distributed_axis = "freq"
 
     @property
     def vis(self):
@@ -1752,6 +1755,8 @@ class FlagInputData(GainFlagData):
 class GainData(GainFlagData):
     """Subclass of :class:`GainFlagData` for gain and digitalgain acquisitions."""
 
+    distributed_axis = "freq"
+
     @property
     def freq(self):
         """The spectral frequency axis as bin centres in MHz."""
@@ -1765,6 +1770,8 @@ class GainData(GainFlagData):
 
 class CalibrationGainData(GainData):
     """Subclass of :class:`GainData` for gain acquisitions."""
+
+    distributed_axis = "freq"
 
     @property
     def source(self):
@@ -1817,6 +1824,8 @@ class CalibrationGainData(GainData):
 
 class DigitalGainData(GainData):
     """Subclass of :class:`GainData` for digitalgain acquisitions."""
+
+    distributed_axis = "freq"
 
     @property
     def gain_coeff(self):
