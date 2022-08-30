@@ -386,6 +386,12 @@ class BaseData(tod.TOData):
         **kwargs,
     ):
 
+        if cls.distributed_axis is None:
+            raise RuntimeError(
+                f"The container {cls} does not have a distributed axis "
+                "defined but a distributed read was requested."
+            )
+
         from mpi4py import MPI
         from caput import mpiutil, mpiarray, memh5
 
