@@ -145,6 +145,23 @@ TONELATITUDE = 38.4292962636
 TONELONGITUDE = -79.8451625395
 TONEALTITUDE = 810.000
 
+# Calvin used a rough position for Princeton outrigger. These coordinates are derived from direct measurements taken by Jane K and Mattias L: https://docs.google.com/document/d/1OUcBVsaA8XREs-NQtBbEG_MOHQgX-dKU0K00G-3_PCk/edit# to be replaced with Doclib document when we have better absolute positions.
+PCOLATITUDE = 49.41905
+PCOLONGITUDE = -120.5253
+PCOALTITUDE = 835
+
+GBOLATITUDE = 38.436122  # These rough positions are not centered on the focal line. They are at what I believe is the "CONCRETE VAULT WITH METAL LID" in the GBO Cylinder survey."
+GBOLONGITUDE = (
+    -79.827922
+)  # Link here: https://docs.google.com/document/d/1OUcBVsaA8XREs-NQtBbEG_MOHQgX-dKU0K00G-3_PCk/edit# to be replaced with Doclib document when we have better absolute positions.
+GBOALTITUDE = 2710 / 3.28084  # factor of 3.28 converts from meters to feet.
+
+HCOLATITUDE = 40.8171082  # This position is the SETI institude building.
+HCOLONGITUDE = (
+    -121.4689584
+)  # Taken from here: https://bao.chimenet.ca/doc/documents/1696/1/get/COHS_Coffman_Foundations_Structural_Calculations_220623.pdf?n=5597
+HCOALTITUDE = 3346 / 3.28084
+
 # Create the Observer instances for CHIME and outriggers
 chime = Observer(
     lon=CHIMELONGITUDE,
@@ -157,6 +174,27 @@ tone = Observer(
     lon=TONELONGITUDE,
     lat=TONELATITUDE,
     alt=TONEALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+pco = Observer(
+    lon=PCOLONGITUDE,
+    lat=PCOLATITUDE,
+    alt=PCOALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+gbo = Observer(
+    lon=GBOLONGITUDE,
+    lat=GBOLATITUDE,
+    alt=GBOALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+hco = Observer(
+    lon=HCOLONGITUDE,
+    lat=HCOLATITUDE,
+    alt=HCOALTITUDE,
     lsd_start=datetime(2013, 11, 15),
 )
 
