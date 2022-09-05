@@ -618,6 +618,9 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
     """Construct a high-pass delay filter.
 
     The stop band will range from [-tau_cut, tau_cut].
+    DAYENU is used to construct the filter in the presence
+    of masked frequencies.  See Ewall-Wice et al. 2021
+    (arXiv:2004.11397) for a description.
 
     Parameters
     ----------

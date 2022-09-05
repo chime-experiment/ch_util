@@ -2112,6 +2112,11 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
             if iscomplex:
                 interp_gain[test, ii] += 1.0j * (ypred[:, 1] + ytrain_mu[:, 1])
 
+            if err_ypred.ndim > 1:
+                err_ypred = np.sqrt(
+                    np.sum(err_ypred**2, axis=-1) / err_ypred.shape[-1]
+                )
+
             interp_weight[test, ii] = tools.invert_no_zero(err_ypred**2)
 
         else:
