@@ -27,6 +27,7 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
+from typing import Tuple
 
 import numpy as np
 import scipy.signal as sig
@@ -180,7 +181,6 @@ def number_deviations(
         Number of median absolute deviations of the autocorrelations
         from the local median.
     """
-
     from caput import memh5, mpiarray
 
     if fill_value is None:
@@ -191,6 +191,95 @@ def number_deviations(
 
     data.redistribute("freq")
 
+    # Extract the auto correlations
+    auto_ii, auto_vis, auto_flag = get_autocorrelations(data, stack, normalize)
+
+    # Create static flag of frequencies that are known to be bad
+    static_flag = (
+        ~frequency_mask(data.freq)
+        if apply_static_mask
+        else np.ones(data.nfreq, dtype=np.bool)
+    )[:, np.newaxis]
+
+    if parallel:
+        # Ensure these are distributed across frequency
+        auto_vis = auto_vis.redistribute(0)
+        auto_flag = auto_flag.redistribute(0)
+        static_flag = mpiarray.MPIArray.wrap(static_flag[auto_vis.local_bounds], axis=0)
+
+    # Calculate frequency interval in bins
+    fwidth = (
+        int(freq_width / np.median(np.abs(np.diff(data.freq)))) + 1 if not flag1d else 1
+    )
+    # Calculate time interval in samples
+    twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
+
+    # Create an empty array for number of median absolute deviations
+    ndev = np.zeros_like(auto_vis, dtype=np.float32)
+
+    auto_flag_view = auto_flag.allgather() if parallel else auto_flag
+    static_flag_view = static_flag.allgather() if parallel else static_flag
+    ndev_view = ndev.local_array if parallel else ndev
+
+    # Loop over extracted autos and create a mask for each
+    for ind in range(auto_vis.shape[1]):
+
+        flg = static_flag_view & auto_flag_view[:, ind]
+        # Gather enire array onto each rank
+        arr = auto_vis[:, ind].allgather() if parallel else auto_vis[:, ind]
+        # Use NaNs to ignore previously flagged data when computing the MAD
+        arr = np.where(flg, arr.real, np.nan)
+        local_bounds = auto_vis.local_bounds if parallel else slice(None)
+        # Apply RFI flagger
+        if rolling:
+            # Limit bounds to the local portion of the array
+            ndev_i = mad_cut_rolling(
+                arr, twidth=twidth, fwidth=fwidth, mask=False, limit_range=local_bounds
+            )
+        elif flag1d:
+            ndev_i = mad_cut_1d(arr[local_bounds, :], twidth=twidth, mask=False)
+        else:
+            ndev_i = mad_cut_2d(
+                arr[local_bounds, :], twidth=twidth, fwidth=fwidth, mask=False
+            )
+
+        ndev_view[:, ind, :] = ndev_i
+
+    # Fill any values equal to NaN with the user specified fill value
+    ndev_view[~np.isfinite(ndev_view)] = fill_value
+
+    return auto_ii, auto_vis, ndev
+
+
+def get_autocorrelations(
+    data, stack: bool = False, normalize: bool = False
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """Extract autocorrelations from a data stack.
+
+    Parameters
+    ----------
+    data : `andata.CorrData`
+        Must contain vis and weight attributes that are both
+        `np.ndarray[nfreq, nprod, ntime]`.
+    stack: bool, optional
+        Average over all autocorrelations.
+    normalize : bool, optional
+        Normalize by the median value over time prior to averaging over
+        autocorrelations.  Only relevant if `stack` is True.
+
+    Returns
+    -------
+    auto_ii: np.ndarray[ninput,]
+        Index of the inputs that have been processed.
+        If stack is True, then [0] will be returned.
+
+    auto_vis: np.ndarray[nfreq, ninput, ntime]
+        The autocorrelations that were used to calculate
+        the number of deviations.
+
+    auto_flag: np.ndarray[nfreq, ninput, ntime]
+        Indices where data weights are positive
+    """
     # Extract the auto correlations
     prod = data.index_map["prod"][data.index_map["stack"]["prod"]]
     auto_ii, auto_pi = np.array(
@@ -233,68 +322,12 @@ def number_deviations(
         ) * tools.invert_no_zero(norm)
 
         auto_flag = norm > 0.0
-        auto_ii = np.zeros(1, dtype=np.int)
+        auto_ii = np.zeros(1, dtype=int)
 
     else:
         auto_flag = data.weight[:, auto_pi, :] > 0.0
 
-    # Now redistribute the array over inputs
-    if parallel:
-        auto_vis = auto_vis.redistribute(1)
-        auto_flag = auto_flag.redistribute(1)
-
-    # Create static flag of frequencies that are known to be bad
-    if apply_static_mask:
-        static_flag = ~frequency_mask(data.freq)
-    else:
-        static_flag = np.ones(data.nfreq, dtype=np.bool)
-
-    static_flag = static_flag[:, np.newaxis]
-
-    # Create an empty array for number of median absolute deviations
-    ndev = np.zeros_like(auto_vis, dtype=np.float32)
-
-    # Calculate frequency interval in bins
-    fwidth = (
-        int(freq_width / np.median(np.abs(np.diff(data.freq)))) + 1 if not flag1d else 1
-    )
-
-    # Calculate time interval in samples
-    twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
-
-    auto_flag_view = auto_flag.local_array if parallel else auto_flag
-    auto_vis_view = auto_vis.local_array if parallel else auto_vis_view
-    ndev_view = ndev.local_array if parallel else ndev
-
-    # Loop over extracted autos and create a mask for each
-    for ind in range(auto_vis.shape[1]):
-
-        # Create a quick copy
-        flg = static_flag & auto_flag_view[:, ind]
-        arr = auto_vis_view[:, ind].copy()
-
-        # Use NaNs to ignore previously flagged data when computing the MAD
-        arr = np.where(flg, arr.real, np.nan)
-
-        # Apply RFI flagger
-        if rolling:
-            ndev_i = mad_cut_rolling(arr, twidth=twidth, fwidth=fwidth, mask=False)
-        elif flag1d:
-            ndev_i = mad_cut_1d(arr, twidth=twidth, mask=False)
-        else:
-            ndev_i = mad_cut_2d(arr, twidth=twidth, fwidth=fwidth, mask=False)
-
-        ndev_view[:, ind, :] = ndev_i
-
-    # Fill any values equal to NaN with the user specified fill value
-    ndev_view[~np.isfinite(ndev_view)] = fill_value
-
-    # Convert back to an MPIArray and redistribute over freq axis
-    if parallel:
-        ndev = ndev.redistribute(0)
-        auto_vis = auto_vis.redistribute(0)
-
-    return auto_ii, auto_vis, ndev
+    return auto_ii, auto_vis, auto_flag
 
 
 def spectral_cut(data, fil_window=15, only_autos=False):
