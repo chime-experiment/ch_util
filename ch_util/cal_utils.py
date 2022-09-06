@@ -2113,10 +2113,19 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
             # Predict error
             ypred, err_ypred = gp.predict(xtest, return_std=True)
 
+            # When the gains are not complex, ypred will have a single dimension for
+            # sklearn version 1.1.2, but will have a second dimension of length 1 for
+            # earlier versions.  The line below ensures consistent behavior.
+            if ypred.ndim == 1:
+                ypred = ypred[:, np.newaxis]
+
             interp_gain[test, ii] = ypred[:, 0] + ytrain_mu[:, 0]
             if iscomplex:
                 interp_gain[test, ii] += 1.0j * (ypred[:, 1] + ytrain_mu[:, 1])
 
+            # When the gains are complex, err_ypred will have a second dimension
+            # of length 2 for sklearn version 1.1.2, but will have a single dimension
+            # for earlier versions.  The line below ensures consistent behavior.
             if err_ypred.ndim > 1:
                 err_ypred = np.sqrt(
                     np.sum(err_ypred**2, axis=-1) / err_ypred.shape[-1]
