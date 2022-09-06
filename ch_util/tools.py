@@ -2354,5 +2354,12 @@ def invert_no_zero(x):
     r : np.ndarray
         Return the reciprocal of x.
     """
-    with np.errstate(divide="ignore", invalid="ignore"):
-        return np.where(x == 0, 0.0, 1.0 / x)
+    out = np.zeros_like(x)
+    np.divide(
+        np.array(1, dtype=x.dtype),
+        x.view(np.ndarray),
+        out=out.view(np.ndarray),
+        where=x != 0,
+    )
+
+    return out
