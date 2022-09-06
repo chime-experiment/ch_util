@@ -562,7 +562,13 @@ def _rolling_window(a, window):
 
 
 def mad_cut_rolling(
-    data, fwidth=64, twidth=42, threshold=5.0, freq_flat=True, mask=True
+    data,
+    fwidth=64,
+    twidth=42,
+    threshold=5.0,
+    freq_flat=True,
+    mask=True,
+    limit_range: slice = slice(None),
 ):
     """Mask out RFI by placing a cut on the absolute deviation.
     Compared to `mad_cut_2d`, this function calculates
@@ -589,12 +595,20 @@ def mad_cut_rolling(
     mask : boolean, optional
         If True return the mask, if False return the number of
         median absolute deviations.
+    limit_range : slice, optional
+        Data is limited to this range in the freqeuncy axis. Defaults to slice(None).
 
     Returns
     -------
     mask : np.ndarray[freq, time]
         Mask or number of median absolute deviations for each sample.
     """
+    # Make sure we have an odd number of samples
+    fwidth += int(not (fwidth % 2))
+    twidth += int(not (twidth % 2))
+
+    foff = fwidth // 2
+    toff = twidth // 2
 
     nfreq, ntime = data.shape
 
@@ -603,18 +617,20 @@ def mad_cut_rolling(
         mfd = tools.invert_no_zero(nanmedian(data, axis=1))
         data *= mfd[:, np.newaxis]
 
-    # Make sure we have an odd number of samples
-    fwidth += int(not (fwidth % 2))
-    twidth += int(not (twidth % 2))
-
-    foff = fwidth // 2
-    toff = twidth // 2
-
     # Add NaNs around the edges of the array so that we don't have to treat them separately
     eshp = [nfreq + fwidth - 1, ntime + twidth - 1]
-
     exp_data = np.full(eshp, np.nan, dtype=data.dtype)
     exp_data[foff : foff + nfreq, toff : toff + ntime] = data
+
+    if limit_range != slice(None):
+        # Get only desired slice
+        expsl = slice(
+            max(limit_range.start, 0),
+            min(limit_range.stop + 2 * foff, exp_data.shape[0]),
+        )
+        dsl = slice(max(limit_range.start, 0), min(limit_range.stop, data.shape[0]))
+        exp_data = exp_data[expsl, :]
+        data = data[dsl, :]
 
     # Use numpy slices to construct the rolling windowed data
     win_data = _rolling_window(exp_data, (fwidth, twidth))
