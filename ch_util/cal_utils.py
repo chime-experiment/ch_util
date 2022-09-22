@@ -638,8 +638,6 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
             Measured response to the point source.  Complex valued.
         resp_err : np.ndarray[nha,]
             Error on the measured response.
-        width : float
-             Initial guess at the width (sigma) of the transit in degrees.
         absolute_sigma : bool
             Set to True if the errors provided are absolute.  Set to False if
             the errors provided are relative, in which case the parameter covariance
