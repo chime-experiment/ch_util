@@ -625,15 +625,10 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
 
         return np.squeeze(deriv, axis=-1) if is_scalar else deriv
 
-    def _fit(self, ha, resp, resp_err, width=None, absolute_sigma=False):
+    def _fit(self, ha, resp, resp_err, absolute_sigma=False):
         """Fit polynomial to real and imaginary component.
 
-        Use weighted least squares.  The initial errors on log amplitude
-        are set to `resp_err / abs(resp)`.  If the niter parameter is greater than 1,
-        then those errors will be updated with `resp_err / model_amp`, where `model_amp`
-        is the best-fit model for the amplitude from the previous iteration.  The errors
-        on the phase are set to `resp_err / model_amp` where `model_amp` is the best-fit
-        model for the amplitude from the log amplitude fit.
+        Use weighted least squares.
 
         Parameters
         ----------
@@ -750,12 +745,12 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
 
     @property
     def ndofr(self):
-        """Number of degrees of freedom for the amplitude fit."""
+        """Number of degrees of freedom for the real fit."""
         return self.ndof[..., 0]
 
     @property
     def ndofi(self):
-        """Number of degrees of freedom for the phase fit."""
+        """Number of degrees of freedom for the imag fit."""
         return self.ndof[..., 1]
 
     @property
