@@ -2121,7 +2121,7 @@ def fringestop_time(
     feeds,
     src,
     wterm=False,
-    bterm=False,
+    bterm=True,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2145,7 +2145,7 @@ def fringestop_time(
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
-        Include a correction for the geometry of the 26m Galt telescope.
+        Include a correction for baselines including the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2204,14 +2204,13 @@ def fringestop_time(
 # Cache the PFB object
 _chime_pfb = pfb.PFB(4, 2048)
 
-
 def decorrelation(
     timestream,
     times,
     feeds,
     src,
     wterm=True,
-    bterm=False,
+    bterm=True,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2232,7 +2231,7 @@ def decorrelation(
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
-        Include a correction for the geometry of the 26m Galt telescope.
+        Include a correction for baselines including the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2289,7 +2288,7 @@ def delay(
     feeds,
     src,
     wterm=True,
-    bterm=False,
+    bterm=True,
     prod_map=None,
     csd=False,
     static_delays=True,
@@ -2310,7 +2309,7 @@ def delay(
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
-        Include a correction for the geometry of the 26m Galt telescope.
+        Include a correction for baselines which include the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2340,10 +2339,6 @@ def delay(
     if static_delays:
         delay_ref += feed_delays[:, np.newaxis]
 
-    # Add in the 26m b-term for holographic timestreams
-    if bterm:
-        delay_ref += _26M_B / scipy.constants.c * np.cos(src_dec)
-
     # Calculate baseline separations and pack into product array
     if prod_map is None:
         delays = fast_pack_product_array(
@@ -2351,6 +2346,19 @@ def delay(
         )
     else:
         delays = delay_ref[prod_map["input_a"]] - delay_ref[prod_map["input_b"]]
+
+    # Add the b-term for baselines including the 26m Galt telescope
+    if bterm:
+        b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
+
+        galt_feeds = get_holographic_index(feeds)
+
+        galt_conj = np.where(np.isin(prod_map["input_a"], galt_feeds), -1, 0)
+        galt_noconj = np.where(np.isin(prod_map["input_b"], galt_feeds), 1, 0)
+
+        conj_flag = galt_conj + galt_noconj
+
+        delays += conj_flag * b_delay
 
     return delays
 
