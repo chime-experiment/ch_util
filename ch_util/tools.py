@@ -147,7 +147,7 @@ _CHIME_POS = [0.0, 0.0, 0.0]
 _CHIME_ROT = -0.071
 
 # 26m geometry
-_26M_POS = [254.162124, 21.853934, 20.0]
+_26M_POS = [254.162124, 21.853934, 18.93]
 _26M_B = 2.14 # m
 
 # Pathfinder geometry
