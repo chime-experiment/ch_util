@@ -2358,7 +2358,7 @@ def delay(
 
         conj_flag = galt_conj + galt_noconj
 
-        delays += conj_flag * b_delay
+        delays += conj_flag[:, np.newaxis] * b_delay
 
     return delays
 
