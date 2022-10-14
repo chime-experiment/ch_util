@@ -154,6 +154,20 @@ _PF_POS = [373.754961, -54.649866, 0.0]
 _PF_ROT = 1.986  # Pathfinder rotation from north (towards west) in degrees
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
+# PCO geometry
+_PCO_POS = [0.0, 0.0, 0.0]
+_PCO_ROT = -0.67
+# PCO rotation from north. Anti-clockwise looking at the ground (degrees).
+# See Doclib #1530 for more information.
+
+# GBO geometry
+_GBO_POS = [0.0, 0.0, 0.0]
+_GBO_ROT = 0.0  # TODO
+
+# HCRO geometry
+_HCRO_POS = [0.0, 0.0, 0.0]
+_HCRO_ROT = 0.0  # TODO
+
 # Lat/Lon
 _LAT_LON = {
     "chime": [49.3207125, -119.623670],
@@ -444,25 +458,25 @@ class CHIMEAntenna(ArrayAntenna):
 class PCOAntenna(ArrayAntenna):
     """PCO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _PCO_ROT
+    _offset = _PCO_POS
+    _delay = np.nan
 
 
 class GBOAntenna(ArrayAntenna):
     """GBO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _GBO_ROT
+    _offset = _GBO_POS
+    _delay = np.nan
 
 
 class HCROAntenna(ArrayAntenna):
     """HCRO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _HCRO_ROT
+    _offset = _HCRO_POS
+    _delay = np.nan
 
 
 class TONEAntenna(ArrayAntenna):
@@ -472,7 +486,7 @@ class TONEAntenna(ArrayAntenna):
 
     _rotation = 0.00
     _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _delay = np.nan
 
 
 class HolographyAntenna(Antenna):
@@ -505,6 +519,49 @@ def _ensure_graph(graph):
     except:
         graph = layout.graph(graph)
     return graph
+
+
+def _get_feed_position(lay, rfl, foc, cas, slt, slot_factor):
+    """Calculate feed position from node properties.
+
+    Parameters
+    ----------
+    lay : layout.graph
+        Layout instance to search from.
+    rfl : layout.component
+        Reflector.
+    foc : layout.component
+        Focal line slot.
+    cas : layout.component
+        Cassette.
+    slt : layout.component
+        Cassette slot.
+    slot_factor : float
+        1.5 for CHIME, 0.5 for Outriggers
+
+    Returns
+    -------
+    pos : list
+        x,y,z coordinates of the feed relative to the centre of the focal line.
+    """
+    try:
+        pos = [0.0] * 3
+
+        for node in [rfl, foc, cas, slt]:
+            prop = lay.node_property(node)
+
+            for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
+
+                if dim in prop:
+                    pos[ind] += float(prop[dim].value)  # in metres
+
+        if "y_offset" not in lay.node_property(slt):
+            pos[1] += (float(slt.sn[-1]) - slot_factor) * 0.3048
+
+    except:
+        pos = None
+
+    return pos
 
 
 def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source):
@@ -652,23 +709,9 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         # Dealing with a CHIME feed
 
         # Determine position
-        try:
-            pos = [0.0] * 3
-
-            for node in [rfl, foc, cas, slt]:
-                prop = lay.node_property(node)
-
-                for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
-
-                    if dim in prop:
-                        pos[ind] += float(prop[dim].value)  # in metres
-
-            if "y_offset" not in lay.node_property(slt):
-                pos[1] += (float(slt.sn[-1]) - 1.5) * 0.3048
-
-        except:
-
-            pos = None
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=1.5
+        )
 
         # Return CHIMEAntenna object
         return CHIMEAntenna(
@@ -741,8 +784,10 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
         # Dealing with an PCO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return PCOAntenna object
         return PCOAntenna(
@@ -762,8 +807,10 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
         # Dealing with a GBO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return GBOAntenna object
         return GBOAntenna(
@@ -783,8 +830,10 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
         # Dealing with a HCRO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return HCROAntenna object
         return HCROAntenna(
