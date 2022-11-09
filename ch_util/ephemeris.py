@@ -442,6 +442,7 @@ transit_times = chime.transit_times
 setting_times = chime.set_times
 rising_times = chime.rise_times
 CSD_ZERO = chime.lsd_start_day
+CSD_NOW = chime.current_lsd
 
 
 def transit_RA(time):
