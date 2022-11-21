@@ -2388,27 +2388,12 @@ def delay(
     return delays
 
 
-def invert_no_zero(x):
-    """Return the reciprocal, but ignoring zeros.
+def invert_no_zero(*args, **kwargs):
+    from caput import tools
+    import warnings
 
-    Where `x != 0` return 1/x, or just return 0. Importantly this routine does
-    not produce a warning about zero division.
-
-    Parameters
-    ----------
-    x : np.ndarray
-
-    Returns
-    -------
-    r : np.ndarray
-        Return the reciprocal of x.
-    """
-    out = np.zeros_like(x)
-    np.divide(
-        np.array(1, dtype=x.dtype),
-        x.view(np.ndarray),
-        out=out.view(np.ndarray),
-        where=x != 0,
+    warnings.warn(
+        f"Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
+        category=DeprecationWarning,
     )
-
-    return out
+    return tools.invert_no_zero(*args, **kwargs)
