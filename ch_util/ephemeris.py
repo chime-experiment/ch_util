@@ -696,6 +696,74 @@ def object_coords(body, date=None, deg=False, obs=chime):
     return ra, dec
 
 
+def equat_to_bmxy(ra_icrs, dec_icrs, time):
+    """Convert ICRS equatorial coordinates to CHIME/FRB beam-model XY coordinates.
+
+    Similar to `beam_model.util.get_position_from_equatorial`, but the results
+    seem to be different by up to ~20 arcsec.
+
+    Parameters
+    ----------
+    ra_icrs : float
+        The ICRS Right Ascension of the source in degrees.
+    dec_icrs : float
+        The ICRS Declination of the source in degrees.
+    time : array_like
+        Unix time.
+
+    Returns
+    -------
+    bmx, bmy : array_like
+        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+        the beam-model coordinate conventions:
+        https://chimefrb.github.io/frb_common/build/html/beam_model.html
+    """
+
+    from skyfield.api import Star, Angle
+
+    from caput.interferometry import sph_to_ground
+
+    from ch_util.tools import _CHIME_ROT
+
+    from drift.telescope.cylbeam import rotate_ypr
+
+    # Create skyfield Star object from ICRS coordinates
+    ra = Angle(degrees=ra_icrs)
+    dec = Angle(degrees=dec_icrs)
+    source = Star(ra=ra, dec=dec)
+
+    # Convert ICRS to CIRS coordinates (by passing a date to object_coords,
+    # it returns CIRS coordinates at that epoch)
+    ra_cirs, dec_cirs = object_coords(source, date=time, deg=True)
+
+    # Compute CIRS Hour Angle
+    ha_cirs = unix_to_lsa(time) - ra_cirs
+
+    # Convert CIRS coordinates to CHIME "ground fixed" XYZ coordinates,
+    # which constitute a unit vector pointing towards the point of interest,
+    # i.e., telescope cartesian unit-sphere coordinates
+    # with X pointing East, Y pointing North, Z pointing up to zenith.
+    chx, chy, chz = sph_to_ground(
+        np.deg2rad(ha_cirs), np.deg2rad(CHIMELATITUDE), np.deg2rad(dec_cirs)
+    )
+
+    # Correct for CHIME telescope rotation with respect to North
+    ypr = np.array([np.deg2rad(-_CHIME_ROT), 0, 0])
+    chx, chy, chz = rotate_ypr(ypr, chx, chy, chz)
+
+    # Convert cartesian unit-sphere coordinates to polar angle and azimuth
+    # polar angle: almost-North = 0 deg; almost-South = 180 deg
+    # azimut: Zenith = 0 deg; almost-West = 90 deg; almost-East = 270 deg (check)
+    pa = np.arccos(chy)
+    az = np.arctan2(chx, chz)
+
+    # Convert polar angle and azimuth to CHIME/FRB beam model XY position
+    bmx = np.rad2deg(-az * np.sin(pa))
+    bmy = np.rad2deg(np.pi / 2.0 - pa)
+
+    return bmx, bmy
+
+
 def peak_RA(body, date=None, deg=False):
     """Calculates the RA where a source is expected to peak in the beam.
     Note that this is not the same as the RA where the source is at
