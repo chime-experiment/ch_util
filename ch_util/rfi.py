@@ -432,10 +432,10 @@ def frequency_mask(timestamp, freq_centre, freq_width=None):
 
     # Time-dependent static RFI flagging
 
-    for bad_freq in bad_frequencies:
-        fs, fe = bad_freq[1]
+    for line in bad_frequencies:
+        fs, fe = line[1]
 
-        if not bad_freq[0] or timestamp >= bad_freq[0][0]:
+        if not line[0] or timestamp >= line[0][0]:
             tm = np.logical_and(freq_end > fs, freq_start < fe)
             mask = np.logical_or(mask, tm)
         else:
@@ -727,7 +727,7 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
 
 
 def iterative_hpf_masking(
-    data,
+    timestamp,
     freq,
     y,
     flag=None,
@@ -756,6 +756,8 @@ def iterative_hpf_masking(
 
     Parameters
     ----------
+    timestamp : float
+        Start observing time (in unix time)
     freq: np.ndarray[nfreq,]
         Frequency in MHz.
     y: np.ndarray[nfreq,]
@@ -805,7 +807,7 @@ def iterative_hpf_masking(
 
     # If an initial flag was not provided, then use the static rfi mask.
     if flag is None:
-        flag = ~frequency_mask(data, freq)
+        flag = ~frequency_mask(timestamp, freq)
 
     # We will be updating the flags on each iteration.  Make a copy of
     # the input so that we do not overwrite.
