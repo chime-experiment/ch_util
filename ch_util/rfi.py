@@ -69,7 +69,10 @@ bad_frequencies = np.array(
             [1577755022],
             [617.00, 627.00],
         ],  # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
-        [[1564051033], [716.00, 728.00]],  # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
+        [
+            [1564051033],
+            [716.00, 728.00],
+        ],  # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
     ],
     dtype=object,
 )
