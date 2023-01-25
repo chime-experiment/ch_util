@@ -164,7 +164,7 @@ class FitTransit(object, metaclass=ABCMeta):
         self.param = np.full(shp + (self.nparam,), np.nan, dtype=dtype)
         self.param_cov = np.full(shp + (self.nparam, self.nparam), np.nan, dtype=dtype)
         self.chisq = np.full(shp + (self.ncomponent,), np.nan, dtype=dtype)
-        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=np.int)
+        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=np.int64)
 
         with np.errstate(all="ignore"):
 
@@ -982,7 +982,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
                 if np.isnan(center):
                     raise RuntimeError("No peak found.")
 
-                wk *= (np.abs(ha - center) <= window).astype(np.float)
+                wk *= (np.abs(ha - center) <= window).astype(np.float64)
 
                 ndata = int(np.sum(wk > 0.0))
                 if ndata < min_nfit:
@@ -1003,7 +1003,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
         wf = w0 * model_amp**2
         if window is not None:
-            wf *= (np.abs(ha - center) <= window).astype(np.float)
+            wf *= (np.abs(ha - center) <= window).astype(np.float64)
 
             ndata = int(np.sum(wf > 0.0))
             if ndata < min_nfit:
@@ -1627,7 +1627,7 @@ def fit_point_source_map(
                 rms[index][good_ra, np.newaxis], [1, submap.shape[-1]]
             ).ravel()
         else:
-            good_ra = np.ones(submap.shape[-2], dtype=np.bool)
+            good_ra = np.ones(submap.shape[-2], dtype=bool)
             this_rms = None
 
         if np.sum(good_ra) <= nparam:
@@ -2582,14 +2582,14 @@ def get_reference_times_file(
 
     # Array to contain reference times for each entry.
     # NaN for entries with no reference time.
-    reftime = np.full(ntimes, np.nan, dtype=np.float)
+    reftime = np.full(ntimes, np.nan, dtype=np.float64)
     # Array to hold reftimes of previous updates
     # (for entries that need interpolation).
-    reftime_prev = np.full(ntimes, np.nan, dtype=np.float)
+    reftime_prev = np.full(ntimes, np.nan, dtype=np.float64)
     # Arrays to hold start and stop times of gain transition
     # (for entries that need interpolation).
-    interp_start = np.full(ntimes, np.nan, dtype=np.float)
-    interp_stop = np.full(ntimes, np.nan, dtype=np.float)
+    interp_start = np.full(ntimes, np.nan, dtype=np.float64)
+    interp_stop = np.full(ntimes, np.nan, dtype=np.float64)
 
     # Acquisition restart. We load an old gain.
     acqrestart = is_restart[last_start_index] == 1

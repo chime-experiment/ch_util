@@ -1262,7 +1262,7 @@ class HKPData(memh5.MemDiskGroup):
             data = dset[:]
             time = data["time"]
 
-            mask = np.ones(time.shape, dtype=np.bool)
+            mask = np.ones(time.shape, dtype=bool)
 
             if start is not None:
                 tstart = ctime.ensure_unix(start)
@@ -1339,7 +1339,7 @@ class HKPData(memh5.MemDiskGroup):
                 index_remap.append({})  # List of dictionaries (one per file)
                 for att, values in fl[dset_name].attrs.items():
                     # Reserve zeroeth entry for N/A
-                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=np.int)
+                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=np.int64)
                     if att not in full_attrs:
                         full_attrs[att] = []
                     for idx, val in enumerate(values):
@@ -3496,7 +3496,7 @@ def _insert_gains(data, input_sel):
             # should be sorted by channel id.
             keylist = sorted(zip(chanid, keylist))
         # Down select keylist based on input_sel.
-        input_sel_list = list(np.arange(ninput_orig, dtype=np.int)[input_sel])
+        input_sel_list = list(np.arange(ninput_orig, dtype=np.int64)[input_sel])
         keylist = [keylist[ii] for ii in input_sel_list]
 
         if len(fsel) != data.nfreq:

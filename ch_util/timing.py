@@ -205,7 +205,7 @@ class TimingCorrection(andata.BaseData):
 
         for tt, obj in enumerate(objs):
             for nn in range(dphi.shape[1]):
-                if np.sum(flag[:, nn, tt], dtype=np.int) > 2:
+                if np.sum(flag[:, nn, tt], dtype=np.int64) > 2:
                     # Fit the difference in the static phase between this file and the
                     # reference file to a linear relationship with frequency.  Uses
                     # nonlinear-least-squares that is insensitive to phase wrapping
@@ -552,7 +552,7 @@ class TimingCorrection(andata.BaseData):
 
         Returns
         -------
-        index: np.ndarray[ninput,] of np.int
+        index: np.ndarray[ninput,] of np.int64
             Indices of the input axis that yield the requested inputs.
         """
         if not hasattr(self, "_input_lookup"):
@@ -982,7 +982,7 @@ class TimingCorrection(andata.BaseData):
     ):
 
         stack_index = reverse_stack["stack"][:]
-        stack_conj = reverse_stack["conjugate"][:].astype(np.bool)
+        stack_conj = reverse_stack["conjugate"][:].astype(bool)
 
         nstack = np.max(stack_index) + 1
         nprod = prod.size
@@ -1679,7 +1679,7 @@ class TimingInterpolator(object):
             self.var = tools.invert_no_zero(weight)
 
         if flag is None:
-            self.flag = np.ones(y.shape, dtype=np.bool)
+            self.flag = np.ones(y.shape, dtype=bool)
         else:
             self.flag = flag
 
@@ -2235,7 +2235,7 @@ def construct_delay_template(
         logger.info(" | ".join(msg))
 
     # Calculate the number of frequencies used in the fit
-    num_freq = np.sum(weight_amp > 0.0, axis=0, dtype=np.int)
+    num_freq = np.sum(weight_amp > 0.0, axis=0, dtype=np.int64)
 
     # Calculate the uncertainties on the fit parameters
     weight_tau = np.sum(weight_phi * omega**2, axis=0)
@@ -2249,7 +2249,7 @@ def construct_delay_template(
 
         static_phi_fit = np.zeros((nparam, nsource), dtype=np.float64)
         for nn in range(nsource):
-            if np.sum(err_static_phi[:, nn] > 0.0, dtype=np.int) > nparam:
+            if np.sum(err_static_phi[:, nn] > 0.0, dtype=np.int64) > nparam:
                 static_phi_fit[:, nn] = fit_poly_to_phase(
                     freq,
                     np.exp(1.0j * static_phi[:, nn]),
@@ -2520,12 +2520,12 @@ def _amplitude_scaling(freq):
 
 
 def _flagged_median(data, flag, axis=0, keepdims=False):
-    bflag = flag.astype(np.bool)
+    bflag = flag.astype(bool)
     nandata = np.full(data.shape, np.nan, dtype=data.dtype)
     nandata[bflag] = data[bflag]
 
     sortdata = np.sort(nandata, axis=axis)
-    ieval = np.sum(np.isfinite(sortdata), axis=axis, dtype=np.int, keepdims=True) // 2
+    ieval = np.sum(np.isfinite(sortdata), axis=axis, dtype=np.int64, keepdims=True) // 2
 
     med = np.zeros(ieval.shape, dtype=sortdata.dtype)
     for aind, sind in np.ndenumerate(ieval):

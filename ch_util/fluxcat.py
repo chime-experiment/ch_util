@@ -94,7 +94,7 @@ class FitSpectrum(object, metaclass=ABCMeta):
         dfdp = self._deriv_fit_func(x, *self.param)
 
         if hasattr(x, "__iter__"):
-            df2 = np.zeros(len(x), dtype=np.float)
+            df2 = np.zeros(len(x), dtype=np.float64)
         else:
             df2 = 0.0
 
@@ -159,7 +159,7 @@ class CurvedPowerLaw(FitSpectrum):
     def fit(self, freq, flux, eflux, flag=None):
 
         if flag is None:
-            flag = np.ones(len(freq), dtype=np.bool)
+            flag = np.ones(len(freq), dtype=bool)
 
         # Make sure we have enough measurements
         if np.sum(flag) >= self.nparam:
