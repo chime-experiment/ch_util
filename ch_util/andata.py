@@ -1262,7 +1262,7 @@ class HKPData(memh5.MemDiskGroup):
             data = dset[:]
             time = data["time"]
 
-            mask = np.ones(time.shape, dtype=np.bool)
+            mask = np.ones(time.shape, dtype=bool)
 
             if start is not None:
                 tstart = ctime.ensure_unix(start)
@@ -1339,7 +1339,7 @@ class HKPData(memh5.MemDiskGroup):
                 index_remap.append({})  # List of dictionaries (one per file)
                 for att, values in fl[dset_name].attrs.items():
                     # Reserve zeroeth entry for N/A
-                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=np.int)
+                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=int)
                     if att not in full_attrs:
                         full_attrs[att] = []
                     for idx, val in enumerate(values):
@@ -2316,12 +2316,12 @@ def _ensure_1D_selection(selection):
         # to integer selection.
         if len(selection) == 1:
             return _ensure_1D_selection(selection[0])
-        if issubclass(selection.dtype.type, np.integer):
+        if np.issubdtype(selection.dtype, np.integer):
             if np.any(np.diff(selection) <= 0):
                 raise ValueError("h5py requires sorted non-duplicate selections.")
-        elif not issubclass(selection.dtype.type, np.bool_):
+        elif not np.issubdtype(selection.dtype, bool):
             raise ValueError("Array selections must be integer or boolean type.")
-        elif issubclass(selection.dtype.type, np.bool_):
+        elif np.issubdtype(selection.dtype, bool):
             # This is a workaround for h5py/h5py#1750
             selection = selection.nonzero()[0]
 
@@ -3496,7 +3496,7 @@ def _insert_gains(data, input_sel):
             # should be sorted by channel id.
             keylist = sorted(zip(chanid, keylist))
         # Down select keylist based on input_sel.
-        input_sel_list = list(np.arange(ninput_orig, dtype=np.int)[input_sel])
+        input_sel_list = list(np.arange(ninput_orig, dtype=int)[input_sel])
         keylist = [keylist[ii] for ii in input_sel_list]
 
         if len(fsel) != data.nfreq:
