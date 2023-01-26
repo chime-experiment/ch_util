@@ -401,7 +401,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     return mask
 
 
-def frequency_mask(timestamp, freq_centre, freq_width=None):
+def frequency_mask(freq_centre, timestamp=None, freq_width=None):
     """Flag known bad frequencies.
     LSD-dependent static RFI flags are added.
 
