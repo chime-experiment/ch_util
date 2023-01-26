@@ -56,10 +56,8 @@ bad_frequencies = [
         [[], [729.88, 745.12]],
         [[], [746.29, 756.45]],
         [[], [505.85, 511.71]],  # 6 MHz band (reported by Simon)
-        [
-            [1633758888],
-            [584.00, 590.00],
-        ],  # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+        # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+        [1633758888, [584.00, 590.00]],  
         [
             [1633758888],
             [596.00, 602.00],
