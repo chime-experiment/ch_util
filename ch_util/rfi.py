@@ -211,7 +211,7 @@ def number_deviations(
 
     # Create static flag of frequencies that are known to be bad
     static_flag = (
-        ~frequency_mask(data.time[0], data.freq)
+        ~frequency_mask(data.freq, timestamp=data.time[0])
         if apply_static_mask
         else np.ones(data.nfreq, dtype=np.bool)
     )[:, np.newaxis]
