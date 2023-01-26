@@ -41,8 +41,7 @@ logger.addHandler(logging.NullHandler())
 
 # Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
-bad_frequencies = np.array(
-    [
+bad_frequencies = [
         [[], [449.41, 450.98]],
         [[], [454.88, 456.05]],
         [[], [457.62, 459.18]],
