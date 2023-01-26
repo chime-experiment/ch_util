@@ -71,8 +71,7 @@ bad_frequencies = [
             [716.00, 728.00],
         ],  # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
     ],
-    dtype=object,
-)
+]
 
 
 def flag_dataset(
