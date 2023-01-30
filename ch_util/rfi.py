@@ -43,34 +43,27 @@ logger.addHandler(logging.NullHandler())
 # If the start time is not specified, t = [], the flag is applied to all CSDs
 bad_frequencies = [
         [None, [449.41, 450.98]],
-        [[], [454.88, 456.05]],
-        [[], [457.62, 459.18]],
-        [[], [483.01, 485.35]],
-        [[], [487.70, 494.34]],
-        [[], [497.85, 506.05]],
-        [[], [529.10, 536.52]],
-        [[], [541.60, 554.49]],
-        [[], [564.65, 585.35]],
-        [[], [693.16, 693.55]],
-        [[], [694.34, 696.68]],
-        [[], [729.88, 745.12]],
-        [[], [746.29, 756.45]],
-        [[], [505.85, 511.71]],  # 6 MHz band (reported by Simon)
+        [None, [454.88, 456.05]],
+        [None, [457.62, 459.18]],
+        [None, [483.01, 485.35]],
+        [None, [487.70, 494.34]],
+        [None, [497.85, 506.05]],
+        [None, [529.10, 536.52]],
+        [None, [541.60, 554.49]],
+        [None, [564.65, 585.35]],
+        [None, [693.16, 693.55]],
+        [None, [694.34, 696.68]],
+        [None, [729.88, 745.12]],
+        [None, [746.29, 756.45]],
+        [None, [505.85, 511.71]],  # 6 MHz band (reported by Simon)
+        [1633758888, [584.00, 590.00]],
         # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
-        [1633758888, [584.00, 590.00]],  
-        [
-            [1633758888],
-            [596.00, 602.00],
-        ],  #                               UHF TV Channel 35
-        [
-            [1577755022],
-            [617.00, 627.00],
-        ],  # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
-        [
-            [1564051033],
-            [716.00, 728.00],
-        ],  # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
-    ],
+        [1633758888, [596.00, 602.00]],
+        # UHF TV Channel 35
+        [1577755022, [617.00, 627.00]],
+        # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
+        [1564051033, [716.00, 728.00]],
+        # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
 ]
 
 
@@ -119,7 +112,7 @@ def flag_dataset(
 
     # Apply the frequency cut to the data (add here because we are distributed
     # over products and its easy)
-    freq_mask = frequency_mask(data.time[0], data.freq)
+    freq_mask = frequency_mask(data.freq, data.time[0])
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
 
     # Create an empty mask for the full dataset
@@ -375,7 +368,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     stack_autos_time_ave = np.mean(stack_autos, axis=-1)
 
     # Locations of the generally decent frequency bands
-    drawn_bool_mask = frequency_mask(data.time[0], data.freq)
+    drawn_bool_mask = frequency_mask(data.freq, data.time[0])
     good_data = np.logical_not(drawn_bool_mask)
 
     # Calculate standard deivation of the average channel
@@ -434,7 +427,7 @@ def frequency_mask(freq_centre, timestamp=None, freq_width=None):
     for line in bad_frequencies:
         fs, fe = line[1]
 
-        if not line[0] or timestamp >= line[0][0]:
+        if not line[0] or timestamp >= line[0]:
             tm = np.logical_and(freq_end > fs, freq_start < fe)
             mask = np.logical_or(mask, tm)
         else:
@@ -726,9 +719,9 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
 
 
 def iterative_hpf_masking(
-    timestamp,
     freq,
     y,
+    timestamp=None,
     flag=None,
     tau_cut=0.60,
     epsilon=1e-10,
@@ -806,7 +799,7 @@ def iterative_hpf_masking(
 
     # If an initial flag was not provided, then use the static rfi mask.
     if flag is None:
-        flag = ~frequency_mask(timestamp, freq)
+        flag = ~frequency_mask(freq, timestamp)
 
     # We will be updating the flags on each iteration.  Make a copy of
     # the input so that we do not overwrite.
