@@ -116,7 +116,7 @@ def flag_dataset(
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
 
     # Create an empty mask for the full dataset
-    mask = np.zeros(data.vis[:].shape, dtype=np.bool)
+    mask = np.zeros(data.vis[:].shape, dtype=bool)
 
     # Loop over all products and flag if either inputs auto correlation was flagged
     for pi in range(data.nprod):
@@ -206,7 +206,7 @@ def number_deviations(
     static_flag = (
         ~frequency_mask(data.freq, timestamp=data.time[0])
         if apply_static_mask
-        else np.ones(data.nfreq, dtype=np.bool)
+        else np.ones(data.nfreq, dtype=bool)
     )[:, np.newaxis]
 
     if parallel:
@@ -388,7 +388,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     mask_1d = rel_pow > 10 * sigma
 
     # Generate mask
-    mask = np.zeros((data_vis.shape[0], data_vis.shape[2]), dtype=np.bool)
+    mask = np.zeros((data_vis.shape[0], data_vis.shape[2]), dtype=bool)
     mask[:] = mask_1d[:, None]
 
     return mask
@@ -417,7 +417,7 @@ def frequency_mask(freq_centre, timestamp=None, freq_width=None):
     if freq_width is None:
         freq_width = np.abs(np.median(np.diff(freq_centre)))
 
-    mask = np.zeros_like(freq_centre, dtype=np.bool)
+    mask = np.zeros_like(freq_centre, dtype=bool)
 
     freq_start = freq_centre - freq_width / 2
     freq_end = freq_centre + freq_width / 2
@@ -873,9 +873,9 @@ def sir1d(basemask, eta=0.2):
         type as basemask.
     """
     n = basemask.size
-    psi = basemask.astype(np.float) - 1.0 + eta
+    psi = basemask.astype(np.float64) - 1.0 + eta
 
-    M = np.zeros(n + 1, dtype=np.float)
+    M = np.zeros(n + 1, dtype=np.float64)
     M[1:] = np.cumsum(psi)
 
     MP = np.minimum.accumulate(M)[:-1]
@@ -915,7 +915,7 @@ def sir(basemask, eta=0.2, only_freq=False, only_time=False):
 
     nfreq, nprod, ntime = basemask.shape
 
-    newmask = basemask.astype(np.bool).copy()
+    newmask = basemask.astype(bool).copy()
 
     for pp in range(nprod):
 

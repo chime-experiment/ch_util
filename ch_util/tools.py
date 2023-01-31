@@ -1745,7 +1745,7 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
     stack_new : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
         The updated `stack` index map, where each element is an index to a product
         consisting of a pair of array antennas.
-    stack_flag : np.ndarray[nstack,] of dtype=np.bool
+    stack_flag : np.ndarray[nstack,] of dtype=bool
         Boolean flag that is True if this element of the stack index map is now valid,
         and False if none of the baselines that were stacked contained array antennas.
     """
@@ -1937,7 +1937,7 @@ def fast_pack_product_array(arr):
     nfeed = arr.shape[0]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float)
+    ret = np.zeros(nprod, dtype=np.float64)
     iout = 0
 
     for i in range(nfeed):
