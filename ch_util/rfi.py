@@ -42,28 +42,28 @@ logger.addHandler(logging.NullHandler())
 # Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
 bad_frequencies = [
-        [None, [449.41, 450.98]],
-        [None, [454.88, 456.05]],
-        [None, [457.62, 459.18]],
-        [None, [483.01, 485.35]],
-        [None, [487.70, 494.34]],
-        [None, [497.85, 506.05]],
-        [None, [529.10, 536.52]],
-        [None, [541.60, 554.49]],
-        [None, [564.65, 585.35]],
-        [None, [693.16, 693.55]],
-        [None, [694.34, 696.68]],
-        [None, [729.88, 745.12]],
-        [None, [746.29, 756.45]],
-        [None, [505.85, 511.71]],  # 6 MHz band (reported by Simon)
-        [1633758888, [584.00, 590.00]],
-        # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
-        [1633758888, [596.00, 602.00]],
-        # UHF TV Channel 35
-        [1577755022, [617.00, 627.00]],
-        # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
-        [1564051033, [716.00, 728.00]],
-        # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
+    [None, [449.41, 450.98]],
+    [None, [454.88, 456.05]],
+    [None, [457.62, 459.18]],
+    [None, [483.01, 485.35]],
+    [None, [487.70, 494.34]],
+    [None, [497.85, 506.05]],
+    [None, [529.10, 536.52]],
+    [None, [541.60, 554.49]],
+    [None, [564.65, 585.35]],
+    [None, [693.16, 693.55]],
+    [None, [694.34, 696.68]],
+    [None, [729.88, 745.12]],
+    [None, [746.29, 756.45]],
+    [None, [505.85, 511.71]],  # 6 MHz band (reported by Simon)
+    [1633758888, [584.00, 590.00]],
+    # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+    [1633758888, [596.00, 602.00]],
+    # UHF TV Channel 35
+    [1577755022, [617.00, 627.00]],
+    # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
+    [1564051033, [716.00, 728.00]],
+    # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
 ]
 
 
