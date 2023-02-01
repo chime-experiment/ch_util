@@ -431,10 +431,8 @@ def frequency_mask(freq_centre, timestamp=None, freq_width=None):
 
     # Time-dependent static RFI flagging
 
-    for line in bad_frequencies:
-        fs, fe = line[1]
-
-        if not line[0] or timestamp >= line[0]:
+    for start_time, (fs, fe) in bad_frequencies:
+        if start_time is None or timestamp >= start_time:
             tm = np.logical_and(freq_end > fs, freq_start < fe)
             mask = np.logical_or(mask, tm)
         else:
