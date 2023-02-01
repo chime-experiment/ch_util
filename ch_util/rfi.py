@@ -112,7 +112,7 @@ def flag_dataset(
 
     # Apply the frequency cut to the data (add here because we are distributed
     # over products and its easy)
-    freq_mask = frequency_mask(data.freq, data.time[0])
+    freq_mask = frequency_mask(data.freq, timestamp=data.time[0])
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
 
     # Create an empty mask for the full dataset
