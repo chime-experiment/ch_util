@@ -112,7 +112,6 @@ def flag_dataset(
 
     # Loop over all products and flag if either inputs auto correlation was flagged
     for pi in range(data.nprod):
-
         ii, ij = data.index_map["prod"][pi]
 
         if ii in auto_ii:
@@ -223,7 +222,6 @@ def number_deviations(
 
     # Loop over extracted autos and create a mask for each
     for ind in range(auto_vis.shape[1]):
-
         flg = static_flag_view & auto_flag_view[:, ind]
         # Gather enire array onto each rank
         arr = auto_vis[:, ind].allgather() if parallel else auto_vis[:, ind]
@@ -653,7 +651,6 @@ def mad_cut_rolling(
 
 
 def nanmedian(*args, **kwargs):
-
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
         return np.nanmedian(*args, **kwargs)
@@ -787,7 +784,6 @@ def iterative_hpf_masking(
     # Iterate
     itt = 0
     while itt < niter:
-
         # Construct the filter using the current mask
         NF = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
 
@@ -897,7 +893,6 @@ def sir(basemask, eta=0.2, only_freq=False, only_time=False):
     newmask = basemask.astype(bool).copy()
 
     for pp in range(nprod):
-
         if not only_time:
             for tt in range(ntime):
                 newmask[:, pp, tt] |= sir1d(basemask[:, pp, tt], eta=eta)

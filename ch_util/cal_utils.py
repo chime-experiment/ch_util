@@ -167,9 +167,7 @@ class FitTransit(object, metaclass=ABCMeta):
         self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=int)
 
         with np.errstate(all="ignore"):
-
             for ind in np.ndindex(*shp):
-
                 wi = width if np.isscalar(width) else width[ind[: width.ndim]]
 
                 err = resp_err[ind]
@@ -614,7 +612,6 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
 
         deriv = np.full(shp + (ha.size,), np.nan, dtype=np.complex64)
         for ind in np.ndindex(*shp):
-
             ider1_real = der1_real[ind]
             ider1_imag = der1_imag[ind]
 
@@ -713,7 +710,6 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         return param, param_cov, chisq, ndof
 
     def _model(self, ha, elementwise=False):
-
         real = self._fast_eval(
             ha, self.param[..., : self.nparr], elementwise=elementwise
         )
@@ -724,7 +720,6 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         return real + 1.0j * imag
 
     def _jacobian_real(self, ha, elementwise=False):
-
         jac = np.rollaxis(self.vander(ha), -1)
         if not elementwise and self.N is not None:
             slc = (None,) * len(self.N)
@@ -733,7 +728,6 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         return jac
 
     def _jacobian_imag(self, ha, elementwise=False):
-
         jac = np.rollaxis(self.vander(ha), -1)
         if not elementwise and self.N is not None:
             slc = (None,) * len(self.N)
@@ -971,11 +965,9 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
         # Iterate to obtain model estimate for amplitude
         for kk in range(niter):
-
             wk = w0 * model_amp**2
 
             if window is not None:
-
                 if kk > 0:
                     center = self.peak(param=coeff)
 
@@ -1072,7 +1064,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         peak = np.full(shp, np.nan, dtype=der1.dtype)
 
         for ind in np.ndindex(*shp):
-
             ider1 = der1[ind]
 
             if np.any(~np.isfinite(ider1)):
@@ -1092,7 +1083,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return peak
 
     def _model(self, ha, elementwise=False):
-
         amp = self._fast_eval(
             ha, self.param[..., : self.npara], elementwise=elementwise
         )
@@ -1103,7 +1093,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return np.exp(amp) * (np.cos(phi) + 1.0j * np.sin(phi))
 
     def _jacobian_amp(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_amp)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -1114,7 +1103,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return jac
 
     def _jacobian_phi(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_phi)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -1359,7 +1347,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return fit_jac
 
     def _model(self, ha, param=None, elementwise=False):
-
         if param is None:
             param = self.param
 
@@ -1389,7 +1376,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return model_amp * (np.cos(model_phase) + 1.0j * np.sin(model_phase))
 
     def _jacobian_amp(self, ha, elementwise=False):
-
         amp_param = self.param[..., : self.npara]
 
         shp = amp_param.shape
@@ -1418,7 +1404,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return jac
 
     def _jacobian_phi(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_phi)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -1564,7 +1549,6 @@ def fit_point_source_map(
         (len(dirty_beam) == 3) or (dirty_beam.shape == submap.shape)
     )
     if do_dirty:
-
         if real_map:
             model = func_real_dirty_gauss
         else:
@@ -1618,7 +1602,6 @@ def fit_point_source_map(
 
     # Iterate over dimensions
     for index in np.ndindex(*dims):
-
         # Extract the RMS for this index.  In the process,
         # check for data flagged as bad (rms == 0.0).
         if rms is not None:
@@ -2062,7 +2045,6 @@ def estimate_directional_scale(z, c=2.1):
     xb = x[x >= 0.0]
 
     def huber_rho(dx, c=2.1):
-
         num = float(dx.size)
 
         s0 = 1.4826 * np.median(np.abs(dx))
@@ -2258,7 +2240,6 @@ def fit_histogram(
 
 
 def _sliding_window(arr, window):
-
     # Advanced numpy tricks
     shape = arr.shape[:-1] + (arr.shape[-1] - window + 1, window)
     strides = arr.strides + (arr.strides[-1],)
@@ -2381,12 +2362,10 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
     x = freq.reshape(-1, 1)
 
     for ii in range(ninput):
-
         train = np.flatnonzero(flag[:, ii])
         test = np.flatnonzero(~flag[:, ii])
 
         if train.size > 0:
-
             xtest = x[test, :]
 
             xtrain = x[train, :]
@@ -2729,7 +2708,6 @@ def get_reference_times_dataset_id(
 
     # For each gain update extract all the relevant information
     for state_id in unique_gains_ids:
-
         d = {}
         gain_info_dict[state_id] = d
 
@@ -2775,7 +2753,6 @@ def get_reference_times_dataset_id(
     last_valid_non_interpolated = None
     last_non_interpolated = None
     for ii, state_id in enumerate(collapsed_ids):
-
         valid_id = not np.ma.is_masked(state_id)
         update = gain_info_dict[state_id] if valid_id else {}
         valid = valid_id and update["valid"]
