@@ -41,6 +41,7 @@ from chimedb.data_index import (
     RawadcFileInfo,
     StorageGroup,
     StorageNode,
+    TimingFileInfo,
     WeatherFileInfo,
 )
 
@@ -129,6 +130,7 @@ from .finder import (
     FlagInputDataInterval,
     CalibrationGainDataInterval,
     DigitalGainDataInterval,
+    TimingDataInterval,
     files_in_range,
     DataFlagged,
 )
