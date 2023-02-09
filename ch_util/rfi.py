@@ -436,8 +436,6 @@ def frequency_mask(freq_centre, freq_width=None, timestamp=None):
         if start_time is None or timestamp >= start_time:
             tm = np.logical_and(freq_end > fs, freq_start < fe)
             mask = np.logical_or(mask, tm)
-        else:
-            continue
 
     return mask
 
