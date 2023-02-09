@@ -375,7 +375,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     stack_autos_time_ave = np.mean(stack_autos, axis=-1)
 
     # Locations of the generally decent frequency bands
-    drawn_bool_mask = frequency_mask(data.freq, data.time[0])
+    drawn_bool_mask = frequency_mask(data.freq, timestamp=data.time[0])
     good_data = np.logical_not(drawn_bool_mask)
 
     # Calculate standard deivation of the average channel
@@ -401,19 +401,20 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     return mask
 
 
-def frequency_mask(freq_centre, timestamp=None, freq_width=None):
+def frequency_mask(freq_centre, freq_width=None, timestamp=None):
     """Flag known bad frequencies.
-    LSD-dependent static RFI flags are added.
+    
+    LSD-dependent static RFI flags that affect the recent observations are added.
 
     Parameters
     ----------
-    timestamp : float
-        Start observing time (in unix time)
     freq_centre : np.ndarray[nfreq]
         Centre of each frequency channel.
     freq_width : np.ndarray[nfreq] or float, optional
         Width of each frequency channel. If `None` (default), calculate the
         width from the frequency centre separation.
+    timestamp : float
+        Start observing time (in unix time)
 
     Returns
     -------
@@ -726,7 +727,6 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
 def iterative_hpf_masking(
     freq,
     y,
-    timestamp=None,
     flag=None,
     tau_cut=0.60,
     epsilon=1e-10,
@@ -734,6 +734,7 @@ def iterative_hpf_masking(
     threshold=6.0,
     nperiter=1,
     niter=40,
+    timestamp=None,
 ):
     """Mask features in a spectrum that have significant power at high delays.
 
@@ -753,8 +754,6 @@ def iterative_hpf_masking(
 
     Parameters
     ----------
-    timestamp : float
-        Start observing time (in unix time)
     freq: np.ndarray[nfreq,]
         Frequency in MHz.
     y: np.ndarray[nfreq,]
@@ -776,6 +775,8 @@ def iterative_hpf_masking(
         on any iteration.
     niter: int
         Maximum number of iterations.
+    timestamp : float
+        Start observing time (in unix time)        
 
     Returns
     -------
@@ -804,7 +805,7 @@ def iterative_hpf_masking(
 
     # If an initial flag was not provided, then use the static rfi mask.
     if flag is None:
-        flag = ~frequency_mask(freq, timestamp)
+        flag = ~frequency_mask(freq, timestamp=timestamp)
 
     # We will be updating the flags on each iteration.  Make a copy of
     # the input so that we do not overwrite.
