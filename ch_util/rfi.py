@@ -56,19 +56,14 @@ bad_frequencies = [
     [None, [694.34, 696.68]],
     [None, [729.88, 745.12]],
     [None, [746.29, 756.45]],
-    
     # 6 MHz band (reported by Simon)
     [None, [505.85, 511.71]],
-    
     # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
     [1633758888, [584.00, 590.00]],
-    
     # UHF TV Channel 35
     [1633758888, [596.00, 602.00]],
-    
     # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
     [1577755022, [617.00, 627.00]],
-    
     # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
     [1564051033, [716.00, 728.00]],
 ]
@@ -127,7 +122,6 @@ def flag_dataset(
 
     # Loop over all products and flag if either inputs auto correlation was flagged
     for pi in range(data.nprod):
-
         ii, ij = data.index_map["prod"][pi]
 
         if ii in auto_ii:
@@ -238,7 +232,6 @@ def number_deviations(
 
     # Loop over extracted autos and create a mask for each
     for ind in range(auto_vis.shape[1]):
-
         flg = static_flag_view & auto_flag_view[:, ind]
         # Gather enire array onto each rank
         arr = auto_vis[:, ind].allgather() if parallel else auto_vis[:, ind]
@@ -403,7 +396,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
 
 def frequency_mask(freq_centre, freq_width=None, timestamp=None):
     """Flag known bad frequencies.
-    
+
     LSD-dependent static RFI flags that affect the recent observations are added.
 
     Parameters
@@ -675,7 +668,6 @@ def mad_cut_rolling(
 
 
 def nanmedian(*args, **kwargs):
-
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
         return np.nanmedian(*args, **kwargs)
@@ -774,7 +766,7 @@ def iterative_hpf_masking(
     niter: int
         Maximum number of iterations.
     timestamp : float
-        Start observing time (in unix time)        
+        Start observing time (in unix time)
 
     Returns
     -------
@@ -812,7 +804,6 @@ def iterative_hpf_masking(
     # Iterate
     itt = 0
     while itt < niter:
-
         # Construct the filter using the current mask
         NF = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
 
@@ -922,7 +913,6 @@ def sir(basemask, eta=0.2, only_freq=False, only_time=False):
     newmask = basemask.astype(bool).copy()
 
     for pp in range(nprod):
-
         if not only_time:
             for tt in range(ntime):
                 newmask[:, pp, tt] |= sir1d(basemask[:, pp, tt], eta=eta)
