@@ -46,6 +46,7 @@ for fname in acq_fname_list:
     with h5py.File(fname, "r") as f:
         NTIME += len(f["vis"])
 
+
 # Tests for high level data reader.
 @pytest.fixture
 def reader():
@@ -175,7 +176,6 @@ def test_properties(corr_data):
 
 
 def test_vis_shortcuts(corr_data):
-
     # More sophisticated base calculation
     def getbase(a):
         b = a.base

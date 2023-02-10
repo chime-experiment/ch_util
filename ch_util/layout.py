@@ -1041,7 +1041,6 @@ class graph(nx.Graph):
         # removing the type marker
         shortest = []
         for start in start_list:
-
             try:
                 path = nx.shortest_path(graph, source=start, target=tn)[:-1]
             except (nx.NetworkXError, nx.NetworkXNoPath):

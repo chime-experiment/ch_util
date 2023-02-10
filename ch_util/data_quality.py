@@ -171,7 +171,6 @@ def good_channels(
 
     # Digital gains test:
     if "gain" in data:
-
         if verbose:
             print("Testing quality of digital gains")
 
@@ -218,7 +217,6 @@ def good_channels(
     # Only run fit test if there are enough good channels
     # and enogh time around Sun transits:
     if np.sum(stand_chans) > 50 and len(cut_tmstp) > 100:
-
         # Getting template visibility (most typical visibility):
         if verbose:
             print("Getting template visibility")

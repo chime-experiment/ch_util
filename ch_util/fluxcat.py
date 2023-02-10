@@ -36,6 +36,7 @@ DEFAULT_COLLECTIONS = [
     os.path.join(DIR_COLLECTIONS, "specfind_v2_5Jy_vollmer2009.json"),
 ]
 
+
 # ==================================================================================
 class FitSpectrum(object, metaclass=ABCMeta):
     """A base class for modeling and fitting spectra.  Any spectral model
@@ -157,13 +158,11 @@ class CurvedPowerLaw(FitSpectrum):
             self.nparam = nparam
 
     def fit(self, freq, flux, eflux, flag=None):
-
         if flag is None:
             flag = np.ones(len(freq), dtype=bool)
 
         # Make sure we have enough measurements
         if np.sum(flag) >= self.nparam:
-
             # Apply flag
             fit_freq = freq[flag]
             fit_flux = flux[flag]
@@ -210,17 +209,14 @@ class CurvedPowerLaw(FitSpectrum):
         return self.param, self.param_cov, self.stats
 
     def _get_x(self, freq):
-
         return np.log(freq / self.freq_pivot)
 
     @staticmethod
     def _vandermonde(x, nparam):
-
         return np.vstack(tuple([x**rank for rank in range(nparam)])).T
 
     @staticmethod
     def _fit_func(x, *param):
-
         return param[0] * np.exp(
             np.sum(
                 [par * x ** (rank + 1) for rank, par in enumerate(param[1:])], axis=0
@@ -229,7 +225,6 @@ class CurvedPowerLaw(FitSpectrum):
 
     @staticmethod
     def _deriv_fit_func(x, *param):
-
         z = param[0] * np.exp(
             np.sum(
                 [par * x ** (rank + 1) for rank, par in enumerate(param[1:])], axis=0
@@ -249,27 +244,21 @@ class MetaFluxCatalog(type):
     """
 
     def __str__(self):
-
         return self.string()
 
     def __iter__(self):
-
         return self.iter()
 
     def __reversed__(self):
-
         return self.reversed()
 
     def __len__(self):
-
         return self.len()
 
     def __getitem__(self, key):
-
         return self.get(key)
 
     def __contains__(self, item):
-
         try:
             obj = self.get(item)
         except KeyError:
@@ -385,7 +374,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         # input name.  If there is, then the behavior is set by the
         # overwrite argument.
         if (overwrite < 2) and (name in FluxCatalog):
-
             # Return existing entry
             print("%s already has an entry in catalog." % name, end=" ")
             if overwrite == 0:
@@ -627,7 +615,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Loop over catalogs/citations
         for ii, cat in enumerate(cat_uniq):
-
             if catalog:
                 pind = np.array([cc == cat for cc in self.catalog])
             else:
@@ -824,7 +811,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Add the measurements
         for meas in self.measurements:
-
             if meas[5] is None:
                 epoch_fmt = "{5:>8s}"
             else:
@@ -1207,7 +1193,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
     @classmethod
     def delete_loaded_collection(cls, cat):
-
         sources_to_delete = cls._collections.pop(cat)
 
         for source_name in sources_to_delete:
@@ -1305,7 +1290,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Loop through dictionary and add each source to the catalog
         for key, value in collection_dict.items():
-
             # Add overwrite keyword
             value["overwrite"] = overwrite
 
@@ -1335,7 +1319,6 @@ def get_epoch(date):
 
 
 def varname(name):
-
     varname = name.replace(" ", "_")
 
     if varname[0].isdigit():
@@ -1345,7 +1328,6 @@ def varname(name):
 
 
 def format_source_name(input_name):
-
     # Address some common naming conventions.
     if input_name.startswith("NAME "):
         # SIMBAD prefixes common source names with 'NAME '.
@@ -1431,7 +1413,6 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
     # Print the sources contained in this collection
     if verbose:
-
         # Seperator
         print("".join(["-"] * len(header)))
 
@@ -1445,7 +1426,6 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 
 def _ensure_list(obj, num=None):
-
     if hasattr(obj, "__iter__") and not isinstance(obj, str):
         nnum = len(obj)
         if (num is not None) and (nnum != num):

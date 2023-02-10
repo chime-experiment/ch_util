@@ -18,14 +18,12 @@ class TestDataIndex(unittest.TestCase):
             raise unittest.SkipTest("Skipping test as couldn't connect to db.")
 
     def test_group_query(self):
-
         sgnames = [sg.name for sg in di.StorageGroup.select()]
 
         self.assertIn("cedar_online", sgnames)
         self.assertLess(3, len(sgnames))  # 3 is an arbitrary low num
 
     def test_acq_type(self):
-
         atnames = [at.name for at in di.AcqType.select()]
 
         self.assertIn("corr", atnames)
@@ -42,7 +40,6 @@ class TestLayout(unittest.TestCase):
             raise unittest.SkipTest("Skipping test as couldn't connect to db.")
 
     def test_component_query(self):
-
         reflectors = [c.sn for c in self.graph.component(type="reflector")]
         self.assertIn("cylinder_A", reflectors)
 

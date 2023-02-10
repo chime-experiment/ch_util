@@ -180,7 +180,6 @@ class TimingCorrection(andata.BaseData):
 
     @classmethod
     def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
-
         # Instantiate an object for each file
         objs = [cls.from_file(d, ondisk=False) for d in acq_files]
 
@@ -500,7 +499,6 @@ class TimingCorrection(andata.BaseData):
                 )
 
         for name, coeff in datasets.items():
-
             spec = DSET_SPEC[name]
             if spec["flag"]:
                 dset = self.create_flag(name, data=coeff[:, reod])
@@ -509,7 +507,6 @@ class TimingCorrection(andata.BaseData):
             dset.attrs["axis"] = np.array(spec["axis"], dtype=np.string_)
 
         if reference_noise_source is not None:
-
             ref_sn_lookup = {
                 sn: ii for ii, sn in enumerate(self.noise_source["correlator_input"][:])
             }
@@ -758,7 +755,6 @@ class TimingCorrection(andata.BaseData):
         flag = self.num_freq[:] > 0 if self.has_num_freq else None
 
         if ignore_amp or (self.amp_to_delay is None) or not self.has_amplitude:
-
             tau_interpolator = TimingInterpolator(
                 self.time[:],
                 self.tau[:],
@@ -771,7 +767,6 @@ class TimingCorrection(andata.BaseData):
             tau, weight = tau_interpolator(timestamp)
 
         else:
-
             logger.info(
                 "Correcting delay template using amplitude template "
                 "with coefficient %0.1f." % self.amp_to_delay
@@ -980,7 +975,6 @@ class TimingCorrection(andata.BaseData):
         input_flags=None,
         reference_noise_source=None,
     ):
-
         stack_index = reverse_stack["stack"][:]
         stack_conj = reverse_stack["conjugate"][:].astype(bool)
 
@@ -1054,7 +1048,6 @@ class TimingCorrection(andata.BaseData):
 
         # Loop over stacked products
         for ss, ssi in enumerate(np.unique(sorted_stack_index)):
-
             # Get the input pairs that went into this stack
             prodo = sorted_prod[boundary[ss] : boundary[ss + 1]]
             aa = prodo["input_a"]
@@ -1145,7 +1138,6 @@ class TimingCorrection(andata.BaseData):
             Uncerainty on the gain expressed as an inverse variance.
         """
         if self.has_coeff_tau:
-
             # Get the delay template for the noise source inputs
             # at the requested times
             tau, wtau = self.get_tau(timestamp, **kwargs)
@@ -1186,7 +1178,6 @@ class TimingCorrection(andata.BaseData):
 
             # Check if we need to correct the delay using the noise source amplitude
             if self.has_amplitude and self.has_coeff_alpha:
-
                 # Get the alpha template for the noise source inputs
                 # at the requested times
                 alpha, walpha = self.get_alpha(timestamp, **kwargs)
@@ -1721,10 +1712,8 @@ class TimingInterpolator(object):
 
         # Loop over other axes and interpolate along last axis
         for ind in np.ndindex(*self._shape):
-
             to_interp = np.flatnonzero(self.flag[ind])
             if to_interp.size > 0:
-
                 yeval[ind], weval[ind] = self._interp(
                     self.x[to_interp],
                     self.y[ind][to_interp],
@@ -2052,7 +2041,6 @@ def construct_delay_template(
 
     # If requested discard frequencies and times that have high frac_lost
     if hasattr(data, "flags") and ("frac_lost" in data.flags):
-
         logger.info("Fraction of data kept must be greater than %0.2f." % min_frac_kept)
 
         frac_kept = 1.0 - data.flags["frac_lost"][:].view(np.ndarray)
@@ -2077,7 +2065,6 @@ def construct_delay_template(
     # decomposition of the cross-correlation matrix to obtain an improved estimate
     # of the response of each input to the noise source signal.
     if nsource > 2:
-
         response = eigen_decomposition(vis, flg)
 
         phi = np.angle(response)
@@ -2086,7 +2073,6 @@ def construct_delay_template(
         ww = flg
 
     else:
-
         phi = np.zeros((nfreq, nsource, ntime), dtype=np.float32)
         phi[:, 1, :] = np.angle(vis[:, 1, :].conj())
 
@@ -2172,7 +2158,6 @@ def construct_delay_template(
 
     # Estimate variance of each frequency from residuals
     for iter_weight in range(max_iter_weight):
-
         msg = ["Iteration %d of %d" % (iter_weight + 1, max_iter_weight)]
 
         dphi = _correct_phase_wrap(phi - static_phi[:, :, np.newaxis])
@@ -2244,7 +2229,6 @@ def construct_delay_template(
     # Calculate the average delay over this period using non-linear
     # least squares that is insensitive to phase wrapping
     if static_phi_fit is None:
-
         err_static_phi = np.sqrt(tools.invert_no_zero(weight_static_phi))
 
         static_phi_fit = np.zeros((nparam, nsource), dtype=np.float64)
@@ -2318,6 +2302,7 @@ def map_input_to_noise_source(inputs, noise_sources):
     noise_sources: np.ndarray[nsource, ] of dtype=('chan_id', 'correlator_input')
         The noise sources.
     """
+
     # Define functions
     def parse_serial(input_serial):
         # Have to distinguish between CHIME WRH and ERH
@@ -2339,7 +2324,6 @@ def map_input_to_noise_source(inputs, noise_sources):
         return name
 
     def count_startswith(x, y):
-
         cnt = 0
         for ii in range(min(len(x), len(y))):
             if x[ii] == y[ii]:
@@ -2529,7 +2513,6 @@ def _flagged_median(data, flag, axis=0, keepdims=False):
 
     med = np.zeros(ieval.shape, dtype=sortdata.dtype)
     for aind, sind in np.ndenumerate(ieval):
-
         find = list(aind)
         find[axis] = sind
 
@@ -2544,7 +2527,6 @@ def _flagged_median(data, flag, axis=0, keepdims=False):
 
 
 def _func_poly_phase(freq, *param):
-
     nreal = len(freq) // 2
 
     x = FREQ_TO_OMEGA * freq[:nreal]
@@ -2561,7 +2543,6 @@ def _correct_phase_wrap(phi):
 
 
 def _weight_propagation_addition(*args):
-
     sum_variance = np.zeros_like(args[0])
     for weight in args:
         sum_variance += tools.invert_no_zero(weight)
@@ -2586,7 +2567,6 @@ def _resolve_distributed(arr, axis=1):
 
 
 def _search_nearest(x, xeval):
-
     index_next = np.searchsorted(x, xeval, side="left")
 
     index_previous = np.maximum(0, index_next - 1)
@@ -2602,7 +2582,6 @@ def _search_nearest(x, xeval):
 
 
 def _interpolation_nearest(x, y, var, xeval):
-
     index = _search_nearest(x, xeval)
 
     yeval = y[index]
@@ -2612,19 +2591,16 @@ def _interpolation_nearest(x, y, var, xeval):
 
 
 def _interpolation_previous(x, y, var, xeval):
-
     index = np.maximum(np.searchsorted(x, xeval, side="right") - 1, 0)
     return y[index], tools.invert_no_zero(var[index])
 
 
 def _interpolation_next(x, y, var, xeval):
-
     index = np.minimum(np.searchsorted(x, xeval, side="left"), x.size - 1)
     return y[index], tools.invert_no_zero(var[index])
 
 
 def _interpolation_linear(x, y, var, xeval):
-
     index = np.searchsorted(x, xeval, side="left")
 
     ind1 = index - 1
@@ -2655,7 +2631,6 @@ def _interpolation_linear(x, y, var, xeval):
 
 def _interpolation_scipy(kind):
     def _interp1d(x, y, var, xeval):
-
         interpolator = scipy.interpolate.interp1d(
             x, y, kind=kind, fill_value="extrapolate"
         )

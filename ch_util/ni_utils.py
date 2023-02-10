@@ -1051,7 +1051,6 @@ def ni_gains_evalues_tf(
     # Loop through the input frequencies and time frames
     for f in range(Nfreqs):
         for t in range(Ntimeframes):
-
             # Create Nchannel x Nchannel matrix of noise-injection-on visibilities
             if weight_by_autos_on:
                 if vis_on_is_input:
