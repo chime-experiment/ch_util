@@ -32,7 +32,7 @@ from typing import Tuple
 import numpy as np
 import scipy.signal as sig
 
-from . import tools
+from . import tools, ephemeris
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -114,7 +114,12 @@ def flag_dataset(
 
     # Apply the frequency cut to the data (add here because we are distributed
     # over products and its easy)
-    freq_mask = frequency_mask(data.freq, timestamp=data.time[0])
+    if "time" in data.index_map:
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+
+    freq_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
 
     # Create an empty mask for the full dataset
@@ -203,11 +208,24 @@ def number_deviations(
     # Extract the auto correlations
     auto_ii, auto_vis, auto_flag = get_autocorrelations(data, stack, normalize)
 
+    # Calculate time interval in samples. If the data has an ra axis instead,
+    # use an estimation of the time per sample
+    if "time" in data.index_map:
+        twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        twidth = int(time_width * len(data.ra[:]) / 86164.0) + 1
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+    else:
+        raise TypeError(
+            f"Expected data type with a `time` or `ra` axis. Got {type(data)}."
+        )
+
     # Create static flag of frequencies that are known to be bad
     static_flag = (
-        ~frequency_mask(data.freq, timestamp=data.time[0])
+        ~frequency_mask(data.freq[:], timestamp=timestamp)
         if apply_static_mask
-        else np.ones(data.nfreq, dtype=bool)
+        else np.ones(len(data.freq[:]), dtype=bool)
     )[:, np.newaxis]
 
     if parallel:
@@ -220,8 +238,6 @@ def number_deviations(
     fwidth = (
         int(freq_width / np.median(np.abs(np.diff(data.freq)))) + 1 if not flag1d else 1
     )
-    # Calculate time interval in samples
-    twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
 
     # Create an empty array for number of median absolute deviations
     ndev = np.zeros_like(auto_vis, dtype=np.float32)
@@ -368,7 +384,12 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     stack_autos_time_ave = np.mean(stack_autos, axis=-1)
 
     # Locations of the generally decent frequency bands
-    drawn_bool_mask = frequency_mask(data.freq, timestamp=data.time[0])
+    if "time" in data.index_map:
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+
+    drawn_bool_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     good_data = np.logical_not(drawn_bool_mask)
 
     # Calculate standard deivation of the average channel
@@ -402,19 +423,18 @@ def frequency_mask(freq_centre, freq_width=None, timestamp=None):
     Parameters
     ----------
     freq_centre : np.ndarray[nfreq]
-        Centre of each frequency channel.
+        Centre of each frequency channel
     freq_width : np.ndarray[nfreq] or float, optional
         Width of each frequency channel. If `None` (default), calculate the
         width from the frequency centre separation.
-    timestamp : float
-        Start observing time (in unix time)
+    timestamp : float, optional
+        UNIX start observing time
 
     Returns
     -------
     mask : np.ndarray[nfreq]
         An array marking the bad frequency channels.
     """
-
     if freq_width is None:
         freq_width = np.abs(np.median(np.diff(freq_centre)))
 
