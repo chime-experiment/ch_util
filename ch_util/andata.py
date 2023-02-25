@@ -165,30 +165,6 @@ class BaseData(tod.TOData):
             out[name] = value.attrs
         return memh5.ro_dict(out)
 
-    @property
-    def reverse_map(self):
-        """Stores the inverse mapping between axes.
-
-        Do not try to add a new index_map by assigning to an item of this
-        property. Use :meth:`~BaseData.create_reverse_map` instead.
-
-        Returns
-        -------
-        index_map : read only dictionary
-            Entries are 1D arrays used to interpret the axes of datasets.
-
-        """
-
-        out = {}
-        try:
-            g = self._data["reverse_map"]
-        except KeyError:
-            g = {}
-
-        for name, value in g.items():
-            out[name] = value[:]
-        return memh5.ro_dict(out)
-
     # - Methods used by base class to control container structure. - #
 
     def dataset_name_allowed(self, name):
