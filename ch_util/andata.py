@@ -224,9 +224,10 @@ class BaseData(tod.TOData):
             time = _timestamp_from_fpga_cpu(
                 self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
             )
-            # Shift from lower edge to centres.
-            time += abs(np.median(np.diff(time)) / 2)
-            return time
+
+            alignment = self.index_attrs["time"].get("alignment", 0)
+
+            return time + alignment * abs(np.median(np.diff(time)) / 2)
 
     @classmethod
     def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
@@ -301,6 +302,9 @@ class BaseData(tod.TOData):
                 out_group=out_group,
                 **kwargs
             )
+
+            # Set an attribute on the time axis specifying alignment
+            data.index_attrs["time"]["alignment"] = 1
 
         finally:
             # Close any files opened in this function.
