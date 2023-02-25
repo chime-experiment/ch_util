@@ -215,17 +215,21 @@ class BaseData(tod.TOData):
 
         if (
             self.index_map["time"].dtype == np.float32
-            # Already a calculated timestamp.
             or self.index_map["time"].dtype == np.float64
         ):
+            # Already a calculated timestamp.
             return self.index_map["time"][:]
 
         else:
             time = _timestamp_from_fpga_cpu(
                 self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
             )
-            # Shift from lower edge to centres.
-            time += abs(np.median(np.diff(time)) / 2)
+
+            alignment = self.index_attrs["time"].get("alignment", 0)
+
+            if alignment != 0:
+                time = time + alignment * abs(np.median(np.diff(time)) / 2)
+
             return time
 
     @classmethod
@@ -301,6 +305,10 @@ class BaseData(tod.TOData):
                 out_group=out_group,
                 **kwargs
             )
+
+            # Set an attribute on the time axis specifying alignment
+            if "time" in data.index_map:
+                data.index_attrs["time"]["alignment"] = 1
 
         finally:
             # Close any files opened in this function.
@@ -840,6 +848,7 @@ class CorrData(BaseData):
 
             # Create index map
             data.create_index_map(name, index_map)
+            memh5.copyattrs(local_data.index_attrs[name], data.index_attrs[name])
 
         # Copy over reverse maps
         for name, reverse_map in local_data.reverse_map.items():
