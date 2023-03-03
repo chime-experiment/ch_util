@@ -771,6 +771,7 @@ class CorrData(BaseData):
             "gain",
             "gain_coeff",
             "frac_lost",
+            "dataset_id",
             "eval",
             "evec",
             "erms",
@@ -789,8 +790,8 @@ class CorrData(BaseData):
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
             else:
+                # Otherwise just copy out the old dataset
                 array = old_dset[:]
 
             # Create the new dataset and copy over attributes
@@ -806,8 +807,8 @@ class CorrData(BaseData):
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
             else:
+                # Otherwise just copy out the old dataset
                 array = old_dset[:]
 
             # Create the new dataset and copy over attributes
