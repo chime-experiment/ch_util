@@ -775,7 +775,10 @@ def get_source_dictionary(*args):
 
 # Common radio point sources
 source_dictionary = get_source_dictionary(
-    "primary_calibrators_perley2016", "specfind_v2_5Jy_vollmer2009", "atnf_psrcat"
+    "primary_calibrators_perley2016",
+    "specfind_v2_5Jy_vollmer2009",
+    "atnf_psrcat",
+    "hfb_target_list",
 )
 
 #: :class:`skyfield.starlib.Star` representing Cassiopeia A.
