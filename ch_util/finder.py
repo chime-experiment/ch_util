@@ -239,7 +239,7 @@ class Finder(object):
     # Constructors and setup
     # ----------------------
 
-    def __init__(self, acqs=(), node_spoof=None):
+    def __init__(self, acqs=(), node_spoof=None, ntries=1):
         import copy
 
         # Which nodes do we have available?
@@ -247,7 +247,7 @@ class Finder(object):
         self._my_node = []
         self._node_spoof = node_spoof
 
-        connect_database()
+        connect_database(ntries=ntries)
 
         if not node_spoof:
             for n in (
