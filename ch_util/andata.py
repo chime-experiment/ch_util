@@ -3126,10 +3126,6 @@ def andata_from_archive2(
             dataset.real = data["r"]
             dataset.imag = data["i"]
 
-        # Convert any string types to unicode. At the moment this should only effect
-        # the dataset_id dataset
-        dataset = memh5.ensure_unicode(dataset)
-
         return dataset
 
     # The actual read, file by file.
