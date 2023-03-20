@@ -362,6 +362,11 @@ class CorrData(BaseData):
         return self.flags["inputs"]
 
     @property
+    def dataset_id(self):
+        """Access dataset id dataset in unicode format."""
+        return memh5.ensure_unicode(self.flags["dataset_id"][:])
+
+    @property
     def nprod(self):
         """Length of the prod axis."""
         return len(self.index_map["prod"])
