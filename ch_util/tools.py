@@ -125,7 +125,6 @@ import datetime
 import numpy as np
 import scipy.linalg as la
 import re
-from typing import Tuple
 
 from caput import pfb
 from caput.interferometry import projected_distance, fringestop_phase
@@ -175,6 +174,7 @@ _LAT_LON = {
     "pathfinder": [49.3202245, -119.6183635],
     "galt_26m": [49.320909, -119.620174],
     "gbo_tone": [38.4292962636, -79.8451625395],
+    "aro_lpda": [45.9558616666666667, -78.072347],
 }
 
 # Classes
@@ -262,6 +262,7 @@ class CorrInput(object):
                         attr.fset(self, input_dict.get(k, None))
 
     def _attribute_strings(self):
+
         prop = [
             (k, getattr(self, k))
             for k in ["id", "crate", "slot", "sma", "corr_order", "delay"]
@@ -274,6 +275,7 @@ class CorrInput(object):
         return kv
 
     def __repr__(self):
+
         kv = self._attribute_strings()
 
         return "%s(%s)" % (self.__class__.__name__, ", ".join(kv))
@@ -390,6 +392,7 @@ class ArrayAntenna(Antenna):
     flag = None
 
     def _attribute_strings(self):
+
         kv = super(ArrayAntenna, self)._attribute_strings()
         if self.pos is not None:
             pos = ", ".join(["%0.2f" % pp for pp in self.pos])
@@ -399,15 +402,18 @@ class ArrayAntenna(Antenna):
     @property
     def pos(self):
         if hasattr(self, "_pos"):
+
             pos = self._pos
 
             if self._rotation:
+
                 t = np.radians(self._rotation)
                 c, s = np.cos(t), np.sin(t)
 
                 pos = [c * pos[0] - s * pos[1], s * pos[0] + c * pos[1], pos[2]]
 
             if any(self._offset):
+
                 pos = [pos[dim] + off for dim, off in enumerate(self._offset)]
 
             return pos
@@ -483,6 +489,13 @@ class TONEAntenna(ArrayAntenna):
     _offset = [0.00, 0.00, 0.00]
     _delay = np.nan
 
+class LPDAAntenna(ArrayAntenna):
+    """LPDA antenna."""
+    
+    _rotation= 0.00
+    _offset = [0.00, 0.00, 0.00]
+    _delay = np.nan
+    
 
 class HolographyAntenna(Antenna):
     """Antenna used for holography.
@@ -506,6 +519,7 @@ class HolographyAntenna(Antenna):
 
 
 def _ensure_graph(graph):
+
     from . import layout
 
     try:
@@ -545,6 +559,7 @@ def _get_feed_position(lay, rfl, foc, cas, slt, slot_factor):
             prop = lay.node_property(node)
 
             for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
+
                 if dim in prop:
                     pos[ind] += float(prop[dim].value)  # in metres
 
@@ -658,6 +673,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
+
         return HolographyAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
@@ -697,6 +713,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # Different conventions for CHIME, PCO, GBO, HCRO, and Pathfinder
     if cyl >= 2 and cyl <= 5:
+
         # Dealing with a CHIME feed
 
         # Determine position
@@ -719,6 +736,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 0 or cyl == 1:
+
         # Dealing with a pathfinder feed
 
         # Determine y_offset
@@ -740,6 +758,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             pos[1] = 20.0 - pos[1]
 
         except:
+
             pos = None
 
         # Try and determine if the FLA is powered or not. Paths without an
@@ -747,6 +766,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         pwd = True
 
         if rft is not None:
+
             rft_prop = lay.node_property(rft)
 
             if "powered" in rft_prop:
@@ -769,6 +789,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 6:
+
         # Dealing with an PCO feed
 
         # Determine position
@@ -791,6 +812,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 7:
+
         # Dealing with a GBO feed
 
         # Determine position
@@ -813,6 +835,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 8:
+
         # Dealing with a HCRO feed
 
         # Determine position
@@ -1077,6 +1100,7 @@ def hk_to_sensor(graph, inp):
 
 # Parse a serial number into crate, slot, and sma number
 def parse_chime_serial(sn):
+
     mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1092,6 +1116,7 @@ def parse_chime_serial(sn):
 
 
 def parse_pathfinder_serial(sn):
+
     mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1107,6 +1132,7 @@ def parse_pathfinder_serial(sn):
 
 
 def parse_old_serial(sn):
+
     mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
@@ -1230,79 +1256,6 @@ def serial_to_location(serial):
     return default
 
 
-def get_default_frequency_map_stream() -> Tuple[np.ndarray]:
-    """Get the default CHIME frequency map stream.
-
-    Level order is [shuffle, crate, slot, link].
-
-    Returns
-    -------
-    stream
-        [shuffle, crate, slot, link] for each frequency bin
-    stream_id
-        stream_id for each map combination
-        shuffle*2**12 + crate*2**8 + slot*2**4 + link
-    """
-    stream = np.empty((1024, 4), dtype=np.int32)
-
-    # shuffle
-    stream[:, 0] = 3
-    # crate
-    stream[:, 1] = np.tile(np.arange(2).repeat(16), 32)
-    # slot
-    stream[:, 2] = np.tile(np.arange(16), 64)
-    # link
-    stream[:, 3] = np.tile(np.arange(8).repeat(32), 4)
-
-    stream_id = (
-        stream[:, 0] * 2**12
-        + stream[:, 1] * 2**12
-        + stream[:, 2] * 2**4
-        + stream[:, 3]
-    ).astype(np.int64)
-
-    return stream, stream_id
-
-
-def order_frequency_map_stream(fmap: np.ndarray, stream_id: np.ndarray) -> np.ndarray:
-    """Order stream_id components based on a frequency map.
-
-    Level order is [shuffle, crate, slot, link]
-
-    Parameters
-    ----------
-    fmap
-        frequency map
-    stream_id
-        1-D array of stream_ids associated with each row in fmap
-
-    Returns
-    -------
-    stream
-        shuffle, crate, slot, link for each frequency
-    """
-
-    def decode_stream_id(sid: int) -> Tuple[int]:
-        link = sid & 15
-        slot = (sid >> 4) & 15
-        crate = (sid >> 8) & 15
-        shuffle = (sid >> 12) & 15
-
-        return (shuffle, crate, slot, link)
-
-    decoded_stream = [decode_stream_id(i) for i in stream_id[:]]
-    x = [[] for _ in range(len(stream_id))]
-
-    for ii, freqs in enumerate(fmap):
-        for f in freqs:
-            x[f].append(decoded_stream[ii])
-
-    # TODO: maybe implement some checks here
-    stream = np.array([i[0] for i in x], dtype=np.int32)
-
-    return stream
-
-
 def get_correlator_inputs(lay_time, correlator=None, connect=True):
     """Get the information for all channels in a layout.
 
@@ -1358,6 +1311,11 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             connect = False
             laytime = 0
             return fake_tone_database()
+        elif correlator.lower() == "lpda":
+            correlator = "lpda"
+            connect = False
+            laytime = 0
+            return fake_lpda_database()
 
     if not connect_this_rank():
         return None
@@ -1526,6 +1484,36 @@ def get_feed_positions(feeds, get_zpos=False):
 
     return pos
 
+
+def fake_lpda_database():
+    
+    x_pos = [0.46786903962492943, 0.33419222675729543, 0.2005153950303793, 0.06683854490984231, -0.06683832360431552, -0.20051521039567888, -0.33419211581349373, -0.46786903962492943]
+    y_pos = [-2.2148991022258997, -1.5820710500702262, -0.9492429094389081, -0.316414681263268, 0.31641363352537155,
+ 0.9492420358583331, 1.5820705257356167, 2.2148991022258997]
+    z_pos = [-2.189474929124117, -1.56391039211303, -0.9383459463715553, -0.31278159003704786, 0.31278267595916986,
+ 0.9383468506857753, 1.563910935074091, 2.189474929124117]
+    
+    inputs = []
+    for id in range(len(x_pos)):
+        inputs.append(
+            LPDAAntenna(
+                id=id,
+                crate=0,
+                slot=0,
+                sma=0,
+                corr_order=0,
+                input_sn=f"LPDA{id:04}",
+                corr="lpda",
+                reflector=None,
+                antenna=f"ANT{id:04}",
+                rf_thru="N/A",
+                cyl=0,
+                pol='S',
+                flag=True,
+                pos=[x_pos[id], y_pos[id], z_pos[id]],
+            )
+        )
+    return inputs
 
 def fake_tone_database():
     positions_and_polarizations = [
@@ -1800,7 +1788,7 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
     stack_new : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
         The updated `stack` index map, where each element is an index to a product
         consisting of a pair of array antennas.
-    stack_flag : np.ndarray[nstack,] of dtype=bool
+    stack_flag : np.ndarray[nstack,] of dtype=np.bool
         Boolean flag that is True if this element of the stack index map is now valid,
         and False if none of the baselines that were stacked contained array antennas.
     """
@@ -1812,6 +1800,7 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
 
     bad_stack_index = np.flatnonzero(~stack_flag)
     for ind in bad_stack_index:
+
         this_stack = np.flatnonzero(reverse_stack["stack"] == ind)
         for ts in this_stack:
             tp = prod[ts]
@@ -1918,6 +1907,7 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
     # Use a python loop, but should be fast if other axes are large
     for ii, fi in enumerate(feeds):
         for ij, fj in enumerate(feeds):
+
             pi = cmap(fi, fj, nfeed)
 
             if fi <= fj:
@@ -1965,6 +1955,7 @@ def pack_product_array(exp_arr, axis=1):
 
     # Iterate over products and copy from correct location of expanded array
     for pi in range(nprod):
+
         fi, fj = icmap(pi, nfeed)
 
         prod_arr[slice0 + (pi,) + slice1] = exp_arr[slice0 + (fi, fj) + slice1]
@@ -1989,7 +1980,7 @@ def fast_pack_product_array(arr):
     nfeed = arr.shape[0]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float64)
+    ret = np.zeros(nprod, dtype=np.float)
     iout = 0
 
     for i in range(nfeed):
@@ -2135,6 +2126,7 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set gains
     for pp in range(nprod):
+
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
@@ -2199,6 +2191,7 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set signals
     for pp in range(nprod):
+
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
