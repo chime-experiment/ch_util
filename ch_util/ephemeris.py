@@ -195,7 +195,7 @@ hco = Observer(
 lpda = Observer(
     lon=LPDALONGITUDE,
     lat=LPDALATITUDE,
-    alt=HCOALTITUDE,
+    alt=LPDAALTITUDE,
     lsd_start=datetime(2013,11,15),
 )
 
