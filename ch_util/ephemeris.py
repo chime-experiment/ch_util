@@ -146,9 +146,9 @@ TONELONGITUDE = -79.8451625395
 TONEALTITUDE = 810.000
 
 # Calvin used a rough position for Princeton outrigger. These coordinates are derived from direct measurements taken by Jane K and Mattias L: https://docs.google.com/document/d/1OUcBVsaA8XREs-NQtBbEG_MOHQgX-dKU0K00G-3_PCk/edit# to be replaced with Doclib document when we have better absolute positions.
-PCOLATITUDE = 49.41905
-PCOLONGITUDE = -120.5253
-PCOALTITUDE = 835
+PCOLATITUDE = 49.419005
+PCOLONGITUDE = -120.524913
+PCOALTITUDE = 803.600
 
 GBOLATITUDE = 38.436122  # These rough positions are not centered on the focal line. They are at what I believe is the "CONCRETE VAULT WITH METAL LID" in the GBO Cylinder survey."
 GBOLONGITUDE = (
