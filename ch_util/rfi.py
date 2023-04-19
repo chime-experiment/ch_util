@@ -41,31 +41,31 @@ logger.addHandler(logging.NullHandler())
 
 # Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
-bad_frequencies = [
+BAD_FREQUENCIES = [
     # Bad bands at first light
-    [None, [449.41, 450.98]],
-    [None, [454.88, 456.05]],
-    [None, [457.62, 459.18]],
-    [None, [483.01, 485.35]],
-    [None, [487.70, 494.34]],
-    [None, [497.85, 506.05]],
-    [None, [529.10, 536.52]],
-    [None, [541.60, 554.49]],
-    [None, [564.65, 585.35]],
-    [None, [693.16, 693.55]],
-    [None, [694.34, 696.68]],
-    [None, [729.88, 745.12]],
-    [None, [746.29, 756.45]],
+    [[None, None], [449.41, 450.98]],
+    [[None, None], [454.88, 456.05]],
+    [[None, None], [457.62, 459.18]],
+    [[None, None], [483.01, 485.35]],
+    [[None, None], [487.70, 494.34]],
+    [[None, None], [497.85, 506.05]],
+    [[None, None], [529.10, 536.52]],
+    [[None, None], [541.60, 554.49]],
+    [[None, None], [564.65, 585.35]],
+    [[None, None], [693.16, 693.55]],
+    [[None, None], [694.34, 696.68]],
+    [[None, None], [729.88, 745.12]],
+    [[None, None], [746.29, 756.45]],
     # 6 MHz band (reported by Simon)
-    [None, [505.85, 511.71]],
+    [[None, None], [505.85, 511.71]],
     # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
-    [1633758888, [584.00, 590.00]],
+    [[1633758888, None], [584.00, 590.00]],
     # UHF TV Channel 35
-    [1633758888, [596.00, 602.00]],
+    [[1633758888, None], [596.00, 602.00]],
     # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
-    [1577755022, [617.00, 627.00]],
+    [[1577755022, None], [617.00, 627.00]],
     # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
-    [1564051033, [716.00, 728.00]],
+    [[1564051033, None], [716.00, 728.00]],
 ]
 
 
@@ -445,10 +445,18 @@ def frequency_mask(freq_centre, freq_width=None, timestamp=None):
 
     # Time-dependent static RFI flagging
 
-    for start_time, (fs, fe) in bad_frequencies:
-        if start_time is None or timestamp >= start_time:
-            tm = np.logical_and(freq_end > fs, freq_start < fe)
-            mask = np.logical_or(mask, tm)
+    for (start_time, end_time), (fs, fe) in BAD_FREQUENCIES:
+        # If we have a start time and the timestamp occurs before,
+        # do not mask
+        if start_time is not None and timestamp <= start_time:
+            continue
+        # If we have an end time and the timestamp occurs after,
+        # do not mask
+        if end_time is not None and timestamp >= end_time:
+            continue
+
+        # Mask frequencies specified in this band
+        mask |= (freq_end > fs) & (freq_start < fe)
 
     return mask
 
