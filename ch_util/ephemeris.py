@@ -1,5 +1,4 @@
-"""
-Ephemeris routines
+"""Ephemeris routines.
 
 The precession of the Earth's axis gives noticeable shifts in object
 positions over the life time of CHIME. To minimise the effects of this we
@@ -100,28 +99,17 @@ Miscellaneous Utilities
 """
 
 from datetime import datetime
-from numpy.core.multiarray import unravel_index
-
-# NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data
-import skyfield.api
 
 import numpy as np
 
+# NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data
+import skyfield.api
 from caput.time import (
-    unix_to_datetime,
-    datetime_to_unix,
-    datetime_to_timestr,
-    timestr_to_datetime,
-    leap_seconds_between,
-    time_of_day,
     Observer,
-    unix_to_skyfield_time,
-    skyfield_time_to_unix,
+    datetime_to_unix,
     skyfield_star_from_ra_dec,
     skyfield_wrapper,
-    ensure_unix,
-    SIDEREAL_S,
-    STELLAR_S,
+    unix_to_skyfield_time,
 )
 
 # Calvin derived the horizontal position of the center of the focal lines...
@@ -206,7 +194,7 @@ def galt_pointing_model_ha(
 ):
     """Calculate pointing correction in hour angle for the Galt Telescope
     See description of the pointing model by Lewis Knee CHIME document library
-    754 https://bao.chimenet.ca/doc/documents/754
+    754 https://bao.chimenet.ca/doc/documents/754.
 
     Parameters
     ----------
@@ -224,7 +212,6 @@ def galt_pointing_model_ha(
     Skyfield Angle object
         Angular offset in hour angle
     """
-
     from skyfield.positionlib import Angle
 
     ha = ha_in.radians
@@ -249,7 +236,7 @@ def galt_pointing_model_dec(
 ):
     """Calculate pointing correction in declination for the Galt Telescope
     See description of the pointing model by Lewis Knee CHIME document library
-    754 https://bao.chimenet.ca/doc/documents/754
+    754 https://bao.chimenet.ca/doc/documents/754.
 
     Parameters
     ----------
@@ -267,7 +254,6 @@ def galt_pointing_model_dec(
     Skyfield Angle object
         Angular offset in hour angle
     """
-
     from skyfield.positionlib import Angle
 
     ha = ha_in.radians
@@ -300,13 +286,13 @@ def parse_date(datestring):
     date : datetime
         A python datetime object in UTC.
     """
-    from datetime import datetime, timedelta
     import re
+    from datetime import datetime, timedelta
 
     rm = re.match("([0-9]{8})-([A-Z]{3})", datestring)
     if rm is None:
         msg = (
-            "Wrong format for datestring: {0}.".format(datestring)
+            f"Wrong format for datestring: {datestring}."
             + "\nShould be YYYYMMDD-AAA, "
             + "where AAA is one of [UTC,PST,PDT]"
         )
@@ -322,16 +308,16 @@ def parse_date(datestring):
         try:
             tzoffset = tzs[tz.upper()]
         except KeyError:
-            print("Time zone {} not known. Known time zones:".format(tz))
+            print(f"Time zone {tz} not known. Known time zones:")
             for key, value in tzs.items():
                 print(key, value)
-            print("Using UTC{:+.1f}.".format(tzoffset))
+            print(f"Using UTC{tzoffset:+.1f}.")
 
     return datetime.strptime(datestring, "%Y%m%d") - timedelta(hours=tzoffset)
 
 
 def utc_lst_to_mjd(datestring, lst, obs=chime):
-    """Convert datetime string and LST to corresponding modified Julian Day
+    """Convert datetime string and LST to corresponding modified Julian Day.
 
     Parameters
     ----------
@@ -355,12 +341,10 @@ def utc_lst_to_mjd(datestring, lst, obs=chime):
 
 
 def sphdist(long1, lat1, long2, lat2):
-    """
-    Return the angular distance between two coordinates.
+    """Return the angular distance between two coordinates.
 
     Parameters
     ----------
-
     long1, lat1 : Skyfield Angle objects
         longitude and latitude of the first coordinate. Each should be the
         same length; can be one or longer.
@@ -407,7 +391,6 @@ def solar_transit(start_time, end_time=None, obs=chime):
         Array of transit times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     return obs.transit_times(sun, start_time, end_time)
@@ -430,7 +413,6 @@ def lunar_transit(start_time, end_time=None, obs=chime):
         Array of transit times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     return obs.transit_times(moon, start_time, end_time)
@@ -471,7 +453,6 @@ def chime_local_datetime(*args):
         Timezone naive date and time but converted to UTC.
 
     """
-
     from pytz import timezone
 
     tz = timezone("Canada/Pacific")
@@ -500,7 +481,6 @@ def solar_setting(start_time, end_time=None, obs=chime):
         Array of setting times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
@@ -524,7 +504,6 @@ def lunar_setting(start_time, end_time=None, obs=chime):
         Array of setting times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
@@ -548,7 +527,6 @@ def solar_rising(start_time, end_time=None, obs=chime):
         Array of rising times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     sun = planets["sun"]
     # Use 0.6 degrees for the angular diameter of the Sun to be conservative:
@@ -572,7 +550,6 @@ def lunar_rising(start_time, end_time=None, obs=chime):
         Array of rising times (in UNIX time).
 
     """
-
     planets = skyfield_wrapper.ephemeris
     moon = planets["moon"]
     # Use 0.6 degrees for the angular diameter of the Moon to be conservative:
@@ -589,7 +566,7 @@ def _is_skyfield_obj(body):
 
 def Star_cirs(ra, dec, epoch):
     """Wrapper for skyfield.api.star that creates a position given CIRS
-    coordinates observed from CHIME
+    coordinates observed from CHIME.
 
     Parameters
     ----------
@@ -603,7 +580,6 @@ def Star_cirs(ra, dec, epoch):
     body : skyfield.api.Star
         Star object in ICRS coordinates
     """
-
     from skyfield.api import Star
 
     return cirs_radec(Star(ra=ra, dec=dec, epoch=epoch))
@@ -611,7 +587,7 @@ def Star_cirs(ra, dec, epoch):
 
 def cirs_radec(body, date=None, deg=False, obs=chime):
     """Converts a Skyfield body in CIRS coordinates at a given epoch to
-    ICRS coordinates observed from CHIME
+    ICRS coordinates observed from CHIME.
 
     Parameters
     ----------
@@ -623,9 +599,8 @@ def cirs_radec(body, date=None, deg=False, obs=chime):
     new_body : skyfield.api.Star
         Skyfield Star object with positions in ICRS coordinates
     """
-
-    from skyfield.positionlib import Angle
     from skyfield.api import Star
+    from skyfield.positionlib import Angle
 
     ts = skyfield_wrapper.timescale
 
@@ -672,7 +647,6 @@ def object_coords(body, date=None, deg=False, obs=chime):
     ra, dec: float
         Position of the source.
     """
-
     if date is None:  # No date, get ICRS coords
         if isinstance(body, skyfield.starlib.Star):
             ra, dec = body.ra.radians, body.dec.radians
@@ -720,7 +694,6 @@ def peak_RA(body, date=None, deg=False):
     peak_ra : float
         RA when the transiting source peaks.
     """
-
     _PF_ROT = np.radians(1.986)  # Pathfinder rotation from north.
     _PF_LAT = np.radians(CHIMELATITUDE)  # Latitude of pathfinder
 
@@ -757,9 +730,8 @@ def get_source_dictionary(*args):
         Format is {'SOURCE_NAME': :class:`skyfield.starlib.Star`, ...}
 
     """
-
-    import os
     import json
+    import os
 
     src_dict = {}
     for catalog_name in reversed(args):
@@ -769,7 +741,7 @@ def get_source_dictionary(*args):
             os.path.splitext(catalog_name)[0] + ".json",
         )
 
-        with open(path_to_catalog, "r") as handler:
+        with open(path_to_catalog) as handler:
             catalog = json.load(handler)
 
         for name, info in catalog.items():

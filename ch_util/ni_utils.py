@@ -1,14 +1,12 @@
-"""Tools for noise injection data"""
+"""Tools for noise injection data."""
+
+import datetime
+import warnings
 
 import numpy as np
-import os
-import datetime
+from caput import memh5, mpiarray
 from numpy import linalg as LA
 from scipy import linalg as sciLA
-import warnings
-import copy
-from caput import memh5
-from caput import mpiarray
 
 from . import andata
 
@@ -69,7 +67,6 @@ def process_synced_data(data, ni_params=None, only_off=False):
     - For the time index map, only one timestamp per noise period is kept
     (no averaging)
     """
-
     if ni_params is None:
         # ctime before which the noise injection information is not in the
         # headers so this function cannot be used to determine the noise
@@ -222,10 +219,10 @@ def process_synced_data(data, ni_params=None, only_off=False):
 
                 # Add noise source dataset
                 gate_dset = newdata.create_dataset(
-                    "gated_vis{0}".format(i + 1), data=vis_noise, distributed=dist
+                    f"gated_vis{i + 1}", data=vis_noise, distributed=dist
                 )
                 gate_dset.attrs["axis"] = np.array(
-                    ["freq", "prod", "gated_time{0}".format(i + 1)]
+                    ["freq", "prod", f"gated_time{i + 1}"]
                 )
                 gate_dset.attrs["folding_period"] = folding_period
                 gate_dset.attrs["folding_start"] = folding_start
@@ -240,8 +237,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
 
 
 def _find_ni_params(data, verbose=0):
-    """
-    Finds the noise injection gating parameters.
+    """Finds the noise injection gating parameters.
 
     Parameters
     ----------
@@ -284,7 +280,6 @@ def _find_ni_params(data, verbose=0):
     Use the value of ni_params recommended above to reproduce the
     results of the old function with the main old datasets.
     """
-
     # ctime before which the noise injection information is not in the headers
     # so this function cannot be used to determine the noise injection
     # parameters.
@@ -446,8 +441,7 @@ def _find_ni_params(data, verbose=0):
 
 
 def process_gated_data(data, only_off=False):
-    """
-    Processes fast gating data and turns it into gated form.
+    """Processes fast gating data and turns it into gated form.
 
     Parameters
     ----------
@@ -555,13 +549,13 @@ def process_gated_data(data, only_off=False):
     return newdata
 
 
-class ni_data(object):
+class ni_data:
     """Provides analysis utilities for CHIME noise injection data.
 
     This is just a wrapper for all the utilities created in this module.
 
     Parameters
-    -----------
+    ----------
     Reader_read_obj : andata.Reader.read() like object
         Contains noise injection data. Must have 'vis' and 'timestamp' property.
         Assumed to contain all the Nadc_channels*(Nadc_channels+1)/2 correlation
@@ -587,17 +581,16 @@ class ni_data(object):
 
     def __init__(self, Reader_read_obj, Nadc_channels, adc_ch_ref=None, fbin_ref=None):
         """Processes raw noise injection data so it is ready to compute gains."""
-
         self.adc_channels = np.arange(Nadc_channels)
         self.Nadc_channels = Nadc_channels
         self.raw_vis = Reader_read_obj.vis
         self.Nfreqs = np.size(self.raw_vis, 0)  # Number of frequencies
-        if adc_ch_ref != None:
+        if adc_ch_ref is not None:
             self.adc_ch_ref = adc_ch_ref
         else:
             self.adc_ch_ref = self.adc_channels[0]  # Default reference channel
 
-        if fbin_ref != None:
+        if fbin_ref is not None:
             self.fbin_ref = fbin_ref
         else:  # Default reference frequency bin (rather arbitrary)
             self.fbin_ref = self.Nfreqs // 3
@@ -614,11 +607,10 @@ class ni_data(object):
         """Removes sky and system noise contributions from noise injection
         visibility data.
 
-        See also
+        See Also
         --------
         subtract_sky_noise function
         """
-
         ni_dict = subtract_sky_noise(
             self.raw_vis,
             self.Nadc_channels,
@@ -639,7 +631,7 @@ class ni_data(object):
     def get_ni_gains(self, normalize_vis=False, masked_channels=None):
         """Computes gains and evalues from noise injection visibility data.
 
-        See also
+        See Also
         --------
         ni_gains_evalues_tf
 
@@ -648,9 +640,8 @@ class ni_data(object):
         masked_channels : list of integers
             channels which are not considered in the calculation of the gains.
         """
-
         self.channels = np.arange(self.Nadc_channels)
-        if masked_channels != None:
+        if masked_channels is not None:
             self.channels = np.delete(self.channels, masked_channels)
 
         self.Nchannels = len(self.channels)
@@ -662,14 +653,12 @@ class ni_data(object):
 
     def get_als_gains(self):
         """Compute gains, sky and system noise covariance matrices from a
-        combination of noise injection gains and point source gains
+        combination of noise injection gains and point source gains.
         """
-
         pass
 
     def save(self):
-        """Save gain solutions"""
-
+        """Save gain solutions."""
         pass
 
 
@@ -693,7 +682,6 @@ def gen_prod_sel(channels_to_select, total_N_channels):
         indices of correlation products for channels in channels_to_select
 
     """
-
     prod_sel = []
     k = 0
     for i in range(total_N_channels):
@@ -723,19 +711,17 @@ def mat2utvec(A):
     if A is a 3x3 matrix then the output vector is
     outvector = [A00, A01, A02, A11, A12, A22]
 
-    See also
+    See Also
     --------
     utvec2mat
     """
-
     iu = np.triu_indices(np.size(A, 0))  # Indices for upper triangle of A
 
     return A[iu]
 
 
 def utvec2mat(n, utvec):
-    """
-    Recovers a hermitian matrix a from its upper triangle vectorized version.
+    """Recovers a hermitian matrix a from its upper triangle vectorized version.
 
     Parameters
     ----------
@@ -749,7 +735,6 @@ def utvec2mat(n, utvec):
     A : 2d array
         hermitian matrix
     """
-
     iu = np.triu_indices(n)
     A = np.zeros((n, n), dtype=np.complex128)
     A[iu] = utvec  # Filling uppper triangle of A
@@ -821,11 +806,10 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
     err : 1d array
         Error function for every step
 
-    See also
+    See Also
     --------
     http://bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf
     """
-
     g = g0.copy()
     G = np.diag(g)
     Nchannels = np.size(R, 0)  # Number of receiver channels
@@ -907,7 +891,7 @@ def ni_als(R, g0, Gamma, Upsilon, maxsteps, abs_tol, rel_tol, weighted_als=True)
 
 
 def sort_evalues_mag(evalues):
-    """Sorts eigenvalue array by magnitude for all frequencies and time frames
+    """Sorts eigenvalue array by magnitude for all frequencies and time frames.
 
     Parameters
     ----------
@@ -919,7 +903,6 @@ def sort_evalues_mag(evalues):
     ev : 3d array
         Array of same shape as evalues
     """
-
     ev = np.zeros(evalues.shape, dtype=float)
     for f in range(np.size(ev, 0)):
         for t in range(np.size(ev, 2)):
@@ -955,11 +938,10 @@ def ni_gains_evalues(C, normalize_vis=False):
     ev : 1d array
         Noise injection eigenvalues
 
-    See also
+    See Also
     --------
     ni_gains_evalues_tf, subtract_sky_noise
     """
-
     Nchannels = np.size(C, 0)  # Number of receiver channels
     if normalize_vis:  # Convert to correlation coefficient matrix
         W = np.diag(1 / np.sqrt(np.diag(C).real))
@@ -1022,20 +1004,18 @@ def ni_gains_evalues_tf(
     ------------
     tools.normalise_correlations, tools.eigh_no_diagonal
 
-    See also
+    See Also
     --------
     ni_gains_evalues, subtract_sky_noise
     """
-
-    from .tools import normalise_correlations
-    from .tools import eigh_no_diagonal
+    from .tools import eigh_no_diagonal, normalise_correlations
 
     # Determine the number of frequencies and time frames
     Nfreqs = np.size(vis_gated, 0)
     Ntimeframes = np.size(vis_gated, 2)
 
     # Create NaN matrices to hold the gains and eigenvalues
-    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.complex) * (
+    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=complex) * (
         np.nan + 1j * np.nan
     )
     evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float64) * np.nan
@@ -1159,7 +1139,6 @@ def subtract_sky_noise(vis, Nchannels, timestamp, adc_ch_ref, fbin_ref):
         correlation index corresponding to the autocorrelation of the reference
         channel
     """
-
     # Find correlation product of autocorrelation of ref channel in read data
     # Indices of autocorrelations for selected channels
     cor_prod_auto = [k * Nchannels - (k * (k - 1)) // 2 for k in range(Nchannels)]
@@ -1274,16 +1253,15 @@ def gains2utvec_tf(gains):
     >>> G_ut = ni.gains2utvec(nidata.ni_gains)
     >>> corrected_vis = nidata.vis_off_dec/G_ut
 
-    See also
+    See Also
     --------
     gains2utvec, ni_gains_evalues_tf
     """
-
     Nfreqs = np.size(gains, 0)  # Number of frequencies
     Ntimeframes = np.size(gains, 2)  # Number of time frames
     Nchannels = np.size(gains, 1)
     Ncorrprods = Nchannels * (Nchannels + 1) // 2  # Number of correlation products
-    G_ut = np.zeros((Nfreqs, Ncorrprods, Ntimeframes), dtype=np.complex)
+    G_ut = np.zeros((Nfreqs, Ncorrprods, Ntimeframes), dtype=complex)
 
     for f in range(Nfreqs):
         for t in range(Ntimeframes):
@@ -1305,7 +1283,6 @@ def gains2utvec(g):
     -------
     1d array with vectorized form of upper triangle for the outer product of g
     """
-
     n = len(g)
     G = np.dot(g.reshape(n, 1), g.conj().reshape(1, n))
     return mat2utvec(G)

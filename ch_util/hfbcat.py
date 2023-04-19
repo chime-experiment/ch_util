@@ -1,6 +1,4 @@
-"""
-Catalog of HFB test targets
-"""
+"""Catalog of HFB test targets."""
 
 import os
 
@@ -13,8 +11,7 @@ HFB_COLLECTION = os.path.join(
 
 
 class HFBCatalog(FluxCatalog):
-    """
-    Class for cataloguing HFB targets.
+    """Class for cataloguing HFB targets.
 
     Attributes
     ----------
@@ -39,8 +36,7 @@ class HFBCatalog(FluxCatalog):
         freq_abs=[],
         overwrite=0,
     ):
-        """
-        Instantiate an HFBCatalog object for an HFB target.
+        """Instantiate an HFBCatalog object for an HFB target.
 
         Parameters
         ----------
@@ -67,7 +63,6 @@ class HFBCatalog(FluxCatalog):
             Default is 0.
             BUG: Currently, `freq_abs` is always overwritten.
         """
-
         super().__init__(
             name,
             ra=ra,

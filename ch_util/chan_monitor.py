@@ -1,8 +1,10 @@
-"""Channel quality monitor routines"""
+"""Channel quality monitor routines."""
+
+import copy
 
 import numpy as np
-import copy
 from chimedb import data_index
+
 from ch_util import ephemeris, finder
 
 # Corrections to transit times due to 2deg rotation of cylinders:
@@ -20,7 +22,7 @@ _DEFAULT_NODE_SPOOF = {"scinet_online": "/scratch/k/krs/jrs65/chime/archive/onli
 # _DEFAULT_NODE_SPOOF = {'gong': '/mnt/gong/archive'} # For tests on Marimba
 
 
-class FeedLocator(object):
+class FeedLocator:
     """This class contains functions that do all the computations to
     determine feed positions from data. It also determines the quality
     of data and returns a list of good inputs and frequencies.
@@ -56,7 +58,7 @@ class FeedLocator(object):
         pstns0,
         bsipts=None,
     ):
-        """Basic initialization method"""
+        """Basic initialization method."""
         self.adj_freqs = False  # frequencies adjacent in data? (used for some tests)
         self.VERBOSE = False
         self.PATH = True  # True if Pathfinder, False if CHIME
@@ -227,7 +229,6 @@ class FeedLocator(object):
         for ii in range(Nmax):
             yslp, a = yparams(fr, yslp)
             a_incr = abs(a - a_prev) / (abs(a + a_prev) * 0.5)
-            pass_y = a_incr < 1e-2
             if a_incr.all():
                 break
             else:
@@ -252,9 +253,8 @@ class FeedLocator(object):
 
     def get_c_ydist_perfreq(self, ph1=None, ph2=None):
         """Old N-S dists function. TO be used only in case a continuum of
-        frequencies is not available
+        frequencies is not available.
         """
-
         if ph1 is None:
             ph1 = self.ph1
         if ph2 is None:
@@ -312,7 +312,7 @@ class FeedLocator(object):
         """Extract relevant parameters from source transit
             visibility in two steps:
                 1) FFT visibility
-                2) Fit a gaussian to the transform
+                2) Fit a gaussian to the transform.
 
         Parameters
         ----------
@@ -338,7 +338,6 @@ class FeedLocator(object):
         from scipy.optimize import curve_fit
 
         freqs = self.freqs
-        prods = self.prods
 
         # Gaussian function for fit:
         def gaus(x, A, mu, sig2):
@@ -418,7 +417,7 @@ class FeedLocator(object):
     # TODO: change all occurences of 'get_xdist' to 'xdists'
     # to make it more consistent
     def get_xdist(self, ft_prms, dec):
-        """E-W"""
+        """E-W."""
         xdists = (
             -ft_prms[..., 1]
             * SD
@@ -519,7 +518,7 @@ class FeedLocator(object):
         return self.c_xdists1, self.c_xdists2, self.c_ydists
 
     def set_good_ipts(self, base_ipts):
-        """Good_prods to good_ipts"""
+        """Good_prods to good_ipts."""
         inp_list = [inpt for inpt in self.inputs]  # Full input list
         self.good_ipts = np.zeros(self.inputs.shape, dtype=bool)
         for ii, inprd in enumerate(self.inprds):
@@ -579,7 +578,7 @@ class FeedLocator(object):
         def get_centre(xdists, tol):
             """Returns the median (across frequencies) of NS separation dists for each
             baseline if this median is withing *tol* of a multiple of 22 meters. Else,
-            returns the multiple of 22 meters closest to this median (up to 3*22=66 meters)
+            returns the multiple of 22 meters closest to this median (up to 3*22=66 meters).
             """
             xmeds = np.nanmedian(xdists, axis=0)
             cylseps = np.arange(-1, 2) * 22.0 if self.PATH else np.arange(-3, 4) * 22.0
@@ -636,7 +635,6 @@ class FeedLocator(object):
         """Tries to determine overall bad products and overall bad frequencies
         from a test_pass result.
         """
-
         # First iteration:
         chans_score = np.sum(pass_rst, axis=0) / float(pass_rst.shape[0])
         freqs_score = np.sum(pass_rst, axis=1) / float(pass_rst.shape[1])
@@ -653,7 +651,7 @@ class FeedLocator(object):
         return good_chans, good_freqs
 
 
-class ChanMonitor(object):
+class ChanMonitor:
     """This class provides the user interface to FeedLocator.
 
     It initializes instances of FeedLocator (normally one per polarization)
@@ -684,7 +682,7 @@ class ChanMonitor(object):
         bsep1=154,
         bsep2=218,
     ):
-        """Here t1 and t2 have to be unix time (floats)"""
+        """Here t1 and t2 have to be unix time (floats)."""
         self.t1 = t1
         if t2 is None:
             self.t2 = self.t1 + SD
@@ -736,7 +734,7 @@ class ChanMonitor(object):
         bsep1=154,
         bsep2=218,
     ):
-        """Initialize class from date"""
+        """Initialize class from date."""
         t1 = ephemeris.datetime_to_unix(date)
         return cls(
             t1,
@@ -753,7 +751,7 @@ class ChanMonitor(object):
     # or not allow for that possibility.
     @classmethod
     def fromdata(cls, data, freq_sel=None, prod_sel=None):
-        """Initialize class from andata object"""
+        """Initialize class from andata object."""
         t1 = data.time[0]
         t2 = data.time[-1]
         return cls(t1, t2, freq_sel=freq_sel, prod_sel=prod_sel)
@@ -925,7 +923,7 @@ class ChanMonitor(object):
         return pstns, p1_idx, p2_idx
 
     def set_metadata(self, tms, input_map):
-        """Sets self.corr_inputs, self.pwds, self.pstns, self.p1_idx, self.p2_idx"""
+        """Sets self.corr_inputs, self.pwds, self.pstns, self.p1_idx, self.p2_idx."""
         from ch_util import tools
 
         # Get CHIME ON channels:
@@ -1057,12 +1055,11 @@ class ChanMonitor(object):
         self.t1 and self.t2, and then queries the database to obtain a list
         of the acquisitions.
         """
-
         if self.finder is not None:
             f = copy.deepcopy(self.finder)
         else:
             f = finder.Finder(node_spoof=_DEFAULT_NODE_SPOOF)
-            f.filter_acqs((data_index.ArchiveInst.name == "pathfinder"))
+            f.filter_acqs(data_index.ArchiveInst.name == "pathfinder")
             f.only_corr()
             f.set_time_range(self.t1, self.t2)
 
@@ -1080,10 +1077,9 @@ class ChanMonitor(object):
         that contain all data beween self.t1 and self.t2 with the
         sunrise, sun transit, and sunset removed.
         """
-
         # Create a Finder object and focus on time range
         f = finder.Finder(node_spoof=_DEFAULT_NODE_SPOOF)
-        f.filter_acqs((data_index.ArchiveInst.name == "pathfinder"))
+        f.filter_acqs(data_index.ArchiveInst.name == "pathfinder")
         f.only_corr()
         f.set_time_range(self.t1, self.t2)
 
@@ -1123,7 +1119,6 @@ class ChanMonitor(object):
         brightest four radio point sources in the sky:
         CygA, CasA, TauA, and VirA.
         """
-
         if self.acq_list is None:
             self.set_acq_list()
 
@@ -1158,7 +1153,7 @@ class ChanMonitor(object):
         return clr, ntt, srcs
 
     def single_source_check(self):
-        """Assumes self.source1 is NOT None"""
+        """Assumes self.source1 is NOT None."""
         Nipts = len(self.inputs)
         self.good_ipts = np.zeros(Nipts, dtype=bool)
         self.good_freqs = None

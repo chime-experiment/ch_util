@@ -1,25 +1,22 @@
-"""
-Private module for defining the DB tables with the peewee ORM.
+"""Private module for defining the DB tables with the peewee ORM.
 
 These are imported into the layout and finder modules.
 """
 
 import datetime
+
+# Logging
+# =======
+# Set default logging handler to avoid "No handlers could be found for logger
+# 'layout'" warnings.
+import logging
 import re
 
 import chimedb.core
 import chimedb.data_index
-from chimedb.core import AlreadyExistsError as AlreadyExists
-
 import peewee as pw
-import numpy as np
-
-# Logging
-# =======
-
-# Set default logging handler to avoid "No handlers could be found for logger
-# 'layout'" warnings.
-import logging
+from chimedb.core import AlreadyExistsError as AlreadyExists
+from chimedb.core.orm import EnumField, base_model, name_table
 
 # All peewee-generated logs are logged to this namespace.
 logger = logging.getLogger("_db_tables")
@@ -88,8 +85,6 @@ class ClosestDraw(chimedb.core.CHIMEdbError):
 # Helper classes for the peewee ORM
 # =================================
 
-from chimedb.core.orm import JSONDictField, EnumField, base_model, name_table
-
 
 class event_table(base_model):
     """Baseclass for all models which are linked to the event class."""
@@ -102,9 +97,10 @@ class event_table(base_model):
         order=None,
         active=True,
     ):
-        """event(self, time = datetime.datetime.now(), type = None,\
+        """Find events associated with entries in this table.
+
+        event(self, time = datetime.datetime.now(), type = None,\
                  when = EVENT_ALL, order = None, active = True)
-           Find events associated with entries in this table.
 
         Parameters
         ----------
@@ -128,7 +124,7 @@ class event_table(base_model):
         )
         if type:
             try:
-                dummy = iter(type)
+                iter(type)
                 ret = ret.where(event.type << type)
             except TypeError:
                 ret = ret.where(event.type == type)
@@ -154,8 +150,9 @@ def connect_peewee_tables(read_write=False, reconnect=False, ntries=1):
         Whether to connect with read and write privileges.
     reconnect : bool
         Force a reconnection.
+    ntries : int
+        Number of times to retry if the initial connection fails.
     """
-
     chimedb.core.connect(read_write, reconnect, ntries)
 
     # Set the default, no-permissions user.
@@ -184,7 +181,7 @@ def set_user(u):
     """
     global _user
 
-    _user = dict()
+    _user = {}
 
     # Find the user.
     if isinstance(u, int):
@@ -194,8 +191,8 @@ def set_user(u):
     else:
         q = chimedb.core.proxy.execute_sql(
             "SELECT user_id FROM chimewiki.user "
-            "WHERE user_name = '%s' OR "
-            "user_real_name = '%s';" % (u, u)
+            f"WHERE user_name = '{u}' OR "
+            f"user_real_name = '{u}';"
         )
     r = q.fetchone()
     if not r:
@@ -227,9 +224,7 @@ def _check_user(perm):
             raise NoPermission("You do not have the permissions to %s." % p.long_name)
         except pw.DoesNotExist:
             raise RuntimeError(
-                "Internal error: _check_user called with unknown permission: {}".format(
-                    perm
-                )
+                f"Internal error: _check_user called with unknown permission: {perm}"
             )
 
 
@@ -252,6 +247,7 @@ def _peewee_get_current_user():
 
 class graph_obj(base_model):
     """Parent table for any table that has events associated with it.
+
     This is a way to make the event table polymorphic. It points to this table,
     which shares (unique) primary keys with child tables (e.g., component). It
     only has one key: ID.
@@ -266,6 +262,7 @@ class graph_obj(base_model):
 
 class global_flag_category(base_model):
     """Categories for global flags.
+
     Examples of component types are antennas, 60m coaxial cables, and so on.
 
     Attributes
@@ -313,7 +310,6 @@ class global_flag(event_table):
 
         Examples
         --------
-
         The following starts and ends a new global flag.
 
         >>> cat = layout.global_flag_category.get(name = "pass")
@@ -412,6 +408,7 @@ class global_flag(event_table):
 
 class component_type(name_table):
     """A CHIME component type.
+
     Examples of component types are antennas, 60m coaxial cables, and so on.
 
     Attributes
@@ -492,7 +489,7 @@ class component(event_table):
     type = pw.ForeignKeyField(component_type, backref="component")
     type_rev = pw.ForeignKeyField(component_type_rev, backref="component", null=True)
 
-    class Meta(object):
+    class Meta:
         indexes = (("sn"), True)
 
     def __hash__(self):
@@ -534,8 +531,8 @@ class component(event_table):
         )
         if comp:
             return c.where((connexion.comp1 == comp) | (connexion.comp2 == comp)).get()
-        else:
-            return c
+
+        return c
 
     def get_history(
         self, time=datetime.datetime.now(), when=EVENT_AT, order=ORDER_ASC, active=True
@@ -586,7 +583,6 @@ class component(event_table):
 
         Examples
         --------
-
         The following makes a new LNA available:
 
         >>> lna_type = layout.component_type.get(name = "LNA")
@@ -673,7 +669,6 @@ class component(event_table):
         history : :obj:`component_doc`
             The newly-created document pointer object.
         """
-
         _check_user("comp_info")
         try:
             external_repo.get(id=repo.id)
@@ -706,8 +701,8 @@ class component(event_table):
         )
         if type:
             return p.where(property.type == type).get()
-        else:
-            return p.get()
+
+        return p.get()
 
     def set_property(self, type, value, time=datetime.datetime.now(), notes=None):
         """Set a property for this component.
@@ -809,7 +804,7 @@ class connexion(event_table):
         component, column_name="comp_sn2", field="sn", backref="conn2"
     )
 
-    class Meta(object):
+    class Meta:
         indexes = (("component_sn1", "component_sn2"), True)
 
     @classmethod
@@ -845,10 +840,10 @@ class connexion(event_table):
         if allow_new:
             try:
                 return q.get()
-            except:
+            except:  # noqa: E722
                 return cls(comp1=pair[0], comp2=pair[1])
-        else:
-            return q.get()
+
+        return q.get()
 
     def is_connected(self, time=datetime.datetime.now()):
         """See if a connexion exists.
@@ -926,17 +921,16 @@ class connexion(event_table):
         """
         if self.comp1 == comp:
             return self.comp2
-        elif self.comp2 == comp:
+        if self.comp2 == comp:
             return self.comp1
-        else:
-            raise DoesNotExist(
-                "The component you passed is not part of this connexion."
-            )
+
+        raise DoesNotExist("The component you passed is not part of this connexion.")
 
     def make(
         self, time=datetime.datetime.now(), permanent=False, notes=None, force=False
     ):
         """Create a connexion.
+
         This method begins a connexion event at the specified time.
 
         Parameters
@@ -961,6 +955,7 @@ class connexion(event_table):
 
     def sever(self, time=datetime.datetime.now(), notes=None, force=False):
         """Sever a connexion.
+
         This method ends a connexion event at the specified time.
 
         Parameters
@@ -1000,6 +995,7 @@ class property_type(name_table):
 
 class property_component(base_model):
     """A list associating property types with components.
+
     A property can be for one or more component types. For example,
     "dist_from_n_end" is only a property of cassettes, but "termination" may be a
     property of LNA's, FLA's and so on. This is simply a table for matching
@@ -1016,7 +1012,7 @@ class property_component(base_model):
     prop_type = pw.ForeignKeyField(property_type, backref="property_component")
     comp_type = pw.ForeignKeyField(component_type, backref="property_component")
 
-    class Meta(object):
+    class Meta:
         indexes = (("prop_type", "comp_type"), True)
 
 
@@ -1044,7 +1040,7 @@ class property(event_table):
     type = pw.ForeignKeyField(property_type, backref="property")
     value = pw.CharField(max_length=255)
 
-    class Meta(object):
+    class Meta:
         indexes = (("comp_sn, type_id"), False)
 
 
@@ -1184,7 +1180,7 @@ class event(base_model):
     start = pw.ForeignKeyField(timestamp, backref="event_start")
     end = pw.ForeignKeyField(timestamp, backref="event_end")
 
-    class Meta(object):
+    class Meta:
         indexes = ((("type_id"), False), (("start", "end"), False))
 
     def _event_permission(self):
@@ -1238,8 +1234,8 @@ class event(base_model):
                 False,
                 LayoutIntegrity,
                 "Cannot deactivate because "
-                "the following history event%s %s set for this "
-                "component" % (_plural(fail), _are(fail)),
+                f"the following history event{_plural(fail)} {_are(fail)} "
+                "set for this component",
             )
 
             # Check documents.
@@ -1252,8 +1248,8 @@ class event(base_model):
                 False,
                 LayoutIntegrity,
                 "Cannot deactivate because "
-                "the following document event%s %s set for this "
-                "component" % (_plural(fail), _are(fail)),
+                f"the following document event{_plural(fail)} {_are(fail)} "
+                "set for this component",
             )
 
             # Check properties.
@@ -1266,13 +1262,13 @@ class event(base_model):
                 False,
                 LayoutIntegrity,
                 "Cannot deactivate because "
-                "the following property event%s %s set for this "
-                "component" % (_plural(fail), _are(fail)),
+                f"the following property event{_plural(fail)} {_are(fail)} "
+                "set for this component",
             )
 
             # Check connexions.
             for conn in comp.get_connexion(when=EVENT_ALL):
-                fail.append("%s<->%s" % (conn.comp1.sn, conn.comp2.sn))
+                fail.append(f"{conn.comp1.sn}<->{conn.comp2.sn}")
             _check_fail(
                 fail,
                 False,
@@ -1325,14 +1321,14 @@ class event(base_model):
                     "This method does not currently support moving a "
                     "component availability event later."
                 )
-        if start == None:
+        if start is None:
             start = self.start
         else:
             try:
                 timestamp.get(id=start.id)
             except pw.DoesNotExist:
                 start.save()
-        if end == None:
+        if end is None:
             if not force_end:
                 end = _pw_getattr(self, "end", None)
         else:
@@ -1353,7 +1349,7 @@ class event(base_model):
             end=end,
         )
         self = new
-        return self
+        return self  # noqa: RET504
 
 
 class predef_subgraph_spec(name_table):
@@ -1399,7 +1395,7 @@ class predef_subgraph_spec_param(base_model):
     type2 = pw.ForeignKeyField(component_type, backref="subgraph_param2", null=True)
     action = EnumField(["T", "H", "O"])
 
-    class Meta(object):
+    class Meta:
         indexes = (("predef_subgraph_spec", "type", "action"), False)
 
 
@@ -1434,7 +1430,7 @@ class user_permission(base_model):
     user_id = pw.IntegerField()
     type = pw.ForeignKeyField(user_permission_type, backref="user")
 
-    class Meta(object):
+    class Meta:
         indexes = (("user_id", "type"), False)
 
 
@@ -1473,7 +1469,7 @@ def _graph_obj_iter(sel, obj, time, when, order, active):
         )
 
     if active:
-        ret = ret.where(event.active == True)
+        ret = ret.where(event.active is True)
 
     if (not when == EVENT_AT) and order:
         if order == ORDER_ASC:
@@ -1504,14 +1500,14 @@ def _check_property_type(ptype, ctype):
         ).where(property_component.comp_type == ctype).get().name
     except pw.DoesNotExist:
         raise PropertyType(
-            'Property type "%s" cannot be used for component '
-            'type "%s".' % (ptype.name, ctype.name)
+            f'Property type "{ptype.name}" cannot be used for component '
+            f'type "{ctype.name}".'
         )
 
 
 def _check_fail(fail, force, exception, msg):
     if len(fail):
-        msg = "%s: %s" % (msg, ", ".join(fail))
+        msg = f"{msg}: {', '.join(fail)}"
         if force:
             logger.debug(msg)
         else:
@@ -1521,33 +1517,30 @@ def _check_fail(fail, force, exception, msg):
 def _conj(l):
     if len(l) == 1:
         return "s"
-    else:
-        return ""
+    return ""
 
 
 def _plural(l):
     if len(l) == 1:
         return ""
-    else:
-        return "s"
+    return "s"
 
 
 def _does(l):
     if len(l) == 1:
         return "does"
-    else:
-        return "do"
+    return "do"
 
 
 def _are(l):
     if len(l) == 1:
         return "is"
-    else:
-        return "are"
+    return "are"
 
 
 def compare_connexion(conn1, conn2):
     """See if two connexions are the same.
+
     Because the :class:`connexion` could store the two components in different
     orders, or have different instances of the same component object, direct
     comparison may fail. This function explicitly compares both possible
@@ -1571,8 +1564,8 @@ def compare_connexion(conn1, conn2):
 
     if (sn11 == sn21 and sn12 == sn22) or (sn11 == sn22 and sn12 == sn21):
         return True
-    else:
-        return False
+
+    return False
 
 
 def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
@@ -1629,7 +1622,7 @@ def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
         try:
             c.event(time, event_type.comp_avail(), EVENT_AT).get()
             fail.append(c.sn)
-        except:
+        except:  # noqa: E722
             to_add.append(comp)
             to_add_sn.append(comp.sn)
 
@@ -1655,7 +1648,7 @@ def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
         force,
         AlreadyExists,
         "Aborting because the following "
-        "component%s %s already available at that time" % (_plural(fail), _are(fail)),
+        f"component{_plural(fail)} {_are(fail)} already available at that time",
     )
 
     if len(to_add):
@@ -1728,7 +1721,7 @@ def _check_perm_connexion_recurse(comp, time, done=[]):
                 ev_sn += s
                 done.append(c2)
         else:
-            fail.append("%s<->%s" % (conn.comp1.sn, conn.comp2.sn))
+            fail.append(f"{conn.comp1.sn}<->{conn.comp2.sn}")
 
     ev.append(comp.event(time, event_type.comp_avail(), EVENT_AT).get())
     ev_sn.append(comp.sn)
@@ -1780,7 +1773,7 @@ def remove_component(comp, time=datetime.datetime.now(), notes=None, force=False
             found_conn = False
             for conn in c.get_connexion(time=time):
                 if not conn.is_permanent():
-                    fail_conn.append("%s<->%s" % (conn.comp1.sn, conn.comp2.sn))
+                    fail_conn.append(f"{conn.comp1.sn}<->{conn.comp2.sn}")
                     found_conn = True
 
             perm_ev, perm_ev_sn, perm_fail = _check_perm_connexion_recurse(c, time)
@@ -1803,30 +1796,25 @@ def remove_component(comp, time=datetime.datetime.now(), notes=None, force=False
         fail_avail,
         force,
         LayoutIntegrity,
-        "The following component%s "
-        "%s not available at that time, or you have specified an "
-        "end time earlier than %s start time%s"
-        % (
-            _plural(fail_avail),
-            _are(fail_avail),
-            "its" if len(fail_avail) == 1 else "their",
-            _plural(fail_avail),
-        ),
+        f"The following component{_plural(fail_avail)} "
+        f"{_are(fail_avail)} not available at that time, or you have specified an "
+        f"end time earlier than {'its' if len(fail_avail) == 1 else 'their'} start "
+        f"time{_plural(fail_avail)}",
     )
     _check_fail(
         fail_conn,
         force,
         LayoutIntegrity,
         "Cannot remove because the "
-        "following component%s %s connected" % (_plural(fail_conn), _are(fail_conn)),
+        f"following component{_plural(fail_conn)} {_are(fail_conn)} connected",
     )
     _check_fail(
         fail_perm_conn,
         force,
         LayoutIntegrity,
         "Cannot remove because "
-        "the following component%s %s connected (via permanent "
-        "connexions)" % (_plural(fail_perm_conn), _are(fail_perm_conn)),
+        f"the following component{_plural(fail_perm_conn)} {_are(fail_perm_conn)} "
+        "connected (via permanent connexions)",
     )
 
     t_stamp = timestamp.create(time=time, notes=notes)
@@ -1887,11 +1875,11 @@ def set_property(
         comp_list = comp
     for comp in comp_list:
         _check_property_type(type, comp.type)
-    if type.regex and value != None:
+    if type.regex and value is not None:
         if not re.match(re.compile(type.regex), value):
             raise ValueError(
-                'Value "%s" does not conform to regular '
-                "expression %s." % (value, type.regex)
+                f'Value "{value}" does not conform to regular '
+                f"expression {type.regex}."
             )
 
     fail = []
@@ -1953,8 +1941,8 @@ def set_property(
             p = property.create(id=o, comp=comp, type=type, value=value)
             e = event.create(graph_obj=o, type=event_type.property(), start=t_stamp)
         logger.info(
-            "Added property %s=%s to the following component%s: %s."
-            % (type.name, value, _plural(to_set), ", ".join(to_set_sn))
+            f"Added property {type.name}={value} to the following "
+            f"component{_plural(to_set)}: {', '.join(to_set_sn)}."
         )
     else:
         logger.info("No component property was changed.")
@@ -1981,10 +1969,12 @@ def make_connexion(
 
     Parameters
     ----------
-    comp : list of :obj:`connexion` objects
+    conn : list of :obj:`connexion` objects
         The connexions to make.
     time : datetime.datetime
         The time at which to end availability.
+    permanent : bool
+        Create a permanent connexion if True.
     notes : string
         Any notes for the timestamp.
     force : bool
@@ -2004,10 +1994,10 @@ def make_connexion(
     to_conn_sn = []
     for c in conn:
         if c.is_connected(time):
-            fail.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
+            fail.append(f"{c.comp1.sn}<=>{c.comp2.sn}")
         else:
             to_conn.append(c)
-            to_conn_sn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
+            to_conn_sn.append(f"{c.comp1.sn}<=>{c.comp2.sn}")
     if len(fail):
         _check_fail(
             fail,
@@ -2028,7 +2018,7 @@ def make_connexion(
             try:
                 conn = connexion.from_pair(c.comp1, c.comp2, allow_new=False)
                 o = conn.id
-            except:
+            except:  # noqa: E722
                 o = graph_obj.create()
                 conn = connexion.create(id=o, comp1=c.comp1, comp2=c.comp2)
             if permanent:
@@ -2065,7 +2055,7 @@ def sever_connexion(conn, time=datetime.datetime.now(), notes=None, force=False)
 
     Parameters
     ----------
-    comp : list of :obj:`connexion` objects
+    conn : list of :obj:`connexion` objects
         The connexions to sever.
     time : datetime.datetime
         The time at which to end availability.
@@ -2092,22 +2082,22 @@ def sever_connexion(conn, time=datetime.datetime.now(), notes=None, force=False)
             ev.append(
                 c.event(time=time, type=event_type.connexion(), when=EVENT_AT).get()
             )
-            ev_conn_sn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
+            ev_conn_sn.append(f"{c.comp1.sn}<=>{c.comp2.sn}")
         except pw.DoesNotExist:
             try:
                 c.event(
                     time=time, type=event_type.perm_connexion(), when=EVENT_AT
                 ).get()
-                fail_perm.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
+                fail_perm.append(f"{c.comp1.sn}<=>{c.comp2.sn}")
             except pw.DoesNotExist:
-                fail_conn.append("%s<=>%s" % (c.comp1.sn, c.comp2.sn))
+                fail_conn.append(f"{c.comp1.sn}<=>{c.comp2.sn}")
     _check_fail(
         fail_conn,
         force,
         AlreadyExists,
         "Cannot disconnect because "
-        "the following connexion%s %s not exist at that time"
-        % (_plural(fail_conn), _does(fail_conn)),
+        f"the following connexion{_plural(fail_conn)} {_does(fail_conn)} "
+        "not exist at that time",
     )
     _check_fail(
         fail_perm, force, LayoutIntegrity, "Cannot disconnect permanent connexions"

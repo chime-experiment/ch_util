@@ -1,24 +1,24 @@
-"""
-Tools for point source calibration
+"""Tools for point source calibration.
 
 This module contains tools for performing point-source calibration.
 """
 
-from abc import ABCMeta, abstractmethod
-from datetime import datetime
 import inspect
 import logging
-from typing import Dict, Optional, Union
+from abc import ABCMeta, abstractmethod
+from datetime import datetime
+from typing import ClassVar, Dict, Optional, Union
 
 import numpy as np
 import scipy.stats
-from scipy.optimize import curve_fit
-from scipy.interpolate import interp1d
-from scipy.linalg import lstsq, inv
-
-from caput import memh5, time as ctime
+from caput import memh5
+from caput import time as ctime
 from chimedb import dataset as ds
 from chimedb.dataset.utils import state_id_of_type, unique_unmasked_entry
+from scipy.interpolate import interp1d
+from scipy.linalg import inv, lstsq
+from scipy.optimize import curve_fit
+
 from ch_util import ephemeris, tools
 
 # Set up logging
@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class FitTransit(object, metaclass=ABCMeta):
+class FitTransit(metaclass=ABCMeta):
     """Base class for fitting models to point source transits.
 
     The `fit` method should be used to populate the `param`, `param_cov`, `chisq`,
@@ -54,7 +54,7 @@ class FitTransit(object, metaclass=ABCMeta):
         _jacobian
     """
 
-    _tval = {}
+    _tval: ClassVar = {}
     component = np.array(["complex"], dtype=np.string_)
 
     def __init__(self, *args, **kwargs):
@@ -70,6 +70,10 @@ class FitTransit(object, metaclass=ABCMeta):
             Chi-squared.
         ndof : np.ndarray[..., ncomponent]
             Number of degrees of freedom.
+        args : list
+            Placeholder for above positional arguments
+        kwargs : dict
+            Placeholder for above keyword arguments
         """
         # Save keyword arguments as attributes
         self.param = kwargs.pop("param", None)
@@ -154,6 +158,8 @@ class FitTransit(object, metaclass=ABCMeta):
             Set to True if the errors provided are absolute.  Set to False if
             the errors provided are relative, in which case the parameter covariance
             will be scaled by the chi-squared per degree-of-freedom.
+        kwargs : dict
+            Arbitrary additional keyword arguments to pass to subclass defined "_fit"
         """
         shp = resp.shape[:-1]
         dtype = ha.dtype
@@ -161,10 +167,31 @@ class FitTransit(object, metaclass=ABCMeta):
         if not np.isscalar(width) and (width.shape != shp):
             ValueError("Keyword with must be scalar or have shape %s." % str(shp))
 
-        self.param = np.full(shp + (self.nparam,), np.nan, dtype=dtype)
-        self.param_cov = np.full(shp + (self.nparam, self.nparam), np.nan, dtype=dtype)
-        self.chisq = np.full(shp + (self.ncomponent,), np.nan, dtype=dtype)
-        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=int)
+        self.param = np.full(
+            (
+                *shp,
+                self.nparam,
+            ),
+            np.nan,
+            dtype=dtype,
+        )
+        self.param_cov = np.full((*shp, self.nparam, self.nparam), np.nan, dtype=dtype)
+        self.chisq = np.full(
+            (
+                *shp,
+                self.ncomponent,
+            ),
+            np.nan,
+            dtype=dtype,
+        )
+        self.ndof = np.full(
+            (
+                *shp,
+                self.ncomponent,
+            ),
+            0,
+            dtype=int,
+        )
 
         with np.errstate(all="ignore"):
             for ind in np.ndindex(*shp):
@@ -185,8 +212,8 @@ class FitTransit(object, metaclass=ABCMeta):
                         absolute_sigma=absolute_sigma,
                         **kwargs,
                     )
-                except Exception as error:
-                    logger.debug("Index %s failed with error: %s" % (str(ind), error))
+                except Exception as error:  # noqa: BLE001
+                    logger.debug(f"Index {ind!s} failed with error: {error}")
                     continue
 
                 self.param[ind] = param
@@ -196,8 +223,7 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def parameter_names(self):
-        """
-        Array of strings containing the name of the fit parameters.
+        """Array of strings containing the name of the fit parameters.
 
         Returns
         -------
@@ -208,8 +234,7 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def param_corr(self):
-        """
-        Parameter correlation matrix.
+        """Parameter correlation matrix.
 
         Returns
         -------
@@ -223,8 +248,7 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def N(self):
-        """
-        Number of independent transit fits contained in this object.
+        """Number of independent transit fits contained in this object.
 
         Returns
         -------
@@ -235,11 +259,11 @@ class FitTransit(object, metaclass=ABCMeta):
         """
         if self.param is not None:
             return self.param.shape[:-1] or None
+        return None
 
     @property
     def nparam(self):
-        """
-        Number of parameters.
+        """Number of parameters.
 
         Returns
         -------
@@ -250,8 +274,7 @@ class FitTransit(object, metaclass=ABCMeta):
 
     @property
     def ncomponent(self):
-        """
-        Number of components.
+        """Number of components.
 
         Returns
         -------
@@ -262,7 +285,6 @@ class FitTransit(object, metaclass=ABCMeta):
 
     def __getitem__(self, val):
         """Instantiates a new TransitFit object containing some subset of the fits."""
-
         if self.N is None:
             raise KeyError(
                 "Attempting to slice TransitFit object containing single fit."
@@ -401,8 +423,12 @@ class FitPoly(FitTransit):
         ----------
         poly_type : str
             Type of polynomial.  Can be 'standard', 'hermite', or 'chebyshev'.
+        args : list
+            Additional positional arguments to pass to the parent constructor
+        kwargs : dict
+            Additional keyword arguments to pass to the parent constructor
         """
-        super(FitPoly, self).__init__(poly_type=poly_type, *args, **kwargs)
+        super().__init__(poly_type=poly_type, *args, **kwargs)
 
         self._set_polynomial_model(poly_type)
 
@@ -466,6 +492,13 @@ class FitRealImag(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
+
 
         Returns
         -------
@@ -478,6 +511,7 @@ class FitRealImag(FitTransit):
             self.param_cov[..., : self.nparr, : self.nparr],
             self.tval(alpha, self.ndofr),
         )
+
         return np.squeeze(err, axis=-1) if np.isscalar(ha) else err
 
     def uncertainty_imag(self, ha, alpha=0.32, elementwise=False):
@@ -489,6 +523,12 @@ class FitRealImag(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
 
         Returns
         -------
@@ -514,6 +554,13 @@ class FitRealImag(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
+
 
         Returns
         -------
@@ -521,13 +568,16 @@ class FitRealImag(FitTransit):
             Uncertainty on the response.
         """
         with np.errstate(all="ignore"):
-            err = np.sqrt(
+            return np.sqrt(
                 self.uncertainty_real(ha, alpha=alpha, elementwise=elementwise) ** 2
                 + self.uncertainty_imag(ha, alpha=alpha, elementwise=elementwise) ** 2
             )
-        return err
 
     def _jacobian(self, ha):
+        """Raises an exception.
+
+        Use `_jacobian_real` and `_jacobian_imag` instead.
+        """
         raise NotImplementedError(
             "Fits to real and imaginary are independent.  "
             "Use _jacobian_real and _jacobian_imag instead."
@@ -544,7 +594,7 @@ class FitRealImag(FitTransit):
         return
 
     @property
-    def nparam(self):
+    def nparam(self):  # noqa: D102
         return self.nparr + self.npari
 
 
@@ -562,13 +612,20 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         ----------
         poly_deg : int
             Degree of the polynomial to fit to real and imaginary component.
+        even : bool
+            Use only even polynomial coefficients
+        odd : bool
+            Use only odd polynomial coefficients
+        args : list
+            Additional positional arguments to pass to the parent constructor
+        kwargs : dict
+            Additional keyword arguments to pass to the parent constructor
+
         """
         if even and odd:
             raise RuntimeError("Cannot request both even AND odd.")
 
-        super(FitPolyRealPolyImag, self).__init__(
-            poly_deg=poly_deg, even=even, odd=odd, *args, **kwargs
-        )
+        super().__init__(poly_deg=poly_deg, even=even, odd=odd, *args, **kwargs)
 
         self.poly_deg = poly_deg
         self.even = even
@@ -602,15 +659,34 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
 
         shp = param.shape[:-1]
 
-        param_expanded_real = np.zeros(shp + (self.poly_deg + 1,), dtype=param.dtype)
+        param_expanded_real = np.zeros(
+            (
+                *shp,
+                self.poly_deg + 1,
+            ),
+            dtype=param.dtype,
+        )
         param_expanded_real[..., self.coeff_index] = param[..., : self.nparr]
         der1_real = self._deriv(param_expanded_real, m=1, axis=-1)
 
-        param_expanded_imag = np.zeros(shp + (self.poly_deg + 1,), dtype=param.dtype)
+        param_expanded_imag = np.zeros(
+            (
+                *shp,
+                self.poly_deg + 1,
+            ),
+            dtype=param.dtype,
+        )
         param_expanded_imag[..., self.coeff_index] = param[..., self.nparr :]
         der1_imag = self._deriv(param_expanded_imag, m=1, axis=-1)
 
-        deriv = np.full(shp + (ha.size,), np.nan, dtype=np.complex64)
+        deriv = np.full(
+            (
+                *shp,
+                ha.size,
+            ),
+            np.nan,
+            dtype=np.complex64,
+        )
         for ind in np.ndindex(*shp):
             ider1_real = der1_real[ind]
             ider1_imag = der1_imag[ind]
@@ -778,6 +854,12 @@ class FitAmpPhase(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
 
         Returns
         -------
@@ -801,6 +883,12 @@ class FitAmpPhase(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
 
         Returns
         -------
@@ -826,6 +914,12 @@ class FitAmpPhase(FitTransit):
             Hour angle in degrees.
         alpha : float
             Confidence level given by 1 - alpha.
+        elementwise : bool
+            If False, then the uncertainty will be evaluated at
+            the requested hour angles for every set of parameters.
+            If True, then the uncertainty will be evaluated at a
+            separate hour angle for each set of parameters
+            (requires `ha.shape == self.N`).
 
         Returns
         -------
@@ -833,13 +927,16 @@ class FitAmpPhase(FitTransit):
             Uncertainty on the response.
         """
         with np.errstate(all="ignore"):
-            err = np.abs(self._model(ha, elementwise=elementwise)) * np.sqrt(
+            return np.abs(self._model(ha, elementwise=elementwise)) * np.sqrt(
                 self.uncertainty_amp(ha, alpha=alpha, elementwise=elementwise) ** 2
                 + self.uncertainty_phi(ha, alpha=alpha, elementwise=elementwise) ** 2
             )
-        return err
 
     def _jacobian(self, ha):
+        """Raises NotImplementedError.
+
+        Use `_jacobian_amp` and `_jacobian_phi` instead.
+        """
         raise NotImplementedError(
             "Fits to amplitude and phase are independent.  "
             "Use _jacobian_amp and _jacobian_phi instead."
@@ -856,7 +953,7 @@ class FitAmpPhase(FitTransit):
         return
 
     @property
-    def nparam(self):
+    def nparam(self):  # noqa: D102
         return self.npara + self.nparp
 
 
@@ -872,8 +969,12 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
             Degree of the polynomial to fit to log amplitude.
         poly_deg_phi : int
             Degree of the polynomial to fit to phase.
+        args : list
+            Additional positional args to pass to the parent constructor
+        kwargs : dict
+            Additional keyword args to pass to the parent constructor
         """
-        super(FitPolyLogAmpPolyPhase, self).__init__(
+        super().__init__(
             poly_deg_amp=poly_deg_amp, poly_deg_phi=poly_deg_phi, *args, **kwargs
         )
 
@@ -969,7 +1070,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
             if window is not None:
                 if kk > 0:
-                    center = self.peak(param=coeff)
+                    center = self.peak(param=coeff)  # noqa: F821
 
                 if np.isnan(center):
                     raise RuntimeError("No peak found.")
@@ -1114,8 +1215,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofa(self):
-        """
-        Number of degrees of freedom for the amplitude fit.
+        """Number of degrees of freedom for the amplitude fit.
 
         Returns
         -------
@@ -1126,8 +1226,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofp(self):
-        """
-        Number of degrees of freedom for the phase fit.
+        """Number of degrees of freedom for the phase fit.
 
         Returns
         -------
@@ -1159,10 +1258,12 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         ----------
         poly_deg_phi : int
             Degree of the polynomial to fit to phase.
+        args : list
+            Additional positional args to pass to parent constructor
+        kwargs : dict
+            Additional keyword args to pass to parent constructor
         """
-        super(FitGaussAmpPolyPhase, self).__init__(
-            poly_deg_phi=poly_deg_phi, *args, **kwargs
-        )
+        super().__init__(poly_deg_phi=poly_deg_phi, *args, **kwargs)
 
         self.poly_deg_phi = poly_deg_phi
         self.nparp = poly_deg_phi + 1
@@ -1282,11 +1383,9 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
             model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dxr / fwhm) ** 2)
             model_phase = self._eval(xr, poly_coeff)
 
-            model = np.concatenate(
+            return np.concatenate(
                 (model_amp * np.cos(model_phase), model_amp * np.sin(model_phase))
             )
-
-            return model
 
         return fit_func
 
@@ -1310,7 +1409,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
                 The jacobian defined as
                 jac[i, j] = d(model(ha)) / d(param[j]) evaluated at ha[i]
             """
-
             peak_amplitude, centroid, fwhm = param[:3]
             poly_coeff = param[3:]
 
@@ -1364,9 +1462,24 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
             ha = ha[(None,) * (ndim1 - 1) + (slice(None),) * ndim2]
 
         slc = (slice(None),) * (ndim1 - 1)
-        peak_amplitude = amp_param[slc + (0,)]
-        centroid = amp_param[slc + (1,)]
-        fwhm = amp_param[slc + (2,)]
+        peak_amplitude = amp_param[
+            (
+                *slc,
+                0,
+            )
+        ]
+        centroid = amp_param[
+            (
+                *slc,
+                1,
+            )
+        ]
+        fwhm = amp_param[
+            (
+                *slc,
+                2,
+            )
+        ]
 
         dha = _correct_phase_wrap(ha - centroid)
 
@@ -1390,16 +1503,50 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
                 ha = ha[(None,) * (ndim1 - 1) + (slice(None),) * ndim2]
 
         slc = (slice(None),) * (ndim1 - 1)
-        peak_amplitude = amp_param[slc + (0,)]
-        centroid = amp_param[slc + (1,)]
-        fwhm = amp_param[slc + (2,)]
+        peak_amplitude = amp_param[
+            (
+                *slc,
+                0,
+            )
+        ]
+        centroid = amp_param[
+            (
+                *slc,
+                1,
+            )
+        ]
+        fwhm = amp_param[
+            (
+                *slc,
+                2,
+            )
+        ]
 
         dha = _correct_phase_wrap(ha - centroid)
 
         jac = np.zeros(shp, dtype=ha.dtype)
-        jac[slc + (0,)] = tools.invert_no_zero(peak_amplitude)
-        jac[slc + (1,)] = 8.0 * np.log(2.0) * dha * tools.invert_no_zero(fwhm) ** 2
-        jac[slc + (2,)] = 8.0 * np.log(2.0) * dha**2 * tools.invert_no_zero(fwhm) ** 3
+        jac[
+            (
+                *slc,
+                0,
+            )
+        ] = tools.invert_no_zero(peak_amplitude)
+        jac[
+            (
+                *slc,
+                1,
+            )
+        ] = (
+            8.0 * np.log(2.0) * dha * tools.invert_no_zero(fwhm) ** 2
+        )
+        jac[
+            (
+                *slc,
+                2,
+            )
+        ] = (
+            8.0 * np.log(2.0) * dha**2 * tools.invert_no_zero(fwhm) ** 3
+        )
 
         return jac
 
@@ -1424,8 +1571,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofa(self):
-        """
-        Number of degrees of freedom for the amplitude fit.
+        """Number of degrees of freedom for the amplitude fit.
 
         Returns
         -------
@@ -1436,8 +1582,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
 
     @property
     def ndofp(self):
-        """
-        Number of degrees of freedom for the phase fit.
+        """Number of degrees of freedom for the phase fit.
 
         Returns
         -------
@@ -1521,8 +1666,6 @@ def fit_point_source_map(
         Region of the ringmap around the point source.
     rms : np.ndarray[..., nra]
         RMS error on the map.
-    flag : np.ndarray[..., nra, ndec]
-        Boolean array that indicates which pixels to fit.
     dirty_beam : np.ndarray[..., nra, ndec] or [ra, dec, dirty_beam]
         Fourier transform of the weighting function used to create
         the map.  If input, then the interpolated dirty beam will be used
@@ -1531,6 +1674,16 @@ def fit_point_source_map(
         of length 3 that contains [ra, dec, dirty_beam] since the shape of the
         dirty beam is likely to be larger than the shape of the subregion of the
         map, at least in the declination direction.
+    real_map : bool, optional
+        If True, use only the real component of the model. Default is False
+    freq : float, optional
+        Frequency of the map in MHz. Default is 600.0.
+    ra0 : float, optional
+        Initial ra estimate. Default is None, which uses the median ra.
+    dec0 : float, optional
+        Initial dec estimate. Default is None, which uses median elevation
+        converted to dec.
+
 
     Returns
     -------
@@ -1541,7 +1694,6 @@ def fit_point_source_map(
     param_cov: np.ndarray[..., nparam, nparam]
         Parameter covariance for each item.
     """
-
     el = _dec_to_el(dec)
 
     # Check if dirty beam was input
@@ -1596,8 +1748,15 @@ def fit_point_source_map(
 
     # Create arrays to hold best-fit parameters and
     # parameter covariance.  Initialize to NaN.
-    param = np.full(dims + (nparam,), np.nan, dtype=np.float64)
-    param_cov = np.full(dims + (nparam, nparam), np.nan, dtype=np.float64)
+    param = np.full(
+        (
+            *dims,
+            nparam,
+        ),
+        np.nan,
+        dtype=np.float64,
+    )
+    param_cov = np.full((*dims, nparam, nparam), np.nan, dtype=np.float64)
     resid_rms = np.full(dims, np.nan, dtype=np.float64)
 
     # Iterate over dimensions
@@ -1660,7 +1819,7 @@ def fit_point_source_map(
 
         p0 = np.array([p0_dict[key] for key in param_name])
 
-        bounds = (
+        (
             np.array([lb_dict[key] for key in param_name]),
             np.array([ub_dict[key] for key in param_name]),
         )
@@ -1691,11 +1850,8 @@ def fit_point_source_map(
                 sigma=this_rms,
                 absolute_sigma=True,
             )  # , bounds=bounds)
-        except Exception as error:
-            print(
-                "index %s: %s"
-                % ("(" + ", ".join(["%d" % ii for ii in index]) + ")", error)
-            )
+        except Exception as error:  # noqa: BLE001
+            print(f"index ({', '.join([f'{ii:d}' for ii in index])}): {error}")
             continue
 
         # Save the results
@@ -1722,8 +1878,9 @@ def fit_point_source_map(
 def func_2d_gauss(
     coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
 ):
-    """Returns a parameteric model for the map of a point source,
-    consisting of a 2-dimensional gaussian.
+    """Returns a parameteric model for the map of a point source.
+
+    Consists of a 2-dimensional gaussian.
 
     Parameters
     ----------
@@ -1766,9 +1923,10 @@ def func_2d_gauss(
 def func_2d_sinc_gauss(
     coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, fwhm_y, offset
 ):
-    """Returns a parameteric model for the map of a point source,
-        consisting of a sinc function along the declination direction
-        and gaussian along the right ascension direction.
+    """Returns a parameteric model for the map of a point source.
+
+    Consists of a sinc function along the declination direction
+    and gaussian along the right ascension direction.
 
     Parameters
     ----------
@@ -1809,8 +1967,9 @@ def func_2d_sinc_gauss(
 
 
 def func_dirty_gauss(dirty_beam):
-    """Returns a parameteric model for the map of a point source,
-    consisting of the interpolated dirty beam along the y-axis
+    """Returns a parameteric model for the map of a point source.
+
+    Consists of the interpolated dirty beam along the y-axis
     and a gaussian along the x-axis.
 
     This function is a wrapper that defines the interpolated
@@ -1830,8 +1989,9 @@ def func_dirty_gauss(dirty_beam):
     """
 
     def dirty_gauss(coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset):
-        """Returns a parameteric model for the map of a point source,
-        consisting of the interpolated dirty beam along the y-axis
+        """Returns a parameteric model for the map of a point source.
+
+        Consists of the interpolated dirty beam along the y-axis
         and a gaussian along the x-axis.
 
         Parameter
@@ -1859,7 +2019,6 @@ def func_dirty_gauss(dirty_beam):
         model : np.ndarray[nra*ndec]
             Model prediction for the map of the point source.
         """
-
         x, y = coord
 
         model = (
@@ -1876,8 +2035,9 @@ def func_dirty_gauss(dirty_beam):
 
 
 def func_real_dirty_gauss(dirty_beam):
-    """Returns a parameteric model for the map of a point source,
-    consisting of the interpolated dirty beam along the y-axis
+    """Returns a parameteric model for the map of a point source.
+
+    Consists of the interpolated dirty beam along the y-axis
     and a sinusoid with gaussian envelope along the x-axis.
 
     This function is a wrapper that defines the interpolated
@@ -1899,8 +2059,9 @@ def func_real_dirty_gauss(dirty_beam):
     def real_dirty_gauss(
         coord, peak_amplitude, centroid_x, centroid_y, fwhm_x, offset, fringe_rate
     ):
-        """Returns a parameteric model for the map of a point source,
-        consisting of the interpolated dirty beam along the y-axis
+        """Returns a parameteric model for the map of a point source.
+
+        Consists of the interpolated dirty beam along the y-axis
         and a sinusoid with gaussian envelope along the x-axis.
 
         Parameter
@@ -1930,7 +2091,6 @@ def func_real_dirty_gauss(dirty_beam):
         model : np.ndarray[nra*ndec]
             Model prediction for the map of the point source.
         """
-
         x, y = coord
 
         model = (
@@ -2070,8 +2230,7 @@ def fit_histogram(
     test_normal=False,
     return_histogram=False,
 ):
-    """
-    Fit a gaussian to a histogram of the data.
+    """Fit a gaussian to a histogram of the data.
 
     Parameters
     ----------
@@ -2242,7 +2401,7 @@ def fit_histogram(
 def _sliding_window(arr, window):
     # Advanced numpy tricks
     shape = arr.shape[:-1] + (arr.shape[-1] - window + 1, window)
-    strides = arr.strides + (arr.strides[-1],)
+    strides = (*arr.strides, arr.strides[-1])
     return np.lib.stride_tricks.as_strided(arr, shape=shape, strides=strides)
 
 
@@ -2261,6 +2420,8 @@ def flag_outliers(raw, flag, window=25, nsigma=5.0):
     nsigma : float
         Data is considered an outlier if it is greater than this number of median absolute
         deviations away from the local median.
+
+
     Returns
     -------
     not_outlier : np.ndarray[nsample,]
@@ -2310,9 +2471,7 @@ def flag_outliers(raw, flag, window=25, nsigma=5.0):
 
     sig = 1.4826 * np.nanmedian(_sliding_window(expanded_resid, rwidth), axis=-1)
 
-    not_outlier = resid < (nsigma * sig)
-
-    return not_outlier
+    return resid < (nsigma * sig)
 
 
 def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
@@ -2345,7 +2504,7 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
         `flag = False`, this will be the expected uncertainty on the interpolation.
     """
     from sklearn import gaussian_process
-    from sklearn.gaussian_process.kernels import Matern, ConstantKernel
+    from sklearn.gaussian_process.kernels import ConstantKernel, Matern
 
     if flag is None:
         flag = weight > 0.0
@@ -2441,17 +2600,18 @@ def interpolate_gain_quiet(*args, **kwargs):
     Accepts and passes all arguments and keyword arguments for `interpolate_gain`.
     """
     import warnings
+
     from sklearn.exceptions import ConvergenceWarning
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn")
-        results = interpolate_gain(*args, **kwargs)
-
-    return results
+        return interpolate_gain(*args, **kwargs)
 
 
 def thermal_amplitude(delta_T, freq):
-    """Computes the amplitude gain correction given a (set of) temperature
+    """Amplitude gain correction given temperature difference and frequency.
+
+    Computes the amplitude gain correction given a (set of) temperature
     difference and a (set of) frequency based on the thermal model.
 
     Parameters
@@ -2475,13 +2635,11 @@ def thermal_amplitude(delta_T, freq):
 
 def _el_to_dec(el):
     """Convert from el = sin(zenith angle) to declination in degrees."""
-
     return np.degrees(np.arcsin(el)) + ephemeris.CHIMELATITUDE
 
 
 def _dec_to_el(dec):
     """Convert from declination in degrees to el = sin(zenith angle)."""
-
     return np.sin(np.radians(dec - ephemeris.CHIMELATITUDE))
 
 
@@ -2520,7 +2678,6 @@ def get_reference_times_file(
         - interp_stop: The Unix time of the end of the interpolation period. Only
           set for time samples that need to be interpolated, otherwise `NaN`.
     """
-
     if logger is None:
         logger = logging.getLogger(__name__)
 
@@ -2644,14 +2801,12 @@ def get_reference_times_file(
         logger.warning(msg.format(n_bad_times, ntimes))
 
     # Bundle result in dictionary
-    result = {
+    return {
         "reftime": reftime,
         "reftime_prev": reftime_prev,
         "interp_start": interp_start,
         "interp_stop": interp_stop,
     }
-
-    return result
 
 
 def get_reference_times_dataset_id(
@@ -2719,7 +2874,7 @@ def get_reference_times_dataset_id(
         # After restart we sometimes have only a timing update without a source
         # reference. These aren't valid for our purposes here, and can be distinguished
         # at the update_id doesn't contain source information, and is thus shorter
-        d["valid"] = any([src in split_id for src in _source_dict.keys()])
+        d["valid"] = any(src in split_id for src in _source_dict.keys())
         d["interpolated"] = "transition" in split_id
         # If it's not a valid update we shouldn't try to extract everything else
         if not d["valid"]:
