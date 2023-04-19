@@ -5,6 +5,7 @@ timing jitter and timing delay.
 
 
 Example
+-------
 =======
 
 The function :meth:`construct_delay_template` generates a delay template from
@@ -48,18 +49,18 @@ To print a summary of the timing correction, use:
 
 """
 
-import os
+import gc
 import glob
-import numpy as np
 import inspect
 import logging
-import gc
+import os
 
+import numpy as np
 import scipy.interpolate
 import scipy.optimize
-
-from . import tools, andata, ephemeris, rfi
 from caput import memh5, mpiarray, tod
+
+from . import andata, ephemeris, rfi, tools
 
 FREQ_TO_OMEGA = 2.0 * np.pi * 1e-6
 FREQ_PIVOT = 600.0
@@ -92,16 +93,14 @@ logger.addHandler(logging.NullHandler())
 
 
 class TimingCorrection(andata.BaseData):
-    """
-    Container that holds a timing correction.
+    """Container that holds a timing correction.
 
     Provides methods for applying that correction to other datasets.
     """
 
     @classmethod
     def from_dict(self, **kwargs):
-        """
-        Instantiate a TimingCorrection object.
+        """Instantiate a TimingCorrection object.
 
         Parameters
         ----------
@@ -1425,8 +1424,7 @@ class TimingCorrection(andata.BaseData):
 
 
 class TimingData(andata.CorrData, TimingCorrection):
-    """
-    Subclass of :class:`andata.CorrData` for timing data.
+    """Subclass of :class:`andata.CorrData` for timing data.
 
     Automatically computes the timing correction when data is loaded and
     inherits the methods of :class:`TimingCorrection` that enable the application
@@ -1622,7 +1620,7 @@ class TimingData(andata.CorrData, TimingCorrection):
         return summary
 
 
-class TimingInterpolator(object):
+class TimingInterpolator:
     """Interpolation that is aware of flagged data and weights.
 
     Flagged data is ignored during the interpolation. The weights from

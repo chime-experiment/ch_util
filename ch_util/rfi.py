@@ -1,4 +1,4 @@
-"""Tools for RFI flagging
+"""Tools for RFI flagging.
 
 This module contains tools for finding and removing Radio Frequency Interference
 (RFI).
@@ -25,14 +25,14 @@ For more control there are specific routines that can be called:
 - :py:meth:`sir`
 """
 
-import warnings
 import logging
-from typing import Tuple, Optional, Union
+import warnings
+from typing import Optional, Tuple, Union
 
 import numpy as np
 import scipy.signal as sig
 
-from . import tools, ephemeris
+from . import ephemeris, tools
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -130,7 +130,6 @@ def flag_dataset(
     mask : np.ndarray
         RFI mask, output shape is the same as input visibilities.
     """
-
     auto_ii, auto_vis, auto_ndev = number_deviations(
         data,
         freq_width=freq_width,
@@ -402,7 +401,6 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     mask: np.ndarray[freq,time]
           RFI mask (no product axis).
     """
-
     if only_autos:
         data_vis = data.vis[:].real
     else:
@@ -538,7 +536,6 @@ def mad_cut_2d(data, fwidth=64, twidth=42, threshold=5.0, freq_flat=True, mask=T
     mask : np.ndarray[freq, time]
         Mask or number of median absolute deviations for each sample.
     """
-
     median = nanmedian if np.any(~np.isfinite(data)) else np.median
 
     flen = int(np.ceil(data.shape[0] * 1.0 / fwidth))
@@ -608,7 +605,6 @@ def mad_cut_1d(data, twidth=42, threshold=5.0, mask=True):
     mask : np.ndarray[freq, time]
         Mask or number of median absolute deviations for each sample.
     """
-
     median = nanmedian if np.any(~np.isfinite(data)) else np.median
 
     tlen = int(np.ceil(data.shape[1] * 1.0 / twidth))
@@ -779,7 +775,6 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
     pinv : np.ndarray[nfreq, nfreq]
         High pass delay filter.
     """
-
     nfreq = freq.size
     assert (flag.ndim == 1) and (flag.size == nfreq)
 
@@ -862,7 +857,6 @@ def iterative_hpf_masking(
         The local median absolute deviation from the last
         iteration.
     """
-
     from caput import weighted_median
 
     assert y.ndim == 1

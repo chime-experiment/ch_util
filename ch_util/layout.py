@@ -1,5 +1,4 @@
-"""
-Interface to the CHIME components and graphs
+"""Interface to the CHIME components and graphs.
 
 This module interfaces to the layout tables in the CHIME database.
 
@@ -129,67 +128,39 @@ Constants
 """
 
 import datetime
-import inspect
 import logging
-import networkx as nx
 import os
-import peewee as pw
-import re
 
 import chimedb.core
+import networkx as nx
+import peewee as pw
 
 _property = property  # Do this since there is a class "property" in _db_tables.
-from ._db_tables import (
-    EVENT_AT,
-    EVENT_BEFORE,
-    EVENT_AFTER,
-    EVENT_ALL,
-    ORDER_ASC,
-    ORDER_DESC,
-    _check_fail,
-    _plural,
-    _are,
-    AlreadyExists,
-    NoSubgraph,
-    BadSubgraph,
-    DoesNotExist,
-    UnknownUser,
-    NoPermission,
-    LayoutIntegrity,
-    PropertyType,
-    PropertyUnchanged,
-    ClosestDraw,
-    set_user,
-    graph_obj,
-    global_flag_category,
-    global_flag,
-    component_type,
-    component_type_rev,
-    external_repo,
-    component,
-    component_history,
-    component_doc,
-    connexion,
-    property_type,
-    property_component,
-    property,
-    event_type,
-    timestamp,
-    event,
-    predef_subgraph_spec,
-    predef_subgraph_spec_param,
-    user_permission_type,
-    user_permission,
-    compare_connexion,
-    add_component,
-    remove_component,
-    set_property,
-    make_connexion,
-    sever_connexion,
-)
-
 # Legacy name
 from chimedb.core import NotFoundError as NotFound
+
+from ._db_tables import (
+    BadSubgraph,
+    DoesNotExist,
+    NoSubgraph,
+    _are,
+    _check_fail,
+    _plural,
+    component,
+    component_type,
+    component_type_rev,
+    connexion,
+    event,
+    event_type,
+    global_flag,
+    graph_obj,
+    make_connexion,
+    predef_subgraph_spec_param,
+    property,
+    property_type,
+    sever_connexion,
+    timestamp,
+)
 
 os.environ["TZ"] = "UTC"
 
@@ -200,7 +171,6 @@ os.environ["TZ"] = "UTC"
 # 'layout'" warnings.
 from logging import NullHandler
 
-
 # All peewee-generated logs are logged to this namespace.
 logger = logging.getLogger("layout")
 logger.addHandler(NullHandler())
@@ -210,7 +180,7 @@ logger.addHandler(NullHandler())
 # =======
 
 
-class subgraph_spec(object):
+class subgraph_spec:
     """Specifications for extracting a subgraph from a full graph.
 
     The subgraph specification can be created from scratch by passing the
@@ -441,7 +411,6 @@ class graph(nx.Graph):
 
     Examples
     --------
-
     To load a graph from the database, use the :meth:`from_db` class method:
 
     >>> from ch_util import graph
@@ -548,7 +517,6 @@ class graph(nx.Graph):
         ------
         If no graph is found, :exc:`NotFound` is raised.
         """
-
         # Initalise the database connections
         connect_database()
 
@@ -813,7 +781,7 @@ class graph(nx.Graph):
         A list of :obj:`graph` objects, one for each subgraph found. If, however,
         *g* is set to :obj:`None`, a reference to the input graph is returned.
         """
-        if sg_spec == None:
+        if sg_spec is None:
             return g
         if sg_spec.start in sg_spec.terminate:
             raise BadSubgraph(
@@ -1134,7 +1102,6 @@ class graph(nx.Graph):
         The shortest path really was through the correlator card slot, until we
         explicitly rejected such paths.
         """
-
         path = self.shortest_path_to_type(comp, type, type_exclude, ignore_draws)
 
         try:
@@ -1255,7 +1222,7 @@ def _add_to_chain(chain, sn, prop, sever, fail_comp):
                 raise SyntaxError('Confused by the property command "%s".' % prop[k])
             chain[-1][prop[k].split("=")[0]] = prop[k].split("=")[1]
     except pw.DoesNotExist:
-        if not sn in fail_comp:
+        if sn not in fail_comp:
             fail_comp.append(sn)
 
 
@@ -1294,11 +1261,10 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
       integrity are encountered; skip over them. If :obj:`False`, then a bad
       propsed event will raise the appropriate exception.
     """
-
     try:
-        with open(ltf, "r") as myfile:
+        with open(ltf) as myfile:
             ltf = myfile.readlines()
-    except IOError:
+    except OSError:
         try:
             ltf = ltf.splitlines()
         except AttributeError:
@@ -1430,13 +1396,12 @@ def get_global_flag_times(flag):
       Global flag end time (UTC) or `None` if the flag hasn't ended.
 
     """
-
     if isinstance(flag, str):
         query_ = global_flag.select().where(global_flag.name == flag)
     else:
         query_ = global_flag.select().where(global_flag.id == flag)
 
-    flag_ = query_.join(graph_obj).join(event).where(event.active == True).get()
+    flag_ = query_.join(graph_obj).join(event).where(event.active is True).get()
 
     event_ = event.get(graph_obj=flag_.id, active=True)
 
@@ -1464,7 +1429,6 @@ def global_flags_between(start_time, end_time, severity=None):
         List of global_flag objects matching criteria.
 
     """
-
     from . import ephemeris
 
     start_time = ephemeris.ensure_unix(start_time)
@@ -1473,7 +1437,7 @@ def global_flags_between(start_time, end_time, severity=None):
     query = global_flag.select()
     if severity:
         query = query.where(global_flag.severity == severity)
-    query = query.join(graph_obj).join(event).where(event.active == True)
+    query = query.join(graph_obj).join(event).where(event.active is True)
 
     # Set aliases for the join
     ststamp = timestamp.alias()

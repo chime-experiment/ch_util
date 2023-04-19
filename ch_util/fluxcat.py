@@ -1,27 +1,25 @@
-"""
-Catalog the measured flux densities of astronomical sources
+"""Catalog the measured flux densities of astronomical sources.
 
 This module contains tools for cataloging astronomical sources
 and predicting their flux density at radio frequencies based on
 previous measurements.
 """
 
-from abc import ABCMeta, abstractmethod
-import os
-import fnmatch
-import inspect
-import warnings
-
-from collections import OrderedDict
-import json
-import pickle
-
-import numpy as np
 import base64
 import datetime
+import fnmatch
+import inspect
+import json
+import os
+import pickle
 import time
+import warnings
+from abc import ABCMeta, abstractmethod
+from collections import OrderedDict
 
+import numpy as np
 from caput import misc
+
 from . import ephemeris
 
 # Define nominal frequency. Sources in catalog are ordered according to
@@ -38,7 +36,7 @@ DEFAULT_COLLECTIONS = [
 
 
 # ==================================================================================
-class FitSpectrum(object, metaclass=ABCMeta):
+class FitSpectrum(metaclass=ABCMeta):
     """A base class for modeling and fitting spectra.  Any spectral model
     used by FluxCatalog should be derived from this class.
 
@@ -67,14 +65,12 @@ class FitSpectrum(object, metaclass=ABCMeta):
 
     def __init__(self, param=None, param_cov=None, stats=None):
         """Instantiates a FitSpectrum object."""
-
         self.param = param
         self.param_cov = param_cov
         self.stats = stats
 
     def predict(self, freq):
         """Predicts the flux density at a particular frequency."""
-
         x = self._get_x(freq)
 
         return self._fit_func(x, *self.param)
@@ -83,7 +79,6 @@ class FitSpectrum(object, metaclass=ABCMeta):
         """Predicts the uncertainty on the flux density at a
         particular frequency.
         """
-
         from scipy.stats import t
 
         prob = 1.0 - alpha / 2.0
@@ -125,8 +120,7 @@ class FitSpectrum(object, metaclass=ABCMeta):
 
 
 class CurvedPowerLaw(FitSpectrum):
-    """
-    Class to fit a spectrum to a polynomial in log-log space, given by
+    """Class to fit a spectrum to a polynomial in log-log space, given by.
 
     .. math::
         \\ln{S} = a_{0} + a_{1} \\ln{\\nu'} + a_{2} \\ln{\\nu'}^2 + a_{3} \\ln{\\nu'}^3 + \\dots
@@ -145,8 +139,7 @@ class CurvedPowerLaw(FitSpectrum):
     """
 
     def __init__(self, freq_pivot=FREQ_NOMINAL, nparam=2, *args, **kwargs):
-        """Instantiates a CurvedPowerLaw object"""
-
+        """Instantiates a CurvedPowerLaw object."""
         super(CurvedPowerLaw, self).__init__(*args, **kwargs)
 
         # Set the additional model kwargs
@@ -267,9 +260,8 @@ class MetaFluxCatalog(type):
         return obj is not None
 
 
-class FluxCatalog(object, metaclass=MetaFluxCatalog):
-    """
-    Class for cataloging astronomical sources and predicting
+class FluxCatalog(metaclass=MetaFluxCatalog):
+    """Class for cataloging astronomical sources and predicting
     their flux density at radio frequencies based on spectral fits
     to previous measurements.
 
@@ -321,8 +313,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         measurements=None,
         overwrite=0,
     ):
-        """
-        Instantiates a FluxCatalog object for an astronomical source.
+        """Instantiates a FluxCatalog object for an astronomical source.
 
         Parameters
         ----------
@@ -368,7 +359,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             - 2 - Overwrite the existing entry.
             Default is 0.
         """
-
         # The name argument is a unique identifier into the catalog.
         # Check if there is already a source in the catalog with the
         # input name.  If there is, then the behavior is set by the
@@ -418,7 +408,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
                 param=self.param,
                 param_cov=self.param_cov,
                 stats=self.stats,
-                **self.model_kwargs
+                **self.model_kwargs,
             )
 
             # Populate the kwargs that were used
@@ -482,7 +472,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Default is None.
 
         """
-
         # Ensure that all of the inputs are lists
         # of the same length as flux
         flux = _ensure_list(flux)
@@ -524,7 +513,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         spectral model specified in the 'model' attribute. This populates the
         'param', 'param_cov', and 'stats' attributes.
         """
-
         arg_list = misc.getfullargspec(self._model.fit).args[1:]
 
         args = [self.freq[self.flag], self.flux[self.flag], self.eflux[self.flag]]
@@ -551,8 +539,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Plot the residuals instead of the measurements and best-fit model.
             Default is False.
         """
-
-        import matplotlib
         import matplotlib.pyplot as plt
 
         # Define plot parameters
@@ -698,7 +684,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Flux density in Jansky.
 
         """
-
         arg_list = misc.getfullargspec(self._model.predict).args[1:]
 
         if (epoch is not None) and ("epoch" in arg_list):
@@ -728,7 +713,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Uncertainty on the flux density in Jansky.
 
         """
-
         arg_list = misc.getfullargspec(self._model.uncertainty).args[1:]
 
         if (epoch is not None) and ("epoch" in arg_list):
@@ -751,7 +735,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Dictionary containing all attributes listed in
             the 'fields' class attribute.
         """
-
         flux_body_dict = OrderedDict()
 
         for key in self.fields:
@@ -785,7 +768,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
     def print_measurements(self):
         """Print all measurements."""
-
         out = []
 
         # Define header
@@ -800,9 +782,9 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         # Setup the title
         out.append("".join(["="] * max(len(hdr), len(units))))
         out.append("NAME: {0:s}".format(self.name.replace("_", " ")))
-        out.append("RA:   {0:>6.2f} deg".format(self.ra))
-        out.append("DEC:  {0:>6.2f} deg".format(self.dec))
-        out.append("{0:d} Measurements".format(len(self.measurements)))
+        out.append(f"RA:   {self.ra:>6.2f} deg")
+        out.append(f"DEC:  {self.dec:>6.2f} deg")
+        out.append(f"{len(self.measurements):d} Measurements")
 
         out.append("".join(["-"] * max(len(hdr), len(units))))
         out.append(hdr)
@@ -902,7 +884,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
     @classmethod
     def string(cls):
         """Print basic information about the sources in the catalog."""
-
         catalog_string = []
 
         # Print the header
@@ -952,7 +933,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             plot flux measurements, etc.
 
         """
-
         arg_list = misc.getfullargspec(cls.__init__).args[2:]
 
         kwargs = {
@@ -981,7 +961,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             plot flux measurements, etc.
 
         """
-
         # Check that key is a string
         if not isinstance(key, str):
             raise TypeError("Provide source name as string.")
@@ -1014,7 +993,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Name of the astronomical source.
 
         """
-
         try:
             obj = cls.get(source_name)
         except KeyError:
@@ -1041,7 +1019,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             List of source names in correct order.
 
         """
-
         keys = []
         for name, body in cls._entries.items():
             keys.append((body._sort_id, name))
@@ -1127,7 +1104,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             (list of str).
 
         """
-
         # Determine the directory where this class is located
         current_file = inspect.getfile(cls.__class__)
         current_dir = os.path.abspath(os.path.dirname(os.path.dirname(current_file)))
@@ -1143,7 +1119,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
                 full_path = os.path.join(root, filename)
 
                 # Read into dictionary
-                with open(full_path, "r") as fp:
+                with open(full_path) as fp:
                     collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
 
                 # Append (path, number of sources, source names) to list
@@ -1208,7 +1184,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Valid path name.  Should have .json or .pickle extension.
 
         """
-
         # Parse filename
         filename = os.path.expandvars(os.path.expanduser(filename))
         path = os.path.abspath(os.path.dirname(filename))
@@ -1241,8 +1216,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
     @classmethod
     def load(cls, filename, overwrite=0, set_globals=False, verbose=False):
-        """
-        Load the contents of a file into the catalog.
+        """Load the contents of a file into the catalog.
 
         Parameters
         ----------
@@ -1261,7 +1235,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             If True, print some basic info about the contents of
             the file as it is loaded. Default is False.
         """
-
         # Parse filename
         # Define collection name as basename of file without extension
         filename = os.path.expandvars(os.path.expanduser(filename))
@@ -1275,7 +1248,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             raise ValueError("Do not recognize '%s' extension." % ext)
 
         # Load contents of file into a dictionary
-        with open(filename, "r") as fp:
+        with open(filename) as fp:
             if ext == ".json":
                 collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
             elif ext == ".pickle":
@@ -1403,7 +1376,6 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
     verbose : bool
         If true, then print out all of the source names.
     """
-
     ncol = 4
     nsrc = len(source_names)
 

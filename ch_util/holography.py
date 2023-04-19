@@ -1,5 +1,4 @@
-"""
-Holography observation tables.
+"""Holography observation tables.
 
 This module defines the tables:
 
@@ -17,6 +16,7 @@ and the constants:
 import os
 import warnings
 import zipfile
+
 import numpy as np
 import peewee as pw
 from chimedb.core.orm import base_model
@@ -53,8 +53,7 @@ class HolographySource(base_model):
 
 
 class HolographyObservation(base_model):
-    """
-    A peewee model for the holographic observations.
+    """A peewee model for the holographic observations.
 
     Attributes
     ----------
@@ -106,7 +105,6 @@ class HolographyObservation(base_model):
         notes : string, optional
             Any notes on this observation.
         """
-
         start_time = ephemeris.lsa_to_unix(
             start_lst * 360 / 24,
             ephemeris.datetime_to_unix(ephemeris.parse_date(start_day)),
@@ -161,10 +159,9 @@ class HolographyObservation(base_model):
     # duration
     @classmethod
     def parse_post_report(cls, post_report_file):
-        """
-        read a .POST_REPORT file from the nsched program which controls the
+        """Read a .POST_REPORT file from the nsched program which controls the
         John Galt Telescope and extract the source name, estimated start time,
-        DRAO sidereal day, commanded duration, and estimated finish time
+        DRAO sidereal day, commanded duration, and estimated finish time.
 
         Parameters
         ----------
@@ -195,7 +192,7 @@ class HolographyObservation(base_model):
 
         output_params = {}
 
-        with open(post_report_file, "r") as f:
+        with open(post_report_file) as f:
             lines = [line for line in f]
             for l in lines:
                 if (l.find("Source")) != -1:
@@ -240,9 +237,8 @@ class HolographyObservation(base_model):
         quality_flag=0,
         **kwargs,
     ):
-        """
-        Read John Galt Telescope log files and create an entry in the
-        holography database corresponding to the exact times on source
+        """Read John Galt Telescope log files and create an entry in the
+        holography database corresponding to the exact times on source.
 
         Parameters
         ----------
@@ -256,9 +252,9 @@ class HolographyObservation(base_model):
         -------
         none
         """
+        from skyfield.positionlib import Angle
 
         from ch_util.ephemeris import sphdist
-        from skyfield.positionlib import Angle
 
         ts = ephemeris.skyfield_wrapper.timescale
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %z"
@@ -281,7 +277,7 @@ class HolographyObservation(base_model):
                     ant_log["dec"],
                 )
                 if verbose:
-                    print("onsource_dist = {:.2f} deg".format(onsource_dist))
+                    print(f"onsource_dist = {onsource_dist:.2f} deg")
                 onsource = np.where(dist.degrees < onsource_dist)[0]
 
                 if len(onsource) > 0:
@@ -306,7 +302,7 @@ class HolographyObservation(base_model):
                         )
                         noteout = (
                             "Questionable on source. Mean, STD(offset) : "
-                            "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
+                            f"{meanoffset:.3f}, {stdoffset:.3f}. {noteout}"
                         )
                     obs["quality_flag"] |= quality_flag
                     if verbose:
@@ -365,8 +361,7 @@ class HolographyObservation(base_model):
         replace_dup=False,
         verbose=False,
     ):
-        """
-        Create a holography database entry from a dictionary
+        """Create a holography database entry from a dictionary.
 
         This routine checks for duplicates and overwrites duplicates if and
         only if `replace_dup = True`
@@ -384,9 +379,8 @@ class HolographyObservation(base_model):
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %Z"
 
         def check_for_duplicates(t, src, start_tol, ignore_src_mismatch=False):
-            """
-            Check for duplicate holography observations, comparing the given
-            observation to the existing database
+            """Check for duplicate holography observations, comparing the given
+            observation to the existing database.
 
             Inputs
             ------
@@ -445,7 +439,7 @@ class HolographyObservation(base_model):
                         # check possible.
 
                     if dup_found:
-                        tf = ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
+                        ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
                         print(
                             "Tried to add  :  {} {}; LST={:.3f}".format(
                                 src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
@@ -518,9 +512,8 @@ class HolographyObservation(base_model):
 
     @classmethod
     def parse_ant_logs(cls, logs, return_post_report_params=False):
-        """
-        Unzip and parse .ANT log file output by nsched for John Galt Telescope
-        observations
+        """Unzip and parse .ANT log file output by nsched for John Galt Telescope
+        observations.
 
         Parameters
         ----------
@@ -542,7 +535,6 @@ class HolographyObservation(base_model):
 
         Returns
         -------
-
         if output_params == False:
             ant_data: A dictionary consisting of lists containing the LST,
                 hour angle, RA, and dec (all as Skyfield Angle objects),
@@ -558,16 +550,12 @@ class HolographyObservation(base_model):
         the .ANT and .POST_REPORT files in the input .zip archive are
         extracted into /tmp/26mlog/<loginname>/
         """
-
-        from skyfield.positionlib import Angle
         from caput import time as ctime
-
-        DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0 / 360.0
+        from skyfield.positionlib import Angle
 
         def sidlst_to_csd(sid, lst, sid_ref, t_ref):
-            """
-            Convert an integer DRAO sidereal day and LST to a float
-            CHIME sidereal day
+            """Convert an integer DRAO sidereal day and LST to a float
+            CHIME sidereal day.
 
             Parameters
             ----------
@@ -598,7 +586,7 @@ class HolographyObservation(base_model):
             doobs = True
 
             filename = log.split("/")[-1]
-            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
+            basedir = f"/tmp/26mlog/{os.getlogin()}/"
             basename, extension = filename.split(".")
             post_report_file = basename + ".POST_REPORT"
             ant_file = basename + ".ANT"
@@ -629,7 +617,7 @@ class HolographyObservation(base_model):
                         basedir + post_report_file
                     )
 
-                    with open(os.path.join(basedir, ant_file), "r") as f:
+                    with open(os.path.join(basedir, ant_file)) as f:
                         lines = [line for line in f]
                         ant_data = {"sid": np.array([])}
                         lsth = []
@@ -670,11 +658,7 @@ class HolographyObservation(base_model):
                                     ant_data["sid"], int(arr[1])
                                 )
                             except:
-                                print(
-                                    "Failed in file {} for line \n{}".format(
-                                        ant_file, l
-                                    )
-                                )
+                                print(f"Failed in file {ant_file} for line \n{l}")
                                 if len(ant_data["sid"]) != len(decs):
                                     print("WARNING: mismatch in list lengths.")
 
@@ -731,7 +715,7 @@ class HolographyObservation(base_model):
                     ant_data_list.append(ant_data)
                     post_report_list.append(post_report_params)
                 except:
-                    print("Parsing {} failed".format(post_report_file))
+                    print(f"Parsing {post_report_file} failed")
 
         if return_post_report_params:
             return post_report_list, ant_data_list
@@ -802,7 +786,7 @@ class HolographyObservation(base_model):
 
         for log, note in zip(logs, notesarr):
             if verbose:
-                print("Working on {}".format(log))
+                print(f"Working on {log}")
             filename = log.split("/")[-1]
             # basedir = '/'.join(log.split('/')[:-1]) + '/'
             basedir = "/tmp/"
@@ -816,11 +800,7 @@ class HolographyObservation(base_model):
                 try:
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
                 except Exception:
-                    print(
-                        "failed to find {}. Moving right along...".format(
-                            post_report_file
-                        )
-                    )
+                    print(f"failed to find {post_report_file}. Moving right along...")
                     doobs = False
             elif extension != "POST_REPORT":
                 print(

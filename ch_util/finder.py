@@ -1,5 +1,4 @@
-"""
-Data Index Searcher for CHIME
+"""Data Index Searcher for CHIME.
 
 Search routines for locating data withing the CHIME data index.
 
@@ -39,20 +38,16 @@ Routines
 """
 
 import logging
-import os
-from os import path
-import time
 import socket
-import peewee as pw
-import re
+import time
+from os import path
 
-import chimedb.core as db
 import chimedb.data_index as di
-from . import layout, ephemeris
+import peewee as pw
+from chimedb.dataflag import DataFlag, DataFlagType
 
-from chimedb.dataflag import DataFlagType, DataFlag
-
-from .holography import HolographySource, HolographyObservation
+from . import ephemeris, layout
+from .holography import HolographyObservation, HolographySource
 
 # Module Constants
 # ================
@@ -68,7 +63,6 @@ GF_ACCEPT = "gf_accept"
 
 from ._db_tables import connect_peewee_tables as connect_database
 
-
 # High level interface to the data index
 # ======================================
 
@@ -81,7 +75,7 @@ _acq_info_table = [di.CorrAcqInfo, di.HKAcqInfo, di.RawadcAcqInfo]
 from chimedb.data_index.orm import file_info_table
 
 
-class Finder(object):
+class Finder:
     """High level searching of the CHIME data index.
 
     This class gives a convenient way to search and filter data acquisitions
@@ -144,7 +138,6 @@ class Finder(object):
 
     Examples
     --------
-
     To find all the correlator data between two times.
 
     >>> from ch_util import finder
@@ -312,7 +305,6 @@ class Finder(object):
         full archive.
 
         """
-
         node_spoof = {}
         # for n in di.StorageNode.select():
         #    node_spoof[n.name] = ''
@@ -333,7 +325,6 @@ class Finder(object):
         acqs : list of :class:`chimedb.data_index.ArchiveAcq` objects
 
         """
-
         return list(self._acqs)
 
     @property
@@ -350,7 +341,6 @@ class Finder(object):
             Unix/POSIX beginning and end of the time range.
 
         """
-
         return self._time_range
 
     @property
@@ -367,7 +357,6 @@ class Finder(object):
             to be included.
 
         """
-
         if self._time_intervals is None:
             return [self.time_range]
         else:
@@ -392,7 +381,6 @@ class Finder(object):
             to be excluded.
 
         """
-
         return list(self._time_exclusions)
 
     def _append_time_exclusion(self, interval):
@@ -410,7 +398,6 @@ class Finder(object):
             Length of time in seconds.
 
         """
-
         return self._min_interval
 
     @min_interval.setter
@@ -443,7 +430,6 @@ class Finder(object):
             Specifies finder behaviour.
 
         """
-
         return dict(self._gf_mode)
 
     @property
@@ -464,7 +450,6 @@ class Finder(object):
         severe : One of *GF_REJECT*, *GF_RAISE*, *GF_WARN*, or *GF_ACCEPT*.
 
         """
-
         if comment:
             _validate_gf_value(comment)
             self._gf_mode["comment"] = comment
@@ -477,7 +462,6 @@ class Finder(object):
 
     def accept_all_global_flags(self):
         """Set global flag behaviour to accept all data."""
-
         self.update_global_flag_mode(
             comment=GF_ACCEPT, warning=GF_ACCEPT, severe=GF_ACCEPT
         )
@@ -514,32 +498,33 @@ class Finder(object):
 
     def only_chime_weather(self):
         """Only include chime weather acquisitions in this search.
-        This excludes the old format mingun-weather."""
+        This excludes the old format mingun-weather.
+        """
         self._acq_info = []
         self._file_info = [di.WeatherFileInfo]
         self.filter_acqs(di.AcqType.name == "weather")
         self.filter_acqs(di.ArchiveInst.name == "chime")
 
     def only_hkp(self):
-        """Only include Prometheus housekeeping data in this search"""
+        """Only include Prometheus housekeeping data in this search."""
         self._acq_info = []
         self._file_info = [di.HKPFileInfo]
         self.filter_acqs(di.AcqType.name == "hkp")
 
     def only_digitalgain(self):
-        """Only include digital gain data in this search"""
+        """Only include digital gain data in this search."""
         self._acq_info = []
         self._file_info = [di.DigitalGainFileInfo]
         self.filter_acqs(di.AcqType.name == "digitalgain")
 
     def only_gain(self):
-        """Only include calibration gain data in this search"""
+        """Only include calibration gain data in this search."""
         self._acq_info = []
         self._file_info = [di.CalibrationGainFileInfo]
         self.filter_acqs(di.AcqType.name == "gain")
 
     def only_flaginput(self):
-        """Only include input flag data in this search"""
+        """Only include input flag data in this search."""
         self._acq_info = []
         self._file_info = [di.FlagInputFileInfo]
         self.filter_acqs(di.AcqType.name == "flaginput")
@@ -556,7 +541,6 @@ class Finder(object):
 
         Examples
         --------
-
         >>> from ch_util import finder
         >>> import chimedb.data_index as di
         >>> f = finder.Finder()
@@ -565,17 +549,14 @@ class Finder(object):
 
         See Also
         --------
-
         :meth:`Finder.filter_acqs_by_files`
 
 
         References
         ----------
-
         .. [1] http://peewee.readthedocs.org/en/latest/peewee/querying.html
 
         """
-
         # Get the acquisitions currently included.
         acq_ids = [acq.id for acq in self.acqs]
         if not acq_ids:
@@ -607,7 +588,6 @@ class Finder(object):
 
         See Also
         --------
-
         :meth:`Finder.filter_acqs`
 
         Examples
@@ -615,7 +595,6 @@ class Finder(object):
 
         References
         ----------
-
         .. [2] http://peewee.readthedocs.org/en/latest/peewee/querying.html
 
         """
@@ -682,7 +661,7 @@ class Finder(object):
             )
         self.filter_acqs_by_files(cond)
 
-        if not self._time_intervals is None:
+        if self._time_intervals is not None:
             time_intervals = _trim_intervals_range(
                 self.time_intervals, (start_time, end_time)
             )
@@ -703,12 +682,10 @@ class Finder(object):
 
         Notes
         -----
-
         Global flag ID numbers, names, and descriptions are listed at
         http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7
 
         """
-
         start_time, end_time = _get_global_flag_times_by_name_event_id(flag)
         self.set_time_range(start_time, end_time)
 
@@ -748,7 +725,6 @@ class Finder(object):
 
         Examples
         --------
-
         First a certain layout is chosen
 
         >>> from ch_util import finder
@@ -787,7 +763,6 @@ class Finder(object):
         Total 5465.059670 seconds of data.
 
         """
-
         interval = self._format_time_interval(start_time, end_time)
         if interval:
             self._append_time_interval(interval)
@@ -797,7 +772,6 @@ class Finder(object):
 
         Examples
         --------
-
         >>> from ch_util import finder
         >>> from datetime import datetime
         >>> f = finder.Finder()
@@ -817,7 +791,6 @@ class Finder(object):
            8  |  20140413T002319Z_blanchard_corr  |        0.0  |    84981.7  |  24
         Total 873555.739000 seconds of data.
         """
-
         interval = self._format_time_interval(start_time, end_time)
         if interval:
             self._append_time_exclusion(interval)
@@ -832,12 +805,10 @@ class Finder(object):
 
         Notes
         -----
-
         Global flag ID numbers, names, and descriptions are listed at
         http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7
 
         """
-
         start_time, end_time = _get_global_flag_times_by_name_event_id(flag)
         self.include_time_interval(start_time, end_time)
 
@@ -851,17 +822,14 @@ class Finder(object):
 
         See Also
         --------
-
         Look under :meth:`include_global_flag` for a very similar example.
 
         Notes
         -----
-
         Global flag ID numbers, names, and descriptions are listed at
         http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7
 
         """
-
         start_time, end_time = _get_global_flag_times_by_name_event_id(flag)
         self.exclude_time_interval(start_time, end_time)
 
@@ -873,14 +841,13 @@ class Finder(object):
         flag_type : string or list of string
             Name of DataFlagType(s) to exclude from results, e.g. "rain".
         """
-
         if isinstance(flag_type, list):
             self.data_flag_types.extend(flag_type)
         else:
             self.data_flag_types.append(flag_type)
 
     def include_RA_interval(self, start_RA, end_RA):
-        """Add time intervals to include passings of given right RA intervals
+        """Add time intervals to include passings of given right RA intervals.
 
         Parameters
         ----------
@@ -914,7 +881,6 @@ class Finder(object):
           14  |  20140413T002319Z_blanchard_corr  |      664.1  |    21541.0  |  7
         Total 242094.394565 seconds of data.
         """
-
         from . import ephemeris
 
         delta_RA = (end_RA - start_RA) % 360
@@ -924,7 +890,7 @@ class Finder(object):
 
     def exclude_RA_interval(self, start_RA, end_RA):
         """Add time intervals to exclude passings of given right RA
-        intervals
+        intervals.
 
         Parameters
         ----------
@@ -974,7 +940,6 @@ class Finder(object):
         Total 11790.181012 seconds of data.
 
         """
-
         if not time_delta:
             time_delta = self.min_interval * 2
         ttimes = ephemeris.transit_times(body, *self.time_range)
@@ -1010,13 +975,12 @@ class Finder(object):
         Total  18271 seconds, 229410 MB of data.
 
         """
-
         connect_database()
         sources = HolographySource.select()
         sources = sources.where(HolographySource.name == source)
         if len(sources) == 0:
             msg = (
-                "No sources found in the database that match: {0}\n".format(source)
+                f"No sources found in the database that match: {source}\n"
                 + "Returning full time range"
             )
             logging.warning(msg)
@@ -1028,7 +992,7 @@ class Finder(object):
         if require_quality:
             obs = obs.select().where(
                 (HolographyObservation.quality_flag == 0)
-                | (HolographyObservation.quality_flag == None)
+                | (HolographyObservation.quality_flag is None)
             )
 
         found_obs = False
@@ -1041,9 +1005,7 @@ class Finder(object):
                 self.include_time_interval(ob.start_time, ob.finish_time)
         if not found_obs:
             msg = (
-                "No observation of the source ({0}) was found within the time range.\n".format(
-                    source
-                )
+                f"No observation of the source ({source}) was found within the time range.\n"
                 + "Returning full time range"
             )
             logging.warning(msg)
@@ -1078,7 +1040,6 @@ class Finder(object):
         Total 155641.231275 seconds of data.
 
         """
-
         if not time_delta:
             time_delta = self.min_interval * 2
         ttimes = ephemeris.transit_times(body, *self.time_range)
@@ -1089,7 +1050,6 @@ class Finder(object):
 
     def exclude_daytime(self):
         """Add time intervals to exclude all day time data."""
-
         rise_times = ephemeris.solar_rising(
             self.time_range[0] - 24 * 3600.0, self.time_range[1]
         )
@@ -1100,7 +1060,6 @@ class Finder(object):
 
     def exclude_nighttime(self):
         """Add time intervals to exclude all night time data."""
-
         set_times = ephemeris.solar_setting(
             self.time_range[0] - 24 * 3600.0, self.time_range[1]
         )
@@ -1121,7 +1080,6 @@ class Finder(object):
             Total amount of time to exclude after sunrise and before sunset
             in seconds.  Default is to use 4000.0 seconds.
         """
-
         # Sunrise
         rise_times = ephemeris.solar_rising(
             self.time_range[0] - time_delta_rise_set, self.time_range[1]
@@ -1237,8 +1195,8 @@ class Finder(object):
         if len(self.data_flag_types) > 0:
             df_types = [t.name for t in DataFlagType.select()]
             for dft in self.data_flag_types:
-                if not dft in df_types:
-                    raise RuntimeError("Could not find data flag type {}.".format(dft))
+                if dft not in df_types:
+                    raise RuntimeError(f"Could not find data flag type {dft}.")
                 flag_times = []
                 for f in DataFlag.select().where(
                     DataFlag.type == DataFlagType.get(name=dft)
@@ -1307,7 +1265,6 @@ class Finder(object):
             Any extra filters, particularly filters on individual files.
 
         """
-
         intervals = []
         for ii in range(len(self.acqs)):
             intervals += self.get_results_acq(ii, file_condition)
@@ -1325,7 +1282,6 @@ class Finder(object):
         :meth:`Finder.print_results_summary`
 
         """
-
         from . import ephemeris
 
         print("acquisition | name | start | length (hrs) | N files")
@@ -1342,7 +1298,6 @@ class Finder(object):
 
     def print_results_summary(self):
         """Print a summary of the search results."""
-
         row_proto = "%4d | %-36s | %7.f | %7.f | %4d | %6.f"
         total_data = 0.0
         total_size = 0.0
@@ -1429,7 +1384,7 @@ def _check_intervals_overlap(intervals1, intervals2):
 
 
 def _validate_gf_value(value):
-    if not value in (GF_REJECT, GF_RAISE, GF_WARN, GF_ACCEPT):
+    if value not in (GF_REJECT, GF_RAISE, GF_WARN, GF_ACCEPT):
         raise ValueError(
             "Global flag behaviour must be one of"
             " the *GF_REJECT*, *GF_RAISE*, *GF_WARN*, *GF_ACCEPT*"
@@ -1441,7 +1396,7 @@ def _get_global_flag_times_by_name_event_id(flag):
     if isinstance(flag, str):
         event = (
             layout.event.select()
-            .where(layout.event.active == True)
+            .where(layout.event.active is True)
             .join(
                 layout.global_flag, on=(layout.event.graph_obj == layout.global_flag.id)
             )
@@ -1475,7 +1430,6 @@ class DataIntervalList(list):
             Iterator over data intervals as :class:`andata.Reader` instances.
 
         """
-
         for data_interval in self:
             yield data_interval.as_reader()
 
@@ -1496,7 +1450,6 @@ class DataIntervalList(list):
 
         Examples
         --------
-
         Use this method to loop over data loaded into memory.
 
         >>> for data in interval_list.iter_loaded_data():
@@ -1508,7 +1461,6 @@ class DataIntervalList(list):
         >>> loaded_data_list = list(interval_list.iter_loaded_data())
 
         """
-
         for data_interval in self:
             yield data_interval.as_loaded_data(**kwargs)
 
@@ -1583,7 +1535,7 @@ class CorrDataInterval(BaseDataInterval):
         return andata.CorrReader
 
     def as_loaded_data(self, prod_sel=None, freq_sel=None, datasets=None):
-        """Load data interval to memory as an :class:`andata.CorrData` instance
+        """Load data interval to memory as an :class:`andata.CorrData` instance.
 
         Parameters
         ----------
@@ -1692,7 +1644,6 @@ def files_in_range(
         List of filenames, including the full path.
 
     """
-
     if isinstance(acq, str):
         acq_name = acq
         acq = di.ArchiveAcq.get(di.ArchiveAcq.name == acq).acq

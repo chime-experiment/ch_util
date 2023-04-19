@@ -1,13 +1,13 @@
-"""Analysis data format"""
+"""Analysis data format."""
 
-import warnings
 import glob
-from os import path
 import posixpath
 import re
+import warnings
+from os import path
 
-import numpy as np
 import h5py
+import numpy as np
 from bitshuffle import h5
 
 tmp = h5  # To appease linters who complain about unused imports.
@@ -79,16 +79,13 @@ class BaseData(tod.TOData):
     convert_dataset_strings = True
 
     def __new__(cls, h5_data=None, **kwargs):
-        """Used to pick which subclass to instantiate based on attributes in
-        data."""
-
+        """Used to pick which subclass to instantiate based on attributes in data."""
         new_cls = subclass_from_obj(cls, h5_data)
 
-        self = super(BaseData, new_cls).__new__(new_cls)
-        return self
+        return super().__new__(new_cls)
 
     def __init__(self, h5_data=None, **kwargs):
-        super(BaseData, self).__init__(h5_data, **kwargs)
+        super().__init__(h5_data, **kwargs)
         if self._data.file.mode == "r+":
             self._data.require_group("cal")
             self._data.require_group("flags")
@@ -114,7 +111,6 @@ class BaseData(tod.TOData):
             Entries are :mod:`h5py` or :mod:`caput.memh5` datasets.
 
         """
-
         out = {}
         for name, value in self._data.items():
             if not memh5.is_group(value):
@@ -131,7 +127,6 @@ class BaseData(tod.TOData):
             Entries are :mod:`h5py` or :mod:`caput.memh5` datasets.
 
         """
-
         try:
             g = self._data["flags"]
         except KeyError:
@@ -159,7 +154,6 @@ class BaseData(tod.TOData):
             Calibration schemes.
 
         """
-
         out = {}
         for name, value in self._data["cal"].items():
             out[name] = value.attrs
@@ -169,20 +163,17 @@ class BaseData(tod.TOData):
 
     def dataset_name_allowed(self, name):
         """Permits datasets in the root and 'flags' groups."""
-
         parent_name, name = posixpath.split(name)
         return True if parent_name == "/" or parent_name == "/flags" else False
 
     def group_name_allowed(self, name):
         """Permits only the "flags" group."""
-
         return True if name == "/flags" else False
 
     # - Methods for manipulating and building the class. - #
 
     def create_cal(self, name, cal=None):
         """Create a new cal entry."""
-
         if cal is None:
             cal = {}
         self._data["cal"].create_group(name)
@@ -206,13 +197,11 @@ class BaseData(tod.TOData):
     @property
     def ntime(self):
         """Length of the time axis of the visibilities."""
-
         return len(self.index_map["time"])
 
     @property
     def time(self):
         """The 'time' axis centres as Unix/POSIX time."""
-
         if (
             self.index_map["time"].dtype == np.float32
             or self.index_map["time"].dtype == np.float64
@@ -220,17 +209,16 @@ class BaseData(tod.TOData):
             # Already a calculated timestamp.
             return self.index_map["time"][:]
 
-        else:
-            time = _timestamp_from_fpga_cpu(
-                self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
-            )
+        time = _timestamp_from_fpga_cpu(
+            self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
+        )
 
-            alignment = self.index_attrs["time"].get("alignment", 0)
+        alignment = self.index_attrs["time"].get("alignment", 0)
 
-            if alignment != 0:
-                time = time + alignment * abs(np.median(np.diff(time)) / 2)
+        if alignment != 0:
+            time = time + alignment * abs(np.median(np.diff(time)) / 2)
 
-            return time
+        return time
 
     @classmethod
     def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
@@ -276,13 +264,14 @@ class BaseData(tod.TOData):
         out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
+        **kwargs : dict, optional
+            Additional keyword args to pass to the function which read the files
 
         Examples
         --------
         Examples are analogous to those of :meth:`CorrData.from_acq_h5`.
 
         """
-
         # Make sure the input is a sequence and that we have at least one file.
         acq_files = tod.ensure_file_list(acq_files)
         if not acq_files:
@@ -303,7 +292,7 @@ class BaseData(tod.TOData):
                 stop=stop,
                 datasets=datasets,
                 out_group=out_group,
-                **kwargs
+                **kwargs,
             )
 
             # Set an attribute on the time axis specifying alignment
@@ -321,11 +310,14 @@ class BaseData(tod.TOData):
     @property
     def timestamp(self):
         """Deprecated name for :attr:`~BaseData.time`."""
-
         return self.time
 
     @staticmethod
     def convert_time(time):
+        """Ensure a timestamp is unix.
+
+        XXX: This seems to be deprecated
+        """
         try:
             from .ephemeris import ensure_unix
         except ValueError:
@@ -399,19 +391,22 @@ class CorrData(BaseData):
 
     @property
     def ninput(self):
+        """Length of the input axis."""
         return len(self.index_map["input"])
 
     @property
     def input(self):
+        """The input axis."""
         return self.index_map["input"]
 
     @property
     def nstack(self):
+        """Length of the stack axis."""
         return len(self.index_map["stack"])
 
     @property
     def stack(self):
-        """The correlation product axis as channel pairs."""
+        """The stack axis."""
         return self.index_map["stack"]
 
     @property
@@ -436,6 +431,7 @@ class CorrData(BaseData):
 
     @property
     def is_stacked(self):
+        """True if this dataset has already been stacked over redundant baselines."""
         return "stack" in self.index_map and len(self.stack) != len(self.prod)
 
     @classmethod
@@ -460,7 +456,7 @@ class CorrData(BaseData):
         if datasets is not None and (
             ("vis" in datasets and apply_gain) or ("gain" in datasets)
         ):
-            datasets = tuple(datasets) + ("gain", "gain_exp", "gain_coeff")
+            datasets = (*tuple(datasets), "gain", "gain_exp", "gain_coeff")
         # Always load packet loss dataset if available, so we can normalized
         # for it.
         if datasets is not None:
@@ -468,7 +464,10 @@ class CorrData(BaseData):
             if "vis_weight" in datasets:
                 norm_dsets += ["vis_weight"]
             if len(norm_dsets):
-                datasets = tuple(datasets) + ("flags/lost_packet_count",)
+                datasets = (
+                    *tuple(datasets),
+                    "flags/lost_packet_count",
+                )
 
         # Inspect the header of the first file for version information.
         f = acq_files[0]
@@ -518,7 +517,7 @@ class CorrData(BaseData):
 
             # Remove the FPGA applied gains (need to invert them first).
             if apply_gain and any(
-                [re.match(ACQ_VIS_DATASETS, key) for key in data.datasets]
+                re.match(ACQ_VIS_DATASETS, key) for key in data.datasets
             ):
                 from ch_util import tools
 
@@ -616,6 +615,8 @@ class CorrData(BaseData):
             Load data into a distributed dataset.
         comm : MPI.Comm
             Communicator to distributed over. Use MPI.COMM_WORLD if not set.
+        kwargs : dict
+            Placeholder for all the above optional keyword arguments.
 
         Returns
         -------
@@ -624,7 +625,6 @@ class CorrData(BaseData):
 
         Examples
         --------
-
         Suppose we have two acquisition format files (this test data is
         included in the ch_util repository):
 
@@ -674,7 +674,6 @@ class CorrData(BaseData):
         True
 
         """
-
         stack_sel = kwargs.pop("stack_sel", None)
         prod_sel = kwargs.pop("prod_sel", None)
         input_sel = kwargs.pop("input_sel", None)
@@ -706,7 +705,7 @@ class CorrData(BaseData):
                 comm=comm,
             )
 
-        return super(CorrData, cls).from_acq_h5(
+        return super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -735,8 +734,8 @@ class CorrData(BaseData):
         renormalize,
         comm,
     ):
+        from caput import memh5, mpiarray, mpiutil
         from mpi4py import MPI
-        from caput import mpiutil, mpiarray, memh5
 
         # Turn into actual list of files
         files = tod.ensure_file_list(acq_files)
@@ -765,7 +764,7 @@ class CorrData(BaseData):
         )
 
         # Load just the local part of the data.
-        local_data = super(CorrData, cls).from_acq_h5(
+        local_data = super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -887,8 +886,8 @@ class CorrData(BaseData):
         data : andata.CorrData
             The CorrData container.
         """
+        from caput import memh5, misc, mpiarray
         from mpi4py import MPI
-        from caput import misc, mpiarray, memh5
 
         ## Datasets to read, if it's not listed here, it's not read at all
         # Datasets read by andata (should be small)
@@ -1019,7 +1018,7 @@ class HKData(BaseData):
         try:
             self._chan
         except AttributeError:
-            self._chan = dict()
+            self._chan = {}
         try:
             return self._chan[mux]
         except KeyError:
@@ -1157,7 +1156,7 @@ class HKData(BaseData):
         --------
         Examples are analogous to those of :meth:`CorrData.from_acq_h5`.
         """
-        return super(HKData, cls).from_acq_h5(
+        return super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -1186,7 +1185,6 @@ class HKPData(memh5.MemDiskGroup):
         -------
         metrics : list
         """
-
         import h5py
 
         metric_names = set()
@@ -1216,13 +1214,13 @@ class HKPData(memh5.MemDiskGroup):
             Names of metrics to load. Default is all.
         datasets : list
             Synonym for metrics (the value of metrics will take precedence).
-
+        kwargs : dict, optional
+            Additional keyword arguments to pass to parent `from_file` method
 
         Returns
         -------
         data : HKPData
         """
-
         from caput import time as ctime
 
         metrics = metrics if metrics is not None else datasets
@@ -1238,7 +1236,7 @@ class HKPData(memh5.MemDiskGroup):
                 f,
                 convert_attribute_strings=cls.convert_attribute_strings,
                 convert_dataset_strings=cls.convert_dataset_strings,
-                **kwargs
+                **kwargs,
             )
             for f in acq_files
         ]
@@ -1261,9 +1259,7 @@ class HKPData(memh5.MemDiskGroup):
             return data[mask]
 
         def filter_file(f):
-            """Filter a file's data down to the requested metrics
-            and time range.
-            """
+            """Filter a file's data down to the requested metrics and time range."""
             metrics_to_copy = set(f.keys())
 
             if metrics is not None:
@@ -1275,11 +1271,10 @@ class HKPData(memh5.MemDiskGroup):
             return filtered_data
 
         def get_full_dtype(dset_name, filtered_data):
-            """Returns a numpy.dtype object with the union of all columns
-            from all files. Also returns the total length of the data set
-            (metric) including all files.
-            """
+            """Returns a numpy.dtype object with the union of all columns from all files.
 
+            Also returns the total length of the data set (metric) including all files.
+            """
             length = 0
             all_columns = []
             all_types = []
@@ -1310,13 +1305,13 @@ class HKPData(memh5.MemDiskGroup):
             return data_dtype, length
 
         def get_full_attrs(dset_name, files):
-            """Creates a 'full_attrs' dictionary of all attributes and all
-            possible values they can take, from all the files, for a
-            particular data set (metric). Also returns an 'index_remap'
-            list of dictionaries to remap indices of values in different
-            files.
-            """
+            """Creates a 'full_attrs' dictionary.
 
+            Includes all attributes and all possible values they can take,
+            from all the files, for a particular data set (metric).
+            Also returns an 'index_remap' list of dictionaries to remap
+            indices of values in different files.
+            """
             full_attrs = {}  # Dictionary of attributes
             index_remap = []  # List of dictionaries (one per file)
             for ii, fl in enumerate(files):
@@ -1339,11 +1334,11 @@ class HKPData(memh5.MemDiskGroup):
             return full_attrs, index_remap
 
         def get_full_data(length, data_dtype, index_remap, filtered_data, dset_name):
-            """Returns the full data matrix as a structured array. Values are
-            modified when necessary acording to 'index_remap' to correspond
-            to the final positions in the 'full_attrs'.
-            """
+            """Returns the full data matrix as a structured array.
 
+            Values are modified when necessary acording to 'index_remap'
+            to correspond to the final positions in the 'full_attrs'.
+            """
             full_data = np.zeros(length, data_dtype)
 
             curr_ent = 0  # Current entry we are in the full data file
@@ -1409,7 +1404,6 @@ class HKPData(memh5.MemDiskGroup):
         -------
         df : pandas.DataFrame
         """
-
         import pandas as pd
 
         dset = self[metric_name]
@@ -1466,7 +1460,6 @@ class HKPData(memh5.MemDiskGroup):
             A dataframe resampled onto a regular grid. Labels now appear as part
             of multi-level columns.
         """
-
         df = self.select(metric_name)
 
         group_columns = list(set(df.columns) - {"value"})
@@ -1475,8 +1468,8 @@ class HKPData(memh5.MemDiskGroup):
 
         if unstack:
             return resampled_df.unstack(group_columns)
-        else:
-            return resampled_df.reset_index(group_columns)
+
+        return resampled_df.reset_index(group_columns)
 
 
 class WeatherData(BaseData):
@@ -1484,34 +1477,31 @@ class WeatherData(BaseData):
 
     @property
     def time(self):
-        """Needs to be able to extrac times from both mingun_weather files
-        and chime_weather files.
-        """
+        """Extract times from both mingun_weather files and chime_weather files."""
         if "time" in self.index_map:
             return self.index_map["time"]
-        else:
-            return self.index_map["station_time_blockhouse"]
+
+        return self.index_map["station_time_blockhouse"]
 
     @property
     def temperature(self):
-        """For easy access to outside weather station temperature.
+        """Easy access to outside weather station temperature.
+
         Needs to be able to extrac temperatures from both mingun_weather files
         and chime_weather files.
         """
         if "blockhouse" in self.keys():
             return self["blockhouse"]["outTemp"]
-        else:
-            return self["outTemp"]
+
+        return self["outTemp"]
 
     def dataset_name_allowed(self, name):
         """Permits datasets in the root and 'blockhouse' groups."""
-
         parent_name, name = posixpath.split(name)
         return True if parent_name == "/" or parent_name == "/blockhouse" else False
 
     def group_name_allowed(self, name):
         """Permits only the "blockhouse" group."""
-
         return True if name == "/blockhouse" else False
 
 
@@ -1535,13 +1525,12 @@ class RawADCData(BaseData):
                 data = dataset
             else:
                 raise RuntimeError(
-                    "Dataset (%s) has unexpected shape [%s]."
-                    % (dataset.name, repr(dataset.shape))
+                    f"Dataset ({dataset.name}) has unexpected shape [{dataset.shape!r}]."
                 )
             return data
 
         andata_objs = [RawADCData(d) for d in acq_files]
-        data = concatenate(
+        return concatenate(
             andata_objs,
             out_group=out_group,
             start=start,
@@ -1551,7 +1540,6 @@ class RawADCData(BaseData):
             convert_attribute_strings=cls.convert_attribute_strings,
             convert_dataset_strings=cls.convert_dataset_strings,
         )
-        return data
 
 
 class GainFlagData(BaseData):
@@ -1616,13 +1604,11 @@ class GainFlagData(BaseData):
         if dmax > 0.0:
             msg = (
                 "Requested timestamps are after the latest update_time "
-                "by as much as %0.2f hours." % (dmax / 3600.0,)
+                f"by as much as {(dmax / 3600.0):.2f} hours."
             )
             warnings.warn(msg)
 
-        index = np.digitize(timestamp, self.time, right=False) - 1
-
-        return index
+        return np.digitize(timestamp, self.time, right=False) - 1
 
     def search_update_id(self, pattern, is_regex=False):
         """Find the index into the `update_time` axis corresponding to a particular `update_id`.
@@ -1644,10 +1630,9 @@ class GainFlagData(BaseData):
 
         ptn = pattern if is_regex else fnmatch.translate(pattern)
         regex = re.compile(ptn)
-        index = np.array(
+        return np.array(
             [ii for ii, uid in enumerate(self.update_id[:]) if regex.match(uid)]
         )
-        return index
 
     @property
     def time(self):
@@ -1845,10 +1830,7 @@ class BaseReader(tod.Reader):
             of :attr:`~Reader.time_sel`.  Default leaves it unchanged.
 
         """
-
-        super(BaseReader, self).select_time_range(
-            start_time=start_time, stop_time=stop_time
-        )
+        super().select_time_range(start_time=start_time, stop_time=stop_time)
 
     def read(self, out_group=None):
         """Read the selected data.
@@ -1867,7 +1849,6 @@ class BaseReader(tod.Reader):
             :attr:`~Reader.freq_sel`.
 
         """
-
         return self.data_class.from_acq_h5(
             self.files,
             start=self.time_sel[0],
@@ -1883,7 +1864,7 @@ class CorrReader(BaseReader):
     data_class = CorrData
 
     def __init__(self, files):
-        super(CorrReader, self).__init__(files)
+        super().__init__(files)
         data_empty = self._data_empty
         prod = data_empty.prod
         freq = data_empty.index_map["freq"]
@@ -2013,7 +1994,6 @@ class CorrReader(BaseReader):
             Input pairs to be included.
 
         """
-
         sel = []
         for input_a, input_b in pairs:
             for ii in range(len(self.prod)):
@@ -2026,7 +2006,6 @@ class CorrReader(BaseReader):
 
     def select_prod_autos(self):
         """Sets :attr:`~Reader.prod_sel` to only auto-correlations."""
-
         sel = []
         for ii, prod in enumerate(self.prod):
             if prod[0] == prod[1]:
@@ -2043,7 +2022,6 @@ class CorrReader(BaseReader):
             this input as one of the pairs are selected.
 
         """
-
         sel = []
         for ii, prod in enumerate(self.prod):
             if prod[0] == input or prod[1] == input:
@@ -2068,7 +2046,6 @@ class CorrReader(BaseReader):
             is approximate. Default is to include all samples in given range.
 
         """
-
         freq = self.freq["centre"]
         nfreq = len(freq)
         if freq_step is None:
@@ -2100,7 +2077,6 @@ class CorrReader(BaseReader):
             on a best match basis.
 
         """
-
         freq_centre = self.freq["centre"]
         freq_width = self.freq["width"]
         frequencies = np.array(frequencies)
@@ -2138,7 +2114,6 @@ class CorrReader(BaseReader):
             :attr:`~Reader.freq_sel`.
 
         """
-
         dsets = tuple(self.dataset_sel)
 
         # Add in virtual gain dataset
@@ -2236,7 +2211,7 @@ def subclass_from_obj(cls, obj):
     if isinstance(obj, str):
         with h5py.File(obj, "r") as f:
             cls = subclass_from_obj(cls, f)
-        return cls
+        return cls  # noqa: RET504
 
     new_cls = cls
     acquisition_type = None
@@ -2267,7 +2242,6 @@ def _open_files(files, opened):
     work is recorded in the event of an error.
 
     """
-
     for ii, this_file in enumerate(list(files)):
         # Sort out how to get an open hdf5 file.
         open_file, was_opened = memh5.get_h5py_File(this_file, mode="r")
@@ -2428,8 +2402,7 @@ def _input_sel_from_prod_sel(prod_sel, prod_map):
         input_sel.append(p0)
         input_sel.append(p1)
     # ensure_1D here deals with h5py issue #425.
-    input_sel = _ensure_1D_selection(sorted(list(set(input_sel))))
-    return input_sel
+    return _ensure_1D_selection(sorted(set(input_sel)))
 
 
 def _prod_sel_from_input_sel(input_sel, input_map, prod_map):
@@ -2439,14 +2412,12 @@ def _prod_sel_from_input_sel(input_sel, input_map, prod_map):
         if p[0] in inputs and p[1] in inputs:
             prod_sel.append(ii)
     # ensure_1D here deals with h5py issue #425.
-    prod_sel = _ensure_1D_selection(prod_sel)
-    return prod_sel
+    return _ensure_1D_selection(prod_sel)
 
 
 def _stack_sel_from_prod_sel(prod_sel, stack_rmap):
     stack_sel = stack_rmap["stack"][prod_sel]
-    stack_sel = _ensure_1D_selection(sorted(list(set(stack_sel))))
-    return stack_sel
+    return _ensure_1D_selection(sorted(set(stack_sel)))
 
 
 def _prod_sel_from_stack_sel(stack_sel, stack_map, stack_rmap):
@@ -2458,12 +2429,15 @@ def _prod_sel_from_stack_sel(stack_sel, stack_map, stack_rmap):
     prod_sel = []
     for ii in range(len(stack_inds)):
         prod_sel.append(stack_rmap_sort_inds[left_indeces[ii] : right_indeces[ii]])
-    prod_sel = np.concatenate(prod_sel)
-    prod_sel = _ensure_1D_selection(sorted(list(set(prod_sel))))
-    return prod_sel
+    return np.concatenate(prod_sel)
 
 
 def versiontuple(v):
+    """Split a version string into a tuple.
+
+    Takes a version string of form x.y.z and returns
+    a tuple of integers (x, y, z).
+    """
     return tuple(map(int, (v.split("."))))
 
 
@@ -2510,7 +2484,6 @@ def _renormalize(data):
 
 def _unwrap_fpga_counts(data):
     """Unwrap 32-bit FPGA counts in a CorrData object."""
-
     import datetime
 
     time_map = data.index_map["time"][:]
@@ -2689,7 +2662,6 @@ def _check_files_acq1(files):
     datasets.
 
     """
-
     first_file = True
     for ii, open_file in enumerate(list(files)):
         # Sort out how to get an open hdf5 file.
@@ -2769,9 +2741,7 @@ def _resolve_header_info_acq1(header_info):
 
 
 def _get_files_frames_acq1(files, start, stop):
-    """Counts the number of frames in each file and sorts out which frames to
-    read."""
-
+    """Counts the number of frames in each file and sorts out which frames to read."""
     dataset_name = "vis"  # For now just base everything off of 'vis'.
     n_times = []
     for this_file in files:
@@ -2789,7 +2759,6 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
     Completely reverses the order of all axes.
 
     """
-
     # Get shape information.
     ntime = len(dataset)
     ntime_out = len(np.arange(ntime)[time_slice])
@@ -2798,7 +2767,10 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
     # The shape of the output array.
     reversed_back_shape = list(back_shape)
     reversed_back_shape.reverse()
-    out_shape = tuple(reversed_back_shape) + (ntime_out,)
+    out_shape = (
+        *tuple(reversed_back_shape),
+        ntime_out,
+    )
     # Check if there are multiple data fields in this dataset.  If so they will
     # each end up in their own separate arrays.
     if dataset[0].dtype.fields is None:
@@ -2824,45 +2796,51 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
         else:
             out_cal = {}
         return {"": out}, out_cal
-    else:
-        fields = list(dataset[0].dtype.fields.keys())
-        # If there is a 'cal' attribute, make sure it's the right shape.
+
+    fields = list(dataset[0].dtype.fields.keys())
+    # If there is a 'cal' attribute, make sure it's the right shape.
+    if "cal" in dataset.attrs:
+        if dataset.attrs["cal"].shape != (1,):
+            msg = "'cal' attribute has more than one element."
+            raise AttributeError(msg)
+        if len(list(dataset.attrs["cal"].dtype.fields.keys())) != len(fields):
+            msg = "'cal' attribute not compatible with dataset dtype."
+            raise AttributeError(msg)
+    out = {}
+    out_cal = {}
+    # Figure out what fields there are and allocate memory.
+    for field in fields:
+        dtype = dataset[0][field].dtype
+        out_arr = np.empty(out_shape, dtype=dtype)
+        out[field] = out_arr
         if "cal" in dataset.attrs:
-            if dataset.attrs["cal"].shape != (1,):
-                msg = "'cal' attribute has more than one element."
-                raise AttributeError(msg)
-            if len(list(dataset.attrs["cal"].dtype.fields.keys())) != len(fields):
-                msg = "'cal' attribute not compatible with dataset dtype."
-                raise AttributeError(msg)
-        out = {}
-        out_cal = {}
-        # Figure out what fields there are and allocate memory.
+            out_cal[field] = memh5.bytes_to_unicode(dataset.attrs["cal"][0][field])
+    for jj, ii in enumerate(np.arange(ntime)[time_slice]):
+        # Copy data for efficient read.
+        record = dataset[ii]  # Copies to memory.
         for field in fields:
-            dtype = dataset[0][field].dtype
-            out_arr = np.empty(out_shape, dtype=dtype)
-            out[field] = out_arr
-            if "cal" in dataset.attrs:
-                out_cal[field] = memh5.bytes_to_unicode(dataset.attrs["cal"][0][field])
-        for jj, ii in enumerate(np.arange(ntime)[time_slice]):
-            # Copy data for efficient read.
-            record = dataset[ii]  # Copies to memory.
-            for field in fields:
-                if not back_shape:
-                    out[field][jj] = record[field]
-                elif len(back_shape) == 1:
-                    out[field][:, jj] = record[field][:]
-                else:
-                    # Multidimensional, try to be more efficient.
-                    it = np.nditer(record[..., 0], flags=["multi_index"], order="C")
-                    while not it.finished:
-                        # Reverse the multiindex for the out array.
-                        ind = it.multi_index + (slice(None),)
-                        ind_rev = list(ind)
-                        ind_rev.reverse()
-                        ind_rev = tuple(ind_rev) + (jj,)
-                        out[field][ind_rev] = record[field][ind]
-                        it.iternext()
-        return out, out_cal
+            if not back_shape:
+                out[field][jj] = record[field]
+            elif len(back_shape) == 1:
+                out[field][:, jj] = record[field][:]
+            else:
+                # Multidimensional, try to be more efficient.
+                it = np.nditer(record[..., 0], flags=["multi_index"], order="C")
+                while not it.finished:
+                    # Reverse the multiindex for the out array.
+                    ind = (
+                        *it.multi_index,
+                        slice(None),
+                    )
+                    ind_rev = list(ind)
+                    ind_rev.reverse()
+                    ind_rev = (
+                        *tuple(ind_rev),
+                        jj,
+                    )
+                    out[field][ind_rev] = record[field][ind]
+                    it.iternext()
+    return out, out_cal
 
 
 def _data_attrs_from_acq_attrs_acq1(acq_attrs):
@@ -2911,6 +2889,7 @@ def _get_index_map_from_acq1(acq_files, time_sel, prod_sel, freq_sel):
 
 
 def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_group):
+    """Create a CorrData container from version 1 aqc files."""
     # First open all the files and collect necessary data for all of them.
     dtypes = _check_files_acq1(acq_files)
     # Figure how much of the total data to read.
@@ -2987,6 +2966,7 @@ def andata_from_archive2(
     datasets,
     out_group,
 ):
+    """Create a CorrData container from version 1 aqc files."""
     # XXX For short term force to CorrData class.  Will be fixed once archive
     # files carry 'acquisition_type' attribute.
     # andata_objs = [ cls(d) for d in acq_files ]
@@ -3197,9 +3177,7 @@ def _generate_input_map(serials, chans=None):
     else:
         chan_iter = list(zip(chans, serials))
 
-    imap = np.array(list(chan_iter), dtype=_imap_dtype)
-
-    return imap
+    return np.array(list(chan_iter), dtype=_imap_dtype)
 
 
 def _get_versiontuple(afile):

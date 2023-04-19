@@ -1,6 +1,4 @@
-"""
-Data quality routines
-
+"""Data quality routines.
 
 Data quality functions
 ======================
@@ -17,9 +15,7 @@ Auxiliary functions are still lacking documentation.
 import numpy as np
 
 import ch_util.ephemeris as ch_eph
-from ch_util import andata
-from ch_util import tools
-from ch_util import ni_utils
+from ch_util import andata, ni_utils, tools
 
 
 def good_channels(
@@ -100,7 +96,6 @@ def good_channels(
 
     Examples
     --------
-
     Run test on frequency index 3. data is an andata object:
 
     >>> good_gains, good_noise, good_fit, test_chans = good_channels(data,test_freq=3)
@@ -110,7 +105,6 @@ def good_channels(
     >>> good_gains, good_noise, good_fit, test_chans = good_channels(data,test_freq=3,res_plot=True)
 
     """
-
     if verbose:
         print("Running data quality test.")
 
@@ -130,9 +124,9 @@ def good_channels(
         n_samp = t_step * bwdth
 
     # Processing noise synced data, if noise_synced != False:
-    if noise_synced == False:
+    if noise_synced is False:
         pass
-    elif noise_synced == True:
+    elif noise_synced is True:
         if is_gated_format:
             # If data is gated, ignore noise_synced argument:
             msg = (
@@ -144,12 +138,12 @@ def good_channels(
         else:
             # Process noise synced data:
             data = ni_utils.process_synced_data(data)
-    elif noise_synced == None:
+    elif noise_synced is None:
         # If noise_synced is not given, try to read ni_enable from data:
         try:
             # Newer data have a noise-injection flag
             ni_enable = data.attrs["fpga.ni_enable"][0].astype(bool)
-        except:
+        except (AttributeError, KeyError, IndexError, TypeError):
             # If no info is found, run function to determine ni_enable:
             ni_enable = _check_ni(data, test_freq)
         # If noise injection is enabled and data is not gated:
@@ -163,7 +157,7 @@ def good_channels(
     autos_index, autos_chan = _get_autos_index(prod_array_full)
     # Select auto-corrs and test_freq only:
     visi = np.array([data.vis[test_freq, jj, :] for jj in autos_index])
-    chan_array = np.array([chan for chan in autos_chan])
+    chan_array = np.array([chan for chan in autos_chan])  # noqa: C416
     tmstp = data.index_map["time"]["ctime"]
 
     # Remove non-chime channels (Noise source, RFI, 26m...):
@@ -262,10 +256,11 @@ def good_channels(
 
 
 def _check_ni(data, test_freq=0):
-    """This is a quick and dirt function to determine if
-        noise injection was ON or OFF for acquisitions
-        older then ctime = 1435349183, when noise injection
-        info started to be written to the h5py files
+    """Check noise injection status for acquisitions before ctime = 1435349183.
+
+    This is a quick and dirt function to determine if noise injection was ON
+    or OFF for acquisitions older then ctime = 1435349183, when noise injection
+    info started to be written to the h5py files.
 
     Parameters
     ----------
@@ -279,7 +274,6 @@ def _check_ni(data, test_freq=0):
     ni_on : boolean
         True if noise injection is On, False otherwise.
     """
-
     visi = data.vis[test_freq].real
     # Divide visibility in even and odd time bins
     if visi.shape[1] % 2 == 0:
@@ -315,9 +309,7 @@ def _check_ni(data, test_freq=0):
 
 
 def _get_autos_index(prod_array):
-    """Obtain auto-correlation indices from the 'prod' index map
-    returned by andata.
-    """
+    """Obtain auto-correlation indices from the 'prod' index map returned by andata."""
     autos_index, autos_chan = [], []
     for ii in range(len(prod_array)):
         if prod_array[ii][0] == prod_array[ii][1]:
@@ -328,21 +320,24 @@ def _get_autos_index(prod_array):
 
 
 def _get_prod_array(path):
-    """Function to get visibility product array from file path
+    """Function to get visibility product array from file path.
 
     Useful when desired file is known but not the time span, so that
     finder and as_reader are not useful. Or when file is not known
     to alpenhorn
 
-    Parameters:
+    Parameters
+    ----------
     ***********
-    path : string, path to file
+    path : string
+        path to file
 
-    Returns:
+    Returns
+    -------
     ********
-    prod_array : array-like, the visibility products.
+    prod_array : array-like
+        the visibility products.
     """
-
     # If given list of files, use first one:
     if isinstance(path, list):
         path = path[0]
@@ -354,12 +349,11 @@ def _get_prod_array(path):
 
 
 def _cut_non_chime(data, visi, chan_array, inputs=None):
-    """
-    Remove non CHIME channels (noise injection, RFI antenna,
-    26m, etc...) from visibility. Also remove channels marked
-    as powered-off in layout DB.
-    """
+    """Remove non CHIME channels from visibility.
 
+    Includes noise injection, RFI antenna, 26m, etc...).
+    Also remove channels marked as powered-off in layout DB.
+    """
     # Map of channels to corr. inputs:
     input_map = data.input
     tmstp = data.index_map["time"]["ctime"]  # time stamp
@@ -388,9 +382,11 @@ def _cut_non_chime(data, visi, chan_array, inputs=None):
 
 
 def _noise_test(visi, tmstp, n_samp, tol):
-    """Calls radiom_noise to obtain radiometer statistics
-    and aplies the noise tolerance to get a list of
-    channels that pass the radiometer noise test
+    """Perform a radiometer noise test on given channels.
+
+    Calls radiom_noise to obtain radiometer statistics
+    and applies the noise tolerance to get a list of
+    channels that pass the radiometer noise test.
     """
     Nchans = visi.shape[0]
     # Array to hold radiom noise fractions
@@ -433,7 +429,7 @@ def _noise_test(visi, tmstp, n_samp, tol):
                 rnt[ii] = rnt_med
 
         # List of good noise channels (Initialized with all True):
-        good_noise = np.ones((Nchans))
+        good_noise = np.ones(Nchans)
         # Test noise against tolerance and isnan, isinf:
         for ii in range(Nchans):
             is_nan_inf = np.isnan(rnt[ii]) or np.isinf(rnt[ii])
@@ -443,8 +439,7 @@ def _noise_test(visi, tmstp, n_samp, tol):
 
 
 def _radiom_noise(trace, n_samp, wind=100):
-    """Generates radiometer noise test statistics"""
-
+    """Generates radiometer noise test statistics."""
     # If window is < the length, use length of trace:
     wind = min(len(trace), wind)
 
@@ -490,10 +485,10 @@ def _radiom_noise(trace, n_samp, wind=100):
 
 def _cut_daytime(visi, tmstp):
     """Returns visibilities with night time only.
+
     Returns an array if a single night is present.
     Returns a list of arrays if multiple nights are present.
     """
-
     tstp = tmstp[1] - tmstp[0]  # Get time step
 
     risings = ch_eph.solar_rising(tmstp[0], tmstp[-1])
@@ -592,7 +587,6 @@ def _cut_daytime(visi, tmstp):
 
 def _gains_test(data, test_freq, test_chans, tol):
     """Test channels for excessive digital gains."""
-
     input_map = [entry[0] for entry in data.input]
 
     # Get gains:
@@ -620,9 +614,7 @@ def _gains_test(data, test_freq, test_chans, tol):
 
 
 def _stats_print(good_noise, good_gains, good_fit, test_chans):
-    """Generate a simple set of statistics for the test
-    and print them to screen.
-    """
+    """Generate a simple set of statistics for the test and print them to screen."""
     print("\nFilter statistics:")
 
     good_chans = [1] * len(test_chans)
@@ -631,9 +623,7 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
     if good_noise is not None:
         Nnoisy = Nact - int(np.sum(good_noise))
         print(
-            "Noisy channels: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Nnoisy, Nact, Nnoisy * 100 / Nact
-            )
+            f"Noisy channels: {Nnoisy} out of {Nact} active channels ({(Nnoisy * 100 / Nact):2.1f}%)"
         )
         good_chans = good_chans * good_noise
     else:
@@ -641,9 +631,7 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
     if good_gains is not None:
         Ngains = Nact - int(np.sum(good_gains))
         print(
-            "High digital gains: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Ngains, Nact, Ngains * 100 / Nact
-            )
+            f"High digital gains: {Ngains} out of {Nact} active channels ({(Ngains * 100 / Nact):2.1f}%)"
         )
         good_chans = good_chans * good_gains
     else:
@@ -651,9 +639,7 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
     if good_fit is not None:
         Nfit = Nact - int(np.sum(good_fit))
         print(
-            "Bad fit to T_sky: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Nfit, Nact, Nfit * 100 / Nact
-            )
+            f"Bad fit to T_sky: {Nfit} out of {Nact} active channels ({(Nfit * 100 / Nact):2.1f}%)"
         )
         good_chans = good_chans * good_fit
     else:
@@ -664,9 +650,7 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
     if not ((good_noise is None) and (good_gains is None) and (good_fit is None)):
         Nbad = Nact - int(np.sum(good_chans))
         print(
-            "Overall bad: {0} out of {1} active channels ({2:2.1f}%)\n".format(
-                Nbad, Nact, Nbad * 100 / Nact
-            )
+            f"Overall bad: {Nbad} out of {Nact} active channels ({(Nbad * 100 / Nact):2.1f}%)\n"
         )
     else:
         Nbad = None
@@ -687,7 +671,6 @@ def _cut_sun_transit(cut_vis, tmstp, tcut=120.0):
         time (in minutes) to cut on both sides of Sun transit.
 
     """
-
     # Start looking for transits tcut minutes before start time:
     st_time = tmstp[0] - tcut * 60.0
     # Stop looking for transits tcut minutes after end time:
@@ -721,18 +704,17 @@ def _median_filter(visi, ks=3):
     from scipy.signal import medfilt
 
     # Median filter visibilities:
-    cut_vis = np.array(
+    return np.array(
         [medfilt(visi[jj, :].real, kernel_size=ks) for jj in range(visi.shape[0])]
     )
-    return cut_vis
 
 
 def _get_template(cut_vis_full, stand_chans):
     """Obtain template visibility through an SVD.
+
     This template will be compared to the actual
     visibilities in _fit_template.
     """
-
     # Full copy of visibilities without sun:
     cut_vis = np.copy(cut_vis_full)
 
@@ -770,7 +752,7 @@ def _get_template(cut_vis_full, stand_chans):
         indices = np.delete(indices, max_ind)
     # Cut-out channels with largest deviations:
     cut_vis = np.array(
-        [cut_vis[jj, :] for jj in range(len(cut_vis)) if not (jj in del_ind)]
+        [cut_vis[jj, :] for jj in range(len(cut_vis)) if jj not in del_ind]
     )
 
     Nchans = cut_vis.shape[0]  # Number of channels after cut
@@ -829,13 +811,10 @@ def _get_template(cut_vis_full, stand_chans):
 
 
 def _fit_template(Ts, cut_vis, tol):
-    """Fits template visibility to actual ones
-    to identify bad channels.
-    """
-
+    """Fits template visibility to actual ones to identify bad channels."""
     from scipy.optimize import curve_fit
 
-    class Template(object):
+    class Template:
         def __init__(self, tmplt):
             self.tmplt = tmplt
 
@@ -877,14 +856,13 @@ def _fit_template(Ts, cut_vis, tol):
 def _create_plot(
     visi, tmstp, cut_tmstp, sky, popt, test_chans, good_gains, good_noise, good_fit
 ):
-    """Creates plot of the visibilities and the fits
-    with labels for those that fail the tests
-    """
+    """Plot the visibilities and label for that fail the tests."""
     import matplotlib
 
     matplotlib.use("PDF")
-    import matplotlib.pyplot as plt
     import time
+
+    import matplotlib.pyplot as plt
 
     # Visibilities to plot:
     visi1 = visi  # Raw data
@@ -898,9 +876,7 @@ def _create_plot(
     tmstp2 = cut_tmstp
 
     # For title, use start time stamp:
-    title = "Good channels result for {0}".format(
-        ch_eph.unix_to_datetime(tmstp1[0]).date()
-    )
+    title = f"Good channels result for {ch_eph.unix_to_datetime(tmstp1[0]).date()}"
 
     # I need to know the slot for each channel:
     def get_slot(channel):
@@ -968,7 +944,7 @@ def _create_plot(
         plt.ylim(med - 7.0 * mad, med + 7.0 * mad)
 
         # labels:
-        plt.ylabel("Ch{0} (Sl.{1})".format(chan, get_slot(chan)), fontsize=8)
+        plt.ylabel(f"Ch{chan} (Sl.{get_slot(chan)})", fontsize=8)
 
         # Hide numbering:
         frame = plt.gca()
@@ -984,16 +960,12 @@ def _create_plot(
                 # Put x-labels on bottom plots:
                 if time_unit == "days":
                     plt.xlabel(
-                        "Time (days since {0} UTC)".format(
-                            ch_eph.unix_to_datetime(tmstp1[0])
-                        ),
+                        f"Time (days since {ch_eph.unix_to_datetime(tmstp1[0])} UTC)",
                         fontsize=10,
                     )
                 else:
                     plt.xlabel(
-                        "Time (hours since {0} UTC)".format(
-                            ch_eph.unix_to_datetime(tmstp1[0])
-                        ),
+                        f"Time (hours since {ch_eph.unix_to_datetime(tmstp1[0])} UTC)",
                         fontsize=10,
                     )
 
@@ -1006,7 +978,7 @@ def _create_plot(
         elif chan == 192:
             plt.title("East cyl. P2(E-W)", fontsize=12)
 
-    filename = "plot_fit_{0}.pdf".format(int(time.time()))
+    filename = f"plot_fit_{int(time.time())}.pdf"
     plt.savefig(filename)
     plt.close()
-    print("Finished creating plot. File name: {0}".format(filename))
+    print(f"Finished creating plot. File name: {filename}")

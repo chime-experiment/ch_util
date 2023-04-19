@@ -1,5 +1,4 @@
-"""
-Tools for CHIME analysis
+"""Tools for CHIME analysis.
 
 A collection of miscellaneous utility routines.
 
@@ -47,7 +46,6 @@ This can determine if we are connected to any of the following:
 
 Example
 -------
-
 Fetch the inputs for blanchard during layout 38::
 
     >>> from datetime import datetime
@@ -122,13 +120,13 @@ Miscellaneous
 """
 
 import datetime
-import numpy as np
-import scipy.linalg as la
 import re
 from typing import Tuple
 
+import numpy as np
+import scipy.linalg as la
 from caput import pfb
-from caput.interferometry import projected_distance, fringestop_phase
+from caput.interferometry import projected_distance
 
 from ch_util import ephemeris
 
@@ -189,7 +187,7 @@ _LAT_LON = {
 # =======
 
 
-class HKInput(object):
+class HKInput:
     """A housekeeping input.
 
     Parameters
@@ -231,7 +229,7 @@ class HKInput(object):
         return ret
 
 
-class CorrInput(object):
+class CorrInput:
     """Base class for describing a correlator input.
 
     Meant to be subclassed by actual types of inputs.
@@ -363,7 +361,7 @@ class Antenna(CorrInput):
 
 
 class RFIAntenna(Antenna):
-    """RFI monitoring antenna"""
+    """RFI monitoring antenna."""
 
     pass
 
@@ -595,7 +593,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
     channel : CorrInput
         An instance of `CorrInput` containing the channel properties.
     """
-
     if corr is not None:
         corr_sn = corr.sn
     else:
@@ -1035,7 +1032,6 @@ def hk_to_sensor(graph, inp):
         Raised if one of the channels or muxes passed in **hk_chan** is out of
         range.
     """
-
     from . import layout
 
     graph = _ensure_graph(graph)
@@ -1209,7 +1205,6 @@ def serial_to_location(serial):
     location : 4-tuple
         (corr_order, crate, slot, sma)
     """
-
     default = (None,) * 4
     if serial is None:
         return default
@@ -1337,10 +1332,10 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
         List of :class:`CorrInput` instances. Returns `None` for MPI ranks
         other than zero.
     """
-
-    from ch_util import layout
     import networkx as nx
     from chimedb.core.connectdb import connect_this_rank
+
+    from ch_util import layout
 
     coax_type = ["SMA coax", "3.25m SMA coax"]
 
@@ -1372,7 +1367,6 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             # A hack to return GBO correlator inputs
             correlator = "tone"
             connect = False
-            laytime = 0
             return fake_tone_database()
 
     if not connect_this_rank():
@@ -1470,7 +1464,6 @@ def change_pathfinder_location(rotation=None, location=None, default=False):
     default:  bool
         Set parameters back to default value.  Overides other keywords.
     """
-
     if default:
         rotation = _PF_ROT
         location = _PF_POS
@@ -1496,7 +1489,6 @@ def change_chime_location(rotation=None, location=None, default=False):
     default: bool
         Set parameters back to default value.  Overides other keywords.
     """
-
     if default:
         rotation = _CHIME_ROT
         location = _CHIME_POS
@@ -1526,7 +1518,6 @@ def get_feed_positions(feeds, get_zpos=False):
         (increasing to the E), and the second is the N-S position (increasing
         to the N). Non CHIME feeds get set to `NaN`.
     """
-
     # Extract positions for all array antennas or holographic antennas, fill other
     # inputs with NaNs
     pos = np.array(
@@ -1736,7 +1727,6 @@ def is_array_on(inputs, *args):
         If list, it is the same length as inputs. Value is True if input is
         attached to a ArrayAntenna *and* powered-on and False otherwise
     """
-
     if len(args) > 0:
         raise RuntimeError("This routine no longer accepts a layout time argument.")
 
@@ -1907,7 +1897,6 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
     corr_arr : np.ndarray[..., nfeed, nfeed, ...]
         Expanded array.
     """
-
     nprod = prod_arr.shape[axis]
     nfeed = int((2 * nprod) ** 0.5)
 
@@ -1964,7 +1953,6 @@ def pack_product_array(exp_arr, axis=1):
     prod_arr : np.ndarray[..., nprod, ...]
         Array containing products packed in upper triangle format.
     """
-
     nfeed = exp_arr.shape[axis]
     nprod = nfeed * (nfeed + 1) // 2
 
@@ -1989,8 +1977,7 @@ def pack_product_array(exp_arr, axis=1):
 
 
 def fast_pack_product_array(arr):
-    """
-    Equivalent to ch_util.tools.pack_product_array(arr, axis=0),
+    """Equivalent to ch_util.tools.pack_product_array(arr, axis=0),
     but 10^5 times faster for full CHIME!
 
     Currently assumes that arr is a 2D array of shape (nfeeds, nfeeds),
@@ -1998,7 +1985,6 @@ def fast_pack_product_array(arr):
     is all we need for phase calibration, but pack_product_array() is
     more general.
     """
-
     assert arr.ndim == 2
     assert arr.shape[0] == arr.shape[1]
 
@@ -2029,7 +2015,6 @@ def rankN_approx(A, rank=1):
     B : np.ndarray
         Low rank approximation.
     """
-
     N = A.shape[0]
 
     evals, evecs = la.eigh(A, eigvals=(N - rank, N - 1))
@@ -2056,7 +2041,6 @@ def eigh_no_diagonal(A, niter=5, eigvals=None):
     evals : np.ndarray[:]
     evecs : np.ndarray[:, :]
     """
-
     Ac = A.copy()
 
     if niter > 0:
@@ -2086,7 +2070,6 @@ def normalise_correlations(A, norm=None):
     ach : np.ndarray[:]
         Array of the square root diagonal elements that normalise the matrix.
     """
-
     if norm is None:
         ach = A.diagonal() ** 0.5
     else:
@@ -2128,7 +2111,6 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
         Visibility array with gains applied. Same shape as :obj:`vis`.
 
     """
-
     nprod = vis.shape[axis]
     ninput = gain.shape[axis]
 
@@ -2192,7 +2174,6 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
     out : np.ndarray
         Visibility array with signal subtracted. Same shape as :obj:`vis`.
     """
-
     nprod = vis.shape[axis]
     ninput = signal.shape[axis]
 
@@ -2273,7 +2254,6 @@ def fringestop_time(
     -------
     fringestopped_timestream : np.ndarray[nfreq, nprod, times]
     """
-
     # Check the shapes match
     nfeed = len(feeds)
     nprod = len(prod_map) if prod_map is not None else nfeed * (nfeed + 1) // 2
@@ -2360,7 +2340,6 @@ def decorrelation(
     -------
     corrected_timestream : np.ndarray[nfreq, nprod, times]
     """
-
     # Check the shapes match
     nfeed = len(feeds)
     nprod = len(prod_map) if prod_map is not None else nfeed * (nfeed + 1) // 2
@@ -2437,7 +2416,6 @@ def delay(
     -------
     delay : np.ndarray[nprod, nra]
     """
-
     import scipy.constants
 
     ra = (times % 1.0) * 360.0 if csd else obs.unix_to_lsa(times)
@@ -2502,11 +2480,12 @@ def beam_index2number(beam_index):
 
 
 def invert_no_zero(*args, **kwargs):
-    from caput import tools
     import warnings
 
+    from caput import tools
+
     warnings.warn(
-        f"Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
+        "Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
         category=DeprecationWarning,
     )
     return tools.invert_no_zero(*args, **kwargs)
