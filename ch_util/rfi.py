@@ -50,8 +50,12 @@ BAD_FREQUENCIES = [
     [[None, None], [487.70, 494.34]],
     [[None, None], [497.85, 506.05]],
     [[None, None], [529.10, 536.52]],
-    [[None, None], [541.60, 554.49]],
-    [[None, None], [564.65, 585.35]],
+    [[None, None], [541.60, 548.00]],
+    # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
+    [[None, 1661334542], [548.00, 554.49]],
+    [[None, None], [564.65, 578.00]],
+    # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
+    [[None, 1661420706], [578.00, 585.35]],
     [[None, None], [693.16, 693.55]],
     [[None, None], [694.34, 696.68]],
     [[None, None], [729.88, 745.12]],
