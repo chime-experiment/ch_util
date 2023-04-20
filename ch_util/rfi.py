@@ -27,7 +27,7 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
-from typing import Tuple
+from typing import Tuple, Optional, Union
 
 import numpy as np
 import scipy.signal as sig
@@ -419,48 +419,63 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     return mask
 
 
-def frequency_mask(freq_centre, freq_width=None, timestamp=None):
+def frequency_mask(
+    freq_centre: np.ndarray,
+    freq_width: Optional[Union[np.ndarray, float]] = None,
+    timestamp: Optional[Union[np.ndarray, float]] = None,
+) -> np.ndarray:
     """Flag known bad frequencies.
 
-    LSD-dependent static RFI flags that affect the recent observations are added.
+    Time dependent static RFI flags that affect the recent observations are added.
 
     Parameters
     ----------
-    freq_centre : np.ndarray[nfreq]
+    freq_centre
         Centre of each frequency channel
-    freq_width : np.ndarray[nfreq] or float, optional
-        Width of each frequency channel. If `None` (default), calculate the
-        width from the frequency centre separation.
-    timestamp : float, optional
-        UNIX start observing time
+    freq_width
+        Width of each frequency channel. If `None` (default), calculate the width from
+        the frequency centre separation. If supplied as an array it must be
+        broadcastable
+        against `freq_centre`.
+    timestamp : np., optional
+        UNIX observing time. If `None` (default) mask all specified bands regardless of
+        their start/end times, otherwise mask only timestamps within the band start and
+        end times. If supplied as an array it must be broadcastable against
+        `freq_centre`.
 
     Returns
     -------
-    mask : np.ndarray[nfreq]
-        An array marking the bad frequency channels.
+    mask
+        An array marking the bad frequency channels. The final shape is the result of
+        broadcasting `freq_centre` and `timestamp` together.
     """
     if freq_width is None:
         freq_width = np.abs(np.median(np.diff(freq_centre)))
 
-    mask = np.zeros_like(freq_centre, dtype=bool)
-
     freq_start = freq_centre - freq_width / 2
     freq_end = freq_centre + freq_width / 2
 
-    # Time-dependent static RFI flagging
+    # Broadcast to get the output mask
+    mask = np.zeros(np.broadcast(freq_centre, timestamp).shape, dtype=bool)
 
     for (start_time, end_time), (fs, fe) in BAD_FREQUENCIES:
-        # If we have a start time and the timestamp occurs before,
-        # do not mask
-        if start_time is not None and timestamp <= start_time:
-            continue
-        # If we have an end time and the timestamp occurs after,
-        # do not mask
-        if end_time is not None and timestamp >= end_time:
-            continue
+        fmask = (freq_end > fs) & (freq_start < fe)
 
-        # Mask frequencies specified in this band
-        mask |= (freq_end > fs) & (freq_start < fe)
+        # If we don't have a timestamp then just mask all bands
+        if timestamp is None:
+            tmask = True
+        else:
+            # Otherwise calculate the mask based on the start and end times
+            tmask = np.ones_like(timestamp, dtype=bool)
+
+            if start_time is not None:
+                tmask &= timestamp >= start_time
+
+            if end_time is not None:
+                tmask &= timestamp <= end_time
+
+        # Mask frequencies and times specified in this band
+        mask |= tmask & fmask
 
     return mask
 
