@@ -364,7 +364,10 @@ class CorrData(BaseData):
     @property
     def dataset_id(self):
         """Access dataset id dataset in unicode format."""
-        return memh5.ensure_unicode(self.flags["dataset_id"][:])
+        dsid = memh5.ensure_unicode(self.flags["dataset_id"][:])
+        dsid.flags.writeable = False
+
+        return dsid
 
     @property
     def nprod(self):
