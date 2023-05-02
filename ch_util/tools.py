@@ -154,19 +154,24 @@ _PF_POS = [373.754961, -54.649866, 0.0]
 _PF_ROT = 1.986  # Pathfinder rotation from north (towards west) in degrees
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
-# PCO geometry
-_PCO_POS = [0.0, 0.0, 0.0]
-_PCO_ROT = -0.67
-# PCO rotation from north. Anti-clockwise looking at the ground (degrees).
-# See Doclib #1530 for more information.
+# KKO geometry
+_KKO_POS = [0.0, 0.0, 0.0]
+_KKO_ROT = -0.6874
+_KKO_ROLL = 0.5888
+# KKO_ROT = rotation of cylinder axis from North. Anti-clockwise looking at the ground (degrees).
+# KKO_ROLL = roll of cylinder toward east from Vertical. Anti-clockwise looking North along the focal line.
+# See Doclib #1530 and #1121 for more information.
 
 # GBO geometry
 _GBO_POS = [0.0, 0.0, 0.0]
-_GBO_ROT = 0.0  # TODO
+_GBO_ROT = 27.3745
+_GBO_ROLL = -30.0871 
 
-# HCRO geometry
-_HCRO_POS = [0.0, 0.0, 0.0]
-_HCRO_ROT = 0.0  # TODO
+# HCO geometry
+_HCO_POS = [0.0, 0.0, 0.0]
+_HCO_ROT = -0.8023
+_HCO_ROLL = 1.0556
+
 
 # Lat/Lon
 _LAT_LON = {
@@ -384,6 +389,7 @@ class ArrayAntenna(Antenna):
     """
 
     _rotation = 0.0
+    _roll = 0.0
     _offset = [0.0] * 3
 
     cyl = None
@@ -455,11 +461,12 @@ class CHIMEAntenna(ArrayAntenna):
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
-class PCOAntenna(ArrayAntenna):
+class KKOAntenna(ArrayAntenna):
     """PCO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _PCO_ROT
-    _offset = _PCO_POS
+    _rotation = _KKO_ROT
+    _roll = _KKO_ROLL
+    _offset = _KKO_POS
     _delay = np.nan
 
 
@@ -467,15 +474,17 @@ class GBOAntenna(ArrayAntenna):
     """GBO outrigger antenna for the CHIME/FRB project."""
 
     _rotation = _GBO_ROT
+    _roll = _GBO_ROLL
     _offset = _GBO_POS
     _delay = np.nan
 
 
-class HCROAntenna(ArrayAntenna):
+class HCOAntenna(ArrayAntenna):
     """HCRO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _HCRO_ROT
-    _offset = _HCRO_POS
+    _rotation = _HCO_ROT
+    _roll = _HCO_ROLL
+    _offset = _HCO_POS
     _delay = np.nan
 
 
@@ -782,15 +791,15 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     elif cyl == 6:
 
-        # Dealing with an PCO feed
+        # Dealing with an KKO feed
 
         # Determine position
         pos = _get_feed_position(
             lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
         )
 
-        # Return PCOAntenna object
-        return PCOAntenna(
+        # Return KKOAntenna object
+        return KKOAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
             corr=corr_sn,
@@ -828,15 +837,15 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     elif cyl == 8:
 
-        # Dealing with a HCRO feed
+        # Dealing with a HCO feed
 
         # Determine position
         pos = _get_feed_position(
             lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
         )
 
-        # Return HCROAntenna object
-        return HCROAntenna(
+        # Return HCOAntenna object
+        return HCOAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
             corr=corr_sn,

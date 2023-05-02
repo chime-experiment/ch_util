@@ -140,9 +140,9 @@ TONEALTITUDE = 810.000
 # Rough position for outriggers.
 # These will be updated as positioning gets refined.
 # https://bao.chimenet.ca/doc/documents/1727
-PCOLATITUDE = 49.41905
-PCOLONGITUDE = -120.5253
-PCOALTITUDE = 835
+KKOLATITUDE = 49.41905
+KKOLONGITUDE = -120.5253
+KKOALTITUDE = 835
 
 GBOLATITUDE = 38.436122
 GBOLONGITUDE = -79.827922
@@ -167,10 +167,10 @@ tone = Observer(
     lsd_start=datetime(2013, 11, 15),
 )
 
-pco = Observer(
-    lon=PCOLONGITUDE,
-    lat=PCOLATITUDE,
-    alt=PCOALTITUDE,
+kko = Observer(
+    lon=KKOLONGITUDE,
+    lat=KKOLATITUDE,
+    alt=KKOALTITUDE,
     lsd_start=datetime(2013, 11, 15),
 )
 
