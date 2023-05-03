@@ -165,7 +165,7 @@ _KKO_ROLL = 0.5888
 # GBO geometry
 _GBO_POS = [0.0, 0.0, 0.0]
 _GBO_ROT = 27.3745
-_GBO_ROLL = -30.0871 
+_GBO_ROLL = -30.0871
 
 # HCO geometry
 _HCO_POS = [0.0, 0.0, 0.0]
@@ -266,7 +266,6 @@ class CorrInput(object):
                         attr.fset(self, input_dict.get(k, None))
 
     def _attribute_strings(self):
-
         prop = [
             (k, getattr(self, k))
             for k in ["id", "crate", "slot", "sma", "corr_order", "delay"]
@@ -279,7 +278,6 @@ class CorrInput(object):
         return kv
 
     def __repr__(self):
-
         kv = self._attribute_strings()
 
         return "%s(%s)" % (self.__class__.__name__, ", ".join(kv))
@@ -397,7 +395,6 @@ class ArrayAntenna(Antenna):
     flag = None
 
     def _attribute_strings(self):
-
         kv = super(ArrayAntenna, self)._attribute_strings()
         if self.pos is not None:
             pos = ", ".join(["%0.2f" % pp for pp in self.pos])
@@ -407,18 +404,15 @@ class ArrayAntenna(Antenna):
     @property
     def pos(self):
         if hasattr(self, "_pos"):
-
             pos = self._pos
 
             if self._rotation:
-
                 t = np.radians(self._rotation)
                 c, s = np.cos(t), np.sin(t)
 
                 pos = [c * pos[0] - s * pos[1], s * pos[0] + c * pos[1], pos[2]]
 
             if any(self._offset):
-
                 pos = [pos[dim] + off for dim, off in enumerate(self._offset)]
 
             return pos
@@ -462,12 +456,15 @@ class CHIMEAntenna(ArrayAntenna):
 
 
 class KKOAntenna(ArrayAntenna):
-    """PCO outrigger antenna for the CHIME/FRB project."""
+    """KKO outrigger antenna for the CHIME/FRB project."""
 
     _rotation = _KKO_ROT
     _roll = _KKO_ROLL
     _offset = _KKO_POS
     _delay = np.nan
+
+
+PCOAntenna = KKOAntenna  # Alias for backwards-compatibility
 
 
 class GBOAntenna(ArrayAntenna):
@@ -520,7 +517,6 @@ class HolographyAntenna(Antenna):
 
 
 def _ensure_graph(graph):
-
     from . import layout
 
     try:
@@ -560,7 +556,6 @@ def _get_feed_position(lay, rfl, foc, cas, slt, slot_factor):
             prop = lay.node_property(node)
 
             for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
-
                 if dim in prop:
                     pos[ind] += float(prop[dim].value)  # in metres
 
@@ -674,7 +669,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
-
         return HolographyAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
@@ -714,7 +708,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # Different conventions for CHIME, PCO, GBO, HCRO, and Pathfinder
     if cyl >= 2 and cyl <= 5:
-
         # Dealing with a CHIME feed
 
         # Determine position
@@ -737,7 +730,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 0 or cyl == 1:
-
         # Dealing with a pathfinder feed
 
         # Determine y_offset
@@ -759,7 +751,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             pos[1] = 20.0 - pos[1]
 
         except:
-
             pos = None
 
         # Try and determine if the FLA is powered or not. Paths without an
@@ -767,7 +758,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         pwd = True
 
         if rft is not None:
-
             rft_prop = lay.node_property(rft)
 
             if "powered" in rft_prop:
@@ -790,7 +780,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 6:
-
         # Dealing with an KKO feed
 
         # Determine position
@@ -813,7 +802,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 7:
-
         # Dealing with a GBO feed
 
         # Determine position
@@ -836,7 +824,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 8:
-
         # Dealing with a HCO feed
 
         # Determine position
@@ -1101,7 +1088,6 @@ def hk_to_sensor(graph, inp):
 
 # Parse a serial number into crate, slot, and sma number
 def parse_chime_serial(sn):
-
     mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1117,7 +1103,6 @@ def parse_chime_serial(sn):
 
 
 def parse_pathfinder_serial(sn):
-
     mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1133,7 +1118,6 @@ def parse_pathfinder_serial(sn):
 
 
 def parse_old_serial(sn):
-
     mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
@@ -1766,7 +1750,6 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
 
     bad_stack_index = np.flatnonzero(~stack_flag)
     for ind in bad_stack_index:
-
         this_stack = np.flatnonzero(reverse_stack["stack"] == ind)
         for ts in this_stack:
             tp = prod[ts]
@@ -1873,7 +1856,6 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
     # Use a python loop, but should be fast if other axes are large
     for ii, fi in enumerate(feeds):
         for ij, fj in enumerate(feeds):
-
             pi = cmap(fi, fj, nfeed)
 
             if fi <= fj:
@@ -1921,7 +1903,6 @@ def pack_product_array(exp_arr, axis=1):
 
     # Iterate over products and copy from correct location of expanded array
     for pi in range(nprod):
-
         fi, fj = icmap(pi, nfeed)
 
         prod_arr[slice0 + (pi,) + slice1] = exp_arr[slice0 + (fi, fj) + slice1]
@@ -2092,7 +2073,6 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set gains
     for pp in range(nprod):
-
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
@@ -2157,7 +2137,6 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set signals
     for pp in range(nprod):
-
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
