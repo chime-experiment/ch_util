@@ -148,7 +148,7 @@ _CHIME_ROT = -0.071
 
 # 26m geometry
 _26M_POS = [254.162124, 21.853934, 18.93]
-_26M_B = 2.14 # m
+_26M_B = 2.14  # m
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
@@ -2203,6 +2203,7 @@ def fringestop_time(
 
 # Cache the PFB object
 _chime_pfb = pfb.PFB(4, 2048)
+
 
 def decorrelation(
     timestream,
