@@ -40,7 +40,6 @@ def test_transit_delta_t():
 
 
 def test_transit_sources():
-
     # Check at an early time (this is close to the UNIX epoch)
     t_start = 12315.123
     t1 = ephemeris.transit_times(350.8664, t_start)[0]  # This is CasA's RA
@@ -92,7 +91,6 @@ def test_csd():
 
 
 def test_transit_RA():
-
     # transit RA is deprecated and should just throw an exception
     with pytest.raises(NotImplementedError):
         ephemeris.transit_RA(0.0)

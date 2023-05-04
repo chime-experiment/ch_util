@@ -125,6 +125,7 @@ import datetime
 import numpy as np
 import scipy.linalg as la
 import re
+from typing import Tuple
 
 from caput import pfb
 from caput.interferometry import projected_distance, fringestop_phase
@@ -154,6 +155,20 @@ _26M_B = 2.14  # m
 _PF_POS = [373.754961, -54.649866, 0.0]
 _PF_ROT = 1.986  # Pathfinder rotation from north (towards west) in degrees
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
+
+# PCO geometry
+_PCO_POS = [0.0, 0.0, 0.0]
+_PCO_ROT = -0.67
+# PCO rotation from north. Anti-clockwise looking at the ground (degrees).
+# See Doclib #1530 for more information.
+
+# GBO geometry
+_GBO_POS = [0.0, 0.0, 0.0]
+_GBO_ROT = 0.0  # TODO
+
+# HCRO geometry
+_HCRO_POS = [0.0, 0.0, 0.0]
+_HCRO_ROT = 0.0  # TODO
 
 # Lat/Lon
 _LAT_LON = {
@@ -248,7 +263,6 @@ class CorrInput(object):
                         attr.fset(self, input_dict.get(k, None))
 
     def _attribute_strings(self):
-
         prop = [
             (k, getattr(self, k))
             for k in ["id", "crate", "slot", "sma", "corr_order", "delay"]
@@ -261,7 +275,6 @@ class CorrInput(object):
         return kv
 
     def __repr__(self):
-
         kv = self._attribute_strings()
 
         return "%s(%s)" % (self.__class__.__name__, ", ".join(kv))
@@ -378,7 +391,6 @@ class ArrayAntenna(Antenna):
     flag = None
 
     def _attribute_strings(self):
-
         kv = super(ArrayAntenna, self)._attribute_strings()
         if self.pos is not None:
             pos = ", ".join(["%0.2f" % pp for pp in self.pos])
@@ -388,18 +400,15 @@ class ArrayAntenna(Antenna):
     @property
     def pos(self):
         if hasattr(self, "_pos"):
-
             pos = self._pos
 
             if self._rotation:
-
                 t = np.radians(self._rotation)
                 c, s = np.cos(t), np.sin(t)
 
                 pos = [c * pos[0] - s * pos[1], s * pos[0] + c * pos[1], pos[2]]
 
             if any(self._offset):
-
                 pos = [pos[dim] + off for dim, off in enumerate(self._offset)]
 
             return pos
@@ -445,25 +454,25 @@ class CHIMEAntenna(ArrayAntenna):
 class PCOAntenna(ArrayAntenna):
     """PCO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _PCO_ROT
+    _offset = _PCO_POS
+    _delay = np.nan
 
 
 class GBOAntenna(ArrayAntenna):
     """GBO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _GBO_ROT
+    _offset = _GBO_POS
+    _delay = np.nan
 
 
 class HCROAntenna(ArrayAntenna):
     """HCRO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _rotation = _HCRO_ROT
+    _offset = _HCRO_POS
+    _delay = np.nan
 
 
 class TONEAntenna(ArrayAntenna):
@@ -473,7 +482,7 @@ class TONEAntenna(ArrayAntenna):
 
     _rotation = 0.00
     _offset = [0.00, 0.00, 0.00]
-    _delay = 0
+    _delay = np.nan
 
 
 class HolographyAntenna(Antenna):
@@ -498,7 +507,6 @@ class HolographyAntenna(Antenna):
 
 
 def _ensure_graph(graph):
-
     from . import layout
 
     try:
@@ -506,6 +514,48 @@ def _ensure_graph(graph):
     except:
         graph = layout.graph(graph)
     return graph
+
+
+def _get_feed_position(lay, rfl, foc, cas, slt, slot_factor):
+    """Calculate feed position from node properties.
+
+    Parameters
+    ----------
+    lay : layout.graph
+        Layout instance to search from.
+    rfl : layout.component
+        Reflector.
+    foc : layout.component
+        Focal line slot.
+    cas : layout.component
+        Cassette.
+    slt : layout.component
+        Cassette slot.
+    slot_factor : float
+        1.5 for CHIME, 0.5 for Outriggers
+
+    Returns
+    -------
+    pos : list
+        x,y,z coordinates of the feed relative to the centre of the focal line.
+    """
+    try:
+        pos = [0.0] * 3
+
+        for node in [rfl, foc, cas, slt]:
+            prop = lay.node_property(node)
+
+            for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
+                if dim in prop:
+                    pos[ind] += float(prop[dim].value)  # in metres
+
+        if "y_offset" not in lay.node_property(slt):
+            pos[1] += (float(slt.sn[-1]) - slot_factor) * 0.3048
+
+    except:
+        pos = None
+
+    return pos
 
 
 def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source):
@@ -609,7 +659,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
-
         return HolographyAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
@@ -649,27 +698,12 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # Different conventions for CHIME, PCO, GBO, HCRO, and Pathfinder
     if cyl >= 2 and cyl <= 5:
-
         # Dealing with a CHIME feed
 
         # Determine position
-        try:
-            pos = [0.0] * 3
-
-            for node in [rfl, foc, cas, slt]:
-                prop = lay.node_property(node)
-
-                for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
-
-                    if dim in prop:
-                        pos[ind] += float(prop[dim].value)  # in metres
-
-            if "y_offset" not in lay.node_property(slt):
-                pos[1] += (float(slt.sn[-1]) - 1.5) * 0.3048
-
-        except:
-
-            pos = None
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=1.5
+        )
 
         # Return CHIMEAntenna object
         return CHIMEAntenna(
@@ -686,7 +720,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 0 or cyl == 1:
-
         # Dealing with a pathfinder feed
 
         # Determine y_offset
@@ -708,7 +741,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             pos[1] = 20.0 - pos[1]
 
         except:
-
             pos = None
 
         # Try and determine if the FLA is powered or not. Paths without an
@@ -716,7 +748,6 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         pwd = True
 
         if rft is not None:
-
             rft_prop = lay.node_property(rft)
 
             if "powered" in rft_prop:
@@ -739,11 +770,12 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 6:
-
         # Dealing with an PCO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return PCOAntenna object
         return PCOAntenna(
@@ -760,11 +792,12 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 7:
-
         # Dealing with a GBO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return GBOAntenna object
         return GBOAntenna(
@@ -781,11 +814,12 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         )
 
     elif cyl == 8:
-
         # Dealing with a HCRO feed
 
-        # Temporary setting until this is defined
-        pos = None
+        # Determine position
+        pos = _get_feed_position(
+            lay=lay, rfl=rfl, foc=foc, cas=cas, slt=slt, slot_factor=0.5
+        )
 
         # Return HCROAntenna object
         return HCROAntenna(
@@ -1044,7 +1078,6 @@ def hk_to_sensor(graph, inp):
 
 # Parse a serial number into crate, slot, and sma number
 def parse_chime_serial(sn):
-
     mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1060,7 +1093,6 @@ def parse_chime_serial(sn):
 
 
 def parse_pathfinder_serial(sn):
-
     mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1076,7 +1108,6 @@ def parse_pathfinder_serial(sn):
 
 
 def parse_old_serial(sn):
-
     mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
@@ -1198,6 +1229,79 @@ def serial_to_location(serial):
         pass
 
     return default
+
+
+def get_default_frequency_map_stream() -> Tuple[np.ndarray]:
+    """Get the default CHIME frequency map stream.
+
+    Level order is [shuffle, crate, slot, link].
+
+    Returns
+    -------
+    stream
+        [shuffle, crate, slot, link] for each frequency bin
+    stream_id
+        stream_id for each map combination
+        shuffle*2**12 + crate*2**8 + slot*2**4 + link
+    """
+    stream = np.empty((1024, 4), dtype=np.int32)
+
+    # shuffle
+    stream[:, 0] = 3
+    # crate
+    stream[:, 1] = np.tile(np.arange(2).repeat(16), 32)
+    # slot
+    stream[:, 2] = np.tile(np.arange(16), 64)
+    # link
+    stream[:, 3] = np.tile(np.arange(8).repeat(32), 4)
+
+    stream_id = (
+        stream[:, 0] * 2**12
+        + stream[:, 1] * 2**12
+        + stream[:, 2] * 2**4
+        + stream[:, 3]
+    ).astype(np.int64)
+
+    return stream, stream_id
+
+
+def order_frequency_map_stream(fmap: np.ndarray, stream_id: np.ndarray) -> np.ndarray:
+    """Order stream_id components based on a frequency map.
+
+    Level order is [shuffle, crate, slot, link]
+
+    Parameters
+    ----------
+    fmap
+        frequency map
+    stream_id
+        1-D array of stream_ids associated with each row in fmap
+
+    Returns
+    -------
+    stream
+        shuffle, crate, slot, link for each frequency
+    """
+
+    def decode_stream_id(sid: int) -> Tuple[int]:
+        link = sid & 15
+        slot = (sid >> 4) & 15
+        crate = (sid >> 8) & 15
+        shuffle = (sid >> 12) & 15
+
+        return (shuffle, crate, slot, link)
+
+    decoded_stream = [decode_stream_id(i) for i in stream_id[:]]
+    x = [[] for _ in range(len(stream_id))]
+
+    for ii, freqs in enumerate(fmap):
+        for f in freqs:
+            x[f].append(decoded_stream[ii])
+
+    # TODO: maybe implement some checks here
+    stream = np.array([i[0] for i in x], dtype=np.int32)
+
+    return stream
 
 
 def get_correlator_inputs(lay_time, correlator=None, connect=True):
@@ -1697,7 +1801,7 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
     stack_new : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
         The updated `stack` index map, where each element is an index to a product
         consisting of a pair of array antennas.
-    stack_flag : np.ndarray[nstack,] of dtype=np.bool
+    stack_flag : np.ndarray[nstack,] of dtype=bool
         Boolean flag that is True if this element of the stack index map is now valid,
         and False if none of the baselines that were stacked contained array antennas.
     """
@@ -1709,7 +1813,6 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
 
     bad_stack_index = np.flatnonzero(~stack_flag)
     for ind in bad_stack_index:
-
         this_stack = np.flatnonzero(reverse_stack["stack"] == ind)
         for ts in this_stack:
             tp = prod[ts]
@@ -1816,7 +1919,6 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
     # Use a python loop, but should be fast if other axes are large
     for ii, fi in enumerate(feeds):
         for ij, fj in enumerate(feeds):
-
             pi = cmap(fi, fj, nfeed)
 
             if fi <= fj:
@@ -1864,7 +1966,6 @@ def pack_product_array(exp_arr, axis=1):
 
     # Iterate over products and copy from correct location of expanded array
     for pi in range(nprod):
-
         fi, fj = icmap(pi, nfeed)
 
         prod_arr[slice0 + (pi,) + slice1] = exp_arr[slice0 + (fi, fj) + slice1]
@@ -1889,7 +1990,7 @@ def fast_pack_product_array(arr):
     nfeed = arr.shape[0]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float)
+    ret = np.zeros(nprod, dtype=np.float64)
     iout = 0
 
     for i in range(nfeed):
@@ -2035,7 +2136,6 @@ def apply_gain(vis, gain, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set gains
     for pp in range(nprod):
-
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
@@ -2100,7 +2200,6 @@ def subtract_rank1_signal(vis, signal, axis=1, out=None, prod_map=None):
 
     # Iterate over input pairs and set signals
     for pp in range(nprod):
-
         # Determine the inputs.
         ii, ij = prod_map[pp]
 
@@ -2364,20 +2463,12 @@ def delay(
     return delays
 
 
-def invert_no_zero(x):
-    """Return the reciprocal, but ignoring zeros.
+def invert_no_zero(*args, **kwargs):
+    from caput import tools
+    import warnings
 
-    Where `x != 0` return 1/x, or just return 0. Importantly this routine does
-    not produce a warning about zero division.
-
-    Parameters
-    ----------
-    x : np.ndarray
-
-    Returns
-    -------
-    r : np.ndarray
-        Return the reciprocal of x.
-    """
-    with np.errstate(divide="ignore", invalid="ignore"):
-        return np.where(x == 0, 0.0, 1.0 / x)
+    warnings.warn(
+        f"Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
+        category=DeprecationWarning,
+    )
+    return tools.invert_no_zero(*args, **kwargs)
