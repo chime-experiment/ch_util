@@ -27,36 +27,50 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
-from typing import Tuple
+from typing import Tuple, Optional, Union
 
 import numpy as np
 import scipy.signal as sig
 
-from . import tools
+from . import tools, ephemeris
 
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-# Ranges of bad frequencies given by their start and end frequencies (in MHz)
-bad_frequencies = np.array(
-    [
-        [449.41, 450.98],
-        [454.88, 456.05],
-        [457.62, 459.18],
-        [483.01, 485.35],
-        [487.70, 494.34],
-        [497.85, 506.05],
-        [529.10, 536.52],
-        [541.60, 554.49],
-        [564.65, 585.35],
-        [693.16, 693.55],
-        [694.34, 696.68],
-        [729.88, 745.12],
-        [746.29, 756.45],
-    ]
-)
+# Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
+# If the start time is not specified, t = [], the flag is applied to all CSDs
+BAD_FREQUENCIES = [
+    # Bad bands at first light
+    [[None, None], [449.41, 450.98]],
+    [[None, None], [454.88, 456.05]],
+    [[None, None], [457.62, 459.18]],
+    [[None, None], [483.01, 485.35]],
+    [[None, None], [487.70, 494.34]],
+    [[None, None], [497.85, 506.05]],
+    [[None, None], [529.10, 536.52]],
+    [[None, None], [541.60, 548.00]],
+    # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
+    [[None, 1661334542], [548.00, 554.49]],
+    [[None, None], [564.65, 578.00]],
+    # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
+    [[None, 1661420706], [578.00, 585.35]],
+    [[None, None], [693.16, 693.55]],
+    [[None, None], [694.34, 696.68]],
+    [[None, None], [729.88, 745.12]],
+    [[None, None], [746.29, 756.45]],
+    # 6 MHz band (reported by Simon)
+    [[None, None], [505.85, 511.71]],
+    # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+    [[1633758888, None], [584.00, 590.00]],
+    # UHF TV Channel 35
+    [[1633758888, None], [596.00, 602.00]],
+    # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
+    [[1577755022, None], [617.00, 627.00]],
+    # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
+    [[1564051033, None], [716.00, 728.00]],
+]
 
 
 def flag_dataset(
@@ -104,15 +118,19 @@ def flag_dataset(
 
     # Apply the frequency cut to the data (add here because we are distributed
     # over products and its easy)
-    freq_mask = frequency_mask(data.freq)
+    if "time" in data.index_map:
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+
+    freq_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
 
     # Create an empty mask for the full dataset
-    mask = np.zeros(data.vis[:].shape, dtype=np.bool)
+    mask = np.zeros(data.vis[:].shape, dtype=bool)
 
     # Loop over all products and flag if either inputs auto correlation was flagged
     for pi in range(data.nprod):
-
         ii, ij = data.index_map["prod"][pi]
 
         if ii in auto_ii:
@@ -194,11 +212,24 @@ def number_deviations(
     # Extract the auto correlations
     auto_ii, auto_vis, auto_flag = get_autocorrelations(data, stack, normalize)
 
+    # Calculate time interval in samples. If the data has an ra axis instead,
+    # use an estimation of the time per sample
+    if "time" in data.index_map:
+        twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        twidth = int(time_width * len(data.ra[:]) / 86164.0) + 1
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+    else:
+        raise TypeError(
+            f"Expected data type with a `time` or `ra` axis. Got {type(data)}."
+        )
+
     # Create static flag of frequencies that are known to be bad
     static_flag = (
-        ~frequency_mask(data.freq)
+        ~frequency_mask(data.freq[:], timestamp=timestamp)
         if apply_static_mask
-        else np.ones(data.nfreq, dtype=np.bool)
+        else np.ones(len(data.freq[:]), dtype=bool)
     )[:, np.newaxis]
 
     if parallel:
@@ -211,8 +242,6 @@ def number_deviations(
     fwidth = (
         int(freq_width / np.median(np.abs(np.diff(data.freq)))) + 1 if not flag1d else 1
     )
-    # Calculate time interval in samples
-    twidth = int(time_width / np.median(np.abs(np.diff(data.time)))) + 1
 
     # Create an empty array for number of median absolute deviations
     ndev = np.zeros_like(auto_vis, dtype=np.float32)
@@ -223,7 +252,6 @@ def number_deviations(
 
     # Loop over extracted autos and create a mask for each
     for ind in range(auto_vis.shape[1]):
-
         flg = static_flag_view & auto_flag_view[:, ind]
         # Gather enire array onto each rank
         arr = auto_vis[:, ind].allgather() if parallel else auto_vis[:, ind]
@@ -360,7 +388,12 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     stack_autos_time_ave = np.mean(stack_autos, axis=-1)
 
     # Locations of the generally decent frequency bands
-    drawn_bool_mask = frequency_mask(data.freq)
+    if "time" in data.index_map:
+        timestamp = data.time[0]
+    elif "ra" in data.index_map:
+        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+
+    drawn_bool_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     good_data = np.logical_not(drawn_bool_mask)
 
     # Calculate standard deivation of the average channel
@@ -380,40 +413,69 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     mask_1d = rel_pow > 10 * sigma
 
     # Generate mask
-    mask = np.zeros((data_vis.shape[0], data_vis.shape[2]), dtype=np.bool)
+    mask = np.zeros((data_vis.shape[0], data_vis.shape[2]), dtype=bool)
     mask[:] = mask_1d[:, None]
 
     return mask
 
 
-def frequency_mask(freq_centre, freq_width=None):
+def frequency_mask(
+    freq_centre: np.ndarray,
+    freq_width: Optional[Union[np.ndarray, float]] = None,
+    timestamp: Optional[Union[np.ndarray, float]] = None,
+) -> np.ndarray:
     """Flag known bad frequencies.
+
+    Time dependent static RFI flags that affect the recent observations are added.
 
     Parameters
     ----------
-    freq_centre : np.ndarray[nfreq]
-        Centre of each frequency channel.
-    freq_width : np.ndarray[nfreq] or float, optional
-        Width of each frequency channel. If `None` (default), calculate the
-        width from the frequency centre separation.
+    freq_centre
+        Centre of each frequency channel
+    freq_width
+        Width of each frequency channel. If `None` (default), calculate the width from
+        the frequency centre separation. If supplied as an array it must be
+        broadcastable
+        against `freq_centre`.
+    timestamp : np., optional
+        UNIX observing time. If `None` (default) mask all specified bands regardless of
+        their start/end times, otherwise mask only timestamps within the band start and
+        end times. If supplied as an array it must be broadcastable against
+        `freq_centre`.
 
     Returns
     -------
-    mask : np.ndarray[nfreq]
-        An array marking the bad frequency channels.
+    mask
+        An array marking the bad frequency channels. The final shape is the result of
+        broadcasting `freq_centre` and `timestamp` together.
     """
-
     if freq_width is None:
         freq_width = np.abs(np.median(np.diff(freq_centre)))
-
-    mask = np.zeros_like(freq_centre, dtype=np.bool)
 
     freq_start = freq_centre - freq_width / 2
     freq_end = freq_centre + freq_width / 2
 
-    for fs, fe in bad_frequencies:
-        tm = np.logical_and(freq_end > fs, freq_start < fe)
-        mask = np.logical_or(mask, tm)
+    # Broadcast to get the output mask
+    mask = np.zeros(np.broadcast(freq_centre, timestamp).shape, dtype=bool)
+
+    for (start_time, end_time), (fs, fe) in BAD_FREQUENCIES:
+        fmask = (freq_end > fs) & (freq_start < fe)
+
+        # If we don't have a timestamp then just mask all bands
+        if timestamp is None:
+            tmask = True
+        else:
+            # Otherwise calculate the mask based on the start and end times
+            tmask = np.ones_like(timestamp, dtype=bool)
+
+            if start_time is not None:
+                tmask &= timestamp >= start_time
+
+            if end_time is not None:
+                tmask &= timestamp <= end_time
+
+        # Mask frequencies and times specified in this band
+        mask |= tmask & fmask
 
     return mask
 
@@ -653,7 +715,6 @@ def mad_cut_rolling(
 
 
 def nanmedian(*args, **kwargs):
-
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", r"All-NaN (slice|axis) encountered")
         return np.nanmedian(*args, **kwargs)
@@ -710,6 +771,7 @@ def iterative_hpf_masking(
     threshold=6.0,
     nperiter=1,
     niter=40,
+    timestamp=None,
 ):
     """Mask features in a spectrum that have significant power at high delays.
 
@@ -750,6 +812,8 @@ def iterative_hpf_masking(
         on any iteration.
     niter: int
         Maximum number of iterations.
+    timestamp : float
+        Start observing time (in unix time)
 
     Returns
     -------
@@ -778,7 +842,7 @@ def iterative_hpf_masking(
 
     # If an initial flag was not provided, then use the static rfi mask.
     if flag is None:
-        flag = ~frequency_mask(freq)
+        flag = ~frequency_mask(freq, timestamp=timestamp)
 
     # We will be updating the flags on each iteration.  Make a copy of
     # the input so that we do not overwrite.
@@ -787,7 +851,6 @@ def iterative_hpf_masking(
     # Iterate
     itt = 0
     while itt < niter:
-
         # Construct the filter using the current mask
         NF = highpass_delay_filter(freq, tau_cut, new_flag, epsilon=epsilon)
 
@@ -852,9 +915,9 @@ def sir1d(basemask, eta=0.2):
         type as basemask.
     """
     n = basemask.size
-    psi = basemask.astype(np.float) - 1.0 + eta
+    psi = basemask.astype(np.float64) - 1.0 + eta
 
-    M = np.zeros(n + 1, dtype=np.float)
+    M = np.zeros(n + 1, dtype=np.float64)
     M[1:] = np.cumsum(psi)
 
     MP = np.minimum.accumulate(M)[:-1]
@@ -894,10 +957,9 @@ def sir(basemask, eta=0.2, only_freq=False, only_time=False):
 
     nfreq, nprod, ntime = basemask.shape
 
-    newmask = basemask.astype(np.bool).copy()
+    newmask = basemask.astype(bool).copy()
 
     for pp in range(nprod):
-
         if not only_time:
             for tt in range(ntime):
                 newmask[:, pp, tt] |= sir1d(basemask[:, pp, tt], eta=eta)

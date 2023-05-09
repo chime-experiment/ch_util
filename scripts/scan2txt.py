@@ -14,6 +14,7 @@ CMD_CANCEL = "CANCEL"
 # A global variable.
 overridden = False
 
+
 # For echoing stdout to a file.
 class tee_stdout(object):
     def __init__(self, stdout, fp):

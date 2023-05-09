@@ -139,7 +139,7 @@ class event_table(base_model):
 # ====================================
 
 
-def connect_peewee_tables(read_write=False, reconnect=False):
+def connect_peewee_tables(read_write=False, reconnect=False, ntries=1):
     """Initialize the connection to the CHIME data index database.
 
     This function uses the current database connector from
@@ -156,7 +156,7 @@ def connect_peewee_tables(read_write=False, reconnect=False):
         Force a reconnection.
     """
 
-    chimedb.core.connect(read_write, reconnect)
+    chimedb.core.connect(read_write, reconnect, ntries)
 
     # Set the default, no-permissions user.
     set_user("Chime")

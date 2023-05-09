@@ -940,7 +940,6 @@ class ChanMonitor(object):
         )
 
     def determine_bad_gpu_nodes(self, data, frac_time_on=0.7):
-
         node_on = np.any(data.vis[:].real != 0.0, axis=1)
 
         self.gpu_node_flag = np.sum(node_on, axis=1) > frac_time_on * node_on.shape[1]
@@ -969,7 +968,7 @@ class ChanMonitor(object):
             self.bsep2 += 1
 
         prod_sel = []
-        for (ii, prod) in enumerate(data.prod):
+        for ii, prod in enumerate(data.prod):
             add_prod = False
             add_prod = add_prod or (
                 (prod[0] == self.bswp1 and prod[1] in echp1)
@@ -1136,7 +1135,6 @@ class ChanMonitor(object):
         ntt = [False] * Ns  # night transit
 
         for ii, src in enumerate(srcs):
-
             night_transit = np.array([])
             for acq in self.night_acq_list:
                 night_transit = np.append(
@@ -1147,7 +1145,6 @@ class ChanMonitor(object):
                 ntt[ii] = True
 
             if src.name in ["CygA", "CasA"]:
-
                 transit = np.array([])
                 for acq in self.acq_list:
                     transit = np.append(transit, ephemeris.transit_times(src, *acq[1]))
@@ -1156,7 +1153,6 @@ class ChanMonitor(object):
                     clr[ii] = True
 
             else:
-
                 clr[ii] = ntt[ii]
 
         return clr, ntt, srcs

@@ -239,7 +239,7 @@ class Finder(object):
     # Constructors and setup
     # ----------------------
 
-    def __init__(self, acqs=(), node_spoof=None):
+    def __init__(self, acqs=(), node_spoof=None, ntries=1):
         import copy
 
         # Which nodes do we have available?
@@ -247,7 +247,7 @@ class Finder(object):
         self._my_node = []
         self._node_spoof = node_spoof
 
-        connect_database()
+        connect_database(ntries=ntries)
 
         if not node_spoof:
             for n in (
@@ -1097,6 +1097,17 @@ class Finder(object):
         for rise_time in rise_times:
             set_time = ephemeris.solar_setting(rise_time)
             self.exclude_time_interval(rise_time, set_time)
+
+    def exclude_nighttime(self):
+        """Add time intervals to exclude all night time data."""
+
+        set_times = ephemeris.solar_setting(
+            self.time_range[0] - 24 * 3600.0, self.time_range[1]
+        )
+
+        for set_time in set_times:
+            rise_time = ephemeris.solar_rising(set_time)
+            self.exclude_time_interval(set_time, rise_time)
 
     def exclude_sun(self, time_delta=4000.0, time_delta_rise_set=4000.0):
         """Add time intervals to exclude sunrise, sunset, and sun transit.

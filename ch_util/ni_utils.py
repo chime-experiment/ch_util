@@ -231,7 +231,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
                 gate_dset.attrs["folding_start"] = folding_start
 
                 # Construct array of gate weights (sum = 0)
-                gw = np.zeros(ni_period, dtype=np.float)
+                gw = np.zeros(ni_period, dtype=np.float64)
                 gw[ni_off_bins] = -1.0 / len(ni_off_bins)
                 gw[ni_on_bins[i]] = 1.0 / len(ni_on_bins[i])
                 gate_dset.attrs["gate_weight"] = gw
@@ -1038,7 +1038,7 @@ def ni_gains_evalues_tf(
     gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.complex) * (
         np.nan + 1j * np.nan
     )
-    evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float) * np.nan
+    evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float64) * np.nan
 
     # Determine if we will weight by the square root of the autos
     # of the matrix vis_on = vis_gated + vis_off
@@ -1051,7 +1051,6 @@ def ni_gains_evalues_tf(
     # Loop through the input frequencies and time frames
     for f in range(Nfreqs):
         for t in range(Ntimeframes):
-
             # Create Nchannel x Nchannel matrix of noise-injection-on visibilities
             if weight_by_autos_on:
                 if vis_on_is_input:

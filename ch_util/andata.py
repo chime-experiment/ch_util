@@ -165,30 +165,6 @@ class BaseData(tod.TOData):
             out[name] = value.attrs
         return memh5.ro_dict(out)
 
-    @property
-    def reverse_map(self):
-        """Stores the inverse mapping between axes.
-
-        Do not try to add a new index_map by assigning to an item of this
-        property. Use :meth:`~BaseData.create_reverse_map` instead.
-
-        Returns
-        -------
-        index_map : read only dictionary
-            Entries are 1D arrays used to interpret the axes of datasets.
-
-        """
-
-        out = {}
-        try:
-            g = self._data["reverse_map"]
-        except KeyError:
-            g = {}
-
-        for name, value in g.items():
-            out[name] = value[:]
-        return memh5.ro_dict(out)
-
     # - Methods used by base class to control container structure. - #
 
     def dataset_name_allowed(self, name):
@@ -239,17 +215,21 @@ class BaseData(tod.TOData):
 
         if (
             self.index_map["time"].dtype == np.float32
-            # Already a calculated timestamp.
             or self.index_map["time"].dtype == np.float64
         ):
+            # Already a calculated timestamp.
             return self.index_map["time"][:]
 
         else:
             time = _timestamp_from_fpga_cpu(
                 self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
             )
-            # Shift from lower edge to centres.
-            time += abs(np.median(np.diff(time)) / 2)
+
+            alignment = self.index_attrs["time"].get("alignment", 0)
+
+            if alignment != 0:
+                time = time + alignment * abs(np.median(np.diff(time)) / 2)
+
             return time
 
     @classmethod
@@ -326,6 +306,10 @@ class BaseData(tod.TOData):
                 **kwargs
             )
 
+            # Set an attribute on the time axis specifying alignment
+            if "time" in data.index_map:
+                data.index_attrs["time"]["alignment"] = 1
+
         finally:
             # Close any files opened in this function.
             for ii in range(len(acq_files)):
@@ -384,6 +368,14 @@ class CorrData(BaseData):
         Equivalent to `self.flags['inputs']`.
         """
         return self.flags["inputs"]
+
+    @property
+    def dataset_id(self):
+        """Access dataset id dataset in unicode format."""
+        dsid = memh5.ensure_unicode(self.flags["dataset_id"][:])
+        dsid.flags.writeable = False
+
+        return dsid
 
     @property
     def nprod(self):
@@ -743,7 +735,6 @@ class CorrData(BaseData):
         renormalize,
         comm,
     ):
-
         from mpi4py import MPI
         from caput import mpiutil, mpiarray, memh5
 
@@ -796,6 +787,7 @@ class CorrData(BaseData):
             "gain",
             "gain_coeff",
             "frac_lost",
+            "dataset_id",
             "eval",
             "evec",
             "erms",
@@ -811,12 +803,11 @@ class CorrData(BaseData):
 
         # Iterate over the datasets and copy them over
         for name, old_dset in local_data.datasets.items():
-
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
             else:
+                # Otherwise just copy out the old dataset
                 array = old_dset[:]
 
             # Create the new dataset and copy over attributes
@@ -829,12 +820,11 @@ class CorrData(BaseData):
 
         # Iterate over the flags and copy them over
         for name, old_dset in local_data.flags.items():
-
             # If this should be distributed, extract the sections and turn them into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
-            # Otherwise just copy copy out the old dataset
             else:
+                # Otherwise just copy out the old dataset
                 array = old_dset[:]
 
             # Create the new dataset and copy over attributes
@@ -847,23 +837,21 @@ class CorrData(BaseData):
 
         # Copy over index maps
         for name, index_map in local_data.index_map.items():
-
             # Get reference to actual array
             index_map = index_map[:]
 
             # We need to explicitly stitch the frequency map back together
             if name == "freq":
-
                 # Gather all frequencies onto all nodes and stich together
                 freq_gather = comm.allgather(index_map)
                 index_map = np.concatenate(freq_gather)
 
             # Create index map
             data.create_index_map(name, index_map)
+            memh5.copyattrs(local_data.index_attrs[name], data.index_attrs[name])
 
         # Copy over reverse maps
         for name, reverse_map in local_data.reverse_map.items():
-
             # Get reference to actual array
             reverse_map = reverse_map[:]
 
@@ -940,9 +928,7 @@ class CorrData(BaseData):
         sel = (freq_sel, slice(None), time_sel)
 
         with misc.open_h5py_mpi(fname, "r", comm=comm) as fh:
-
             for ds_name in DSETS_DIRECT:
-
                 if ds_name not in fh:
                     continue
 
@@ -1262,7 +1248,7 @@ class HKPData(memh5.MemDiskGroup):
             data = dset[:]
             time = data["time"]
 
-            mask = np.ones(time.shape, dtype=np.bool)
+            mask = np.ones(time.shape, dtype=bool)
 
             if start is not None:
                 tstart = ctime.ensure_unix(start)
@@ -1339,7 +1325,7 @@ class HKPData(memh5.MemDiskGroup):
                 index_remap.append({})  # List of dictionaries (one per file)
                 for att, values in fl[dset_name].attrs.items():
                     # Reserve zeroeth entry for N/A
-                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=np.int)
+                    index_remap[ii][att] = np.zeros(len(values) + 1, dtype=int)
                     if att not in full_attrs:
                         full_attrs[att] = []
                     for idx, val in enumerate(values):
@@ -1534,7 +1520,6 @@ class RawADCData(BaseData):
 
     @classmethod
     def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
-
         # Define dataset filter to do the transpose.
         def dset_filter(dataset):
             if len(dataset.shape) == 2 and dataset.shape[1] == 1:
@@ -1826,7 +1811,6 @@ class BaseReader(tod.Reader):
     data_class = BaseData
 
     def __init__(self, files):
-
         # If files is a filename, or pattern, turn into list of files.
         if isinstance(files, str):
             files = sorted(glob.glob(files))
@@ -2316,12 +2300,12 @@ def _ensure_1D_selection(selection):
         # to integer selection.
         if len(selection) == 1:
             return _ensure_1D_selection(selection[0])
-        if issubclass(selection.dtype.type, np.integer):
+        if np.issubdtype(selection.dtype, np.integer):
             if np.any(np.diff(selection) <= 0):
                 raise ValueError("h5py requires sorted non-duplicate selections.")
-        elif not issubclass(selection.dtype.type, np.bool_):
+        elif not np.issubdtype(selection.dtype, bool):
             raise ValueError("Array selections must be integer or boolean type.")
-        elif issubclass(selection.dtype.type, np.bool_):
+        elif np.issubdtype(selection.dtype, bool):
             # This is a workaround for h5py/h5py#1750
             selection = selection.nonzero()[0]
 
@@ -2330,11 +2314,9 @@ def _ensure_1D_selection(selection):
 
 def _convert_to_slice(selection):
     if hasattr(selection, "__iter__") and len(selection) > 1:
-
         uniq_step = np.unique(np.diff(selection))
 
         if (len(uniq_step) == 1) and uniq_step[0]:
-
             a = selection[0]
             b = selection[-1]
             b = b + (1 - (b < a) * 2)
@@ -2508,7 +2490,6 @@ def _renormalize(data):
 
     # Loop over frequencies to limit memory usage
     for ff in range(data.nfreq):
-
         # Calculate the fraction of packets received
         weight_factor = 1.0 - data.flags["lost_packet_count"][ff] / float(
             n_packets_expected
@@ -2627,7 +2608,6 @@ def _timestamp_from_fpga_cpu(cpu_s, cpu_us, fpga_counts):
 def _copy_dataset_acq1(
     dataset_name, acq_files, start, stop, out_data, prod_sel=None, freq_sel=None
 ):
-
     s_ind = 0
     ntime = stop - start
     for ii, acq in enumerate(acq_files):
@@ -3007,7 +2987,6 @@ def andata_from_archive2(
     datasets,
     out_group,
 ):
-
     # XXX For short term force to CorrData class.  Will be fixed once archive
     # files carry 'acquisition_type' attribute.
     # andata_objs = [ cls(d) for d in acq_files ]
@@ -3164,10 +3143,6 @@ def andata_from_archive2(
             dataset.real = data["r"]
             dataset.imag = data["i"]
 
-        # Convert any string types to unicode. At the moment this should only effect
-        # the dataset_id dataset
-        dataset = memh5.ensure_unicode(dataset)
-
         return dataset
 
     # The actual read, file by file.
@@ -3278,7 +3253,6 @@ def _remap_blanchard(afile):
 
     # Use time to check if blanchard was in the crate or not
     if last_time < BPC_END:
-
         # Find list of channels and adc serial using different methods depending on the archive file version
         if _get_versiontuple(afile) < versiontuple("2.0.0"):
             # The older files have no index_map/input so we need to guess/construct it.
@@ -3448,7 +3422,6 @@ def _insert_gains(data, input_sel):
     if ("archive_version" not in data.attrs) or versiontuple(
         memh5.bytes_to_unicode(data.attrs["archive_version"])
     ) < versiontuple("2.2.0"):
-
         # Hack to find the indices of the frequencies in the file
         fc = data.index_map["freq"]["centre"]
         fr = np.linspace(
@@ -3496,7 +3469,7 @@ def _insert_gains(data, input_sel):
             # should be sorted by channel id.
             keylist = sorted(zip(chanid, keylist))
         # Down select keylist based on input_sel.
-        input_sel_list = list(np.arange(ninput_orig, dtype=np.int)[input_sel])
+        input_sel_list = list(np.arange(ninput_orig, dtype=int)[input_sel])
         keylist = [keylist[ii] for ii in input_sel_list]
 
         if len(fsel) != data.nfreq:
@@ -3506,7 +3479,6 @@ def _insert_gains(data, input_sel):
         else:
             # Iterate over the keys and extract the gains
             for chan, key in keylist:
-
                 # Try and find gain entry
                 if key in data.attrs:
                     g_data = data.attrs[key]
@@ -3533,7 +3505,6 @@ def _insert_gains(data, input_sel):
         gain = np.tile(gain[:, :, np.newaxis], (1, 1, data.ntime))
 
     else:
-
         gain = np.ones((data.nfreq, data.ninput, data.ntime), dtype=np.complex64)
 
         # Check that the gain datasets have been loaded

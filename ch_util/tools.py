@@ -125,6 +125,7 @@ import datetime
 import numpy as np
 import scipy.linalg as la
 import re
+from typing import Tuple
 
 from caput import pfb
 from caput.interferometry import projected_distance, fringestop_phase
@@ -147,7 +148,8 @@ _CHIME_POS = [0.0, 0.0, 0.0]
 _CHIME_ROT = -0.071
 
 # 26m geometry
-_26M_POS = [254.162124, 21.853934, 20.0]
+_26M_POS = [254.162124, 21.853934, 18.93]
+_26M_B = 2.14  # m
 
 # Pathfinder geometry
 _PF_POS = [373.754961, -54.649866, 0.0]
@@ -1241,6 +1243,79 @@ def serial_to_location(serial):
     return default
 
 
+def get_default_frequency_map_stream() -> Tuple[np.ndarray]:
+    """Get the default CHIME frequency map stream.
+
+    Level order is [shuffle, crate, slot, link].
+
+    Returns
+    -------
+    stream
+        [shuffle, crate, slot, link] for each frequency bin
+    stream_id
+        stream_id for each map combination
+        shuffle*2**12 + crate*2**8 + slot*2**4 + link
+    """
+    stream = np.empty((1024, 4), dtype=np.int32)
+
+    # shuffle
+    stream[:, 0] = 3
+    # crate
+    stream[:, 1] = np.tile(np.arange(2).repeat(16), 32)
+    # slot
+    stream[:, 2] = np.tile(np.arange(16), 64)
+    # link
+    stream[:, 3] = np.tile(np.arange(8).repeat(32), 4)
+
+    stream_id = (
+        stream[:, 0] * 2**12
+        + stream[:, 1] * 2**12
+        + stream[:, 2] * 2**4
+        + stream[:, 3]
+    ).astype(np.int64)
+
+    return stream, stream_id
+
+
+def order_frequency_map_stream(fmap: np.ndarray, stream_id: np.ndarray) -> np.ndarray:
+    """Order stream_id components based on a frequency map.
+
+    Level order is [shuffle, crate, slot, link]
+
+    Parameters
+    ----------
+    fmap
+        frequency map
+    stream_id
+        1-D array of stream_ids associated with each row in fmap
+
+    Returns
+    -------
+    stream
+        shuffle, crate, slot, link for each frequency
+    """
+
+    def decode_stream_id(sid: int) -> Tuple[int]:
+        link = sid & 15
+        slot = (sid >> 4) & 15
+        crate = (sid >> 8) & 15
+        shuffle = (sid >> 12) & 15
+
+        return (shuffle, crate, slot, link)
+
+    decoded_stream = [decode_stream_id(i) for i in stream_id[:]]
+    x = [[] for _ in range(len(stream_id))]
+
+    for ii, freqs in enumerate(fmap):
+        for f in freqs:
+            x[f].append(decoded_stream[ii])
+
+    # TODO: maybe implement some checks here
+    stream = np.array([i[0] for i in x], dtype=np.int32)
+
+    return stream
+
+
 def get_correlator_inputs(lay_time, correlator=None, connect=True):
     """Get the information for all channels in a layout.
 
@@ -1738,7 +1813,7 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
     stack_new : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
         The updated `stack` index map, where each element is an index to a product
         consisting of a pair of array antennas.
-    stack_flag : np.ndarray[nstack,] of dtype=np.bool
+    stack_flag : np.ndarray[nstack,] of dtype=bool
         Boolean flag that is True if this element of the stack index map is now valid,
         and False if none of the baselines that were stacked contained array antennas.
     """
@@ -1927,7 +2002,7 @@ def fast_pack_product_array(arr):
     nfeed = arr.shape[0]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float)
+    ret = np.zeros(nprod, dtype=np.float64)
     iout = 0
 
     for i in range(nfeed):
@@ -2157,6 +2232,7 @@ def fringestop_time(
     feeds,
     src,
     wterm=False,
+    bterm=True,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2179,6 +2255,8 @@ def fringestop_time(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for baselines including the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2209,6 +2287,7 @@ def fringestop_time(
         feeds,
         src,
         wterm=wterm,
+        bterm=bterm,
         prod_map=prod_map,
         csd=csd,
         static_delays=static_delays,
@@ -2243,6 +2322,7 @@ def decorrelation(
     feeds,
     src,
     wterm=True,
+    bterm=True,
     prod_map=None,
     csd=False,
     inplace=False,
@@ -2262,6 +2342,8 @@ def decorrelation(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for baselines including the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2292,6 +2374,7 @@ def decorrelation(
         feeds,
         src,
         wterm=wterm,
+        bterm=bterm,
         prod_map=prod_map,
         csd=csd,
         static_delays=static_delays,
@@ -2317,6 +2400,7 @@ def delay(
     feeds,
     src,
     wterm=True,
+    bterm=True,
     prod_map=None,
     csd=False,
     static_delays=True,
@@ -2336,6 +2420,8 @@ def delay(
         A PyEphem object representing the source to fringestop.
     wterm: bool, optional
         Include elevation information in the calculation.
+    bterm: bool, optional
+        Include a correction for baselines which include the 26m Galt telescope.
     prod_map: np.ndarray[nprod]
         The products in the `timestream` array.
     csd: bool, optional
@@ -2373,30 +2459,28 @@ def delay(
     else:
         delays = delay_ref[prod_map["input_a"]] - delay_ref[prod_map["input_b"]]
 
+    # Add the b-term for baselines including the 26m Galt telescope
+    if bterm:
+        b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
+
+        galt_feeds = get_holographic_index(feeds)
+
+        galt_conj = np.where(np.isin(prod_map["input_a"], galt_feeds), -1, 0)
+        galt_noconj = np.where(np.isin(prod_map["input_b"], galt_feeds), 1, 0)
+
+        conj_flag = galt_conj + galt_noconj
+
+        delays += conj_flag[:, np.newaxis] * b_delay
+
     return delays
 
 
-def invert_no_zero(x):
-    """Return the reciprocal, but ignoring zeros.
+def invert_no_zero(*args, **kwargs):
+    from caput import tools
+    import warnings
 
-    Where `x != 0` return 1/x, or just return 0. Importantly this routine does
-    not produce a warning about zero division.
-
-    Parameters
-    ----------
-    x : np.ndarray
-
-    Returns
-    -------
-    r : np.ndarray
-        Return the reciprocal of x.
-    """
-    out = np.zeros_like(x)
-    np.divide(
-        np.array(1, dtype=x.dtype),
-        x.view(np.ndarray),
-        out=out.view(np.ndarray),
-        where=x != 0,
+    warnings.warn(
+        f"Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
+        category=DeprecationWarning,
     )
-
-    return out
+    return tools.invert_no_zero(*args, **kwargs)

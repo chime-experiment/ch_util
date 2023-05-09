@@ -677,7 +677,6 @@ def object_coords(body, date=None, deg=False, obs=chime):
             )
 
     else:  # Calculate CIRS position with all corrections
-
         date = unix_to_skyfield_time(date)
         radec = obs.skyfield_obs().at(date).observe(body).apparent().cirs_radec(date)
 
@@ -759,7 +758,6 @@ def get_source_dictionary(*args):
 
     src_dict = {}
     for catalog_name in reversed(args):
-
         path_to_catalog = os.path.join(
             os.path.dirname(__file__),
             "catalogs",
@@ -777,7 +775,10 @@ def get_source_dictionary(*args):
 
 # Common radio point sources
 source_dictionary = get_source_dictionary(
-    "primary_calibrators_perley2016", "specfind_v2_5Jy_vollmer2009", "atnf_psrcat"
+    "primary_calibrators_perley2016",
+    "specfind_v2_5Jy_vollmer2009",
+    "atnf_psrcat",
+    "hfb_target_list",
 )
 
 #: :class:`skyfield.starlib.Star` representing Cassiopeia A.

@@ -164,12 +164,10 @@ class FitTransit(object, metaclass=ABCMeta):
         self.param = np.full(shp + (self.nparam,), np.nan, dtype=dtype)
         self.param_cov = np.full(shp + (self.nparam, self.nparam), np.nan, dtype=dtype)
         self.chisq = np.full(shp + (self.ncomponent,), np.nan, dtype=dtype)
-        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=np.int)
+        self.ndof = np.full(shp + (self.ncomponent,), 0, dtype=int)
 
         with np.errstate(all="ignore"):
-
             for ind in np.ndindex(*shp):
-
                 wi = width if np.isscalar(width) else width[ind[: width.ndim]]
 
                 err = resp_err[ind]
@@ -450,13 +448,326 @@ class FitPoly(FitTransit):
         return np.squeeze(out, axis=-1) if np.isscalar(ha) else out
 
 
-class FitAmpPhase(FitTransit):
-    """
-    Base class for fitting models to the amplitude and phase during point source transit.
+class FitRealImag(FitTransit):
+    """Base class for fitting models to the real and imag component.
 
-    Assumes an independent fit to amplitude and phase, and provides methods for predicting the
-    uncertainty on each.
+    Assumes an independent fit to real and imaginary, and provides
+    methods for predicting the uncertainty on each.
     """
+
+    component = np.array(["real", "imag"], dtype=np.string_)
+
+    def uncertainty_real(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on real component at given hour angle(s).
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the real component.
+        """
+        x = np.atleast_1d(ha)
+        err = _propagate_uncertainty(
+            self._jacobian_real(x, elementwise=elementwise),
+            self.param_cov[..., : self.nparr, : self.nparr],
+            self.tval(alpha, self.ndofr),
+        )
+        return np.squeeze(err, axis=-1) if np.isscalar(ha) else err
+
+    def uncertainty_imag(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on imag component at given hour angle(s).
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the imag component.
+        """
+        x = np.atleast_1d(ha)
+        err = _propagate_uncertainty(
+            self._jacobian_imag(x, elementwise=elementwise),
+            self.param_cov[..., self.nparr :, self.nparr :],
+            self.tval(alpha, self.ndofi),
+        )
+        return np.squeeze(err, axis=-1) if np.isscalar(ha) else err
+
+    def uncertainty(self, ha, alpha=0.32, elementwise=False):
+        """Predicts the uncertainty on the response at given hour angle(s).
+
+        Returns the quadrature sum of the real and imag uncertainty.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,] or float
+            Hour angle in degrees.
+        alpha : float
+            Confidence level given by 1 - alpha.
+
+        Returns
+        -------
+        err : np.ndarray[..., nha] or float
+            Uncertainty on the response.
+        """
+        with np.errstate(all="ignore"):
+            err = np.sqrt(
+                self.uncertainty_real(ha, alpha=alpha, elementwise=elementwise) ** 2
+                + self.uncertainty_imag(ha, alpha=alpha, elementwise=elementwise) ** 2
+            )
+        return err
+
+    def _jacobian(self, ha):
+        raise NotImplementedError(
+            "Fits to real and imaginary are independent.  "
+            "Use _jacobian_real and _jacobian_imag instead."
+        )
+
+    @abstractmethod
+    def _jacobian_real(self, ha):
+        """Calculate the jacobian of the model for the real component."""
+        return
+
+    @abstractmethod
+    def _jacobian_imag(self, ha):
+        """Calculate the jacobian of the model for the imag component."""
+        return
+
+    @property
+    def nparam(self):
+        return self.nparr + self.npari
+
+
+class FitPolyRealPolyImag(FitPoly, FitRealImag):
+    """Class that enables separate fits of a polynomial to real and imag components.
+
+    Used to fit cross-polar response that is not well-described by the
+    FitPolyLogAmpPolyPhase used for co-polar response.
+    """
+
+    def __init__(self, poly_deg=5, even=False, odd=False, *args, **kwargs):
+        """Instantiates a FitPolyRealPolyImag object.
+
+        Parameters
+        ----------
+        poly_deg : int
+            Degree of the polynomial to fit to real and imaginary component.
+        """
+        if even and odd:
+            raise RuntimeError("Cannot request both even AND odd.")
+
+        super(FitPolyRealPolyImag, self).__init__(
+            poly_deg=poly_deg, even=even, odd=odd, *args, **kwargs
+        )
+
+        self.poly_deg = poly_deg
+        self.even = even
+        self.odd = odd
+
+        ind = np.arange(self.poly_deg + 1)
+        if self.even:
+            self.coeff_index = np.flatnonzero((ind == 0) | ~(ind % 2))
+
+        elif self.odd:
+            self.coeff_index = np.flatnonzero((ind == 0) | (ind % 2))
+
+        else:
+            self.coeff_index = ind
+
+        self.nparr = self.coeff_index.size
+        self.npari = self.nparr
+
+    def vander(self, ha, *args):
+        """Create the Vandermonde matrix."""
+        A = self._vander(ha, self.poly_deg)
+        return A[:, self.coeff_index]
+
+    def deriv(self, ha, param=None):
+        """Calculate the derivative of the transit."""
+        if param is None:
+            param = self.param
+
+        is_scalar = np.isscalar(ha)
+        ha = np.atleast_1d(ha)
+
+        shp = param.shape[:-1]
+
+        param_expanded_real = np.zeros(shp + (self.poly_deg + 1,), dtype=param.dtype)
+        param_expanded_real[..., self.coeff_index] = param[..., : self.nparr]
+        der1_real = self._deriv(param_expanded_real, m=1, axis=-1)
+
+        param_expanded_imag = np.zeros(shp + (self.poly_deg + 1,), dtype=param.dtype)
+        param_expanded_imag[..., self.coeff_index] = param[..., self.nparr :]
+        der1_imag = self._deriv(param_expanded_imag, m=1, axis=-1)
+
+        deriv = np.full(shp + (ha.size,), np.nan, dtype=np.complex64)
+        for ind in np.ndindex(*shp):
+            ider1_real = der1_real[ind]
+            ider1_imag = der1_imag[ind]
+
+            if np.any(~np.isfinite(ider1_real)) or np.any(~np.isfinite(ider1_imag)):
+                continue
+
+            deriv[ind] = self._eval(ha, ider1_real) + 1.0j * self._eval(ha, ider1_imag)
+
+        return np.squeeze(deriv, axis=-1) if is_scalar else deriv
+
+    def _fit(self, ha, resp, resp_err, absolute_sigma=False):
+        """Fit polynomial to real and imaginary component.
+
+        Use weighted least squares.
+
+        Parameters
+        ----------
+        ha : np.ndarray[nha,]
+            Hour angle in degrees.
+        resp : np.ndarray[nha,]
+            Measured response to the point source.  Complex valued.
+        resp_err : np.ndarray[nha,]
+            Error on the measured response.
+        absolute_sigma : bool
+            Set to True if the errors provided are absolute.  Set to False if
+            the errors provided are relative, in which case the parameter covariance
+            will be scaled by the chi-squared per degree-of-freedom.
+
+        Returns
+        -------
+        param : np.ndarray[nparam,]
+            Best-fit model parameters.
+        param_cov : np.ndarray[nparam, nparam]
+            Covariance of the best-fit model parameters.
+        chisq : np.ndarray[2,]
+            Chi-squared of the fit to amplitude and phase.
+        ndof : np.ndarray[2,]
+            Number of degrees of freedom of the fit to amplitude and phase.
+        """
+        min_nfit = min(self.nparr, self.npari) + 1
+
+        # Prepare amplitude data
+        amp = np.abs(resp)
+        w0 = tools.invert_no_zero(resp_err) ** 2
+
+        # Only perform fit if there is enough data.
+        this_flag = (amp > 0.0) & (w0 > 0.0)
+        ndata = int(np.sum(this_flag))
+        if ndata < min_nfit:
+            raise RuntimeError("Number of data points less than number of parameters.")
+
+        wf = w0 * this_flag.astype(np.float32)
+
+        # Compute real and imaginary component of complex response
+        yr = np.real(resp)
+        yi = np.imag(resp)
+
+        # Calculate vandermonde matrix
+        A = self.vander(ha)
+
+        # Compute parameter covariance
+        cov = inv(np.dot(A.T, wf[:, np.newaxis] * A))
+
+        # Compute best-fit coefficients
+        coeffr = np.dot(cov, np.dot(A.T, wf * yr))
+        coeffi = np.dot(cov, np.dot(A.T, wf * yi))
+
+        # Compute model estimate
+        mr = np.dot(A, coeffr)
+        mi = np.dot(A, coeffi)
+
+        # Compute chisq per degree of freedom
+        ndofr = ndata - self.nparr
+        ndofi = ndata - self.npari
+
+        ndof = np.array([ndofr, ndofi])
+        chisq = np.array([np.sum(wf * (yr - mr) ** 2), np.sum(wf * (yi - mi) ** 2)])
+
+        # Scale the parameter covariance by chisq per degree of freedom.
+        # Equivalent to using RMS of the residuals to set the absolute error
+        # on the measurements.
+        if not absolute_sigma:
+            scale_factor = chisq * tools.invert_no_zero(ndof.astype(np.float32))
+            covr = cov * scale_factor[0]
+            covi = cov * scale_factor[1]
+        else:
+            covr = cov
+            covi = cov
+
+        param = np.concatenate((coeffr, coeffi))
+
+        param_cov = np.zeros((self.nparam, self.nparam), dtype=np.float32)
+        param_cov[: self.nparr, : self.nparr] = covr
+        param_cov[self.nparr :, self.nparr :] = covi
+
+        return param, param_cov, chisq, ndof
+
+    def _model(self, ha, elementwise=False):
+        real = self._fast_eval(
+            ha, self.param[..., : self.nparr], elementwise=elementwise
+        )
+        imag = self._fast_eval(
+            ha, self.param[..., self.nparr :], elementwise=elementwise
+        )
+
+        return real + 1.0j * imag
+
+    def _jacobian_real(self, ha, elementwise=False):
+        jac = np.rollaxis(self.vander(ha), -1)
+        if not elementwise and self.N is not None:
+            slc = (None,) * len(self.N)
+            jac = jac[slc]
+
+        return jac
+
+    def _jacobian_imag(self, ha, elementwise=False):
+        jac = np.rollaxis(self.vander(ha), -1)
+        if not elementwise and self.N is not None:
+            slc = (None,) * len(self.N)
+            jac = jac[slc]
+
+        return jac
+
+    @property
+    def ndofr(self):
+        """Number of degrees of freedom for the real fit."""
+        return self.ndof[..., 0]
+
+    @property
+    def ndofi(self):
+        """Number of degrees of freedom for the imag fit."""
+        return self.ndof[..., 1]
+
+    @property
+    def parameter_names(self):
+        """Array of strings containing the name of the fit parameters."""
+        return np.array(
+            ["%s_poly_real_coeff%d" % (self.poly_type, p) for p in range(self.nparr)]
+            + ["%s_poly_imag_coeff%d" % (self.poly_type, p) for p in range(self.npari)],
+            dtype=np.string_,
+        )
+
+    def peak(self):
+        """Calculate the peak of the transit."""
+        logger.warning("The peak is not defined for this model.")
+        return
+
+
+class FitAmpPhase(FitTransit):
+    """Base class for fitting models to the amplitude and phase.
+
+    Assumes an independent fit to amplitude and phase, and provides
+    methods for predicting the uncertainty on each.
+    """
+
+    component = np.array(["amplitude", "phase"], dtype=np.string_)
 
     def uncertainty_amp(self, ha, alpha=0.32, elementwise=False):
         """Predicts the uncertainty on amplitude at given hour angle(s).
@@ -551,8 +862,6 @@ class FitAmpPhase(FitTransit):
 
 class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
     """Class that enables separate fits of a polynomial to log amplitude and phase."""
-
-    component = np.array(["amplitude", "phase"], dtype=np.string_)
 
     def __init__(self, poly_deg_amp=5, poly_deg_phi=5, *args, **kwargs):
         """Instantiates a FitPolyLogAmpPolyPhase object.
@@ -656,18 +965,16 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
         # Iterate to obtain model estimate for amplitude
         for kk in range(niter):
-
             wk = w0 * model_amp**2
 
             if window is not None:
-
                 if kk > 0:
                     center = self.peak(param=coeff)
 
                 if np.isnan(center):
                     raise RuntimeError("No peak found.")
 
-                wk *= (np.abs(ha - center) <= window).astype(np.float)
+                wk *= (np.abs(ha - center) <= window).astype(np.float64)
 
                 ndata = int(np.sum(wk > 0.0))
                 if ndata < min_nfit:
@@ -688,7 +995,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
         wf = w0 * model_amp**2
         if window is not None:
-            wf *= (np.abs(ha - center) <= window).astype(np.float)
+            wf *= (np.abs(ha - center) <= window).astype(np.float64)
 
             ndata = int(np.sum(wf > 0.0))
             if ndata < min_nfit:
@@ -757,7 +1064,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         peak = np.full(shp, np.nan, dtype=der1.dtype)
 
         for ind in np.ndindex(*shp):
-
             ider1 = der1[ind]
 
             if np.any(~np.isfinite(ider1)):
@@ -777,7 +1083,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return peak
 
     def _model(self, ha, elementwise=False):
-
         amp = self._fast_eval(
             ha, self.param[..., : self.npara], elementwise=elementwise
         )
@@ -788,7 +1093,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return np.exp(amp) * (np.cos(phi) + 1.0j * np.sin(phi))
 
     def _jacobian_amp(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_amp)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -799,7 +1103,6 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return jac
 
     def _jacobian_phi(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_phi)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -1044,7 +1347,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return fit_jac
 
     def _model(self, ha, param=None, elementwise=False):
-
         if param is None:
             param = self.param
 
@@ -1074,7 +1376,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return model_amp * (np.cos(model_phase) + 1.0j * np.sin(model_phase))
 
     def _jacobian_amp(self, ha, elementwise=False):
-
         amp_param = self.param[..., : self.npara]
 
         shp = amp_param.shape
@@ -1103,7 +1404,6 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return jac
 
     def _jacobian_phi(self, ha, elementwise=False):
-
         jac = self._vander(ha, self.poly_deg_phi)
         if not elementwise:
             jac = np.rollaxis(jac, -1)
@@ -1249,7 +1549,6 @@ def fit_point_source_map(
         (len(dirty_beam) == 3) or (dirty_beam.shape == submap.shape)
     )
     if do_dirty:
-
         if real_map:
             model = func_real_dirty_gauss
         else:
@@ -1303,7 +1602,6 @@ def fit_point_source_map(
 
     # Iterate over dimensions
     for index in np.ndindex(*dims):
-
         # Extract the RMS for this index.  In the process,
         # check for data flagged as bad (rms == 0.0).
         if rms is not None:
@@ -1312,7 +1610,7 @@ def fit_point_source_map(
                 rms[index][good_ra, np.newaxis], [1, submap.shape[-1]]
             ).ravel()
         else:
-            good_ra = np.ones(submap.shape[-2], dtype=np.bool)
+            good_ra = np.ones(submap.shape[-2], dtype=bool)
             this_rms = None
 
         if np.sum(good_ra) <= nparam:
@@ -1747,7 +2045,6 @@ def estimate_directional_scale(z, c=2.1):
     xb = x[x >= 0.0]
 
     def huber_rho(dx, c=2.1):
-
         num = float(dx.size)
 
         s0 = 1.4826 * np.median(np.abs(dx))
@@ -1943,7 +2240,6 @@ def fit_histogram(
 
 
 def _sliding_window(arr, window):
-
     # Advanced numpy tricks
     shape = arr.shape[:-1] + (arr.shape[-1] - window + 1, window)
     strides = arr.strides + (arr.strides[-1],)
@@ -2066,12 +2362,10 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
     x = freq.reshape(-1, 1)
 
     for ii in range(ninput):
-
         train = np.flatnonzero(flag[:, ii])
         test = np.flatnonzero(~flag[:, ii])
 
         if train.size > 0:
-
             xtest = x[test, :]
 
             xtrain = x[train, :]
@@ -2267,14 +2561,14 @@ def get_reference_times_file(
 
     # Array to contain reference times for each entry.
     # NaN for entries with no reference time.
-    reftime = np.full(ntimes, np.nan, dtype=np.float)
+    reftime = np.full(ntimes, np.nan, dtype=np.float64)
     # Array to hold reftimes of previous updates
     # (for entries that need interpolation).
-    reftime_prev = np.full(ntimes, np.nan, dtype=np.float)
+    reftime_prev = np.full(ntimes, np.nan, dtype=np.float64)
     # Arrays to hold start and stop times of gain transition
     # (for entries that need interpolation).
-    interp_start = np.full(ntimes, np.nan, dtype=np.float)
-    interp_stop = np.full(ntimes, np.nan, dtype=np.float)
+    interp_start = np.full(ntimes, np.nan, dtype=np.float64)
+    interp_stop = np.full(ntimes, np.nan, dtype=np.float64)
 
     # Acquisition restart. We load an old gain.
     acqrestart = is_restart[last_start_index] == 1
@@ -2414,7 +2708,6 @@ def get_reference_times_dataset_id(
 
     # For each gain update extract all the relevant information
     for state_id in unique_gains_ids:
-
         d = {}
         gain_info_dict[state_id] = d
 
@@ -2460,7 +2753,6 @@ def get_reference_times_dataset_id(
     last_valid_non_interpolated = None
     last_non_interpolated = None
     for ii, state_id in enumerate(collapsed_ids):
-
         valid_id = not np.ma.is_masked(state_id)
         update = gain_info_dict[state_id] if valid_id else {}
         valid = valid_id and update["valid"]
