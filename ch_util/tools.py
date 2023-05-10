@@ -160,6 +160,8 @@ _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 _KKO_POS = [0.0, 0.0, 0.0]
 _KKO_ROT = -0.6874
 _KKO_ROLL = 0.5888
+_PCO_POS = _KKO_POS
+_PCO_ROT = _KKO_ROT  # Aliases for backwards-compatibility
 # KKO_ROT = rotation of cylinder axis from North. Anti-clockwise looking at the ground (degrees).
 # KKO_ROLL = roll of cylinder toward east from Vertical. Anti-clockwise looking North along the focal line.
 # See Doclib #1530 and #1121 for more information.
