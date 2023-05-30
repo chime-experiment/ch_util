@@ -925,12 +925,12 @@ def get_doppler_shifted_freq(
     )
 
     # Get radial velocity of source in frame of obs (positive for moving away)
-    range_rate = position.frame_latlon_and_rates(topos)[5].m_per_s
+    range_rate = -position.frame_latlon_and_rates(topos)[5].m_per_s
 
     # Compute observed frequency from rest frequency
     # using relativistic Doppler effect
     beta = range_rate / speed_of_light
-    freq_obs = freq_rest * np.sqrt((1.0 + beta) / (1.0 - beta))
+    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
 
     return freq_obs
 
