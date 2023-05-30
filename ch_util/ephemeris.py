@@ -100,6 +100,7 @@ Miscellaneous Utilities
 """
 
 from datetime import datetime
+from typing import Union
 from numpy.core.multiarray import unravel_index
 
 # NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data
@@ -857,6 +858,81 @@ def peak_RA(body, date=None, deg=False):
 
     # Return
     return ra
+
+
+def get_doppler_shifted_freq(
+    source: Union[skyfield.starlib.Star, str],
+    date: float,
+    freq_rest: float = None,
+    obs: Observer = chime,
+) -> float:
+    """Calculate Doppler shifted frequency of spectral feature with rest
+    frequency `freq_rest`, seen towards source `source` at time `date`,
+    due to Earth's motion and rotation.
+
+    Parameters
+    ----------
+    source
+        Position on the sky. If the input is a `str`, attempt to resolve this
+        from `ch_util.hfbcat.HFBCatalog`.
+    date
+        Unix time for which to calculate Doppler shift.
+    freq_rest
+        Rest frequency of spectral feature in MHz. If None, attempt to obtain
+        this from `ch_util.hfbcat.HFBCatalog.freq_abs`.
+    obs
+        An observer instance to use. If not supplied use `chime`. For many
+        calculations changing from this default will make little difference.
+
+    Returns
+    -------
+    freq_obs
+        Doppler shifted frequency in MHz.
+    """
+
+    from scipy.constants import c as speed_of_light
+
+    from skyfield.api import iers2010
+    from skyfield.starlib import Star
+
+    from ch_util.hfbcat import HFBCatalog
+
+    # Get skyfield Star object of source from HFB catalog
+    if not isinstance(source, Star):
+        source = HFBCatalog[source].skyfield
+
+    # Get rest frequency from HFB catalog
+    if freq_rest is None:
+        freq_abs = HFBCatalog[source.names].freq_abs
+        nfreq_abs = len(freq_abs)
+        if nfreq_abs == 1:
+            freq_rest = freq_abs[0]
+        else:
+            raise NotImplementedError(
+                f"Source {source.names} has {nfreq_abs} absorption features"
+                "listed in the catalog. Please manually enter a rest frequency."
+            )
+
+    # Create skyfield position object of source seen from obs
+    date = unix_to_skyfield_time(date)
+    position = obs.skyfield_obs().at(date).observe(source).apparent()
+
+    # Create skyfield GeographicPosition object (topocentric location) of obs
+    topos = iers2010.latlon(
+        latitude_degrees=obs.latitude,
+        longitude_degrees=obs.longitude,
+        elevation_m=obs.altitude,
+    )
+
+    # Get radial velocity of source in frame of obs (positive for moving away)
+    range_rate = position.frame_latlon_and_rates(topos)[5].m_per_s
+
+    # Compute observed frequency from rest frequency
+    # using relativistic Doppler effect
+    beta = range_rate / speed_of_light
+    freq_obs = freq_rest * np.sqrt((1.0 + beta) / (1.0 - beta))
+
+    return freq_obs
 
 
 def get_source_dictionary(*args):
