@@ -448,7 +448,6 @@ def frequency_mask(
     ----------
     freq_centre
         Centre of each frequency channel
-<<<<<<< HEAD
     freq_width
         Width of each frequency channel. If `None` (default), calculate the width from
         the frequency centre separation. If supplied as an array it must be
