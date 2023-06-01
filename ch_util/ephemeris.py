@@ -862,10 +862,10 @@ def peak_RA(body, date=None, deg=False):
 
 def get_doppler_shifted_freq(
     source: Union[skyfield.starlib.Star, str],
-    date: float,
-    freq_rest: float = None,
+    date: Union[float, list],
+    freq_rest: Union[float, list] = None,
     obs: Observer = chime,
-) -> float:
+) -> np.array:
     """Calculate Doppler shifted frequency of spectral feature with rest
     frequency `freq_rest`, seen towards source `source` at time `date`,
     due to Earth's motion and rotation.
@@ -876,58 +876,79 @@ def get_doppler_shifted_freq(
         Position on the sky. If the input is a `str`, attempt to resolve this
         from `ch_util.hfbcat.HFBCatalog`.
     date
-        Unix time for which to calculate Doppler shift.
+        Unix time(s) for which to calculate Doppler shift.
     freq_rest
-        Rest frequency of spectral feature in MHz. If None, attempt to obtain
-        this from `ch_util.hfbcat.HFBCatalog.freq_abs`.
+        Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency
+        of absorption feature from `ch_util.hfbcat.HFBCatalog.freq_abs`.
     obs
-        An observer instance to use. If not supplied use `chime`. For many
+        An Observer instance to use. If not supplied use `chime`. For many
         calculations changing from this default will make little difference.
 
     Returns
     -------
     freq_obs
-        Doppler shifted frequency in MHz.
+        Doppler shifted frequencies in MHz. Array where rows correspond to the
+        different input rest frequencies and columns to the input times.
     """
 
     from scipy.constants import c as speed_of_light
 
-    from skyfield.api import iers2010
-    from skyfield.starlib import Star
-
+    from ch_util.fluxcat import _ensure_list
     from ch_util.hfbcat import HFBCatalog
 
-    # Get skyfield Star object of source from HFB catalog
-    if not isinstance(source, Star):
-        source = HFBCatalog[source].skyfield
+    # For source string inputs, get skyfield Star object from HFB catalog
+    if isinstance(source, str):
+        try:
+            source = HFBCatalog[source].skyfield
+        except KeyError:
+            raise ValueError(f"Could not find source {source} in HFB catalog.")
 
     # Get rest frequency from HFB catalog
     if freq_rest is None:
-        freq_abs = HFBCatalog[source.names].freq_abs
-        nfreq_abs = len(freq_abs)
-        if nfreq_abs == 1:
-            freq_rest = freq_abs[0]
-        else:
-            raise NotImplementedError(
-                f"Source {source.names} has {nfreq_abs} absorption features"
-                "listed in the catalog. Please manually enter a rest frequency."
+        if not source.names:
+            raise ValueError(
+                "Rest frequencies must be supplied unless source can be found "
+                "in ch_util.hfbcat.HFBCatalog. "
+                f"Got source {source} with names {source.names}"
             )
+        elif source.names not in HFBCatalog:
+            raise KeyError(
+                f"Could not find source {source.names} in HFB catalog."
+                "Please provide rest frequencies."
+            )
+        else:
+            freq_abs = HFBCatalog[source.names].freq_abs
+            nfreq_abs = len(freq_abs)
+            if nfreq_abs == 1:
+                freq_rest = freq_abs[0]
+            else:
+                raise NotImplementedError(
+                    f"Source {source.names} has {nfreq_abs} absorption features"
+                    "listed in the catalog. Please manually enter a rest frequency."
+                )
 
-    # Create skyfield position object of source seen from obs
-    date = unix_to_skyfield_time(date)
+    # Prepare rest frequencies for broadcasting
+    freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
+
+    # Convert unix times to skyfield times
+    date = unix_to_skyfield_time(_ensure_list(date))
+
+    # Create skyfield Apparent object of source position seen from observer
     position = obs.skyfield_obs().at(date).observe(source).apparent()
 
-    # Create skyfield GeographicPosition object (topocentric location) of obs
-    topos = iers2010.latlon(
-        latitude_degrees=obs.latitude,
-        longitude_degrees=obs.longitude,
-        elevation_m=obs.altitude,
-    )
+    # Observer velocity vector in ICRS xyz coordinates in units of m/s
+    obs_vel_m_per_s = position.velocity.m_per_s
 
-    # Get radial velocity of source in frame of obs (positive for moving away)
-    range_rate = -position.frame_latlon_and_rates(topos)[5].m_per_s
+    # Normalized source position vector in ICRS xyz coordinates
+    source_pos_m = position.position.m
+    source_pos_norm = source_pos_m / np.linalg.norm(source_pos_m, axis=0)
 
-    # Compute observed frequency from rest frequency
+    # Dot product of observer velocity and source position gives observer
+    # velocity in direction of source; flip sign to get range rate (positive
+    # for observer and source moving appart)
+    range_rate = -np.sum(obs_vel_m_per_s.T * source_pos_norm.T, axis=1)
+
+    # Compute observed frequencies from rest frequencies
     # using relativistic Doppler effect
     beta = range_rate / speed_of_light
     freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
