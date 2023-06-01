@@ -905,27 +905,14 @@ def get_doppler_shifted_freq(
 
     # Get rest frequency from HFB catalog
     if freq_rest is None:
-        if not source.names:
+        if not source.names or source.names not in HFBCatalog:
             raise ValueError(
                 "Rest frequencies must be supplied unless source can be found "
                 "in ch_util.hfbcat.HFBCatalog. "
                 f"Got source {source} with names {source.names}"
             )
-        elif source.names not in HFBCatalog:
-            raise KeyError(
-                f"Could not find source {source.names} in HFB catalog."
-                "Please provide rest frequencies."
-            )
         else:
-            freq_abs = HFBCatalog[source.names].freq_abs
-            nfreq_abs = len(freq_abs)
-            if nfreq_abs == 1:
-                freq_rest = freq_abs[0]
-            else:
-                raise NotImplementedError(
-                    f"Source {source.names} has {nfreq_abs} absorption features"
-                    "listed in the catalog. Please manually enter a rest frequency."
-                )
+            freq_rest = HFBCatalog[source.names].freq_abs
 
     # Prepare rest frequencies for broadcasting
     freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
