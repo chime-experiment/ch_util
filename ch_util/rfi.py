@@ -72,7 +72,7 @@ bad_frequencies = {
         [[1577755022, None], [617.00, 627.00]],
         # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
         [[1564051033, None], [716.00, 728.00]],
-     ],
+    ],
     "kko": [
         # Bad bands from statistical analysis of Jan 20, 2023 N2 data
         [[None, None], [433.59, 433.98]],
