@@ -1367,6 +1367,10 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             correlator = "FCC"
         elif correlator.lower() == "pco":
             correlator = "FCA"
+        elif correlator.lower() == "kko":
+            correlator = "FCA"
+        elif correlator.lower() == "gbo":
+            correlator = "FCG"
         elif correlator.lower() == "tone":
             # A hack to return GBO correlator inputs
             correlator = "tone"
