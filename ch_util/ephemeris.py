@@ -867,8 +867,15 @@ def get_doppler_shifted_freq(
     obs: Observer = chime,
 ) -> np.array:
     """Calculate Doppler shifted frequency of spectral feature with rest
-    frequency `freq_rest`, seen towards source `source` at time `date`,
-    due to Earth's motion and rotation.
+    frequency `freq_rest`, seen towards source `source` at time `date`, due to
+    Earth's motion and rotation, following the relativistic Doppler effect.
+
+    Note: This routine uses an :class:`skyfield.positionlib.Apparent` object
+    (rather than an :class:`skyfield.positionlib.Astrometric` object) to find
+    the velocity of the observatory and the position of the source. This
+    accounts for the gravitational deflection and the aberration of light.
+    It is unclear if the latter should be taken into account for this Doppler
+    shift calculation, but its effects are negligible.
 
     Parameters
     ----------
