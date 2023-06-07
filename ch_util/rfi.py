@@ -83,8 +83,8 @@ bad_frequencies = {
         # Notch filter stoppband + leakage
         [[None, None], [710.55, 757.81]],
     ],
-    "gbo": None,
-    "hco": None,
+    "gbo": [],
+    "hco": [],
 }
 
 
