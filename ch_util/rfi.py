@@ -482,7 +482,7 @@ def frequency_mask(
 
     if timestamp is None:
         timestamp = time.time()
-    bad_freq = bad_frequencies[instrument]
+    bad_freq = bad_frequencies.get(instrument, None)
 
     if bad_freq is None:
         raise ValueError(f"No RFI flags defined for {instrument}")
