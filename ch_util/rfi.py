@@ -26,6 +26,7 @@ For more control there are specific routines that can be called:
 """
 
 import warnings
+import time
 import logging
 from typing import Tuple, Optional, Union
 
@@ -41,36 +42,50 @@ logger.addHandler(logging.NullHandler())
 
 # Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
-BAD_FREQUENCIES = [
-    # Bad bands at first light
-    [[None, None], [449.41, 450.98]],
-    [[None, None], [454.88, 456.05]],
-    [[None, None], [457.62, 459.18]],
-    [[None, None], [483.01, 485.35]],
-    [[None, None], [487.70, 494.34]],
-    [[None, None], [497.85, 506.05]],
-    [[None, None], [529.10, 536.52]],
-    [[None, None], [541.60, 548.00]],
-    # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
-    [[None, 1661334542], [548.00, 554.49]],
-    [[None, None], [564.65, 578.00]],
-    # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
-    [[None, 1661420706], [578.00, 585.35]],
-    [[None, None], [693.16, 693.55]],
-    [[None, None], [694.34, 696.68]],
-    [[None, None], [729.88, 745.12]],
-    [[None, None], [746.29, 756.45]],
-    # 6 MHz band (reported by Simon)
-    [[None, None], [505.85, 511.71]],
-    # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
-    [[1633758888, None], [584.00, 590.00]],
-    # UHF TV Channel 35
-    [[1633758888, None], [596.00, 602.00]],
-    # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
-    [[1577755022, None], [617.00, 627.00]],
-    # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
-    [[1564051033, None], [716.00, 728.00]],
-]
+bad_frequencies = {
+    "chime": [
+        # Bad bands at first light
+        [[None, None], [449.41, 450.98]],
+        [[None, None], [454.88, 456.05]],
+        [[None, None], [457.62, 459.18]],
+        [[None, None], [483.01, 485.35]],
+        [[None, None], [487.70, 494.34]],
+        [[None, None], [497.85, 506.05]],
+        [[None, None], [529.10, 536.52]],
+        [[None, None], [541.60, 548.00]],
+        # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
+        [[None, 1661334542], [548.00, 554.49]],
+        [[None, None], [564.65, 578.00]],
+        # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
+        [[None, 1661420706], [578.00, 585.35]],
+        [[None, None], [693.16, 693.55]],
+        [[None, None], [694.34, 696.68]],
+        [[None, None], [729.88, 745.12]],
+        [[None, None], [746.29, 756.45]],
+        # 6 MHz band (reported by Simon)
+        [[None, None], [505.85, 511.71]],
+        # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+        [[1633758888, None], [584.00, 590.00]],
+        # UHF TV Channel 35
+        [[1633758888, None], [596.00, 602.00]],
+        # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
+        [[1577755022, None], [617.00, 627.00]],
+        # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
+        [[1564051033, None], [716.00, 728.00]],
+    ],
+    "kko": [
+        # Bad bands from statistical analysis of Jan 20, 2023 N2 data
+        [[None, None], [433.59, 433.98]],
+        [[None, None], [439.84, 440.62]],
+        [[None, None], [483.20, 484.38]],
+        [[None, None], [616.80, 626.95]],
+        [[None, None], [799.61, 800.00]],
+        # Notch filter stoppband + leakage
+        [[None, None], [710.55, 757.81]],
+    ],
+    "gbo": [],
+    "hco": [],
+}
 
 
 def flag_dataset(
@@ -423,6 +438,7 @@ def frequency_mask(
     freq_centre: np.ndarray,
     freq_width: Optional[Union[np.ndarray, float]] = None,
     timestamp: Optional[Union[np.ndarray, float]] = None,
+    instrument: Optional[str] = None,
 ) -> np.ndarray:
     """Flag known bad frequencies.
 
@@ -437,11 +453,13 @@ def frequency_mask(
         the frequency centre separation. If supplied as an array it must be
         broadcastable
         against `freq_centre`.
-    timestamp : np., optional
+    timestamp
         UNIX observing time. If `None` (default) mask all specified bands regardless of
         their start/end times, otherwise mask only timestamps within the band start and
         end times. If supplied as an array it must be broadcastable against
         `freq_centre`.
+    instrument
+        Telescope name. [kko, gbo, hco, chime (default)]
 
     Returns
     -------
@@ -458,7 +476,18 @@ def frequency_mask(
     # Broadcast to get the output mask
     mask = np.zeros(np.broadcast(freq_centre, timestamp).shape, dtype=bool)
 
-    for (start_time, end_time), (fs, fe) in BAD_FREQUENCIES:
+    # Time-dependent static RFI flagging
+    if instrument is None:
+        instrument = "chime"
+
+    if timestamp is None:
+        timestamp = time.time()
+    bad_freq = bad_frequencies.get(instrument, None)
+
+    if bad_freq is None:
+        raise ValueError(f"No RFI flags defined for {instrument}")
+
+    for (start_time, end_time), (fs, fe) in bad_freq:
         fmask = (freq_end > fs) & (freq_start < fe)
 
         # If we don't have a timestamp then just mask all bands
