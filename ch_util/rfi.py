@@ -26,7 +26,6 @@ For more control there are specific routines that can be called:
 """
 
 import warnings
-import time
 import logging
 from typing import Tuple, Optional, Union
 
@@ -42,7 +41,7 @@ logger.addHandler(logging.NullHandler())
 
 # Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
-bad_frequencies = {
+BAD_FREQUENCIES = {
     "chime": [
         # Bad bands at first light
         [[None, None], [449.41, 450.98]],
@@ -438,7 +437,7 @@ def frequency_mask(
     freq_centre: np.ndarray,
     freq_width: Optional[Union[np.ndarray, float]] = None,
     timestamp: Optional[Union[np.ndarray, float]] = None,
-    instrument: Optional[str] = None,
+    instrument: Optional[str] = "chime",
 ) -> np.ndarray:
     """Flag known bad frequencies.
 
@@ -476,16 +475,10 @@ def frequency_mask(
     # Broadcast to get the output mask
     mask = np.zeros(np.broadcast(freq_centre, timestamp).shape, dtype=bool)
 
-    # Time-dependent static RFI flagging
-    if instrument is None:
-        instrument = "chime"
-
-    if timestamp is None:
-        timestamp = time.time()
-    bad_freq = bad_frequencies.get(instrument, None)
-
-    if bad_freq is None:
-        raise ValueError(f"No RFI flags defined for {instrument}")
+    try:
+        bad_freq = BAD_FREQUENCIES[instrument]
+    except KeyError as e:
+        raise ValueError(f"No RFI flags defined for {instrument}") from e
 
     for (start_time, end_time), (fs, fe) in bad_freq:
         fmask = (freq_end > fs) & (freq_start < fe)
