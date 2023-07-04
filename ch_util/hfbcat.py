@@ -3,6 +3,7 @@ Catalog of HFB test targets
 """
 
 import os
+import warnings
 
 from .fluxcat import FluxCatalog
 
@@ -80,4 +81,8 @@ class HFBCatalog(FluxCatalog):
 
 
 # Load the HFB target list
-HFBCatalog.load(HFB_COLLECTION)
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        "ignore", r"The alternate name .* is already held by the source .*."
+    )
+    HFBCatalog.load(HFB_COLLECTION)
