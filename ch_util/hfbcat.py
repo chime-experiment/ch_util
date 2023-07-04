@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import numpy as np
 from typing import TYPE_CHECKING, Optional, Union
+import warnings
 
 import ch_ephem.catalogs
 
@@ -178,4 +179,8 @@ def get_doppler_shifted_freq(
 
 
 # Load the HFB target list
-HFBCatalog.load_dict(ch_ephem.catalogs.load(HFB_COLLECTION), HFB_COLLECTION)
+with warnings.catch_warnings():
+    warnings.filterwarnings(
+        "ignore", r"The alternate name .* is already held by the source .*."
+    )
+    HFBCatalog.load_dict(ch_ephem.catalogs.load(HFB_COLLECTION), HFB_COLLECTION)
