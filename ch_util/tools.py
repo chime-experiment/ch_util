@@ -158,7 +158,7 @@ _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 # KKO geometry
 _KKO_POS = [0.0, 0.0, 0.0]
-_KKO_ROT = -0.6874
+_KKO_ROT = 0.6874
 _KKO_ROLL = 0.5888
 _PCO_POS = _KKO_POS
 _PCO_ROT = _KKO_ROT  # Aliases for backwards-compatibility
@@ -168,7 +168,7 @@ _PCO_ROT = _KKO_ROT  # Aliases for backwards-compatibility
 
 # GBO geometry
 _GBO_POS = [0.0, 0.0, 0.0]
-_GBO_ROT = 27.3745
+_GBO_ROT = -27.3745
 _GBO_ROLL = -30.0871
 
 # HCO geometry
