@@ -2467,18 +2467,26 @@ def delay(
 
     # Add the b-term for baselines including the 26m Galt telescope
     if bterm:
-        b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
-
-        galt_feeds = get_holographic_index(feeds)
-
-        galt_conj = np.where(np.isin(prod_map["input_a"], galt_feeds), -1, 0)
-        galt_noconj = np.where(np.isin(prod_map["input_b"], galt_feeds), 1, 0)
-
-        conj_flag = galt_conj + galt_noconj
-
-        delays += conj_flag[:, np.newaxis] * b_delay
+        delays += bterm(src_dec, feeds, prod_map)
 
     return delays
+
+
+def bterm(src_dec, feeds, prod_map):
+    import scipy.constants
+
+    b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
+
+    galt_feeds = get_holographic_index(feeds)
+
+    galt_conj = np.where(np.isin(prod_map["input_a"], galt_feeds), -1, 0)
+    galt_noconj = np.where(np.isin(prod_map["input_b"], galt_feeds), 1, 0)
+
+    conj_flag = galt_conj + galt_noconj
+
+    bdelays = conj_flag[:, np.newaxis] * b_delay
+
+    return bdelays
 
 
 def invert_no_zero(*args, **kwargs):
