@@ -880,7 +880,7 @@ def get_doppler_shifted_freq(
     Parameters
     ----------
     source
-        Position on the sky. If the input is a `str`, attempt to resolve this
+        Position(s) on the sky. If the input is a `str`, attempt to resolve this
         from `ch_util.hfbcat.HFBCatalog`.
     date
         Unix time(s) for which to calculate Doppler shift.
@@ -895,7 +895,12 @@ def get_doppler_shifted_freq(
     -------
     freq_obs
         Doppler shifted frequencies in MHz. Array where rows correspond to the
-        different input rest frequencies and columns to the input times.
+        different input rest frequencies and columns correspond either to input
+        times or to input sky positions (whichever contains multiple entries).
+
+    Notes
+    -----
+    Only one of `source` and `date` can contain multiple entries.
     """
 
     from scipy.constants import c as speed_of_light
@@ -925,7 +930,7 @@ def get_doppler_shifted_freq(
     freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
 
     # Convert unix times to skyfield times
-    date = unix_to_skyfield_time(_ensure_list(date))
+    date = unix_to_skyfield_time(date)
 
     # Create skyfield Apparent object of source position seen from observer
     position = obs.skyfield_obs().at(date).observe(source).apparent()
@@ -940,7 +945,7 @@ def get_doppler_shifted_freq(
     # Dot product of observer velocity and source position gives observer
     # velocity in direction of source; flip sign to get range rate (positive
     # for observer and source moving appart)
-    range_rate = -np.sum(obs_vel_m_per_s.T * source_pos_norm.T, axis=1)
+    range_rate = -np.sum(obs_vel_m_per_s.T * source_pos_norm.T, axis=-1)
 
     # Compute observed frequencies from rest frequencies
     # using relativistic Doppler effect
