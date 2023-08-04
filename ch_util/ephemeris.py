@@ -870,13 +870,6 @@ def get_doppler_shifted_freq(
     frequency `freq_rest`, seen towards source `source` at time `date`, due to
     Earth's motion and rotation, following the relativistic Doppler effect.
 
-    Note: This routine uses an :class:`skyfield.positionlib.Apparent` object
-    (rather than an :class:`skyfield.positionlib.Astrometric` object) to find
-    the velocity of the observatory and the position of the source. This
-    accounts for the gravitational deflection and the aberration of light.
-    It is unclear if the latter should be taken into account for this Doppler
-    shift calculation, but its effects are negligible.
-
     Parameters
     ----------
     source
@@ -929,6 +922,61 @@ def get_doppler_shifted_freq(
     # Prepare rest frequencies for broadcasting
     freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
 
+    # Get rate at which the distance between the observer and source changes
+    # (positive for observer and source moving appart)
+    range_rate = get_range_rate(source, date, obs)
+
+    # Compute observed frequencies from rest frequencies
+    # using relativistic Doppler effect
+    beta = range_rate / speed_of_light
+    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
+
+    return freq_obs
+
+
+def get_range_rate(
+    source: skyfield.starlib.Star,
+    date: Union[float, list],
+    obs: Observer = chime,
+) -> Union[float, np.array]:
+    """Calculate rate at which distance between observer and source changes.
+
+    Parameters
+    ----------
+    source
+        Position(s) on the sky.
+    date
+        Unix time(s) for which to calculate range rate.
+    obs
+        An Observer instance to use. If not supplied use `chime`. For many
+        calculations changing from this default will make little difference.
+
+    Returns
+    -------
+    range_rate
+        Rate at which the distance between the observer and source changes
+        (i.e., the velocity of observer in direction of source, but positive
+        for observer and source moving appart). If either `source` or `date`
+        contains multiple entries, `range_rate` will be an array. Otherwise,
+        `range_rate` will be a float.
+
+    Notes
+    -----
+    Only one of `source` and `date` can contain multiple entries.
+
+    This routine uses an :class:`skyfield.positionlib.Apparent` object
+    (rather than an :class:`skyfield.positionlib.Astrometric` object) to find
+    the velocity of the observatory and the position of the source. This
+    accounts for the gravitational deflection and the aberration of light.
+    It is unclear if the latter should be taken into account for this Doppler
+    shift calculation, but its effects are negligible.
+    """
+
+    if hasattr(source.ra._degrees, "__iter__") and hasattr(date, "__iter__"):
+        raise ValueError(
+            "Only one of `source` and `date` can contain multiple entries."
+        )
+
     # Convert unix times to skyfield times
     date = unix_to_skyfield_time(date)
 
@@ -947,12 +995,7 @@ def get_doppler_shifted_freq(
     # for observer and source moving appart)
     range_rate = -np.sum(obs_vel_m_per_s.T * source_pos_norm.T, axis=-1)
 
-    # Compute observed frequencies from rest frequencies
-    # using relativistic Doppler effect
-    beta = range_rate / speed_of_light
-    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
-
-    return freq_obs
+    return range_rate
 
 
 def get_source_dictionary(*args):
