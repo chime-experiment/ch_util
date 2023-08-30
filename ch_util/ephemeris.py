@@ -954,11 +954,11 @@ def get_range_rate(
     Returns
     -------
     range_rate
-        Rate at which the distance between the observer and source changes
-        (i.e., the velocity of observer in direction of source, but positive
-        for observer and source moving appart). If either `source` or `date`
-        contains multiple entries, `range_rate` will be an array. Otherwise,
-        `range_rate` will be a float.
+        Rate (in m/s) at which the distance between the observer and source
+        changes (i.e., the velocity of observer in direction of source, but
+        positive for observer and source moving appart). If either `source`
+        or `date` contains multiple entries, `range_rate` will be an array.
+        Otherwise, `range_rate` will be a float.
 
     Notes
     -----
