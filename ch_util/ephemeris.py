@@ -716,7 +716,7 @@ def equat_to_bmxy(ra_icrs, dec_icrs, time):
     bmx, bmy : array_like
         The CHIME/FRB beam model X and Y coordinates in degrees as defined in
         the beam-model coordinate conventions:
-        https://chimefrb.github.io/frb_common/build/html/beam_model.html
+        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
     """
 
     from skyfield.api import Star, Angle
@@ -754,7 +754,7 @@ def hadec_to_bmxy(ha_cirs, dec_cirs):
     bmx, bmy : array_like
         The CHIME/FRB beam model X and Y coordinates in degrees as defined in
         the beam-model coordinate conventions:
-        https://chimefrb.github.io/frb_common/build/html/beam_model.html
+        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
     """
 
     from caput.interferometry import sph_to_ground
