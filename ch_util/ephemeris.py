@@ -721,12 +721,6 @@ def equat_to_bmxy(ra_icrs, dec_icrs, time):
 
     from skyfield.api import Star, Angle
 
-    from caput.interferometry import sph_to_ground
-
-    from ch_util.tools import _CHIME_ROT
-
-    from drift.telescope.cylbeam import rotate_ypr
-
     # Create skyfield Star object from ICRS coordinates
     ra = Angle(degrees=ra_icrs)
     dec = Angle(degrees=dec_icrs)
@@ -738,6 +732,36 @@ def equat_to_bmxy(ra_icrs, dec_icrs, time):
 
     # Compute CIRS Hour Angle
     ha_cirs = unix_to_lsa(time) - ra_cirs
+
+    # Get CHIME/FRB beam model XY position
+    bmx, bmy = hadec_to_bmxy(ha_cirs, dec_cirs)
+
+    return bmx, bmy
+
+
+def hadec_to_bmxy(ha_cirs, dec_cirs):
+    """Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.
+
+    Parameters
+    ----------
+    ha_cirs : float
+        The CIRS Hour Angle of a position in degrees.
+    dec_cirs : float
+        The CIRS Declination of a position in degrees.
+
+    Returns
+    -------
+    bmx, bmy : array_like
+        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+        the beam-model coordinate conventions:
+        https://chimefrb.github.io/frb_common/build/html/beam_model.html
+    """
+
+    from caput.interferometry import sph_to_ground
+
+    from ch_util.tools import _CHIME_ROT
+
+    from drift.telescope.cylbeam import rotate_ypr
 
     # Convert CIRS coordinates to CHIME "ground fixed" XYZ coordinates,
     # which constitute a unit vector pointing towards the point of interest,
