@@ -744,10 +744,10 @@ def hadec_to_bmxy(ha_cirs, dec_cirs):
 
     Parameters
     ----------
-    ha_cirs : float
-        The CIRS Hour Angle of a position in degrees.
-    dec_cirs : float
-        The CIRS Declination of a position in degrees.
+    ha_cirs : array_like
+        The CIRS Hour Angle in degrees.
+    dec_cirs : array_like
+        The CIRS Declination in degrees.
 
     Returns
     -------
@@ -765,27 +765,99 @@ def hadec_to_bmxy(ha_cirs, dec_cirs):
 
     # Convert CIRS coordinates to CHIME "ground fixed" XYZ coordinates,
     # which constitute a unit vector pointing towards the point of interest,
-    # i.e., telescope cartesian unit-sphere coordinates
-    # with X pointing East, Y pointing North, Z pointing up to zenith.
+    # i.e., telescope cartesian unit-sphere coordinates.
+    # chx: The EW coordinate (increases to the East)
+    # chy: The NS coordinate (increases to the North)
+    # chz: The vertical coordinate (increases to the sky)
     chx, chy, chz = sph_to_ground(
         np.deg2rad(ha_cirs), np.deg2rad(CHIMELATITUDE), np.deg2rad(dec_cirs)
     )
 
     # Correct for CHIME telescope rotation with respect to North
     ypr = np.array([np.deg2rad(-_CHIME_ROT), 0, 0])
-    chx, chy, chz = rotate_ypr(ypr, chx, chy, chz)
+    chx_rot, chy_rot, chz_rot = rotate_ypr(ypr, chx, chy, chz)
 
-    # Convert cartesian unit-sphere coordinates to polar angle and azimuth
-    # polar angle: almost-North = 0 deg; almost-South = 180 deg
-    # azimut: Zenith = 0 deg; almost-West = 90 deg; almost-East = 270 deg (check)
-    pa = np.arccos(chy)
-    az = np.arctan2(chx, chz)
+    # Convert rotated CHIME "ground fixed" XYZ coordinates to spherical polar coordinates
+    # with the pole towards almost-North and using CHIME's meridian as the prime meridian.
+    # Note that the azimuthal angle theta in these spherical polar coordinates increases
+    # to the West (to ensure that phi and theta here have the same meaning as the variables
+    # with the same names in the beam_model package and DocLib #1203).
+    # phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg
+    # theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg
+    phi = np.arccos(chy_rot)
+    theta = np.arctan2(-chx_rot, +chz_rot)
 
     # Convert polar angle and azimuth to CHIME/FRB beam model XY position
-    bmx = np.rad2deg(-az * np.sin(pa))
-    bmy = np.rad2deg(np.pi / 2.0 - pa)
+    bmx = np.rad2deg(theta * np.sin(phi))
+    bmy = np.rad2deg(np.pi / 2.0 - phi)
 
     return bmx, bmy
+
+
+def bmxy_to_hadec(bmx, bmy):
+    """Convert CHIME/FRB beam-model XY coordinates to CIRS hour angle and declination.
+
+    Parameters
+    ----------
+    bmx, bmy : array_like
+        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+        the beam-model coordinate conventions:
+        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
+        X is degrees west from the meridian
+        Y is degrees north from zenith
+
+    Returns
+    -------
+    ha_cirs : array_like
+        The CIRS Hour Angle in degrees.
+    dec_cirs : array_like
+        The CIRS Declination in degrees.
+    """
+    import warnings
+
+    from caput.interferometry import ground_to_sph
+
+    from ch_util.tools import _CHIME_ROT
+
+    from drift.telescope.cylbeam import rotate_ypr
+
+    # Convert CHIME/FRB beam model XY position to spherical polar coordinates
+    # with the pole towards almost-North and using CHIME's meridian as the prime
+    # meridian. Note that the CHIME/FRB beam model X coordinate increases westward
+    # and so does the azimuthal angle theta in these spherical polar coordinates
+    # (to ensure that phi and theta here have the same meaning as the variables
+    # with the same names in the beam_model package and DocLib #1203).
+    # phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg
+    # theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg
+    phi = np.pi / 2.0 - np.deg2rad(bmy)
+    theta = np.deg2rad(bmx) / np.sin(phi)
+
+    # Warn for input beam-model XY positions below the horizon
+    scalar_input = np.isscalar(theta)
+    theta = np.atleast_1d(theta)
+    if (theta < -1.0 * np.pi / 2.0).any() or (theta > np.pi / 2.0).any():
+        warnings.warn("Input beam model XY coordinate(s) below horizon.")
+    if scalar_input:
+        theta = np.squeeze(theta)
+
+    # Convert spherical polar coordinates to rotated CHIME "ground fixed" XYZ
+    # coordinates (i.e., cartesian unit-sphere coordinates, rotated to correct
+    # for the CHIME telescope's rotation with respect to North).
+    # chx_rot: The almost-EW coordinate (increases to the almost-East)
+    # chy_rot: The almost-NS coordinate (increases to the almost-North)
+    # chz_rot: The vertical coordinate (increases to the sky)
+    chx_rot = np.sin(phi) * np.sin(-theta)
+    chy_rot = np.cos(phi)
+    chz_rot = np.sin(phi) * np.cos(-theta)
+
+    # Undo correction for CHIME telescope rotation with respect to North
+    ypr = np.array([np.deg2rad(_CHIME_ROT), 0, 0])
+    chx, chy, chz = rotate_ypr(ypr, chx_rot, chy_rot, chz_rot)
+
+    # Convert CHIME "ground fixed" XYZ coordinates to CIRS hour angle and declination
+    ha_cirs, dec_cirs = ground_to_sph(chx, chy, np.deg2rad(CHIMELATITUDE))
+
+    return np.rad2deg(ha_cirs), np.rad2deg(dec_cirs)
 
 
 def peak_RA(body, date=None, deg=False):
