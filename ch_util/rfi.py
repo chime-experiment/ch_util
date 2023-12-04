@@ -43,7 +43,7 @@ logger.addHandler(logging.NullHandler())
 # If the start time is not specified, t = [], the flag is applied to all CSDs
 BAD_FREQUENCIES = {
     "chime": [
-        # Bad bands at first light
+        ### Bad bands at first light
         [[None, None], [449.41, 450.98]],
         [[None, None], [454.88, 456.05]],
         [[None, None], [457.62, 459.18]],
@@ -52,27 +52,31 @@ BAD_FREQUENCIES = {
         [[None, None], [497.85, 506.05]],
         [[None, None], [529.10, 536.52]],
         [[None, None], [541.60, 548.00]],
-        # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
-        # This is extended until CSD 3432 (2023/03/30) to account for gain errors
-        [[None, 1680204479], [548.00, 554.49]],
-        [[None, None], [564.65, 578.00]],
-        # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
-        # This is extended until CSD 3432 (2023/03/30) to account for gain errors
-        [[None, 1680204479], [578.00, 585.35]],
-        [[None, None], [693.16, 693.55]],
-        [[None, None], [694.34, 696.68]],
-        [[None, None], [729.88, 745.12]],
-        [[None, None], [746.29, 756.45]],
+        ### Additional bad bands
         # 6 MHz band (reported by Simon)
         [[None, None], [505.85, 511.71]],
+        # This is a bright band which has been around since the beginning.
+        # It usually gets masked, but not always
+        [[None, None], [517.97, 524.60]],
+        # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
+        # This is extended until CSD 3446 (2023/04/13) to account for gain errors
+        [[None, 1681410777], [548.00, 554.49]],
+        [[None, None], [564.65, 578.00]],
+        # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
+        # This is extended until CSD 3446 (2023/04/13) to account for gain errors
+        [[None, 1681410777], [578.00, 585.35]],
         # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
         [[1633758888, None], [584.00, 590.00]],
         # UHF TV Channel 35
         [[1633758888, None], [596.00, 602.00]],
         # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
         [[1577755022, None], [617.00, 627.00]],
+        [[None, None], [693.16, 693.55]],
+        [[None, None], [694.34, 696.68]],
         # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
         [[1564051033, None], [716.00, 728.00]],
+        [[None, None], [729.88, 745.12]],
+        [[None, None], [746.29, 756.45]],
     ],
     "kko": [
         # Bad bands from statistical analysis of Jan 20, 2023 N2 data
