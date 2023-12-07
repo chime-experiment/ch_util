@@ -38,6 +38,7 @@ jobs:
 
     - name: Install apt dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
     - name: Set up Python ${{ matrix.python-version }}
@@ -67,6 +68,7 @@ jobs:
 
     - name: Install apt dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
     - name: Set up Python 3.10
