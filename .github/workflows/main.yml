@@ -21,7 +21,10 @@ jobs:
         python-version: "3.10"
 
     - name: Install black
-      run: pip install black
+      run: pip install black ruff
+
+    - name: Lint code with Ruff
+      run: ruff check .
 
     - name: Check code with black
       run: black --check .
