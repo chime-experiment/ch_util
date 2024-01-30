@@ -76,7 +76,9 @@ numpydoc_show_class_members = False
 
 autodoc_mock_imports = ["networkx"]
 
-intersphinx_mapping = {"https://networkx.github.io/documentation/latest/": None}
+intersphinx_mapping = {
+    "networkx": ("https://networkx.github.io/documentation/latest/", None)
+}
 # TODO: add "chimedb.core": ("http://todo/", None)}
 
 # Add any paths that contain templates here, relative to this directory.
