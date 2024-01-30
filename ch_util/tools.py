@@ -1270,10 +1270,7 @@ def get_default_frequency_map_stream() -> Tuple[np.ndarray]:
     stream[:, 3] = np.tile(np.arange(8).repeat(32), 4)
 
     stream_id = (
-        stream[:, 0] * 2**12
-        + stream[:, 1] * 2**12
-        + stream[:, 2] * 2**4
-        + stream[:, 3]
+        stream[:, 0] * 2**12 + stream[:, 1] * 2**12 + stream[:, 2] * 2**4 + stream[:, 3]
     ).astype(np.int64)
 
     return stream, stream_id

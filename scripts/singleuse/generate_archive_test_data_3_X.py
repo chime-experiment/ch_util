@@ -4,7 +4,6 @@ Data is written to the current directory.
 
 """
 
-
 from os import path
 
 import numpy as np

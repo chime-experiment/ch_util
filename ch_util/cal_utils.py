@@ -2421,9 +2421,7 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
             # of length 2 for sklearn version 1.1.2, but will have a single dimension
             # for earlier versions.  The line below ensures consistent behavior.
             if err_ypred.ndim > 1:
-                err_ypred = np.sqrt(
-                    np.sum(err_ypred**2, axis=-1) / err_ypred.shape[-1]
-                )
+                err_ypred = np.sqrt(np.sum(err_ypred**2, axis=-1) / err_ypred.shape[-1])
 
             interp_weight[test, ii] = tools.invert_no_zero(err_ypred**2)
 

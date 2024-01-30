@@ -1,6 +1,7 @@
 """Query the database for pulsar holography sources and compile them into a
 FluxCatalog-style JSON file based on the ATNF pulsar catalog.
 """
+
 import os
 
 import numpy as np

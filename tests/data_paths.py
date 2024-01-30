@@ -1,6 +1,5 @@
 """Module contains paths to test data."""
 
-
 import glob
 from os import path
 
