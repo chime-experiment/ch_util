@@ -53,11 +53,15 @@ BAD_FREQUENCIES = {
         [[None, None], [529.10, 536.52]],
         [[None, None], [541.60, 548.00]],
         ### Additional bad bands
+        # Narrow, high power bands visible in sensitivities and
+        # some longer baselines. There is some sporadic rfi in between
+        # the two bands
+        [[None, None], [460.15, 460.55]],
+        [[None, None], [464.00, 470.32]],
         # 6 MHz band (reported by Simon)
         [[None, None], [505.85, 511.71]],
-        # This is a bright band which has been around since the beginning.
-        # It usually gets masked, but not always
-        [[None, None], [517.97, 524.60]],
+        # Bright band which has been present since early on
+        [[None, None], [517.97, 525.00]],
         # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
         # This is extended until CSD 3446 (2023/04/13) to account for gain errors
         [[None, 1681410777], [548.00, 554.49]],
@@ -69,6 +73,8 @@ BAD_FREQUENCIES = {
         [[1633758888, None], [584.00, 590.00]],
         # UHF TV Channel 35
         [[1633758888, None], [596.00, 602.00]],
+        # Low power band visible in long baselines
+        [[None, None], [602.00, 607.82]],
         # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
         [[1577755022, None], [617.00, 627.00]],
         [[None, None], [693.16, 693.55]],
