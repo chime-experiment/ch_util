@@ -1,6 +1,5 @@
 """Unit tests for ephemeris module."""
 
-
 import os
 from datetime import datetime
 

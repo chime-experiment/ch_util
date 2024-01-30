@@ -1,6 +1,5 @@
 """Unit tests for analysis data format."""
 
-
 import unittest
 
 import numpy as np

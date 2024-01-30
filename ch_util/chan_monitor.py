@@ -587,9 +587,11 @@ class FeedLocator(object):
             devmins = devs.min(axis=1)
             centres = np.array(
                 [
-                    xmeds[ii]  # return median
-                    if devmins[ii] < tol  # if reasonable
-                    else cylseps[np.argmin(devs[ii])]  # or use closest value
+                    (
+                        xmeds[ii]  # return median
+                        if devmins[ii] < tol  # if reasonable
+                        else cylseps[np.argmin(devs[ii])]
+                    )  # or use closest value
                     for ii in range(devmins.size)
                 ]
             )
@@ -767,11 +769,13 @@ class ChanMonitor(object):
         grd_dict = {"CygA": 4, "CasA": 4, "TauA": 3, "VirA": 1}
         # Grades for each source
         grds = [
-            grd_dict[src.name] - 2
-            if (
-                (src.name in ["CygA", "CasA"]) and (not ntt[ii])
-            )  # CasA and CygA at daytime worse than TauA at night
-            else grd_dict[src.name]
+            (
+                grd_dict[src.name] - 2
+                if (
+                    (src.name in ["CygA", "CasA"]) and (not ntt[ii])
+                )  # CasA and CygA at daytime worse than TauA at night
+                else grd_dict[src.name]
+            )
             for ii, src in enumerate(srcs)
         ]
 
