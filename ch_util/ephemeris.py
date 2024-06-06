@@ -696,49 +696,6 @@ def object_coords(body, date=None, deg=False, obs=chime):
     return ra, dec
 
 
-def equat_to_bmxy(ra_icrs, dec_icrs, time):
-    """Convert ICRS equatorial coordinates to CHIME/FRB beam-model XY coordinates.
-
-    Similar to `beam_model.util.get_position_from_equatorial`, but the results
-    seem to be different by up to ~20 arcsec.
-
-    Parameters
-    ----------
-    ra_icrs : float
-        The ICRS Right Ascension of the source in degrees.
-    dec_icrs : float
-        The ICRS Declination of the source in degrees.
-    time : array_like
-        Unix time.
-
-    Returns
-    -------
-    bmx, bmy : array_like
-        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
-        the beam-model coordinate conventions:
-        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
-    """
-
-    from skyfield.api import Star, Angle
-
-    # Create skyfield Star object from ICRS coordinates
-    ra = Angle(degrees=ra_icrs)
-    dec = Angle(degrees=dec_icrs)
-    source = Star(ra=ra, dec=dec)
-
-    # Convert ICRS to CIRS coordinates (by passing a date to object_coords,
-    # it returns CIRS coordinates at that epoch)
-    ra_cirs, dec_cirs = object_coords(source, date=time, deg=True)
-
-    # Compute CIRS Hour Angle
-    ha_cirs = unix_to_lsa(time) - ra_cirs
-
-    # Get CHIME/FRB beam model XY position
-    bmx, bmy = hadec_to_bmxy(ha_cirs, dec_cirs)
-
-    return bmx, bmy
-
-
 def hadec_to_bmxy(ha_cirs, dec_cirs):
     """Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.
 
