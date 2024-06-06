@@ -12,3 +12,4 @@ bitshuffle
 caput[compression] @ git+https://github.com/radiocosmology/caput.git
 skyfield >= 1.10
 mpi4py
+driftscan @ git+https://github.com/radiocosmology/driftscan.git
