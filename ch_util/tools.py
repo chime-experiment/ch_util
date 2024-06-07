@@ -2481,9 +2481,20 @@ def delay(
 def beam_index2number(beam_index):
     """Convert beam "index" (0-1023) to beam "number" (0-255, 1000-1255, etc.)
 
-    The latter, with 1000s indicating the beam's East-West index and the remainder
-    going from 0 through 255 indicating the beam's North-South index, is used in
-    the CHIME/FRB beam_model package."""
+    The beam "number", with 1000s indicating the beam's East-West index and the
+    remainder going from 0 through 255 indicating the beam's North-South index,
+    is used in the CHIME/FRB beam_model package.
+
+    Parameters
+    ----------
+    beam_index : int or np.ndarray of int
+        The beam index or indices to be converted.
+
+    Returns
+    -------
+    beam_number : same as beam_index
+        The corresponding beam number or numbers.
+    """
     beam_ew_index = beam_index // 256
     beam_ns_index = beam_index % 256
     beam_number = 1000 * beam_ew_index + beam_ns_index
