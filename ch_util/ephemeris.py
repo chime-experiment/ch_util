@@ -894,6 +894,18 @@ def get_doppler_shifted_freq(
     Notes
     -----
     Only one of `source` and `date` can contain multiple entries.
+
+    Example
+    -------
+    To get the Doppler shifted frequencies of a feature with a rest frequency
+    of 600 MHz for two positions on the sky at a single point in time (Unix
+    time 1717809534 = 2024-06-07T21:18:54+00:00), run:
+
+    >>> from skyfield.starlib import Star
+    >>> from skyfield.positionlib import Angle
+    >>> from ch_util.tools import get_doppler_shifted_freq
+    >>> coord = Star(ra=Angle(degrees=[100, 110]), dec=Angle(degrees=[45, 50]))
+    >>> get_doppler_shifted_freq(coord, 1717809534, 600)
     """
 
     from scipy.constants import c as speed_of_light
