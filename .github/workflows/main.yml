@@ -53,7 +53,7 @@ jobs:
         pip install numpy
         pip install cython
         pip install h5py
-        pip install --use-deprecated=legacy-resolver -e .
+        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
         pip install pytest
 
     - name: Run tests
@@ -83,7 +83,7 @@ jobs:
         pip install numpy
         pip install cython
         pip install h5py
-        pip install --use-deprecated=legacy-resolver -e .
+        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
         pip install -r doc/requirements.txt
 
     - name: Build sphinx docs
