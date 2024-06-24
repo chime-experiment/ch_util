@@ -16,7 +16,7 @@ setup(
     version=versioneer.get_version(),
     cmdclass=versioneer.get_cmdclass(),
     packages=find_packages(),
-    python_requires=">=3.8",
+    python_requires=">=3.9",
     install_requires=requires,
     extras_require={
         "chimedb_config": [
