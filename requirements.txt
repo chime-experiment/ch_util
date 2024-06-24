@@ -3,7 +3,7 @@ chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git
 chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git
 chimedb.dataset @ git+https://github.com/chime-experiment/chimedb_dataset.git
 matplotlib
-numpy >= 1.16
+numpy >= 1.16,<2
 scipy
 networkx >= 2.0
 h5py
