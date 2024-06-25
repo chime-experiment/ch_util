@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.ephemeris &mdash; ch_util 24.6.0+4.gc460b37 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=91adb8b6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=eb1e4639"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../../_static/katex.min.js?v=be8ff15f"></script>
+        <script src="../../_static/auto-render.min.js?v=ad136472"></script>
+        <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+              <div class="version">
+                24.6.0+4.gc460b37
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.ephemeris</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.ephemeris</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Ephemeris routines</span>
+
+<span class="sd">The precession of the Earth&#39;s axis gives noticeable shifts in object</span>
+<span class="sd">positions over the life time of CHIME. To minimise the effects of this we</span>
+<span class="sd">need to be careful and consistent with our ephemeris calculations.</span>
+<span class="sd">Historically Right Ascension has been given with respect to the Vernal</span>
+<span class="sd">Equinox which has a significant (and unnecessary) precession in the origin of</span>
+<span class="sd">the RA axis. To avoid this we use the new Celestial Intermediate Reference</span>
+<span class="sd">System which does not suffer from this issue.</span>
+
+<span class="sd">Practically this means that when calculating RA, DEC coordinates for a source</span>
+<span class="sd">position at a *given time* you must be careful to obtain CIRS coordinates</span>
+<span class="sd">(and not equinox based ones). Internally using `ephemeris.object_coords` does</span>
+<span class="sd">exactly that for you, so for any lookup of coordinates you should use that on</span>
+<span class="sd">your requested body.</span>
+
+<span class="sd">Note that the actual coordinate positions of sources must be specified using</span>
+<span class="sd">RA, DEC coordinates in ICRS (which is roughly equivalent to J2000). The</span>
+<span class="sd">purpose of object_coords is to transform into new RA, DEC coordinates taking</span>
+<span class="sd">into account the precession and nutation of the Earth&#39;s polar axis since</span>
+<span class="sd">then.</span>
+
+<span class="sd">These kind of coordinate issues are tricky, confusing and hard to debug years</span>
+<span class="sd">later, so if you&#39;re unsure you are recommended to seek some advice.</span>
+
+<span class="sd">Constants</span>
+<span class="sd">=========</span>
+
+<span class="sd">:const:`CHIMELATITUDE`</span>
+<span class="sd">    CHIME&#39;s latitude [degrees].</span>
+<span class="sd">:const:`CHIMELONGITUDE`</span>
+<span class="sd">    CHIME&#39;s longitude [degrees].</span>
+<span class="sd">:const:`CHIMEALTITUDE`</span>
+<span class="sd">    CHIME&#39;s altitude [metres].</span>
+<span class="sd">:const:`SIDEREAL_S`</span>
+<span class="sd">    Number of SI seconds in a sidereal second [s/sidereal s]. You probably want</span>
+<span class="sd">    STELLAR_S instead.</span>
+<span class="sd">:const:`STELLAR_S`</span>
+<span class="sd">    Number of SI seconds in a stellar second [s/stellar s].</span>
+<span class="sd">:const:`CasA`</span>
+<span class="sd">    :class:`skyfield.starlib.Star` representing Cassiopeia A.</span>
+<span class="sd">:const:`CygA`</span>
+<span class="sd">    :class:`skyfield.starlib.Star` representing Cygnus A.</span>
+<span class="sd">:const:`TauA`</span>
+<span class="sd">    :class:`skyfield.starlib.Star` representing Taurus A.</span>
+<span class="sd">:const:`VirA`</span>
+<span class="sd">    :class:`skyfield.starlib.Star` representing Virgo A.</span>
+
+
+<span class="sd">Telescope Instances</span>
+<span class="sd">===================</span>
+
+<span class="sd">- :const:`chime`</span>
+
+
+<span class="sd">Ephemeris Functions</span>
+<span class="sd">===================</span>
+
+<span class="sd">- :py:meth:`skyfield_star_from_ra_dec`</span>
+<span class="sd">- :py:meth:`transit_times`</span>
+<span class="sd">- :py:meth:`solar_transit`</span>
+<span class="sd">- :py:meth:`lunar_transit`</span>
+<span class="sd">- :py:meth:`setting_times`</span>
+<span class="sd">- :py:meth:`solar_setting`</span>
+<span class="sd">- :py:meth:`lunar_setting`</span>
+<span class="sd">- :py:meth:`rising_times`</span>
+<span class="sd">- :py:meth:`solar_rising`</span>
+<span class="sd">- :py:meth:`lunar_rising`</span>
+<span class="sd">- :py:meth:`_is_skyfield_obj`</span>
+<span class="sd">- :py:meth:`peak_RA`</span>
+<span class="sd">- :py:meth:`get_source_dictionary`</span>
+<span class="sd">- :py:meth:`lsa`</span>
+
+
+<span class="sd">Time Utilities</span>
+<span class="sd">==============</span>
+
+<span class="sd">- :py:meth:`ensure_unix`</span>
+<span class="sd">- :py:meth:`chime_local_datetime`</span>
+<span class="sd">- :py:meth:`unix_to_datetime`</span>
+<span class="sd">- :py:meth:`datetime_to_unix`</span>
+<span class="sd">- :py:meth:`datetime_to_timestr`</span>
+<span class="sd">- :py:meth:`timestr_to_datetime`</span>
+<span class="sd">- :py:meth:`unix_to_skyfield_time`</span>
+<span class="sd">- :py:meth:`skyfield_time_to_unix`</span>
+<span class="sd">- :py:meth:`time_of_day`</span>
+<span class="sd">- :py:meth:`csd`</span>
+<span class="sd">- :py:meth:`csd_to_unix`</span>
+<span class="sd">- :py:meth:`unix_to_csd`</span>
+<span class="sd">- :py:meth:`parse_date`</span>
+
+
+<span class="sd">Miscellaneous Utilities</span>
+<span class="sd">=======================</span>
+
+<span class="sd">- :py:meth:`galt_pointing_model_ha`</span>
+<span class="sd">- :py:meth:`galt_pointing_model_dec`</span>
+<span class="sd">- :py:meth:`sphdist`</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">numpy.core.multiarray</span> <span class="kn">import</span> <span class="n">unravel_index</span>
+
+<span class="c1"># NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data</span>
+<span class="kn">import</span> <span class="nn">skyfield.api</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+
+<span class="kn">from</span> <span class="nn">caput.time</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">unix_to_datetime</span><span class="p">,</span>
+    <span class="n">datetime_to_unix</span><span class="p">,</span>
+    <span class="n">datetime_to_timestr</span><span class="p">,</span>
+    <span class="n">timestr_to_datetime</span><span class="p">,</span>
+    <span class="n">leap_seconds_between</span><span class="p">,</span>
+    <span class="n">time_of_day</span><span class="p">,</span>
+    <span class="n">Observer</span><span class="p">,</span>
+    <span class="n">unix_to_skyfield_time</span><span class="p">,</span>
+    <span class="n">skyfield_time_to_unix</span><span class="p">,</span>
+    <span class="n">skyfield_star_from_ra_dec</span><span class="p">,</span>
+    <span class="n">skyfield_wrapper</span><span class="p">,</span>
+    <span class="n">ensure_unix</span><span class="p">,</span>
+    <span class="n">SIDEREAL_S</span><span class="p">,</span>
+    <span class="n">STELLAR_S</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># Calvin derived the horizontal position of the center of the focal lines...</span>
+<span class="c1"># ...and the elevation of the focal line from survey coordinates:</span>
+<span class="c1"># All altitudes given in meters above sea level</span>
+<span class="n">CHIMELATITUDE</span> <span class="o">=</span> <span class="mf">49.3207092194</span>
+<span class="n">CHIMELONGITUDE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">119.6236774310</span>
+<span class="n">CHIMEALTITUDE</span> <span class="o">=</span> <span class="mf">555.372</span>
+
+<span class="c1"># Calvin also positioned the GBO/TONE Outrigger similarly.</span>
+<span class="c1"># GBO/TONE Outrigger</span>
+<span class="n">TONELATITUDE</span> <span class="o">=</span> <span class="mf">38.4292962636</span>
+<span class="n">TONELONGITUDE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">79.8451625395</span>
+<span class="n">TONEALTITUDE</span> <span class="o">=</span> <span class="mf">810.000</span>
+
+<span class="c1"># Rough position for outriggers.</span>
+<span class="c1"># These will be updated as positioning gets refined.</span>
+<span class="c1"># https://bao.chimenet.ca/doc/documents/1727</span>
+<span class="n">KKOLATITUDE</span> <span class="o">=</span> <span class="mf">49.41905</span>
+<span class="n">KKOLONGITUDE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">120.5253</span>
+<span class="n">KKOALTITUDE</span> <span class="o">=</span> <span class="mi">835</span>
+
+<span class="c1"># Aliases for backwards compatibility</span>
+<span class="n">PCOLATITUDE</span> <span class="o">=</span> <span class="n">KKOLATITUDE</span>
+<span class="n">PCOLONGITUDE</span> <span class="o">=</span> <span class="n">KKOLONGITUDE</span>
+<span class="n">PCOALTITUDE</span> <span class="o">=</span> <span class="n">KKOALTITUDE</span>
+
+<span class="n">GBOLATITUDE</span> <span class="o">=</span> <span class="mf">38.436122</span>
+<span class="n">GBOLONGITUDE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">79.827922</span>
+<span class="n">GBOALTITUDE</span> <span class="o">=</span> <span class="mi">2710</span> <span class="o">/</span> <span class="mf">3.28084</span>
+
+<span class="n">HCOLATITUDE</span> <span class="o">=</span> <span class="mf">40.8171082</span>
+<span class="n">HCOLONGITUDE</span> <span class="o">=</span> <span class="o">-</span><span class="mf">121.4689584</span>
+<span class="n">HCOALTITUDE</span> <span class="o">=</span> <span class="mi">3346</span> <span class="o">/</span> <span class="mf">3.28084</span>
+
+<span class="c1"># Create the Observer instances for CHIME and outriggers</span>
+<span class="n">chime</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">(</span>
+    <span class="n">lon</span><span class="o">=</span><span class="n">CHIMELONGITUDE</span><span class="p">,</span>
+    <span class="n">lat</span><span class="o">=</span><span class="n">CHIMELATITUDE</span><span class="p">,</span>
+    <span class="n">alt</span><span class="o">=</span><span class="n">CHIMEALTITUDE</span><span class="p">,</span>
+    <span class="n">lsd_start</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">tone</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">(</span>
+    <span class="n">lon</span><span class="o">=</span><span class="n">TONELONGITUDE</span><span class="p">,</span>
+    <span class="n">lat</span><span class="o">=</span><span class="n">TONELATITUDE</span><span class="p">,</span>
+    <span class="n">alt</span><span class="o">=</span><span class="n">TONEALTITUDE</span><span class="p">,</span>
+    <span class="n">lsd_start</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">kko</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">(</span>
+    <span class="n">lon</span><span class="o">=</span><span class="n">KKOLONGITUDE</span><span class="p">,</span>
+    <span class="n">lat</span><span class="o">=</span><span class="n">KKOLATITUDE</span><span class="p">,</span>
+    <span class="n">alt</span><span class="o">=</span><span class="n">KKOALTITUDE</span><span class="p">,</span>
+    <span class="n">lsd_start</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">gbo</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">(</span>
+    <span class="n">lon</span><span class="o">=</span><span class="n">GBOLONGITUDE</span><span class="p">,</span>
+    <span class="n">lat</span><span class="o">=</span><span class="n">GBOLATITUDE</span><span class="p">,</span>
+    <span class="n">alt</span><span class="o">=</span><span class="n">GBOALTITUDE</span><span class="p">,</span>
+    <span class="n">lsd_start</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+<span class="p">)</span>
+
+<span class="n">hco</span> <span class="o">=</span> <span class="n">Observer</span><span class="p">(</span>
+    <span class="n">lon</span><span class="o">=</span><span class="n">HCOLONGITUDE</span><span class="p">,</span>
+    <span class="n">lat</span><span class="o">=</span><span class="n">HCOLATITUDE</span><span class="p">,</span>
+    <span class="n">alt</span><span class="o">=</span><span class="n">HCOALTITUDE</span><span class="p">,</span>
+    <span class="n">lsd_start</span><span class="o">=</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2013</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">15</span><span class="p">),</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_chime</span><span class="p">():</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Use `ephemeris.chime` instead.&quot;</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">chime</span>
+
+
+<div class="viewcode-block" id="galt_pointing_model_ha">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.galt_pointing_model_ha">[docs]</a>
+<span class="k">def</span> <span class="nf">galt_pointing_model_ha</span><span class="p">(</span>
+    <span class="n">ha_in</span><span class="p">,</span> <span class="n">dec_in</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="p">[</span><span class="o">-</span><span class="mf">5.872</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.5292</span><span class="p">,</span> <span class="mf">5.458</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.076</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.707</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate pointing correction in hour angle for the Galt Telescope</span>
+<span class="sd">    See description of the pointing model by Lewis Knee CHIME document library</span>
+<span class="sd">    754 https://bao.chimenet.ca/doc/documents/754</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ha, dec : Skyfield Angle objects</span>
+<span class="sd">        Target hour angle and declination</span>
+
+<span class="sd">    a : list of floats</span>
+<span class="sd">        List of coefficients (in arcmin) for the pointing model</span>
+<span class="sd">        (NOTE: it is very unlikely that a user will want to change these</span>
+<span class="sd">        from the defaults, which are taken from the pointing model as of</span>
+<span class="sd">        2019-2-15)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Skyfield Angle object</span>
+<span class="sd">        Angular offset in hour angle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">skyfield.positionlib</span> <span class="kn">import</span> <span class="n">Angle</span>
+
+    <span class="n">ha</span> <span class="o">=</span> <span class="n">ha_in</span><span class="o">.</span><span class="n">radians</span>
+    <span class="n">dec</span> <span class="o">=</span> <span class="n">dec_in</span><span class="o">.</span><span class="n">radians</span>
+
+    <span class="c1"># hour angle pointing correction in arcmin</span>
+    <span class="n">delta_ha_cos_dec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">a</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">a</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">(</span><span class="n">delta_ha_cos_dec</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">))</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="galt_pointing_model_dec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.galt_pointing_model_dec">[docs]</a>
+<span class="k">def</span> <span class="nf">galt_pointing_model_dec</span><span class="p">(</span>
+    <span class="n">ha_in</span><span class="p">,</span> <span class="n">dec_in</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="p">[</span><span class="mf">1.081</span><span class="p">,</span> <span class="mf">0.707</span><span class="p">,</span> <span class="o">-</span><span class="mf">0.076</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate pointing correction in declination for the Galt Telescope</span>
+<span class="sd">    See description of the pointing model by Lewis Knee CHIME document library</span>
+<span class="sd">    754 https://bao.chimenet.ca/doc/documents/754</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ha, dec : Skyfield Angle objects</span>
+<span class="sd">        Target hour angle and declination</span>
+
+<span class="sd">    b : list of floats</span>
+<span class="sd">        List of coefficients (in arcmin) for the pointing model</span>
+<span class="sd">        (NOTE: it is very unlikely that a user will want to change these</span>
+<span class="sd">        from the defaults, which are taken from the pointing model as of</span>
+<span class="sd">        2019-2-15)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    Skyfield Angle object</span>
+<span class="sd">        Angular offset in hour angle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">skyfield.positionlib</span> <span class="kn">import</span> <span class="n">Angle</span>
+
+    <span class="n">ha</span> <span class="o">=</span> <span class="n">ha_in</span><span class="o">.</span><span class="n">radians</span>
+    <span class="n">dec</span> <span class="o">=</span> <span class="n">dec_in</span><span class="o">.</span><span class="n">radians</span>
+
+    <span class="c1"># declination pointing correction in arcmin</span>
+    <span class="n">delta_dec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">b</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span>
+        <span class="o">+</span> <span class="n">b</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">ha</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="n">delta_dec</span> <span class="o">/</span> <span class="mf">60.0</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="parse_date">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.parse_date">[docs]</a>
+<span class="k">def</span> <span class="nf">parse_date</span><span class="p">(</span><span class="n">datestring</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert date string to a datetime object.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datestring : string</span>
+<span class="sd">        Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    date : datetime</span>
+<span class="sd">        A python datetime object in UTC.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span><span class="p">,</span> <span class="n">timedelta</span>
+    <span class="kn">import</span> <span class="nn">re</span>
+
+    <span class="n">rm</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">match</span><span class="p">(</span><span class="s2">&quot;([0-9]</span><span class="si">{8}</span><span class="s2">)-([A-Z]</span><span class="si">{3}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">datestring</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">rm</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Wrong format for datestring: </span><span class="si">{0}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">datestring</span><span class="p">)</span>
+            <span class="o">+</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Should be YYYYMMDD-AAA, &quot;</span>
+            <span class="o">+</span> <span class="s2">&quot;where AAA is one of [UTC,PST,PDT]&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+    <span class="n">datestring</span> <span class="o">=</span> <span class="n">rm</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">tzoffset</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="n">tz</span> <span class="o">=</span> <span class="n">rm</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">tzs</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;PDT&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">7.0</span><span class="p">,</span> <span class="s2">&quot;PST&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">8.0</span><span class="p">,</span> <span class="s2">&quot;EDT&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">4.0</span><span class="p">,</span> <span class="s2">&quot;EST&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">5.0</span><span class="p">,</span> <span class="s2">&quot;UTC&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">}</span>
+
+    <span class="k">if</span> <span class="n">tz</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tzoffset</span> <span class="o">=</span> <span class="n">tzs</span><span class="p">[</span><span class="n">tz</span><span class="o">.</span><span class="n">upper</span><span class="p">()]</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Time zone </span><span class="si">{}</span><span class="s2"> not known. Known time zones:&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tz</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">tzs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Using UTC</span><span class="si">{:+.1f}</span><span class="s2">.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">tzoffset</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">datestring</span><span class="p">,</span> <span class="s2">&quot;%Y%m</span><span class="si">%d</span><span class="s2">&quot;</span><span class="p">)</span> <span class="o">-</span> <span class="n">timedelta</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="n">tzoffset</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="utc_lst_to_mjd">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.utc_lst_to_mjd">[docs]</a>
+<span class="k">def</span> <span class="nf">utc_lst_to_mjd</span><span class="p">(</span><span class="n">datestring</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert datetime string and LST to corresponding modified Julian Day</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    datestring : string</span>
+<span class="sd">        Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]</span>
+<span class="sd">    lst : float</span>
+<span class="sd">        Local sidereal time at DRAO (CHIME) in decimal hours</span>
+<span class="sd">    obs : caput.Observer object</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    mjd : float</span>
+<span class="sd">        Modified Julian Date corresponding to the given time.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="n">unix_to_skyfield_time</span><span class="p">(</span>
+            <span class="n">obs</span><span class="o">.</span><span class="n">lsa_to_unix</span><span class="p">(</span><span class="n">lst</span> <span class="o">*</span> <span class="mi">360</span> <span class="o">/</span> <span class="mi">24</span><span class="p">,</span> <span class="n">datetime_to_unix</span><span class="p">(</span><span class="n">parse_date</span><span class="p">(</span><span class="n">datestring</span><span class="p">)))</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">tt</span>
+        <span class="o">-</span> <span class="mf">2400000.5</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sphdist">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.sphdist">[docs]</a>
+<span class="k">def</span> <span class="nf">sphdist</span><span class="p">(</span><span class="n">long1</span><span class="p">,</span> <span class="n">lat1</span><span class="p">,</span> <span class="n">long2</span><span class="p">,</span> <span class="n">lat2</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the angular distance between two coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+
+<span class="sd">    long1, lat1 : Skyfield Angle objects</span>
+<span class="sd">        longitude and latitude of the first coordinate. Each should be the</span>
+<span class="sd">        same length; can be one or longer.</span>
+
+<span class="sd">    long2, lat2 : Skyfield Angle objects</span>
+<span class="sd">        longitude and latitude of the second coordinate. Each should be the</span>
+<span class="sd">        same length. If long1, lat1 have length longer than 1, long2 and</span>
+<span class="sd">        lat2 should either have the same length as coordinate 1 or length 1.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dist : Skyfield Angle object</span>
+<span class="sd">        angle between the two coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span> <span class="nn">skyfield.positionlib</span> <span class="kn">import</span> <span class="n">Angle</span>
+
+    <span class="n">dsinb</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="n">lat1</span><span class="o">.</span><span class="n">radians</span> <span class="o">-</span> <span class="n">lat2</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span>
+
+    <span class="n">dsinl</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat1</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span>
+        <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">lat2</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span>
+        <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">((</span><span class="n">long1</span><span class="o">.</span><span class="n">radians</span> <span class="o">-</span> <span class="n">long2</span><span class="o">.</span><span class="n">radians</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">))</span> <span class="o">**</span> <span class="mi">2</span>
+    <span class="p">)</span>
+
+    <span class="n">dist</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arcsin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">dsinl</span> <span class="o">+</span> <span class="n">dsinb</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">Angle</span><span class="p">(</span><span class="n">radians</span><span class="o">=</span><span class="mi">2</span> <span class="o">*</span> <span class="n">dist</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="solar_transit">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.solar_transit">[docs]</a>
+<span class="k">def</span> <span class="nf">solar_transit</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Solar transits between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find transits.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding transits. If `None` default, search for 24 hours</span>
+<span class="sd">        after start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    transit_times : array_like</span>
+<span class="sd">        Array of transit times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;sun&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">transit_times</span><span class="p">(</span><span class="n">sun</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lunar_transit">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.lunar_transit">[docs]</a>
+<span class="k">def</span> <span class="nf">lunar_transit</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Lunar transits between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find transits.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding transits. If `None` default, search for 24 hours</span>
+<span class="sd">        after start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    transit_times : array_like</span>
+<span class="sd">        Array of transit times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">moon</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;moon&quot;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">transit_times</span><span class="p">(</span><span class="n">moon</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">)</span></div>
+
+
+
+<span class="c1"># Create CHIME specific versions of various calls.</span>
+<span class="n">lsa_to_unix</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">lsa_to_unix</span>
+<span class="n">unix_to_lsa</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">unix_to_lsa</span>
+<span class="n">unix_to_csd</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">unix_to_lsd</span>
+<span class="n">csd_to_unix</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">lsd_to_unix</span>
+<span class="n">csd</span> <span class="o">=</span> <span class="n">unix_to_csd</span>
+<span class="n">lsa</span> <span class="o">=</span> <span class="n">unix_to_lsa</span>
+<span class="n">transit_times</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">transit_times</span>
+<span class="n">setting_times</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">set_times</span>
+<span class="n">rising_times</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">rise_times</span>
+<span class="n">CSD_ZERO</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">lsd_start_day</span>
+
+
+<div class="viewcode-block" id="transit_RA">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.transit_RA">[docs]</a>
+<span class="k">def</span> <span class="nf">transit_RA</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;No longer supported. Use `lsa` instead.&quot;&quot;&quot;</span>
+    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span>
+        <span class="s2">&quot;No longer supported. Use the better defined `lsa` instead.&quot;</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="chime_local_datetime">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.chime_local_datetime">[docs]</a>
+<span class="k">def</span> <span class="nf">chime_local_datetime</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a :class:`datetime.datetime` object in Canada/Pacific timezone.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    *args</span>
+<span class="sd">        Any valid arguments to the constructor of :class:`datetime.datetime`</span>
+<span class="sd">        except *tzinfo*. Local date and time at CHIME.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dt : :class:`datetime.datetime`</span>
+<span class="sd">        Timezone naive date and time but converted to UTC.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">pytz</span> <span class="kn">import</span> <span class="n">timezone</span>
+
+    <span class="n">tz</span> <span class="o">=</span> <span class="n">timezone</span><span class="p">(</span><span class="s2">&quot;Canada/Pacific&quot;</span><span class="p">)</span>
+    <span class="n">dt_naive</span> <span class="o">=</span> <span class="n">datetime</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dt_naive</span><span class="o">.</span><span class="n">tzinfo</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Time zone should not be supplied.&quot;</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+    <span class="n">dt_aware</span> <span class="o">=</span> <span class="n">tz</span><span class="o">.</span><span class="n">localize</span><span class="p">(</span><span class="n">dt_naive</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">dt_aware</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="n">tzinfo</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span> <span class="o">-</span> <span class="n">dt_aware</span><span class="o">.</span><span class="n">utcoffset</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="solar_setting">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.solar_setting">[docs]</a>
+<span class="k">def</span> <span class="nf">solar_setting</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Solar settings between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find settings.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding settings. If `None` default, search for 24 hours</span>
+<span class="sd">        after start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    setting_times : array_like</span>
+<span class="sd">        Array of setting times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;sun&quot;</span><span class="p">]</span>
+    <span class="c1"># Use 0.6 degrees for the angular diameter of the Sun to be conservative:</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">set_times</span><span class="p">(</span><span class="n">sun</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">diameter</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lunar_setting">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.lunar_setting">[docs]</a>
+<span class="k">def</span> <span class="nf">lunar_setting</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Lunar settings between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find settings.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding settings. If `None` default, search for 24 hours</span>
+<span class="sd">        after start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    setting_times : array_like</span>
+<span class="sd">        Array of setting times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">moon</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;moon&quot;</span><span class="p">]</span>
+    <span class="c1"># Use 0.6 degrees for the angular diameter of the Moon to be conservative:</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">set_times</span><span class="p">(</span><span class="n">moon</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">diameter</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="solar_rising">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.solar_rising">[docs]</a>
+<span class="k">def</span> <span class="nf">solar_rising</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Solar risings between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find risings.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding risings. If `None` default, search for 24 hours</span>
+<span class="sd">        after start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rising_times : array_like</span>
+<span class="sd">        Array of rising times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">sun</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;sun&quot;</span><span class="p">]</span>
+    <span class="c1"># Use 0.6 degrees for the angular diameter of the Sun to be conservative:</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">rise_times</span><span class="p">(</span><span class="n">sun</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">diameter</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="lunar_rising">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.lunar_rising">[docs]</a>
+<span class="k">def</span> <span class="nf">lunar_rising</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find the Lunar risings between two times for CHIME.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time : float (UNIX time) or datetime</span>
+<span class="sd">        Start time to find risings.</span>
+<span class="sd">    end_time : float (UNIX time) or datetime, optional</span>
+<span class="sd">        End time for finding risings. If `None` default, search for 24 hours after</span>
+<span class="sd">        start time.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rising_times : array_like</span>
+<span class="sd">        Array of rising times (in UNIX time).</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">planets</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">ephemeris</span>
+    <span class="n">moon</span> <span class="o">=</span> <span class="n">planets</span><span class="p">[</span><span class="s2">&quot;moon&quot;</span><span class="p">]</span>
+    <span class="c1"># Use 0.6 degrees for the angular diameter of the Moon to be conservative:</span>
+    <span class="k">return</span> <span class="n">obs</span><span class="o">.</span><span class="n">rise_times</span><span class="p">(</span><span class="n">moon</span><span class="p">,</span> <span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">diameter</span><span class="o">=</span><span class="mf">0.6</span><span class="p">)</span></div>
+
+
+
+<span class="k">def</span> <span class="nf">_is_skyfield_obj</span><span class="p">(</span><span class="n">body</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">(</span>
+        <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">starlib</span><span class="o">.</span><span class="n">Star</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">vectorlib</span><span class="o">.</span><span class="n">VectorSum</span><span class="p">)</span>
+        <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">jpllib</span><span class="o">.</span><span class="n">ChebyshevPosition</span><span class="p">)</span>
+    <span class="p">)</span>
+
+
+<div class="viewcode-block" id="Star_cirs">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.Star_cirs">[docs]</a>
+<span class="k">def</span> <span class="nf">Star_cirs</span><span class="p">(</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">epoch</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Wrapper for skyfield.api.star that creates a position given CIRS</span>
+<span class="sd">    coordinates observed from CHIME</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ra, dec : skyfield.api.Angle</span>
+<span class="sd">        RA and dec of the source in CIRS coordinates</span>
+<span class="sd">    epoch : skyfield.api.Time</span>
+<span class="sd">        Time of the observation</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    body : skyfield.api.Star</span>
+<span class="sd">        Star object in ICRS coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">skyfield.api</span> <span class="kn">import</span> <span class="n">Star</span>
+
+    <span class="k">return</span> <span class="n">cirs_radec</span><span class="p">(</span><span class="n">Star</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span> <span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="cirs_radec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.cirs_radec">[docs]</a>
+<span class="k">def</span> <span class="nf">cirs_radec</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a Skyfield body in CIRS coordinates at a given epoch to</span>
+<span class="sd">    ICRS coordinates observed from CHIME</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : skyfield.api.Star</span>
+<span class="sd">        Skyfield Star object with positions in CIRS coordinates.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    new_body : skyfield.api.Star</span>
+<span class="sd">        Skyfield Star object with positions in ICRS coordinates</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">skyfield.positionlib</span> <span class="kn">import</span> <span class="n">Angle</span>
+    <span class="kn">from</span> <span class="nn">skyfield.api</span> <span class="kn">import</span> <span class="n">Star</span>
+
+    <span class="n">ts</span> <span class="o">=</span> <span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">timescale</span>
+
+    <span class="n">epoch</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">tt_jd</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">body</span><span class="o">.</span><span class="n">epoch</span><span class="p">))</span>
+
+    <span class="n">pos</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">skyfield_obs</span><span class="p">()</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">epoch</span><span class="p">)</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">body</span><span class="p">)</span>
+
+    <span class="c1"># Matrix CT transforms from CIRS to ICRF (https://rhodesmill.org/skyfield/time.html)</span>
+    <span class="n">r_au</span><span class="p">,</span> <span class="n">dec</span><span class="p">,</span> <span class="n">ra</span> <span class="o">=</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">functions</span><span class="o">.</span><span class="n">to_polar</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">einsum</span><span class="p">(</span><span class="s2">&quot;ij...,j...-&gt;i...&quot;</span><span class="p">,</span> <span class="n">epoch</span><span class="o">.</span><span class="n">CT</span><span class="p">,</span> <span class="n">pos</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">au</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">Star</span><span class="p">(</span>
+        <span class="n">ra</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">radians</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span> <span class="n">preference</span><span class="o">=</span><span class="s2">&quot;hours&quot;</span><span class="p">),</span> <span class="n">dec</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">radians</span><span class="o">=</span><span class="n">dec</span><span class="p">),</span> <span class="n">epoch</span><span class="o">=</span><span class="n">epoch</span>
+    <span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="object_coords">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.object_coords">[docs]</a>
+<span class="k">def</span> <span class="nf">object_coords</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">obs</span><span class="o">=</span><span class="n">chime</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the RA and DEC of the source.</span>
+
+<span class="sd">    Gives the ICRS coordinates if no date is given (=J2000), or if a date is</span>
+<span class="sd">    specified gives the CIRS coordinates at that epoch.</span>
+
+<span class="sd">    This also returns the *apparent* position, including abberation and</span>
+<span class="sd">    deflection by gravitational lensing. This shifts the positions by up to</span>
+<span class="sd">    20 arcseconds.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : skyfield source</span>
+<span class="sd">        skyfield.starlib.Star or skyfield.vectorlib.VectorSum or</span>
+<span class="sd">        skyfield.jpllib.ChebyshevPosition body representing the source.</span>
+<span class="sd">    date : float</span>
+<span class="sd">        Unix time at which to determine ra of source If None, use Jan 01</span>
+<span class="sd">        2000.</span>
+<span class="sd">    deg : bool</span>
+<span class="sd">        Return RA ascension in degrees if True, radians if false (default).</span>
+<span class="sd">    obs : `caput.time.Observer`</span>
+<span class="sd">        An observer instance to use. If not supplied use `chime`. For many</span>
+<span class="sd">        calculations changing from this default will make little difference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ra, dec: float</span>
+<span class="sd">        Position of the source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">date</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>  <span class="c1"># No date, get ICRS coords</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">starlib</span><span class="o">.</span><span class="n">Star</span><span class="p">):</span>
+            <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">body</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="n">body</span><span class="o">.</span><span class="n">dec</span><span class="o">.</span><span class="n">radians</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Body is not fixed, cannot calculate coordinates without a date.&quot;</span>
+            <span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># Calculate CIRS position with all corrections</span>
+        <span class="n">date</span> <span class="o">=</span> <span class="n">unix_to_skyfield_time</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+        <span class="n">radec</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">skyfield_obs</span><span class="p">()</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">body</span><span class="p">)</span><span class="o">.</span><span class="n">apparent</span><span class="p">()</span><span class="o">.</span><span class="n">cirs_radec</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+        <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">radec</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span> <span class="n">radec</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">radians</span>
+
+    <span class="c1"># If requested, convert to degrees</span>
+    <span class="k">if</span> <span class="n">deg</span><span class="p">:</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+        <span class="n">dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">dec</span><span class="p">)</span>
+
+    <span class="c1"># Return</span>
+    <span class="k">return</span> <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span></div>
+
+
+
+<div class="viewcode-block" id="hadec_to_bmxy">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.hadec_to_bmxy">[docs]</a>
+<span class="k">def</span> <span class="nf">hadec_to_bmxy</span><span class="p">(</span><span class="n">ha_cirs</span><span class="p">,</span> <span class="n">dec_cirs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ha_cirs : array_like</span>
+<span class="sd">        The CIRS Hour Angle in degrees.</span>
+<span class="sd">    dec_cirs : array_like</span>
+<span class="sd">        The CIRS Declination in degrees.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    bmx, bmy : array_like</span>
+<span class="sd">        The CHIME/FRB beam model X and Y coordinates in degrees as defined in</span>
+<span class="sd">        the beam-model coordinate conventions:</span>
+<span class="sd">        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">caput.interferometry</span> <span class="kn">import</span> <span class="n">sph_to_ground</span>
+
+    <span class="kn">from</span> <span class="nn">ch_util.tools</span> <span class="kn">import</span> <span class="n">_CHIME_ROT</span>
+
+    <span class="kn">from</span> <span class="nn">drift.telescope.cylbeam</span> <span class="kn">import</span> <span class="n">rotate_ypr</span>
+
+    <span class="c1"># Convert CIRS coordinates to CHIME &quot;ground fixed&quot; XYZ coordinates,</span>
+    <span class="c1"># which constitute a unit vector pointing towards the point of interest,</span>
+    <span class="c1"># i.e., telescope cartesian unit-sphere coordinates.</span>
+    <span class="c1"># chx: The EW coordinate (increases to the East)</span>
+    <span class="c1"># chy: The NS coordinate (increases to the North)</span>
+    <span class="c1"># chz: The vertical coordinate (increases to the sky)</span>
+    <span class="n">chx</span><span class="p">,</span> <span class="n">chy</span><span class="p">,</span> <span class="n">chz</span> <span class="o">=</span> <span class="n">sph_to_ground</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">ha_cirs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">CHIMELATITUDE</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">dec_cirs</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Correct for CHIME telescope rotation with respect to North</span>
+    <span class="n">ypr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="o">-</span><span class="n">_CHIME_ROT</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">chx_rot</span><span class="p">,</span> <span class="n">chy_rot</span><span class="p">,</span> <span class="n">chz_rot</span> <span class="o">=</span> <span class="n">rotate_ypr</span><span class="p">(</span><span class="n">ypr</span><span class="p">,</span> <span class="n">chx</span><span class="p">,</span> <span class="n">chy</span><span class="p">,</span> <span class="n">chz</span><span class="p">)</span>
+
+    <span class="c1"># Convert rotated CHIME &quot;ground fixed&quot; XYZ coordinates to spherical polar coordinates</span>
+    <span class="c1"># with the pole towards almost-North and using CHIME&#39;s meridian as the prime meridian.</span>
+    <span class="c1"># Note that the azimuthal angle theta in these spherical polar coordinates increases</span>
+    <span class="c1"># to the West (to ensure that phi and theta here have the same meaning as the variables</span>
+    <span class="c1"># with the same names in the beam_model package and DocLib #1203).</span>
+    <span class="c1"># phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg</span>
+    <span class="c1"># theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">chy_rot</span><span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="o">-</span><span class="n">chx_rot</span><span class="p">,</span> <span class="o">+</span><span class="n">chz_rot</span><span class="p">)</span>
+
+    <span class="c1"># Convert polar angle and azimuth to CHIME/FRB beam model XY position</span>
+    <span class="n">bmx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">theta</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">))</span>
+    <span class="n">bmy</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="n">phi</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">bmx</span><span class="p">,</span> <span class="n">bmy</span></div>
+
+
+
+<div class="viewcode-block" id="bmxy_to_hadec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.bmxy_to_hadec">[docs]</a>
+<span class="k">def</span> <span class="nf">bmxy_to_hadec</span><span class="p">(</span><span class="n">bmx</span><span class="p">,</span> <span class="n">bmy</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convert CHIME/FRB beam-model XY coordinates to CIRS hour angle and declination.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    bmx, bmy : array_like</span>
+<span class="sd">        The CHIME/FRB beam model X and Y coordinates in degrees as defined in</span>
+<span class="sd">        the beam-model coordinate conventions:</span>
+<span class="sd">        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions</span>
+<span class="sd">        X is degrees west from the meridian</span>
+<span class="sd">        Y is degrees north from zenith</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ha_cirs : array_like</span>
+<span class="sd">        The CIRS Hour Angle in degrees.</span>
+<span class="sd">    dec_cirs : array_like</span>
+<span class="sd">        The CIRS Declination in degrees.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span> <span class="nn">warnings</span>
+
+    <span class="kn">from</span> <span class="nn">caput.interferometry</span> <span class="kn">import</span> <span class="n">ground_to_sph</span>
+
+    <span class="kn">from</span> <span class="nn">ch_util.tools</span> <span class="kn">import</span> <span class="n">_CHIME_ROT</span>
+
+    <span class="kn">from</span> <span class="nn">drift.telescope.cylbeam</span> <span class="kn">import</span> <span class="n">rotate_ypr</span>
+
+    <span class="c1"># Convert CHIME/FRB beam model XY position to spherical polar coordinates</span>
+    <span class="c1"># with the pole towards almost-North and using CHIME&#39;s meridian as the prime</span>
+    <span class="c1"># meridian. Note that the CHIME/FRB beam model X coordinate increases westward</span>
+    <span class="c1"># and so does the azimuthal angle theta in these spherical polar coordinates</span>
+    <span class="c1"># (to ensure that phi and theta here have the same meaning as the variables</span>
+    <span class="c1"># with the same names in the beam_model package and DocLib #1203).</span>
+    <span class="c1"># phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg</span>
+    <span class="c1"># theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg</span>
+    <span class="n">phi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">bmy</span><span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">bmx</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+
+    <span class="c1"># Warn for input beam-model XY positions below the horizon</span>
+    <span class="n">scalar_input</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isscalar</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">theta</span> <span class="o">&lt;</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">()</span> <span class="ow">or</span> <span class="p">(</span><span class="n">theta</span> <span class="o">&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">2.0</span><span class="p">)</span><span class="o">.</span><span class="n">any</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Input beam model XY coordinate(s) below horizon.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">scalar_input</span><span class="p">:</span>
+        <span class="n">theta</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">squeeze</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="c1"># Convert spherical polar coordinates to rotated CHIME &quot;ground fixed&quot; XYZ</span>
+    <span class="c1"># coordinates (i.e., cartesian unit-sphere coordinates, rotated to correct</span>
+    <span class="c1"># for the CHIME telescope&#39;s rotation with respect to North).</span>
+    <span class="c1"># chx_rot: The almost-EW coordinate (increases to the almost-East)</span>
+    <span class="c1"># chy_rot: The almost-NS coordinate (increases to the almost-North)</span>
+    <span class="c1"># chz_rot: The vertical coordinate (increases to the sky)</span>
+    <span class="n">chx_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">chy_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span>
+    <span class="n">chz_rot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">phi</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="o">-</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="c1"># Undo correction for CHIME telescope rotation with respect to North</span>
+    <span class="n">ypr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">_CHIME_ROT</span><span class="p">),</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">chx</span><span class="p">,</span> <span class="n">chy</span><span class="p">,</span> <span class="n">chz</span> <span class="o">=</span> <span class="n">rotate_ypr</span><span class="p">(</span><span class="n">ypr</span><span class="p">,</span> <span class="n">chx_rot</span><span class="p">,</span> <span class="n">chy_rot</span><span class="p">,</span> <span class="n">chz_rot</span><span class="p">)</span>
+
+    <span class="c1"># Convert CHIME &quot;ground fixed&quot; XYZ coordinates to CIRS hour angle and declination</span>
+    <span class="n">ha_cirs</span><span class="p">,</span> <span class="n">dec_cirs</span> <span class="o">=</span> <span class="n">ground_to_sph</span><span class="p">(</span><span class="n">chx</span><span class="p">,</span> <span class="n">chy</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">CHIMELATITUDE</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">ha_cirs</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">rad2deg</span><span class="p">(</span><span class="n">dec_cirs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="peak_RA">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.peak_RA">[docs]</a>
+<span class="k">def</span> <span class="nf">peak_RA</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">deg</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculates the RA where a source is expected to peak in the beam.</span>
+<span class="sd">    Note that this is not the same as the RA where the source is at</span>
+<span class="sd">    transit, since the pathfinder is rotated with respect to north.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    body : ephem.FixedBody</span>
+<span class="sd">        skyfield.starlib.Star or skyfield.vectorlib.VectorSum or</span>
+<span class="sd">        skyfield.jpllib.ChebyshevPosition or Ephemeris body</span>
+<span class="sd">        representing the source.</span>
+<span class="sd">    date : float</span>
+<span class="sd">        Unix time at which to determine ra of source</span>
+<span class="sd">        If None, use Jan 01 2000.</span>
+<span class="sd">        Ignored if body is not a skyfield object</span>
+<span class="sd">    deg : bool</span>
+<span class="sd">        Return RA ascension in degrees if True,</span>
+<span class="sd">        radians if false (default).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    peak_ra : float</span>
+<span class="sd">        RA when the transiting source peaks.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">_PF_ROT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="mf">1.986</span><span class="p">)</span>  <span class="c1"># Pathfinder rotation from north.</span>
+    <span class="n">_PF_LAT</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span><span class="n">CHIMELATITUDE</span><span class="p">)</span>  <span class="c1"># Latitude of pathfinder</span>
+
+    <span class="c1"># Extract RA and dec of object</span>
+    <span class="n">ra</span><span class="p">,</span> <span class="n">dec</span> <span class="o">=</span> <span class="n">object_coords</span><span class="p">(</span><span class="n">body</span><span class="p">,</span> <span class="n">date</span><span class="o">=</span><span class="n">date</span><span class="p">)</span>
+
+    <span class="c1"># Estimate the RA at which the transiting source peaks</span>
+    <span class="n">ra</span> <span class="o">=</span> <span class="n">ra</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">tan</span><span class="p">(</span><span class="n">_PF_ROT</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">dec</span> <span class="o">-</span> <span class="n">_PF_LAT</span><span class="p">)</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">_PF_LAT</span><span class="p">)</span>
+
+    <span class="c1"># If requested, convert to degrees</span>
+    <span class="k">if</span> <span class="n">deg</span><span class="p">:</span>
+        <span class="n">ra</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">degrees</span><span class="p">(</span><span class="n">ra</span><span class="p">)</span>
+
+    <span class="c1"># Return</span>
+    <span class="k">return</span> <span class="n">ra</span></div>
+
+
+
+<div class="viewcode-block" id="get_doppler_shifted_freq">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.get_doppler_shifted_freq">[docs]</a>
+<span class="k">def</span> <span class="nf">get_doppler_shifted_freq</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">skyfield</span><span class="o">.</span><span class="n">starlib</span><span class="o">.</span><span class="n">Star</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+    <span class="n">date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+    <span class="n">freq_rest</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">chime</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Doppler shifted frequency of spectral feature with rest</span>
+<span class="sd">    frequency `freq_rest`, seen towards source `source` at time `date`, due to</span>
+<span class="sd">    Earth&#39;s motion and rotation, following the relativistic Doppler effect.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source</span>
+<span class="sd">        Position(s) on the sky. If the input is a `str`, attempt to resolve this</span>
+<span class="sd">        from `ch_util.hfbcat.HFBCatalog`.</span>
+<span class="sd">    date</span>
+<span class="sd">        Unix time(s) for which to calculate Doppler shift.</span>
+<span class="sd">    freq_rest</span>
+<span class="sd">        Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency</span>
+<span class="sd">        of absorption feature from `ch_util.hfbcat.HFBCatalog.freq_abs`.</span>
+<span class="sd">    obs</span>
+<span class="sd">        An Observer instance to use. If not supplied use `chime`. For many</span>
+<span class="sd">        calculations changing from this default will make little difference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    freq_obs</span>
+<span class="sd">        Doppler shifted frequencies in MHz. Array where rows correspond to the</span>
+<span class="sd">        different input rest frequencies and columns correspond either to input</span>
+<span class="sd">        times or to input sky positions (whichever contains multiple entries).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Only one of `source` and `date` can contain multiple entries.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    To get the Doppler shifted frequencies of a feature with a rest frequency</span>
+<span class="sd">    of 600 MHz for two positions on the sky at a single point in time (Unix</span>
+<span class="sd">    time 1717809534 = 2024-06-07T21:18:54+00:00), run:</span>
+
+<span class="sd">    &gt;&gt;&gt; from skyfield.starlib import Star</span>
+<span class="sd">    &gt;&gt;&gt; from skyfield.positionlib import Angle</span>
+<span class="sd">    &gt;&gt;&gt; from ch_util.tools import get_doppler_shifted_freq</span>
+<span class="sd">    &gt;&gt;&gt; coord = Star(ra=Angle(degrees=[100, 110]), dec=Angle(degrees=[45, 50]))</span>
+<span class="sd">    &gt;&gt;&gt; get_doppler_shifted_freq(coord, 1717809534, 600)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span> <span class="nn">scipy.constants</span> <span class="kn">import</span> <span class="n">c</span> <span class="k">as</span> <span class="n">speed_of_light</span>
+
+    <span class="kn">from</span> <span class="nn">ch_util.fluxcat</span> <span class="kn">import</span> <span class="n">_ensure_list</span>
+    <span class="kn">from</span> <span class="nn">ch_util.hfbcat</span> <span class="kn">import</span> <span class="n">HFBCatalog</span>
+
+    <span class="c1"># For source string inputs, get skyfield Star object from HFB catalog</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">HFBCatalog</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">skyfield</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find source </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> in HFB catalog.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get rest frequency from HFB catalog</span>
+    <span class="k">if</span> <span class="n">freq_rest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span><span class="o">.</span><span class="n">names</span> <span class="ow">or</span> <span class="n">source</span><span class="o">.</span><span class="n">names</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">HFBCatalog</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Rest frequencies must be supplied unless source can be found &quot;</span>
+                <span class="s2">&quot;in ch_util.hfbcat.HFBCatalog. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got source </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> with names </span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">freq_rest</span> <span class="o">=</span> <span class="n">HFBCatalog</span><span class="p">[</span><span class="n">source</span><span class="o">.</span><span class="n">names</span><span class="p">]</span><span class="o">.</span><span class="n">freq_abs</span>
+
+    <span class="c1"># Prepare rest frequencies for broadcasting</span>
+    <span class="n">freq_rest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">_ensure_list</span><span class="p">(</span><span class="n">freq_rest</span><span class="p">))[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+    <span class="c1"># Get rate at which the distance between the observer and source changes</span>
+    <span class="c1"># (positive for observer and source moving appart)</span>
+    <span class="n">range_rate</span> <span class="o">=</span> <span class="n">get_range_rate</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
+
+    <span class="c1"># Compute observed frequencies from rest frequencies</span>
+    <span class="c1"># using relativistic Doppler effect</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">range_rate</span> <span class="o">/</span> <span class="n">speed_of_light</span>
+    <span class="n">freq_obs</span> <span class="o">=</span> <span class="n">freq_rest</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">beta</span><span class="p">))</span>
+
+    <span class="k">return</span> <span class="n">freq_obs</span></div>
+
+
+
+<div class="viewcode-block" id="get_range_rate">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.get_range_rate">[docs]</a>
+<span class="k">def</span> <span class="nf">get_range_rate</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">starlib</span><span class="o">.</span><span class="n">Star</span><span class="p">,</span>
+    <span class="n">date</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="nb">list</span><span class="p">],</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">Observer</span> <span class="o">=</span> <span class="n">chime</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="nb">float</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">]:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate rate at which distance between observer and source changes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source</span>
+<span class="sd">        Position(s) on the sky.</span>
+<span class="sd">    date</span>
+<span class="sd">        Unix time(s) for which to calculate range rate.</span>
+<span class="sd">    obs</span>
+<span class="sd">        An Observer instance to use. If not supplied use `chime`. For many</span>
+<span class="sd">        calculations changing from this default will make little difference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    range_rate</span>
+<span class="sd">        Rate (in m/s) at which the distance between the observer and source</span>
+<span class="sd">        changes (i.e., the velocity of observer in direction of source, but</span>
+<span class="sd">        positive for observer and source moving appart). If either `source`</span>
+<span class="sd">        or `date` contains multiple entries, `range_rate` will be an array.</span>
+<span class="sd">        Otherwise, `range_rate` will be a float.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Only one of `source` and `date` can contain multiple entries.</span>
+
+<span class="sd">    This routine uses an :class:`skyfield.positionlib.Apparent` object</span>
+<span class="sd">    (rather than an :class:`skyfield.positionlib.Astrometric` object) to find</span>
+<span class="sd">    the velocity of the observatory and the position of the source. This</span>
+<span class="sd">    accounts for the gravitational deflection and the aberration of light.</span>
+<span class="sd">    It is unclear if the latter should be taken into account for this Doppler</span>
+<span class="sd">    shift calculation, but its effects are negligible.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">ra</span><span class="o">.</span><span class="n">_degrees</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">date</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s2">&quot;Only one of `source` and `date` can contain multiple entries.&quot;</span>
+        <span class="p">)</span>
+
+    <span class="c1"># Convert unix times to skyfield times</span>
+    <span class="n">date</span> <span class="o">=</span> <span class="n">unix_to_skyfield_time</span><span class="p">(</span><span class="n">date</span><span class="p">)</span>
+
+    <span class="c1"># Create skyfield Apparent object of source position seen from observer</span>
+    <span class="n">position</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">skyfield_obs</span><span class="p">()</span><span class="o">.</span><span class="n">at</span><span class="p">(</span><span class="n">date</span><span class="p">)</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">source</span><span class="p">)</span><span class="o">.</span><span class="n">apparent</span><span class="p">()</span>
+
+    <span class="c1"># Observer velocity vector in ICRS xyz coordinates in units of m/s</span>
+    <span class="n">obs_vel_m_per_s</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">velocity</span><span class="o">.</span><span class="n">m_per_s</span>
+
+    <span class="c1"># Normalized source position vector in ICRS xyz coordinates</span>
+    <span class="n">source_pos_m</span> <span class="o">=</span> <span class="n">position</span><span class="o">.</span><span class="n">position</span><span class="o">.</span><span class="n">m</span>
+    <span class="n">source_pos_norm</span> <span class="o">=</span> <span class="n">source_pos_m</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">source_pos_m</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="c1"># Dot product of observer velocity and source position gives observer</span>
+    <span class="c1"># velocity in direction of source; flip sign to get range rate (positive</span>
+    <span class="c1"># for observer and source moving appart)</span>
+    <span class="n">range_rate</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">obs_vel_m_per_s</span><span class="o">.</span><span class="n">T</span> <span class="o">*</span> <span class="n">source_pos_norm</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">range_rate</span></div>
+
+
+
+<div class="viewcode-block" id="get_source_dictionary">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ephemeris.html#ch_util.ephemeris.get_source_dictionary">[docs]</a>
+<span class="k">def</span> <span class="nf">get_source_dictionary</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns a dictionary containing :class:`skyfield.starlib.Star`</span>
+<span class="sd">    objects for common radio point sources.  This is useful for</span>
+<span class="sd">    obtaining the skyfield representation of a source from a string</span>
+<span class="sd">    containing its name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    catalog_name : str</span>
+<span class="sd">        Name of the catalog.  This must be the basename of the json file</span>
+<span class="sd">        in the `ch_util/catalogs` directory.  Can take multiple catalogs,</span>
+<span class="sd">        with the first catalog favoured for any overlapping sources.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    src_dict : dictionary</span>
+<span class="sd">        Format is {&#39;SOURCE_NAME&#39;: :class:`skyfield.starlib.Star`, ...}</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">import</span> <span class="nn">os</span>
+    <span class="kn">import</span> <span class="nn">json</span>
+
+    <span class="n">src_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="k">for</span> <span class="n">catalog_name</span> <span class="ow">in</span> <span class="nb">reversed</span><span class="p">(</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">path_to_catalog</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="vm">__file__</span><span class="p">),</span>
+            <span class="s2">&quot;catalogs&quot;</span><span class="p">,</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">catalog_name</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s2">&quot;.json&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path_to_catalog</span><span class="p">,</span> <span class="s2">&quot;r&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">handler</span><span class="p">:</span>
+            <span class="n">catalog</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">handler</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">info</span> <span class="ow">in</span> <span class="n">catalog</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">src_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">skyfield_star_from_ra_dec</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">],</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;dec&quot;</span><span class="p">],</span> <span class="n">name</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">src_dict</span></div>
+
+
+
+<span class="c1"># Common radio point sources</span>
+<span class="n">source_dictionary</span> <span class="o">=</span> <span class="n">get_source_dictionary</span><span class="p">(</span>
+    <span class="s2">&quot;primary_calibrators_perley2016&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;specfind_v2_5Jy_vollmer2009&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;atnf_psrcat&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;hfb_target_list&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1">#: :class:`skyfield.starlib.Star` representing Cassiopeia A.</span>
+<span class="n">CasA</span> <span class="o">=</span> <span class="n">source_dictionary</span><span class="p">[</span><span class="s2">&quot;CAS_A&quot;</span><span class="p">]</span>
+
+<span class="c1">#: :class:`skyfield.starlib.Star` representing Cygnus A.</span>
+<span class="n">CygA</span> <span class="o">=</span> <span class="n">source_dictionary</span><span class="p">[</span><span class="s2">&quot;CYG_A&quot;</span><span class="p">]</span>
+
+<span class="c1">#: :class:`skyfield.starlib.Star` representing Taurus A.</span>
+<span class="n">TauA</span> <span class="o">=</span> <span class="n">source_dictionary</span><span class="p">[</span><span class="s2">&quot;TAU_A&quot;</span><span class="p">]</span>
+
+<span class="c1">#: :class:`skyfield.starlib.Star` representing Virgo A.</span>
+<span class="n">VirA</span> <span class="o">=</span> <span class="n">source_dictionary</span><span class="p">[</span><span class="s2">&quot;VIR_A&quot;</span><span class="p">]</span>
+
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s2">&quot;__main__&quot;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">doctest</span>
+
+    <span class="n">doctest</span><span class="o">.</span><span class="n">testmod</span><span class="p">()</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

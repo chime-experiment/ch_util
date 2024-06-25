@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.ephemeris &mdash; ch_util 24.6.0+4.gc460b37 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../_static/documentation_options.js?v=eb1e4639"></script>
+        <script src="../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+        <script src="../_static/katex.min.js?v=be8ff15f"></script>
+        <script src="../_static/auto-render.min.js?v=ad136472"></script>
+        <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.finder" href="ch_util.finder.html" />
+    <link rel="prev" title="ch_util.data_quality" href="ch_util.data_quality.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+              <div class="version">
+                24.6.0+4.gc460b37
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util._db_tables.html">ch_util._db_tables</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.connectdb.html">ch_util.connectdb</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_index.html">ch_util.data_index</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.ephemeris</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#telescope-instances">Telescope Instances</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ephemeris-functions">Ephemeris Functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#time-utilities">Time Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#miscellaneous-utilities">Miscellaneous Utilities</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.CasA"><code class="docutils literal notranslate"><span class="pre">CasA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.CygA"><code class="docutils literal notranslate"><span class="pre">CygA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.Star_cirs"><code class="docutils literal notranslate"><span class="pre">Star_cirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.TauA"><code class="docutils literal notranslate"><span class="pre">TauA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.VirA"><code class="docutils literal notranslate"><span class="pre">VirA</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.bmxy_to_hadec"><code class="docutils literal notranslate"><span class="pre">bmxy_to_hadec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.chime_local_datetime"><code class="docutils literal notranslate"><span class="pre">chime_local_datetime()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.cirs_radec"><code class="docutils literal notranslate"><span class="pre">cirs_radec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_dec"><code class="docutils literal notranslate"><span class="pre">galt_pointing_model_dec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_ha"><code class="docutils literal notranslate"><span class="pre">galt_pointing_model_ha()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.get_doppler_shifted_freq"><code class="docutils literal notranslate"><span class="pre">get_doppler_shifted_freq()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.get_range_rate"><code class="docutils literal notranslate"><span class="pre">get_range_rate()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.get_source_dictionary"><code class="docutils literal notranslate"><span class="pre">get_source_dictionary()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.hadec_to_bmxy"><code class="docutils literal notranslate"><span class="pre">hadec_to_bmxy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.lunar_rising"><code class="docutils literal notranslate"><span class="pre">lunar_rising()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.lunar_setting"><code class="docutils literal notranslate"><span class="pre">lunar_setting()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.lunar_transit"><code class="docutils literal notranslate"><span class="pre">lunar_transit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.object_coords"><code class="docutils literal notranslate"><span class="pre">object_coords()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.parse_date"><code class="docutils literal notranslate"><span class="pre">parse_date()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.peak_RA"><code class="docutils literal notranslate"><span class="pre">peak_RA()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.solar_rising"><code class="docutils literal notranslate"><span class="pre">solar_rising()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.solar_setting"><code class="docutils literal notranslate"><span class="pre">solar_setting()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.solar_transit"><code class="docutils literal notranslate"><span class="pre">solar_transit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.sphdist"><code class="docutils literal notranslate"><span class="pre">sphdist()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.transit_RA"><code class="docutils literal notranslate"><span class="pre">transit_RA()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ephemeris.utc_lst_to_mjd"><code class="docutils literal notranslate"><span class="pre">utc_lst_to_mjd()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.fluxcat.html">ch_util.fluxcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.ephemeris</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.ephemeris.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.ephemeris">
+<span id="ch-util-ephemeris"></span><h1>ch_util.ephemeris<a class="headerlink" href="#module-ch_util.ephemeris" title="Link to this heading"></a></h1>
+<p>Ephemeris routines</p>
+<p>The precession of the Earth’s axis gives noticeable shifts in object
+positions over the life time of CHIME. To minimise the effects of this we
+need to be careful and consistent with our ephemeris calculations.
+Historically Right Ascension has been given with respect to the Vernal
+Equinox which has a significant (and unnecessary) precession in the origin of
+the RA axis. To avoid this we use the new Celestial Intermediate Reference
+System which does not suffer from this issue.</p>
+<p>Practically this means that when calculating RA, DEC coordinates for a source
+position at a <em>given time</em> you must be careful to obtain CIRS coordinates
+(and not equinox based ones). Internally using <cite>ephemeris.object_coords</cite> does
+exactly that for you, so for any lookup of coordinates you should use that on
+your requested body.</p>
+<p>Note that the actual coordinate positions of sources must be specified using
+RA, DEC coordinates in ICRS (which is roughly equivalent to J2000). The
+purpose of object_coords is to transform into new RA, DEC coordinates taking
+into account the precession and nutation of the Earth’s polar axis since
+then.</p>
+<p>These kind of coordinate issues are tricky, confusing and hard to debug years
+later, so if you’re unsure you are recommended to seek some advice.</p>
+<p class="rubric">Constants</p>
+<dl class="simple">
+<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">CHIMELATITUDE</span></code></dt><dd><p>CHIME’s latitude [degrees].</p>
+</dd>
+<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">CHIMELONGITUDE</span></code></dt><dd><p>CHIME’s longitude [degrees].</p>
+</dd>
+<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">CHIMEALTITUDE</span></code></dt><dd><p>CHIME’s altitude [metres].</p>
+</dd>
+<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">SIDEREAL_S</span></code></dt><dd><p>Number of SI seconds in a sidereal second [s/sidereal s]. You probably want
+STELLAR_S instead.</p>
+</dd>
+<dt><code class="xref py py-const docutils literal notranslate"><span class="pre">STELLAR_S</span></code></dt><dd><p>Number of SI seconds in a stellar second [s/stellar s].</p>
+</dd>
+<dt><a class="reference internal" href="#ch_util.ephemeris.CasA" title="ch_util.ephemeris.CasA"><code class="xref py py-const docutils literal notranslate"><span class="pre">CasA</span></code></a></dt><dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cassiopeia A.</p>
+</dd>
+<dt><a class="reference internal" href="#ch_util.ephemeris.CygA" title="ch_util.ephemeris.CygA"><code class="xref py py-const docutils literal notranslate"><span class="pre">CygA</span></code></a></dt><dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cygnus A.</p>
+</dd>
+<dt><a class="reference internal" href="#ch_util.ephemeris.TauA" title="ch_util.ephemeris.TauA"><code class="xref py py-const docutils literal notranslate"><span class="pre">TauA</span></code></a></dt><dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Taurus A.</p>
+</dd>
+<dt><a class="reference internal" href="#ch_util.ephemeris.VirA" title="ch_util.ephemeris.VirA"><code class="xref py py-const docutils literal notranslate"><span class="pre">VirA</span></code></a></dt><dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Virgo A.</p>
+</dd>
+</dl>
+<section id="telescope-instances">
+<h2>Telescope Instances<a class="headerlink" href="#telescope-instances" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">chime</span></code></p></li>
+</ul>
+</section>
+<section id="ephemeris-functions">
+<h2>Ephemeris Functions<a class="headerlink" href="#ephemeris-functions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">skyfield_star_from_ra_dec()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">transit_times()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.solar_transit" title="ch_util.ephemeris.solar_transit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solar_transit()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.lunar_transit" title="ch_util.ephemeris.lunar_transit"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lunar_transit()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">setting_times()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.solar_setting" title="ch_util.ephemeris.solar_setting"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solar_setting()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.lunar_setting" title="ch_util.ephemeris.lunar_setting"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lunar_setting()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">rising_times()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.solar_rising" title="ch_util.ephemeris.solar_rising"><code class="xref py py-meth docutils literal notranslate"><span class="pre">solar_rising()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.lunar_rising" title="ch_util.ephemeris.lunar_rising"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lunar_rising()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">_is_skyfield_obj()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.peak_RA" title="ch_util.ephemeris.peak_RA"><code class="xref py py-meth docutils literal notranslate"><span class="pre">peak_RA()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.get_source_dictionary" title="ch_util.ephemeris.get_source_dictionary"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_source_dictionary()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">lsa()</span></code></p></li>
+</ul>
+</section>
+<section id="time-utilities">
+<h2>Time Utilities<a class="headerlink" href="#time-utilities" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">ensure_unix()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.chime_local_datetime" title="ch_util.ephemeris.chime_local_datetime"><code class="xref py py-meth docutils literal notranslate"><span class="pre">chime_local_datetime()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">unix_to_datetime()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime_to_unix()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">datetime_to_timestr()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">timestr_to_datetime()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">unix_to_skyfield_time()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">skyfield_time_to_unix()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">time_of_day()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">csd()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">csd_to_unix()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">unix_to_csd()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.parse_date" title="ch_util.ephemeris.parse_date"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_date()</span></code></a></p></li>
+</ul>
+</section>
+<section id="miscellaneous-utilities">
+<h2>Miscellaneous Utilities<a class="headerlink" href="#miscellaneous-utilities" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_ha" title="ch_util.ephemeris.galt_pointing_model_ha"><code class="xref py py-meth docutils literal notranslate"><span class="pre">galt_pointing_model_ha()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_dec" title="ch_util.ephemeris.galt_pointing_model_dec"><code class="xref py py-meth docutils literal notranslate"><span class="pre">galt_pointing_model_dec()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.ephemeris.sphdist" title="ch_util.ephemeris.sphdist"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sphdist()</span></code></a></p></li>
+</ul>
+</section>
+<p class="rubric">Module Attributes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.CasA" title="ch_util.ephemeris.CasA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CasA</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cassiopeia A.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.CygA" title="ch_util.ephemeris.CygA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CygA</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cygnus A.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.TauA" title="ch_util.ephemeris.TauA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TauA</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Taurus A.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.VirA" title="ch_util.ephemeris.VirA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">VirA</span></code></a></p></td>
+<td><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Virgo A.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.Star_cirs" title="ch_util.ephemeris.Star_cirs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Star_cirs</span></code></a>(ra, dec, epoch)</p></td>
+<td><p>Wrapper for skyfield.api.star that creates a position given CIRS coordinates observed from CHIME</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.bmxy_to_hadec" title="ch_util.ephemeris.bmxy_to_hadec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bmxy_to_hadec</span></code></a>(bmx, bmy)</p></td>
+<td><p>Convert CHIME/FRB beam-model XY coordinates to CIRS hour angle and declination.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.chime_local_datetime" title="ch_util.ephemeris.chime_local_datetime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">chime_local_datetime</span></code></a>(*args)</p></td>
+<td><p>Create a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code> object in Canada/Pacific timezone.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.cirs_radec" title="ch_util.ephemeris.cirs_radec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cirs_radec</span></code></a>(body[, date, deg, obs])</p></td>
+<td><p>Converts a Skyfield body in CIRS coordinates at a given epoch to ICRS coordinates observed from CHIME</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_dec" title="ch_util.ephemeris.galt_pointing_model_dec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">galt_pointing_model_dec</span></code></a>(ha_in, dec_in[, b])</p></td>
+<td><p>Calculate pointing correction in declination for the Galt Telescope See description of the pointing model by Lewis Knee CHIME document library 754 <a class="reference external" href="https://bao.chimenet.ca/doc/documents/754">https://bao.chimenet.ca/doc/documents/754</a></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.galt_pointing_model_ha" title="ch_util.ephemeris.galt_pointing_model_ha"><code class="xref py py-obj docutils literal notranslate"><span class="pre">galt_pointing_model_ha</span></code></a>(ha_in, dec_in[, a])</p></td>
+<td><p>Calculate pointing correction in hour angle for the Galt Telescope See description of the pointing model by Lewis Knee CHIME document library 754 <a class="reference external" href="https://bao.chimenet.ca/doc/documents/754">https://bao.chimenet.ca/doc/documents/754</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.get_doppler_shifted_freq" title="ch_util.ephemeris.get_doppler_shifted_freq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_doppler_shifted_freq</span></code></a>(source, date[, ...])</p></td>
+<td><p>Calculate Doppler shifted frequency of spectral feature with rest frequency <cite>freq_rest</cite>, seen towards source <cite>source</cite> at time <cite>date</cite>, due to Earth's motion and rotation, following the relativistic Doppler effect.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.get_range_rate" title="ch_util.ephemeris.get_range_rate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_range_rate</span></code></a>(source, date[, obs])</p></td>
+<td><p>Calculate rate at which distance between observer and source changes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.get_source_dictionary" title="ch_util.ephemeris.get_source_dictionary"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_source_dictionary</span></code></a>(*args)</p></td>
+<td><p>Returns a dictionary containing <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> objects for common radio point sources.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.hadec_to_bmxy" title="ch_util.ephemeris.hadec_to_bmxy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hadec_to_bmxy</span></code></a>(ha_cirs, dec_cirs)</p></td>
+<td><p>Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.lunar_rising" title="ch_util.ephemeris.lunar_rising"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lunar_rising</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Lunar risings between two times for CHIME.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.lunar_setting" title="ch_util.ephemeris.lunar_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lunar_setting</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Lunar settings between two times for CHIME.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.lunar_transit" title="ch_util.ephemeris.lunar_transit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lunar_transit</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Lunar transits between two times for CHIME.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.object_coords" title="ch_util.ephemeris.object_coords"><code class="xref py py-obj docutils literal notranslate"><span class="pre">object_coords</span></code></a>(body[, date, deg, obs])</p></td>
+<td><p>Calculates the RA and DEC of the source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.parse_date" title="ch_util.ephemeris.parse_date"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_date</span></code></a>(datestring)</p></td>
+<td><p>Convert date string to a datetime object.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.peak_RA" title="ch_util.ephemeris.peak_RA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">peak_RA</span></code></a>(body[, date, deg])</p></td>
+<td><p>Calculates the RA where a source is expected to peak in the beam.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.solar_rising" title="ch_util.ephemeris.solar_rising"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solar_rising</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Solar risings between two times for CHIME.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.solar_setting" title="ch_util.ephemeris.solar_setting"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solar_setting</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Solar settings between two times for CHIME.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.solar_transit" title="ch_util.ephemeris.solar_transit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">solar_transit</span></code></a>(start_time[, end_time, obs])</p></td>
+<td><p>Find the Solar transits between two times for CHIME.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.sphdist" title="ch_util.ephemeris.sphdist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sphdist</span></code></a>(long1, lat1, long2, lat2)</p></td>
+<td><p>Return the angular distance between two coordinates.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ephemeris.transit_RA" title="ch_util.ephemeris.transit_RA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transit_RA</span></code></a>(time)</p></td>
+<td><p>No longer supported.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ephemeris.utc_lst_to_mjd" title="ch_util.ephemeris.utc_lst_to_mjd"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utc_lst_to_mjd</span></code></a>(datestring, lst[, obs])</p></td>
+<td><p>Convert datetime string and LST to corresponding modified Julian Day</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py data">
+<dt class="sig sig-object py" id="ch_util.ephemeris.CasA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">CasA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Star(ra=350.86642,</span> <span class="pre">dec=58.81178,</span> <span class="pre">names='CAS_A',</span> <span class="pre">epoch=2451545.0)</span></em><a class="headerlink" href="#ch_util.ephemeris.CasA" title="Link to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cassiopeia A.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="ch_util.ephemeris.CygA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">CygA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Star(ra=299.86815,</span> <span class="pre">dec=40.73392,</span> <span class="pre">names='CYG_A',</span> <span class="pre">epoch=2451545.0)</span></em><a class="headerlink" href="#ch_util.ephemeris.CygA" title="Link to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Cygnus A.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.Star_cirs">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">Star_cirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#Star_cirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.Star_cirs" title="Link to this definition"></a></dt>
+<dd><p>Wrapper for skyfield.api.star that creates a position given CIRS
+coordinates observed from CHIME</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ra</strong> (<em>skyfield.api.Angle</em>) – RA and dec of the source in CIRS coordinates</p></li>
+<li><p><strong>dec</strong> (<em>skyfield.api.Angle</em>) – RA and dec of the source in CIRS coordinates</p></li>
+<li><p><strong>epoch</strong> (<em>skyfield.api.Time</em>) – Time of the observation</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>body</strong> – Star object in ICRS coordinates</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>skyfield.api.Star</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="ch_util.ephemeris.TauA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">TauA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Star(ra=83.63321,</span> <span class="pre">dec=22.01446,</span> <span class="pre">names='TAU_A',</span> <span class="pre">epoch=2451545.0)</span></em><a class="headerlink" href="#ch_util.ephemeris.TauA" title="Link to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Taurus A.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="ch_util.ephemeris.VirA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">VirA</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Star(ra=187.70593,</span> <span class="pre">dec=12.39112,</span> <span class="pre">names='VIR_A',</span> <span class="pre">epoch=2451545.0)</span></em><a class="headerlink" href="#ch_util.ephemeris.VirA" title="Link to this definition"></a></dt>
+<dd><p><code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code> representing Virgo A.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.bmxy_to_hadec">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">bmxy_to_hadec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">bmx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bmy</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#bmxy_to_hadec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.bmxy_to_hadec" title="Link to this definition"></a></dt>
+<dd><p>Convert CHIME/FRB beam-model XY coordinates to CIRS hour angle and declination.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>bmx</strong> (<em>array_like</em>) – The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+the beam-model coordinate conventions:
+<a class="reference external" href="https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions">https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions</a>
+X is degrees west from the meridian
+Y is degrees north from zenith</p></li>
+<li><p><strong>bmy</strong> (<em>array_like</em>) – The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+the beam-model coordinate conventions:
+<a class="reference external" href="https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions">https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions</a>
+X is degrees west from the meridian
+Y is degrees north from zenith</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>ha_cirs</strong> (<em>array_like</em>) – The CIRS Hour Angle in degrees.</p></li>
+<li><p><strong>dec_cirs</strong> (<em>array_like</em>) – The CIRS Declination in degrees.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.chime_local_datetime">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">chime_local_datetime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#chime_local_datetime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.chime_local_datetime" title="Link to this definition"></a></dt>
+<dd><p>Create a <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code> object in Canada/Pacific timezone.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>*args</strong> – Any valid arguments to the constructor of <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code>
+except <em>tzinfo</em>. Local date and time at CHIME.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dt</strong> – Timezone naive date and time but converted to UTC.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.cirs_radec">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">cirs_radec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#cirs_radec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.cirs_radec" title="Link to this definition"></a></dt>
+<dd><p>Converts a Skyfield body in CIRS coordinates at a given epoch to
+ICRS coordinates observed from CHIME</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>body</strong> (<em>skyfield.api.Star</em>) – Skyfield Star object with positions in CIRS coordinates.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>new_body</strong> – Skyfield Star object with positions in ICRS coordinates</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>skyfield.api.Star</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.galt_pointing_model_dec">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">galt_pointing_model_dec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">b</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[1.081,</span> <span class="pre">0.707,</span> <span class="pre">-0.076,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#galt_pointing_model_dec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.galt_pointing_model_dec" title="Link to this definition"></a></dt>
+<dd><p>Calculate pointing correction in declination for the Galt Telescope
+See description of the pointing model by Lewis Knee CHIME document library
+754 <a class="reference external" href="https://bao.chimenet.ca/doc/documents/754">https://bao.chimenet.ca/doc/documents/754</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>Skyfield Angle objects</em>) – Target hour angle and declination</p></li>
+<li><p><strong>dec</strong> (<em>Skyfield Angle objects</em>) – Target hour angle and declination</p></li>
+<li><p><strong>b</strong> (<em>list</em><em> of </em><em>floats</em>) – List of coefficients (in arcmin) for the pointing model
+(NOTE: it is very unlikely that a user will want to change these
+from the defaults, which are taken from the pointing model as of
+2019-2-15)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Angular offset in hour angle</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Skyfield Angle object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.galt_pointing_model_ha">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">galt_pointing_model_ha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_in</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">a</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[-5.872,</span> <span class="pre">-0.5292,</span> <span class="pre">5.458,</span> <span class="pre">-0.076,</span> <span class="pre">-0.707,</span> <span class="pre">0.0,</span> <span class="pre">0.0]</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#galt_pointing_model_ha"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.galt_pointing_model_ha" title="Link to this definition"></a></dt>
+<dd><p>Calculate pointing correction in hour angle for the Galt Telescope
+See description of the pointing model by Lewis Knee CHIME document library
+754 <a class="reference external" href="https://bao.chimenet.ca/doc/documents/754">https://bao.chimenet.ca/doc/documents/754</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>Skyfield Angle objects</em>) – Target hour angle and declination</p></li>
+<li><p><strong>dec</strong> (<em>Skyfield Angle objects</em>) – Target hour angle and declination</p></li>
+<li><p><strong>a</strong> (<em>list</em><em> of </em><em>floats</em>) – List of coefficients (in arcmin) for the pointing model
+(NOTE: it is very unlikely that a user will want to change these
+from the defaults, which are taken from the pointing model as of
+2019-2-15)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Angular offset in hour angle</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Skyfield Angle object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.get_doppler_shifted_freq">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">get_doppler_shifted_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source:</span> <span class="pre">~skyfield.starlib.Star</span> <span class="pre">|</span> <span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_rest:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">list</span> <span class="pre">=</span> <span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs:</span> <span class="pre">~caput.time.Observer</span> <span class="pre">=</span> <span class="pre">&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">array</span></span></span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#get_doppler_shifted_freq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.get_doppler_shifted_freq" title="Link to this definition"></a></dt>
+<dd><p>Calculate Doppler shifted frequency of spectral feature with rest
+frequency <cite>freq_rest</cite>, seen towards source <cite>source</cite> at time <cite>date</cite>, due to
+Earth’s motion and rotation, following the relativistic Doppler effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – Position(s) on the sky. If the input is a <cite>str</cite>, attempt to resolve this
+from <cite>ch_util.hfbcat.HFBCatalog</cite>.</p></li>
+<li><p><strong>date</strong> – Unix time(s) for which to calculate Doppler shift.</p></li>
+<li><p><strong>freq_rest</strong> – Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency
+of absorption feature from <cite>ch_util.hfbcat.HFBCatalog.freq_abs</cite>.</p></li>
+<li><p><strong>obs</strong> – An Observer instance to use. If not supplied use <cite>chime</cite>. For many
+calculations changing from this default will make little difference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Doppler shifted frequencies in MHz. Array where rows correspond to the
+different input rest frequencies and columns correspond either to input
+times or to input sky positions (whichever contains multiple entries).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>freq_obs</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Only one of <cite>source</cite> and <cite>date</cite> can contain multiple entries.</p>
+<p class="rubric">Example</p>
+<p>To get the Doppler shifted frequencies of a feature with a rest frequency
+of 600 MHz for two positions on the sky at a single point in time (Unix
+time 1717809534 = 2024-06-07T21:18:54+00:00), run:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skyfield.starlib</span> <span class="kn">import</span> <span class="n">Star</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">skyfield.positionlib</span> <span class="kn">import</span> <span class="n">Angle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">ch_util.tools</span> <span class="kn">import</span> <span class="n">get_doppler_shifted_freq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coord</span> <span class="o">=</span> <span class="n">Star</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">110</span><span class="p">]),</span> <span class="n">dec</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">[</span><span class="mi">45</span><span class="p">,</span> <span class="mi">50</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_doppler_shifted_freq</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="mi">1717809534</span><span class="p">,</span> <span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.get_range_rate">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">get_range_rate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source:</span> <span class="pre">~skyfield.starlib.Star</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date:</span> <span class="pre">float</span> <span class="pre">|</span> <span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs:</span> <span class="pre">~caput.time.Observer</span> <span class="pre">=</span> <span class="pre">&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">array</span></span></span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#get_range_rate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.get_range_rate" title="Link to this definition"></a></dt>
+<dd><p>Calculate rate at which distance between observer and source changes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – Position(s) on the sky.</p></li>
+<li><p><strong>date</strong> – Unix time(s) for which to calculate range rate.</p></li>
+<li><p><strong>obs</strong> – An Observer instance to use. If not supplied use <cite>chime</cite>. For many
+calculations changing from this default will make little difference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Rate (in m/s) at which the distance between the observer and source
+changes (i.e., the velocity of observer in direction of source, but
+positive for observer and source moving appart). If either <cite>source</cite>
+or <cite>date</cite> contains multiple entries, <cite>range_rate</cite> will be an array.
+Otherwise, <cite>range_rate</cite> will be a float.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>range_rate</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Only one of <cite>source</cite> and <cite>date</cite> can contain multiple entries.</p>
+<p>This routine uses an <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.positionlib.Apparent</span></code> object
+(rather than an <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.positionlib.Astrometric</span></code> object) to find
+the velocity of the observatory and the position of the source. This
+accounts for the gravitational deflection and the aberration of light.
+It is unclear if the latter should be taken into account for this Doppler
+shift calculation, but its effects are negligible.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.get_source_dictionary">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">get_source_dictionary</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#get_source_dictionary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.get_source_dictionary" title="Link to this definition"></a></dt>
+<dd><p>Returns a dictionary containing <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code>
+objects for common radio point sources.  This is useful for
+obtaining the skyfield representation of a source from a string
+containing its name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>catalog_name</strong> (<em>str</em>) – Name of the catalog.  This must be the basename of the json file
+in the <cite>ch_util/catalogs</cite> directory.  Can take multiple catalogs,
+with the first catalog favoured for any overlapping sources.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>src_dict</strong> – Format is {‘SOURCE_NAME’: <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code>, …}</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.hadec_to_bmxy">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">hadec_to_bmxy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha_cirs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec_cirs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#hadec_to_bmxy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.hadec_to_bmxy" title="Link to this definition"></a></dt>
+<dd><p>Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha_cirs</strong> (<em>array_like</em>) – The CIRS Hour Angle in degrees.</p></li>
+<li><p><strong>dec_cirs</strong> (<em>array_like</em>) – The CIRS Declination in degrees.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>bmx, bmy</strong> – The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+the beam-model coordinate conventions:
+<a class="reference external" href="https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions">https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions</a></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.lunar_rising">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">lunar_rising</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#lunar_rising"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.lunar_rising" title="Link to this definition"></a></dt>
+<dd><p>Find the Lunar risings between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find risings.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding risings. If <cite>None</cite> default, search for 24 hours after
+start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rising_times</strong> – Array of rising times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.lunar_setting">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">lunar_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#lunar_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.lunar_setting" title="Link to this definition"></a></dt>
+<dd><p>Find the Lunar settings between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find settings.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding settings. If <cite>None</cite> default, search for 24 hours
+after start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>setting_times</strong> – Array of setting times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.lunar_transit">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">lunar_transit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#lunar_transit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.lunar_transit" title="Link to this definition"></a></dt>
+<dd><p>Find the Lunar transits between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find transits.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding transits. If <cite>None</cite> default, search for 24 hours
+after start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>transit_times</strong> – Array of transit times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.object_coords">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">object_coords</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg=False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#object_coords"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.object_coords" title="Link to this definition"></a></dt>
+<dd><p>Calculates the RA and DEC of the source.</p>
+<p>Gives the ICRS coordinates if no date is given (=J2000), or if a date is
+specified gives the CIRS coordinates at that epoch.</p>
+<p>This also returns the <em>apparent</em> position, including abberation and
+deflection by gravitational lensing. This shifts the positions by up to
+20 arcseconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<em>skyfield source</em>) – skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+skyfield.jpllib.ChebyshevPosition body representing the source.</p></li>
+<li><p><strong>date</strong> (<em>float</em>) – Unix time at which to determine ra of source If None, use Jan 01
+2000.</p></li>
+<li><p><strong>deg</strong> (<em>bool</em>) – Return RA ascension in degrees if True, radians if false (default).</p></li>
+<li><p><strong>obs</strong> (<cite>caput.time.Observer</cite>) – An observer instance to use. If not supplied use <cite>chime</cite>. For many
+calculations changing from this default will make little difference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ra, dec</strong> – Position of the source.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.parse_date">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">parse_date</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datestring</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#parse_date"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.parse_date" title="Link to this definition"></a></dt>
+<dd><p>Convert date string to a datetime object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>datestring</strong> (<em>string</em>) – Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>date</strong> – A python datetime object in UTC.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.peak_RA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">peak_RA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#peak_RA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.peak_RA" title="Link to this definition"></a></dt>
+<dd><p>Calculates the RA where a source is expected to peak in the beam.
+Note that this is not the same as the RA where the source is at
+transit, since the pathfinder is rotated with respect to north.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<em>ephem.FixedBody</em>) – skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+skyfield.jpllib.ChebyshevPosition or Ephemeris body
+representing the source.</p></li>
+<li><p><strong>date</strong> (<em>float</em>) – Unix time at which to determine ra of source
+If None, use Jan 01 2000.
+Ignored if body is not a skyfield object</p></li>
+<li><p><strong>deg</strong> (<em>bool</em>) – Return RA ascension in degrees if True,
+radians if false (default).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>peak_ra</strong> – RA when the transiting source peaks.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.solar_rising">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">solar_rising</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#solar_rising"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.solar_rising" title="Link to this definition"></a></dt>
+<dd><p>Find the Solar risings between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find risings.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding risings. If <cite>None</cite> default, search for 24 hours
+after start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>rising_times</strong> – Array of rising times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.solar_setting">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">solar_setting</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#solar_setting"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.solar_setting" title="Link to this definition"></a></dt>
+<dd><p>Find the Solar settings between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find settings.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding settings. If <cite>None</cite> default, search for 24 hours
+after start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>setting_times</strong> – Array of setting times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.solar_transit">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">solar_transit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time=None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#solar_transit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.solar_transit" title="Link to this definition"></a></dt>
+<dd><p>Find the Solar transits between two times for CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em>) – Start time to find transits.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em><em> (</em><em>UNIX time</em><em>) or </em><em>datetime</em><em>, </em><em>optional</em>) – End time for finding transits. If <cite>None</cite> default, search for 24 hours
+after start time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>transit_times</strong> – Array of transit times (in UNIX time).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array_like</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.sphdist">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">sphdist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">long1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lat2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#sphdist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.sphdist" title="Link to this definition"></a></dt>
+<dd><p>Return the angular distance between two coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>long1</strong> (<em>Skyfield Angle objects</em>) – longitude and latitude of the first coordinate. Each should be the
+same length; can be one or longer.</p></li>
+<li><p><strong>lat1</strong> (<em>Skyfield Angle objects</em>) – longitude and latitude of the first coordinate. Each should be the
+same length; can be one or longer.</p></li>
+<li><p><strong>long2</strong> (<em>Skyfield Angle objects</em>) – longitude and latitude of the second coordinate. Each should be the
+same length. If long1, lat1 have length longer than 1, long2 and
+lat2 should either have the same length as coordinate 1 or length 1.</p></li>
+<li><p><strong>lat2</strong> (<em>Skyfield Angle objects</em>) – longitude and latitude of the second coordinate. Each should be the
+same length. If long1, lat1 have length longer than 1, long2 and
+lat2 should either have the same length as coordinate 1 or length 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dist</strong> – angle between the two coordinates</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Skyfield Angle object</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.transit_RA">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">transit_RA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#transit_RA"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.transit_RA" title="Link to this definition"></a></dt>
+<dd><p>No longer supported. Use <cite>lsa</cite> instead.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ephemeris.utc_lst_to_mjd">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ephemeris.</span></span><span class="sig-name descname"><span class="pre">utc_lst_to_mjd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">datestring</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs=&lt;caput.time.Observer</span> <span class="pre">object&gt;</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ephemeris.html#utc_lst_to_mjd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ephemeris.utc_lst_to_mjd" title="Link to this definition"></a></dt>
+<dd><p>Convert datetime string and LST to corresponding modified Julian Day</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>datestring</strong> (<em>string</em>) – Date as YYYYMMDD-AAA, where AAA is one of [UTC, PST, PDT]</p></li>
+<li><p><strong>lst</strong> (<em>float</em>) – Local sidereal time at DRAO (CHIME) in decimal hours</p></li>
+<li><p><strong>obs</strong> (<em>caput.Observer object</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>mjd</strong> – Modified Julian Date corresponding to the given time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.data_quality.html" class="btn btn-neutral float-left" title="ch_util.data_quality" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.finder.html" class="btn btn-neutral float-right" title="ch_util.finder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
