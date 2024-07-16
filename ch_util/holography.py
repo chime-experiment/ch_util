@@ -257,7 +257,7 @@ class HolographyObservation(base_model):
         none
         """
 
-        from ch_util.ephemeris import sphdist
+        from caput.interferometry import sphdist
         from skyfield.positionlib import Angle
 
         ts = ephemeris.skyfield_wrapper.timescale
@@ -828,7 +828,6 @@ class HolographyObservation(base_model):
                 )
 
             if doobs:
-
                 # Read the post report file and pull out the HolographySource
                 # object, start time (LST), and duration (in LST hours) of the
                 # observation

@@ -2,7 +2,6 @@
 
 """
 
-
 import unittest
 
 import numpy as np
@@ -30,11 +29,9 @@ fmap = None
 tmap = []
 
 if comm.rank == 0:
-
     shape_fp = ()
     shape_t = 0
     for fname in fnames:
-
         with h5py.File(fname, "r") as f:
             sh = f["vis"].shape
             nfreq = sh[0]
@@ -61,7 +58,6 @@ class TestLoadDist(unittest.TestCase):
     """Tests for loading andata files in distributed mode."""
 
     def test_load_allfreq(self):
-
         ad = andata.CorrData.from_acq_h5(fnames, distributed=True, comm=comm)
 
         f_shape = (nfreq // comm.size,) + (nprod, ntime)
@@ -94,7 +90,6 @@ class TestLoadDist(unittest.TestCase):
         self.assertTrue((ad.index_map["time"]["ctime"] == tmap["ctime"]).all())
 
     def test_load_freq_sel(self):
-
         fsel = [4, 18, 23, 27]
 
         ad = andata.CorrData.from_acq_h5(

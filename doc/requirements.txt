@@ -1,4 +1,4 @@
-Sphinx >= 4.0, < 5.0
+Sphinx 
 numpydoc
 sphinx_rtd_theme
 sphinxcontrib-katex

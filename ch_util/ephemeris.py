@@ -96,10 +96,10 @@ Miscellaneous Utilities
 
 - :py:meth:`galt_pointing_model_ha`
 - :py:meth:`galt_pointing_model_dec`
-- :py:meth:`sphdist`
 """
 
 from datetime import datetime
+from typing import Union
 from numpy.core.multiarray import unravel_index
 
 # NOTE: Load Skyfield API but be sure to use skyfield_wrapper for loading data
@@ -107,6 +107,7 @@ import skyfield.api
 
 import numpy as np
 
+from caput.interferometry import sphdist
 from caput.time import (
     unix_to_datetime,
     datetime_to_unix,
@@ -124,26 +125,38 @@ from caput.time import (
     STELLAR_S,
 )
 
-# Calvin derived the horizontal position of the geometric center of the focal lines and the elevation of the focal line from survey coordinates:
+# Calvin derived the horizontal position of the center of the focal lines...
+# ...and the elevation of the focal line from survey coordinates:
+# All altitudes given in meters above sea level
 CHIMELATITUDE = 49.3207092194
 CHIMELONGITUDE = -119.6236774310
 CHIMEALTITUDE = 555.372
 
-# Kiyo looked these up on Google Earth. Should replace with 'official' numbers.
-# CHIMELATITUDE = 49.32  # degrees
-# CHIMELONGITUDE = -119.62  # degrees
-# Mateus looked this up on Wikipedia. Should replace with 'official' number.
-# CHIMEALTITUDE = 545.0  # metres
-# Calvin replaced old coordinates with the position of the geometric center of the focal lines derived from survey coordinates: see https://bao.chimenet.ca/doc/documents/1327
-CHIMELATITUDE = 49.3207092194
-CHIMELONGITUDE = -119.6236774310
-CHIMEALTITUDE = 555.372
-
-# Calvin also positioned the GBO/TONE Outrigger similatly.
+# Calvin also positioned the GBO/TONE Outrigger similarly.
 # GBO/TONE Outrigger
 TONELATITUDE = 38.4292962636
 TONELONGITUDE = -79.8451625395
 TONEALTITUDE = 810.000
+
+# Rough position for outriggers.
+# These will be updated as positioning gets refined.
+# https://bao.chimenet.ca/doc/documents/1727
+KKOLATITUDE = 49.41905
+KKOLONGITUDE = -120.5253
+KKOALTITUDE = 835
+
+# Aliases for backwards compatibility
+PCOLATITUDE = KKOLATITUDE
+PCOLONGITUDE = KKOLONGITUDE
+PCOALTITUDE = KKOALTITUDE
+
+GBOLATITUDE = 38.436122
+GBOLONGITUDE = -79.827922
+GBOALTITUDE = 2710 / 3.28084
+
+HCOLATITUDE = 40.8171082
+HCOLONGITUDE = -121.4689584
+HCOALTITUDE = 3346 / 3.28084
 
 # Create the Observer instances for CHIME and outriggers
 chime = Observer(
@@ -157,6 +170,27 @@ tone = Observer(
     lon=TONELONGITUDE,
     lat=TONELATITUDE,
     alt=TONEALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+kko = Observer(
+    lon=KKOLONGITUDE,
+    lat=KKOLATITUDE,
+    alt=KKOALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+gbo = Observer(
+    lon=GBOLONGITUDE,
+    lat=GBOLATITUDE,
+    alt=GBOALTITUDE,
+    lsd_start=datetime(2013, 11, 15),
+)
+
+hco = Observer(
+    lon=HCOLONGITUDE,
+    lat=HCOLATITUDE,
+    alt=HCOALTITUDE,
     lsd_start=datetime(2013, 11, 15),
 )
 
@@ -319,42 +353,6 @@ def utc_lst_to_mjd(datestring, lst, obs=chime):
         ).tt
         - 2400000.5
     )
-
-
-def sphdist(long1, lat1, long2, lat2):
-    """
-    Return the angular distance between two coordinates.
-
-    Parameters
-    ----------
-
-    long1, lat1 : Skyfield Angle objects
-        longitude and latitude of the first coordinate. Each should be the
-        same length; can be one or longer.
-
-    long2, lat2 : Skyfield Angle objects
-        longitude and latitude of the second coordinate. Each should be the
-        same length. If long1, lat1 have length longer than 1, long2 and
-        lat2 should either have the same length as coordinate 1 or length 1.
-
-    Returns
-    -------
-    dist : Skyfield Angle object
-        angle between the two coordinates
-    """
-    from skyfield.positionlib import Angle
-
-    dsinb = np.sin((lat1.radians - lat2.radians) / 2.0) ** 2
-
-    dsinl = (
-        np.cos(lat1.radians)
-        * np.cos(lat2.radians)
-        * (np.sin((long1.radians - long2.radians) / 2.0)) ** 2
-    )
-
-    dist = np.arcsin(np.sqrt(dsinl + dsinb))
-
-    return Angle(radians=2 * dist)
 
 
 def solar_transit(start_time, end_time=None, obs=chime):
@@ -649,7 +647,6 @@ def object_coords(body, date=None, deg=False, obs=chime):
             )
 
     else:  # Calculate CIRS position with all corrections
-
         date = unix_to_skyfield_time(date)
         radec = obs.skyfield_obs().at(date).observe(body).apparent().cirs_radec(date)
 
@@ -662,6 +659,123 @@ def object_coords(body, date=None, deg=False, obs=chime):
 
     # Return
     return ra, dec
+
+
+def hadec_to_bmxy(ha_cirs, dec_cirs):
+    """Convert CIRS hour angle and declination to CHIME/FRB beam-model XY coordinates.
+
+    Parameters
+    ----------
+    ha_cirs : array_like
+        The CIRS Hour Angle in degrees.
+    dec_cirs : array_like
+        The CIRS Declination in degrees.
+
+    Returns
+    -------
+    bmx, bmy : array_like
+        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+        the beam-model coordinate conventions:
+        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
+    """
+
+    from caput.interferometry import rotate_ypr, sph_to_ground
+
+    from ch_util.tools import _CHIME_ROT
+
+    # Convert CIRS coordinates to CHIME "ground fixed" XYZ coordinates,
+    # which constitute a unit vector pointing towards the point of interest,
+    # i.e., telescope cartesian unit-sphere coordinates.
+    # chx: The EW coordinate (increases to the East)
+    # chy: The NS coordinate (increases to the North)
+    # chz: The vertical coordinate (increases to the sky)
+    chx, chy, chz = sph_to_ground(
+        np.deg2rad(ha_cirs), np.deg2rad(CHIMELATITUDE), np.deg2rad(dec_cirs)
+    )
+
+    # Correct for CHIME telescope rotation with respect to North
+    ypr = np.array([np.deg2rad(-_CHIME_ROT), 0, 0])
+    chx_rot, chy_rot, chz_rot = rotate_ypr(ypr, chx, chy, chz)
+
+    # Convert rotated CHIME "ground fixed" XYZ coordinates to spherical polar coordinates
+    # with the pole towards almost-North and using CHIME's meridian as the prime meridian.
+    # Note that the azimuthal angle theta in these spherical polar coordinates increases
+    # to the West (to ensure that phi and theta here have the same meaning as the variables
+    # with the same names in the beam_model package and DocLib #1203).
+    # phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg
+    # theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg
+    phi = np.arccos(chy_rot)
+    theta = np.arctan2(-chx_rot, +chz_rot)
+
+    # Convert polar angle and azimuth to CHIME/FRB beam model XY position
+    bmx = np.rad2deg(theta * np.sin(phi))
+    bmy = np.rad2deg(np.pi / 2.0 - phi)
+
+    return bmx, bmy
+
+
+def bmxy_to_hadec(bmx, bmy):
+    """Convert CHIME/FRB beam-model XY coordinates to CIRS hour angle and declination.
+
+    Parameters
+    ----------
+    bmx, bmy : array_like
+        The CHIME/FRB beam model X and Y coordinates in degrees as defined in
+        the beam-model coordinate conventions:
+        https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
+        X is degrees west from the meridian
+        Y is degrees north from zenith
+
+    Returns
+    -------
+    ha_cirs : array_like
+        The CIRS Hour Angle in degrees.
+    dec_cirs : array_like
+        The CIRS Declination in degrees.
+    """
+    import warnings
+
+    from caput.interferometry import rotate_ypr, ground_to_sph
+
+    from ch_util.tools import _CHIME_ROT
+
+    # Convert CHIME/FRB beam model XY position to spherical polar coordinates
+    # with the pole towards almost-North and using CHIME's meridian as the prime
+    # meridian. Note that the CHIME/FRB beam model X coordinate increases westward
+    # and so does the azimuthal angle theta in these spherical polar coordinates
+    # (to ensure that phi and theta here have the same meaning as the variables
+    # with the same names in the beam_model package and DocLib #1203).
+    # phi (polar angle): almost-North = 0 deg; zenith = 90 deg; almost-South = 180 deg
+    # theta (azimuthal angle): almost-East = -90 deg; zenith = 0 deg; almost-West = +90 deg
+    phi = np.pi / 2.0 - np.deg2rad(bmy)
+    theta = np.deg2rad(bmx) / np.sin(phi)
+
+    # Warn for input beam-model XY positions below the horizon
+    scalar_input = np.isscalar(theta)
+    theta = np.atleast_1d(theta)
+    if (theta < -1.0 * np.pi / 2.0).any() or (theta > np.pi / 2.0).any():
+        warnings.warn("Input beam model XY coordinate(s) below horizon.")
+    if scalar_input:
+        theta = np.squeeze(theta)
+
+    # Convert spherical polar coordinates to rotated CHIME "ground fixed" XYZ
+    # coordinates (i.e., cartesian unit-sphere coordinates, rotated to correct
+    # for the CHIME telescope's rotation with respect to North).
+    # chx_rot: The almost-EW coordinate (increases to the almost-East)
+    # chy_rot: The almost-NS coordinate (increases to the almost-North)
+    # chz_rot: The vertical coordinate (increases to the sky)
+    chx_rot = np.sin(phi) * np.sin(-theta)
+    chy_rot = np.cos(phi)
+    chz_rot = np.sin(phi) * np.cos(-theta)
+
+    # Undo correction for CHIME telescope rotation with respect to North
+    ypr = np.array([np.deg2rad(_CHIME_ROT), 0, 0])
+    chx, chy, chz = rotate_ypr(ypr, chx_rot, chy_rot, chz_rot)
+
+    # Convert CHIME "ground fixed" XYZ coordinates to CIRS hour angle and declination
+    ha_cirs, dec_cirs = ground_to_sph(chx, chy, np.deg2rad(CHIMELATITUDE))
+
+    return np.rad2deg(ha_cirs), np.rad2deg(dec_cirs)
 
 
 def peak_RA(body, date=None, deg=False):
@@ -706,6 +820,156 @@ def peak_RA(body, date=None, deg=False):
     return ra
 
 
+def get_doppler_shifted_freq(
+    source: Union[skyfield.starlib.Star, str],
+    date: Union[float, list],
+    freq_rest: Union[float, list] = None,
+    obs: Observer = chime,
+) -> np.array:
+    """Calculate Doppler shifted frequency of spectral feature with rest
+    frequency `freq_rest`, seen towards source `source` at time `date`, due to
+    Earth's motion and rotation, following the relativistic Doppler effect.
+
+    Parameters
+    ----------
+    source
+        Position(s) on the sky. If the input is a `str`, attempt to resolve this
+        from `ch_util.hfbcat.HFBCatalog`.
+    date
+        Unix time(s) for which to calculate Doppler shift.
+    freq_rest
+        Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency
+        of absorption feature from `ch_util.hfbcat.HFBCatalog.freq_abs`.
+    obs
+        An Observer instance to use. If not supplied use `chime`. For many
+        calculations changing from this default will make little difference.
+
+    Returns
+    -------
+    freq_obs
+        Doppler shifted frequencies in MHz. Array where rows correspond to the
+        different input rest frequencies and columns correspond either to input
+        times or to input sky positions (whichever contains multiple entries).
+
+    Notes
+    -----
+    Only one of `source` and `date` can contain multiple entries.
+
+    Example
+    -------
+    To get the Doppler shifted frequencies of a feature with a rest frequency
+    of 600 MHz for two positions on the sky at a single point in time (Unix
+    time 1717809534 = 2024-06-07T21:18:54+00:00), run:
+
+    >>> from skyfield.starlib import Star
+    >>> from skyfield.positionlib import Angle
+    >>> from ch_util.tools import get_doppler_shifted_freq
+    >>> coord = Star(ra=Angle(degrees=[100, 110]), dec=Angle(degrees=[45, 50]))
+    >>> get_doppler_shifted_freq(coord, 1717809534, 600)
+    """
+
+    from scipy.constants import c as speed_of_light
+
+    from ch_util.fluxcat import _ensure_list
+    from ch_util.hfbcat import HFBCatalog
+
+    # For source string inputs, get skyfield Star object from HFB catalog
+    if isinstance(source, str):
+        try:
+            source = HFBCatalog[source].skyfield
+        except KeyError:
+            raise ValueError(f"Could not find source {source} in HFB catalog.")
+
+    # Get rest frequency from HFB catalog
+    if freq_rest is None:
+        if not source.names or source.names not in HFBCatalog:
+            raise ValueError(
+                "Rest frequencies must be supplied unless source can be found "
+                "in ch_util.hfbcat.HFBCatalog. "
+                f"Got source {source} with names {source.names}"
+            )
+        else:
+            freq_rest = HFBCatalog[source.names].freq_abs
+
+    # Prepare rest frequencies for broadcasting
+    freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
+
+    # Get rate at which the distance between the observer and source changes
+    # (positive for observer and source moving appart)
+    range_rate = get_range_rate(source, date, obs)
+
+    # Compute observed frequencies from rest frequencies
+    # using relativistic Doppler effect
+    beta = range_rate / speed_of_light
+    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
+
+    return freq_obs
+
+
+def get_range_rate(
+    source: skyfield.starlib.Star,
+    date: Union[float, list],
+    obs: Observer = chime,
+) -> Union[float, np.array]:
+    """Calculate rate at which distance between observer and source changes.
+
+    Parameters
+    ----------
+    source
+        Position(s) on the sky.
+    date
+        Unix time(s) for which to calculate range rate.
+    obs
+        An Observer instance to use. If not supplied use `chime`. For many
+        calculations changing from this default will make little difference.
+
+    Returns
+    -------
+    range_rate
+        Rate (in m/s) at which the distance between the observer and source
+        changes (i.e., the velocity of observer in direction of source, but
+        positive for observer and source moving appart). If either `source`
+        or `date` contains multiple entries, `range_rate` will be an array.
+        Otherwise, `range_rate` will be a float.
+
+    Notes
+    -----
+    Only one of `source` and `date` can contain multiple entries.
+
+    This routine uses an :class:`skyfield.positionlib.Apparent` object
+    (rather than an :class:`skyfield.positionlib.Astrometric` object) to find
+    the velocity of the observatory and the position of the source. This
+    accounts for the gravitational deflection and the aberration of light.
+    It is unclear if the latter should be taken into account for this Doppler
+    shift calculation, but its effects are negligible.
+    """
+
+    if hasattr(source.ra._degrees, "__iter__") and hasattr(date, "__iter__"):
+        raise ValueError(
+            "Only one of `source` and `date` can contain multiple entries."
+        )
+
+    # Convert unix times to skyfield times
+    date = unix_to_skyfield_time(date)
+
+    # Create skyfield Apparent object of source position seen from observer
+    position = obs.skyfield_obs().at(date).observe(source).apparent()
+
+    # Observer velocity vector in ICRS xyz coordinates in units of m/s
+    obs_vel_m_per_s = position.velocity.m_per_s
+
+    # Normalized source position vector in ICRS xyz coordinates
+    source_pos_m = position.position.m
+    source_pos_norm = source_pos_m / np.linalg.norm(source_pos_m, axis=0)
+
+    # Dot product of observer velocity and source position gives observer
+    # velocity in direction of source; flip sign to get range rate (positive
+    # for observer and source moving appart)
+    range_rate = -np.sum(obs_vel_m_per_s.T * source_pos_norm.T, axis=-1)
+
+    return range_rate
+
+
 def get_source_dictionary(*args):
     """Returns a dictionary containing :class:`skyfield.starlib.Star`
     objects for common radio point sources.  This is useful for
@@ -731,7 +995,6 @@ def get_source_dictionary(*args):
 
     src_dict = {}
     for catalog_name in reversed(args):
-
         path_to_catalog = os.path.join(
             os.path.dirname(__file__),
             "catalogs",
@@ -753,7 +1016,10 @@ def get_source_dictionary(*args):
 
 # Common radio point sources
 source_dictionary = get_source_dictionary(
-    "primary_calibrators_perley2016", "specfind_v2_5Jy_vollmer2009", "atnf_psrcat"
+    "primary_calibrators_perley2016",
+    "specfind_v2_5Jy_vollmer2009",
+    "atnf_psrcat",
+    "hfb_target_list",
 )
 
 #: :class:`skyfield.starlib.Star` representing Cassiopeia A.

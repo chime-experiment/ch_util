@@ -587,9 +587,11 @@ class FeedLocator(object):
             devmins = devs.min(axis=1)
             centres = np.array(
                 [
-                    xmeds[ii]  # return median
-                    if devmins[ii] < tol  # if reasonable
-                    else cylseps[np.argmin(devs[ii])]  # or use closest value
+                    (
+                        xmeds[ii]  # return median
+                        if devmins[ii] < tol  # if reasonable
+                        else cylseps[np.argmin(devs[ii])]
+                    )  # or use closest value
                     for ii in range(devmins.size)
                 ]
             )
@@ -767,11 +769,13 @@ class ChanMonitor(object):
         grd_dict = {"CygA": 4, "CasA": 4, "TauA": 3, "VirA": 1}
         # Grades for each source
         grds = [
-            grd_dict[src.name] - 2
-            if (
-                (src.name in ["CygA", "CasA"]) and (not ntt[ii])
-            )  # CasA and CygA at daytime worse than TauA at night
-            else grd_dict[src.name]
+            (
+                grd_dict[src.name] - 2
+                if (
+                    (src.name in ["CygA", "CasA"]) and (not ntt[ii])
+                )  # CasA and CygA at daytime worse than TauA at night
+                else grd_dict[src.name]
+            )
             for ii, src in enumerate(srcs)
         ]
 
@@ -940,7 +944,6 @@ class ChanMonitor(object):
         )
 
     def determine_bad_gpu_nodes(self, data, frac_time_on=0.7):
-
         node_on = np.any(data.vis[:].real != 0.0, axis=1)
 
         self.gpu_node_flag = np.sum(node_on, axis=1) > frac_time_on * node_on.shape[1]
@@ -969,7 +972,7 @@ class ChanMonitor(object):
             self.bsep2 += 1
 
         prod_sel = []
-        for (ii, prod) in enumerate(data.prod):
+        for ii, prod in enumerate(data.prod):
             add_prod = False
             add_prod = add_prod or (
                 (prod[0] == self.bswp1 and prod[1] in echp1)
@@ -1136,7 +1139,6 @@ class ChanMonitor(object):
         ntt = [False] * Ns  # night transit
 
         for ii, src in enumerate(srcs):
-
             night_transit = np.array([])
             for acq in self.night_acq_list:
                 night_transit = np.append(
@@ -1147,7 +1149,6 @@ class ChanMonitor(object):
                 ntt[ii] = True
 
             if src.name in ["CygA", "CasA"]:
-
                 transit = np.array([])
                 for acq in self.acq_list:
                     transit = np.append(transit, ephemeris.transit_times(src, *acq[1]))
@@ -1156,7 +1157,6 @@ class ChanMonitor(object):
                     clr[ii] = True
 
             else:
-
                 clr[ii] = ntt[ii]
 
         return clr, ntt, srcs

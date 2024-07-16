@@ -15,10 +15,10 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Set up Python 3.9
+    - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.11"
 
     - name: Install black
       run: pip install black
@@ -30,7 +30,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: [3.7, 3.9]
+        python-version: [3.9, 3.11]
 
     runs-on: ubuntu-latest
     steps:
@@ -38,6 +38,7 @@ jobs:
 
     - name: Install apt dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
     - name: Set up Python ${{ matrix.python-version }}
@@ -52,7 +53,7 @@ jobs:
         pip install numpy
         pip install cython
         pip install h5py
-        pip install --use-deprecated=legacy-resolver -e .
+        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
         pip install pytest
 
     - name: Run tests
@@ -67,12 +68,13 @@ jobs:
 
     - name: Install apt dependencies
       run: |
+        sudo apt-get update
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
-    - name: Set up Python 3.9
+    - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: "3.11"
 
     - name: Install pip dependencies
       run: |
@@ -81,7 +83,7 @@ jobs:
         pip install numpy
         pip install cython
         pip install h5py
-        pip install --use-deprecated=legacy-resolver -e .
+        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
         pip install -r doc/requirements.txt
 
     - name: Build sphinx docs
