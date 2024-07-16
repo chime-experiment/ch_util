@@ -257,7 +257,7 @@ class HolographyObservation(base_model):
         none
         """
 
-        from ch_util.ephemeris import sphdist
+        from caput.interferometry import sphdist
         from skyfield.positionlib import Angle
 
         ts = ephemeris.skyfield_wrapper.timescale

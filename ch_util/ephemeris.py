@@ -96,7 +96,6 @@ Miscellaneous Utilities
 
 - :py:meth:`galt_pointing_model_ha`
 - :py:meth:`galt_pointing_model_dec`
-- :py:meth:`sphdist`
 """
 
 from datetime import datetime
@@ -108,6 +107,7 @@ import skyfield.api
 
 import numpy as np
 
+from caput.interferometry import sphdist
 from caput.time import (
     unix_to_datetime,
     datetime_to_unix,
@@ -353,42 +353,6 @@ def utc_lst_to_mjd(datestring, lst, obs=chime):
         ).tt
         - 2400000.5
     )
-
-
-def sphdist(long1, lat1, long2, lat2):
-    """
-    Return the angular distance between two coordinates.
-
-    Parameters
-    ----------
-
-    long1, lat1 : Skyfield Angle objects
-        longitude and latitude of the first coordinate. Each should be the
-        same length; can be one or longer.
-
-    long2, lat2 : Skyfield Angle objects
-        longitude and latitude of the second coordinate. Each should be the
-        same length. If long1, lat1 have length longer than 1, long2 and
-        lat2 should either have the same length as coordinate 1 or length 1.
-
-    Returns
-    -------
-    dist : Skyfield Angle object
-        angle between the two coordinates
-    """
-    from skyfield.positionlib import Angle
-
-    dsinb = np.sin((lat1.radians - lat2.radians) / 2.0) ** 2
-
-    dsinl = (
-        np.cos(lat1.radians)
-        * np.cos(lat2.radians)
-        * (np.sin((long1.radians - long2.radians) / 2.0)) ** 2
-    )
-
-    dist = np.arcsin(np.sqrt(dsinl + dsinb))
-
-    return Angle(radians=2 * dist)
 
 
 def solar_transit(start_time, end_time=None, obs=chime):
@@ -715,11 +679,9 @@ def hadec_to_bmxy(ha_cirs, dec_cirs):
         https://chime-frb-open-data.github.io/beam-model/#coordinate-conventions
     """
 
-    from caput.interferometry import sph_to_ground
+    from caput.interferometry import rotate_ypr, sph_to_ground
 
     from ch_util.tools import _CHIME_ROT
-
-    from drift.telescope.cylbeam import rotate_ypr
 
     # Convert CIRS coordinates to CHIME "ground fixed" XYZ coordinates,
     # which constitute a unit vector pointing towards the point of interest,
@@ -773,11 +735,9 @@ def bmxy_to_hadec(bmx, bmy):
     """
     import warnings
 
-    from caput.interferometry import ground_to_sph
+    from caput.interferometry import rotate_ypr, ground_to_sph
 
     from ch_util.tools import _CHIME_ROT
-
-    from drift.telescope.cylbeam import rotate_ypr
 
     # Convert CHIME/FRB beam model XY position to spherical polar coordinates
     # with the pole towards almost-North and using CHIME's meridian as the prime
