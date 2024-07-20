@@ -820,90 +820,18 @@ def peak_RA(body, date=None, deg=False):
     return ra
 
 
-def get_doppler_shifted_freq(
-    source: Union[skyfield.starlib.Star, str],
-    date: Union[float, list],
-    freq_rest: Union[float, list] = None,
-    obs: Observer = chime,
-) -> np.array:
-    """Calculate Doppler shifted frequency of spectral feature with rest
-    frequency `freq_rest`, seen towards source `source` at time `date`, due to
-    Earth's motion and rotation, following the relativistic Doppler effect.
+# For backwards compatibility
+def get_doppler_shifted_freq(*args, **kwargs):
+    """Deprecated.  Use `ch_util.hfbcat.get_doppler_shifted_freq`."""
+    from . import hfbcat
 
-    Parameters
-    ----------
-    source
-        Position(s) on the sky. If the input is a `str`, attempt to resolve this
-        from `ch_util.hfbcat.HFBCatalog`.
-    date
-        Unix time(s) for which to calculate Doppler shift.
-    freq_rest
-        Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency
-        of absorption feature from `ch_util.hfbcat.HFBCatalog.freq_abs`.
-    obs
-        An Observer instance to use. If not supplied use `chime`. For many
-        calculations changing from this default will make little difference.
+    import warnings
 
-    Returns
-    -------
-    freq_obs
-        Doppler shifted frequencies in MHz. Array where rows correspond to the
-        different input rest frequencies and columns correspond either to input
-        times or to input sky positions (whichever contains multiple entries).
+    warnings.warn(
+        "Use `ch_util.hfbcat.get_doppler_shifted_freq` instead.", DeprecationWarning
+    )
 
-    Notes
-    -----
-    Only one of `source` and `date` can contain multiple entries.
-
-    Example
-    -------
-    To get the Doppler shifted frequencies of a feature with a rest frequency
-    of 600 MHz for two positions on the sky at a single point in time (Unix
-    time 1717809534 = 2024-06-07T21:18:54+00:00), run:
-
-    >>> from skyfield.starlib import Star
-    >>> from skyfield.positionlib import Angle
-    >>> from ch_util.tools import get_doppler_shifted_freq
-    >>> coord = Star(ra=Angle(degrees=[100, 110]), dec=Angle(degrees=[45, 50]))
-    >>> get_doppler_shifted_freq(coord, 1717809534, 600)
-    """
-
-    from scipy.constants import c as speed_of_light
-
-    from ch_util.fluxcat import _ensure_list
-    from ch_util.hfbcat import HFBCatalog
-
-    # For source string inputs, get skyfield Star object from HFB catalog
-    if isinstance(source, str):
-        try:
-            source = HFBCatalog[source].skyfield
-        except KeyError:
-            raise ValueError(f"Could not find source {source} in HFB catalog.")
-
-    # Get rest frequency from HFB catalog
-    if freq_rest is None:
-        if not source.names or source.names not in HFBCatalog:
-            raise ValueError(
-                "Rest frequencies must be supplied unless source can be found "
-                "in ch_util.hfbcat.HFBCatalog. "
-                f"Got source {source} with names {source.names}"
-            )
-        else:
-            freq_rest = HFBCatalog[source.names].freq_abs
-
-    # Prepare rest frequencies for broadcasting
-    freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
-
-    # Get rate at which the distance between the observer and source changes
-    # (positive for observer and source moving appart)
-    range_rate = get_range_rate(source, date, obs)
-
-    # Compute observed frequencies from rest frequencies
-    # using relativistic Doppler effect
-    beta = range_rate / speed_of_light
-    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
-
-    return freq_obs
+    return hfbcat.get_doppler_shifted_freq(*args, **kwargs)
 
 
 def get_range_rate(
