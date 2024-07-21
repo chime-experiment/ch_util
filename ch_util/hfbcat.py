@@ -8,7 +8,8 @@ import numpy as np
 from typing import TYPE_CHECKING, Union
 
 from . import ephemeris
-from .fluxcat import FluxCatalog, _ensure_list
+from .fluxcat import FluxCatalog
+from .tools import ensure_list
 
 if TYPE_CHECKING:
     import skyfield.starlib.Star
@@ -155,7 +156,7 @@ def get_doppler_shifted_freq(
             freq_rest = HFBCatalog[source.names].freq_abs
 
     # Prepare rest frequencies for broadcasting
-    freq_rest = np.asarray(_ensure_list(freq_rest))[:, np.newaxis]
+    freq_rest = np.asarray(ensure_list(freq_rest))[:, np.newaxis]
 
     # Get rate at which the distance between the observer and source changes
     # (positive for observer and source moving appart)

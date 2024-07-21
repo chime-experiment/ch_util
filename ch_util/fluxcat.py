@@ -23,6 +23,7 @@ import time
 
 from caput import misc
 from . import ephemeris
+from .tools import ensure_list
 
 # Define nominal frequency. Sources in catalog are ordered according to
 # their predicted flux density at this frequency. Also acts as default
@@ -398,7 +399,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             self.dec = dec
 
             self.alternate_names = [
-                format_source_name(aname) for aname in _ensure_list(alternate_names)
+                format_source_name(aname) for aname in ensure_list(alternate_names)
             ]
 
             # Measurements:
@@ -485,15 +486,15 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Ensure that all of the inputs are lists
         # of the same length as flux
-        flux = _ensure_list(flux)
+        flux = ensure_list(flux)
         nmeas = len(flux)
 
-        freq = _ensure_list(freq, nmeas)
-        eflux = _ensure_list(eflux, nmeas)
-        flag = _ensure_list(flag, nmeas)
-        catalog = _ensure_list(catalog, nmeas)
-        epoch = _ensure_list(epoch, nmeas)
-        citation = _ensure_list(citation, nmeas)
+        freq = ensure_list(freq, nmeas)
+        eflux = ensure_list(eflux, nmeas)
+        flag = ensure_list(flag, nmeas)
+        catalog = ensure_list(catalog, nmeas)
+        epoch = ensure_list(epoch, nmeas)
+        citation = ensure_list(citation, nmeas)
 
         # Store as list
         meas = [
@@ -1423,20 +1424,6 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
         # Space
         print("")
-
-
-def _ensure_list(obj, num=None):
-    if hasattr(obj, "__iter__") and not isinstance(obj, str):
-        nnum = len(obj)
-        if (num is not None) and (nnum != num):
-            raise ValueError("Input list has wrong size.")
-    else:
-        if num is not None:
-            obj = [obj] * num
-        else:
-            obj = [obj]
-
-    return obj
 
 
 # Load the default collections
