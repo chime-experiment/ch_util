@@ -10,14 +10,10 @@ import numpy as np
 import h5py
 from bitshuffle import h5
 
-tmp = h5  # To appease linters who complain about unused imports.
+from caput import memh5, tod
+import caput.time as ctime
 
-# If the `caput` package is available, get `memh5` from there.  Otherwise, use
-# the version of memh5 that ships with `ch_util`, eliminating the dependency.
-try:
-    from caput import memh5, tod
-except ImportError:
-    raise ImportError("Could not import memh5 or tod. Have you installed caput?")
+tmp = h5  # To appease linters who complain about unused imports.
 
 
 ni_msg = "Ask Kiyo to implement this."
@@ -326,12 +322,7 @@ class BaseData(tod.TOData):
 
     @staticmethod
     def convert_time(time):
-        try:
-            from .ephemeris import ensure_unix
-        except ValueError:
-            from .ephemeris import ensure_unix
-
-        return ensure_unix(time)
+        return ctime.ensure_unix(time)
 
 
 class CorrData(BaseData):
@@ -1222,8 +1213,6 @@ class HKPData(memh5.MemDiskGroup):
         -------
         data : HKPData
         """
-
-        from caput import time as ctime
 
         metrics = metrics if metrics is not None else datasets
 

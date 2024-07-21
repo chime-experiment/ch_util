@@ -22,6 +22,8 @@ import datetime
 import time
 
 from caput import misc
+import caput.time as ctime
+
 from . import ephemeris
 from .tools import ensure_list
 
@@ -843,7 +845,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         """Skyfield star representation :class:`skyfield.starlib.Star`
         for the source.
         """
-        return ephemeris.skyfield_star_from_ra_dec(self.ra, self.dec, self.name)
+        return ctime.skyfield_star_from_ra_dec(self.ra, self.dec, self.name)
 
     @property
     def freq(self):

@@ -58,8 +58,9 @@ import gc
 import scipy.interpolate
 import scipy.optimize
 
-from . import tools, andata, ephemeris, rfi
+from . import tools, andata, rfi
 from caput import memh5, mpiarray, tod
+import caput.time as ctime
 
 FREQ_TO_OMEGA = 2.0 * np.pi * 1e-6
 FREQ_PIVOT = 600.0
@@ -579,8 +580,8 @@ class TimingCorrection(andata.BaseData):
             nearest to tref.  The get_tau method is use to perform the interpolation, and
             kwargs for that method will be passed along.
         """
-        tref = ephemeris.ensure_unix(tref)
-        tref_string = ephemeris.unix_to_datetime(tref).strftime("%Y-%m-%d %H:%M:%S %Z")
+        tref = ctime.ensure_unix(tref)
+        tref_string = ctime.unix_to_datetime(tref).strftime("%Y-%m-%d %H:%M:%S %Z")
         logger.info("Referencing timing correction with respect to %s." % tref_string)
         if window > 0.0:
             iref = np.flatnonzero(
@@ -664,7 +665,7 @@ class TimingCorrection(andata.BaseData):
             times nearest to tref. The get_tau method is use to perform the
             interpolation, and kwargs for that method will be passed along.
         """
-        tref = np.atleast_1d(ephemeris.ensure_unix(tref))
+        tref = np.atleast_1d(ctime.ensure_unix(tref))
 
         if not interpolate:
             kwargs["interp"] = "nearest"
@@ -673,7 +674,7 @@ class TimingCorrection(andata.BaseData):
         alpha_ref, _ = self.get_alpha(tref, **kwargs)
 
         if tinit is not None:
-            tinit = ephemeris.ensure_unix(tinit)
+            tinit = ctime.ensure_unix(tinit)
             tau_init, _ = self.get_tau(tinit, ignore_amp=True, **kwargs)
             alpha_init, _ = self.get_alpha(tinit, **kwargs)
 
@@ -702,11 +703,11 @@ class TimingCorrection(andata.BaseData):
         tau_ref = np.concatenate((tau_init, tau_ref), axis=-1)
         alpha_ref = np.concatenate((alpha_init, alpha_ref), axis=-1)
 
-        tstart = np.atleast_1d(ephemeris.ensure_unix(tstart))
+        tstart = np.atleast_1d(ctime.ensure_unix(tstart))
         istart = np.digitize(self.time, tstart)
 
         if tend is not None:
-            tend = np.atleast_1d(ephemeris.ensure_unix(tend))
+            tend = np.atleast_1d(ctime.ensure_unix(tend))
             iend = np.digitize(self.time, tend)
         else:
             tend = tstart
@@ -1783,12 +1784,12 @@ def load_timing_correction(
         raise RuntimeError("No timing acquisitions found on node %s." % node)
 
     # Determine the start time of the requested acquistion and the available timing acquisitions
-    acq_start = ephemeris.datetime_to_unix(ephemeris.timestr_to_datetime(acq_date))
+    acq_start = ctime.datetime_to_unix(ctime.timestr_to_datetime(acq_date))
 
     tacq_start = np.array(
-        [ephemeris.timestr_to_datetime(os.path.basename(tt)) for tt in tdirs]
+        [ctime.timestr_to_datetime(os.path.basename(tt)) for tt in tdirs]
     )
-    tacq_start = ephemeris.datetime_to_unix(tacq_start)
+    tacq_start = ctime.datetime_to_unix(tacq_start)
 
     # Find the closest timing acquisition to the requested acquisition
     iclose = np.argmin(np.abs(acq_start - tacq_start))

@@ -138,6 +138,8 @@ import re
 
 import chimedb.core
 
+import caput.time as ctime
+
 _property = property  # Do this since there is a class "property" in _db_tables.
 from ._db_tables import (
     EVENT_AT,
@@ -1465,10 +1467,8 @@ def global_flags_between(start_time, end_time, severity=None):
 
     """
 
-    from . import ephemeris
-
-    start_time = ephemeris.ensure_unix(start_time)
-    end_time = ephemeris.ensure_unix(end_time)
+    start_time = ctime.ensure_unix(start_time)
+    end_time = ctime.ensure_unix(end_time)
 
     query = global_flag.select()
     if severity:
@@ -1481,15 +1481,14 @@ def global_flags_between(start_time, end_time, severity=None):
 
     # Add constraint for the start time
     query = query.join(ststamp, on=event.start).where(
-        ststamp.time < ephemeris.unix_to_datetime(end_time)
+        ststamp.time < ctime.unix_to_datetime(end_time)
     )
     # Constrain the end time (being careful to deal with open events properly)
     query = (
         query.switch(event)
         .join(etstamp, on=event.end, join_type=pw.JOIN.LEFT_OUTER)
         .where(
-            (etstamp.time > ephemeris.unix_to_datetime(start_time))
-            | event.end.is_null()
+            (etstamp.time > ctime.unix_to_datetime(start_time)) | event.end.is_null()
         )
     )
 

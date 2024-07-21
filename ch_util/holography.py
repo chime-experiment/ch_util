@@ -19,6 +19,8 @@ import warnings
 import zipfile
 import numpy as np
 import peewee as pw
+
+import caput.time as ctime
 from chimedb.core.orm import base_model
 
 from ch_util import ephemeris
@@ -109,9 +111,9 @@ class HolographyObservation(base_model):
 
         start_time = ephemeris.lsa_to_unix(
             start_lst * 360 / 24,
-            ephemeris.datetime_to_unix(ephemeris.parse_date(start_day)),
+            ctime.datetime_to_unix(ephemeris.parse_date(start_day)),
         )
-        duration_unix = duration_lst * (3600.0) * ephemeris.SIDEREAL_S
+        duration_unix = duration_lst * (3600.0) * ctime.SIDEREAL_S
 
         finish_time = start_time + duration_unix
 
@@ -186,12 +188,12 @@ class HolographyObservation(base_model):
                 Commanded duration of the observation in sidereal hours
             output_params['finish_time'] : skyfield time object
                 Calculated UTC time at the end of the observation
-                Calculated as start_time + duration * ephemeris.SIDEREAL_S
+                Calculated as start_time + duration * caput.time.SIDEREAL_S
 
         """
         import re
 
-        ts = ephemeris.skyfield_wrapper.timescale
+        ts = ctime.skyfield_wrapper.timescale
 
         output_params = {}
 
@@ -221,9 +223,9 @@ class HolographyObservation(base_model):
                 print("Missing", srcnm)
                 output_params["src"] = srcnm
 
-            output_params["finish_time"] = ephemeris.unix_to_skyfield_time(
-                ephemeris.ensure_unix(output_params["start_time"])
-                + output_params["DURATION"] * 3600.0 * ephemeris.SIDEREAL_S
+            output_params["finish_time"] = ctime.unix_to_skyfield_time(
+                ctime.ensure_unix(output_params["start_time"])
+                + output_params["DURATION"] * 3600.0 * ctime.SIDEREAL_S
             )
 
             output_params["quality_flag"] = QUALITY_GOOD
@@ -260,7 +262,7 @@ class HolographyObservation(base_model):
         from caput.interferometry import sphdist
         from skyfield.positionlib import Angle
 
-        ts = ephemeris.skyfield_wrapper.timescale
+        ts = ctime.skyfield_wrapper.timescale
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %z"
 
         pr_list, al_list = cls.parse_ant_logs(logs, return_post_report_params=True)
@@ -407,9 +409,9 @@ class HolographyObservation(base_model):
 
             If no duplicate is found: None
             """
-            ts = ephemeris.skyfield_wrapper.timescale
+            ts = ctime.skyfield_wrapper.timescale
 
-            unixt = ephemeris.ensure_unix(t)
+            unixt = ctime.ensure_unix(t)
 
             dup_found = False
 
@@ -420,7 +422,7 @@ class HolographyObservation(base_model):
                 if len(existing_db_entry) > 1:
                     print("Multiple entries found.")
                 for entry in existing_db_entry:
-                    tt = ts.utc(ephemeris.unix_to_datetime(entry.start_time))
+                    tt = ts.utc(ctime.unix_to_datetime(entry.start_time))
                     # LST = GST + east longitude
                     ttlst = np.mod(tt.gmst + DRAO_lon, 24.0)
 
@@ -445,7 +447,7 @@ class HolographyObservation(base_model):
                         # check possible.
 
                     if dup_found:
-                        tf = ts.utc(ephemeris.unix_to_datetime(entry.finish_time))
+                        tf = ts.utc(ctime.unix_to_datetime(entry.finish_time))
                         print(
                             "Tried to add  :  {} {}; LST={:.3f}".format(
                                 src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
@@ -488,7 +490,7 @@ class HolographyObservation(base_model):
                     print(
                         "Not replacing duplicate {} observation {}".format(
                             entry.source.name,
-                            ephemeris.unix_to_datetime(entry.start_time).strftime(
+                            ctime.unix_to_datetime(entry.start_time).strftime(
                                 DATE_FMT_STR
                             ),
                         )
@@ -510,8 +512,8 @@ class HolographyObservation(base_model):
             else:
                 cls.create(
                     source=dict["src"],
-                    start_time=ephemeris.ensure_unix(dict["start_time"]),
-                    finish_time=ephemeris.ensure_unix(dict["finish_time"]),
+                    start_time=ctime.ensure_unix(dict["start_time"]),
+                    finish_time=ctime.ensure_unix(dict["finish_time"]),
                     quality_flag=dict["quality_flag"],
                     notes=notes,
                 )
@@ -560,7 +562,6 @@ class HolographyObservation(base_model):
         """
 
         from skyfield.positionlib import Angle
-        from caput import time as ctime
 
         DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0 / 360.0
 
@@ -585,11 +586,9 @@ class HolographyObservation(base_model):
             output : float
                 CHIME sidereal day
             """
-            csd_ref = int(
-                ephemeris.csd(ephemeris.datetime_to_unix(t_ref.utc_datetime()))
-            )
+            csd_ref = int(ephemeris.csd(ctime.datetime_to_unix(t_ref.utc_datetime())))
             csd = sid - sid_ref + csd_ref
-            return csd + lst / ephemeris.SIDEREAL_S / 24.0
+            return csd + lst / ctime.SIDEREAL_S / 24.0
 
         ant_data_list = []
         post_report_list = []
@@ -702,13 +701,13 @@ class HolographyObservation(base_model):
                             post_report_params["start_time"],
                         )
 
-                    ant_data["t"] = ephemeris.unix_to_skyfield_time(
+                    ant_data["t"] = ctime.unix_to_skyfield_time(
                         ephemeris.csd_to_unix(ant_data["csd"])
                     )
 
                     # Correct RA from equinox to CIRS coords (both in radians)
                     era = np.radians(
-                        ctime.unix_to_era(ephemeris.ensure_unix(ant_data["t"]))
+                        ctime.unix_to_era(ctime.ensure_unix(ant_data["t"]))
                     )
                     gast = ant_data["t"].gast * 2 * np.pi / 24.0
 

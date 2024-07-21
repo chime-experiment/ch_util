@@ -2682,7 +2682,7 @@ def get_reference_times_dataset_id(
         logger = logging.getLogger(__name__)
 
     # Dataset IDs before this date are untrustworthy
-    ds_start = ephemeris.datetime_to_unix(datetime(2020, 11, 1))
+    ds_start = ctime.datetime_to_unix(datetime(2020, 11, 1))
     if (times < ds_start).any():
         raise ValueError(
             "Dataset IDs before 2020/11/01 are corrupt, so this method won't work. "

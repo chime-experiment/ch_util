@@ -2255,8 +2255,9 @@ def fringestop_time(
         The frequencies in the array (in MHz).
     feeds : list of CorrInputs
         The feeds in the timestream.
-    src : ephem.FixedBody
-        A PyEphem object representing the source to fringestop.
+    src : skyfield source
+        skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+        skyfield.jpllib.ChebyshevPosition body representing the source.
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
@@ -2342,8 +2343,9 @@ def decorrelation(
         The UNIX time of each sample, or (if csd=True), the CSD of each sample.
     feeds : list of CorrInputs
         The feeds in the timestream.
-    src : ephem.FixedBody
-        A PyEphem object representing the source to fringestop.
+    src : skyfield source
+        skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+        skyfield.jpllib.ChebyshevPosition body representing the source.
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
@@ -2420,8 +2422,9 @@ def delay(
         The UNIX time of each sample, or (if csd=True), the CSD of each sample.
     feeds : list of CorrInputs
         The feeds in the timestream.
-    src : ephem.FixedBody
-        A PyEphem object representing the source to fringestop.
+    src : skyfield source
+        skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+        skyfield.jpllib.ChebyshevPosition body representing the source.
     wterm: bool, optional
         Include elevation information in the calculation.
     bterm: bool, optional
