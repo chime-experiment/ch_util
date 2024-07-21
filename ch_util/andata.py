@@ -2453,6 +2453,18 @@ def _prod_sel_from_stack_sel(stack_sel, stack_map, stack_rmap):
 
 
 def versiontuple(v):
+    """Create a version tuple from a version string.
+
+    Parameters
+    ----------
+    v: str
+        A version string
+
+    Returns
+    -------
+    versiontuple: tuple
+        A tuple of `int` values created by splitting the string on dots.
+    """
     return tuple(map(int, (v.split("."))))
 
 
@@ -2900,6 +2912,36 @@ def _get_index_map_from_acq1(acq_files, time_sel, prod_sel, freq_sel):
 
 
 def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_group):
+    """Create a `CorrData` object from a 1.0.0 archive version acq.
+
+    Parameters
+    ----------
+    acq_files : filename, `h5py.File` or list there-of or filename pattern
+        Files to convert from acquisition format to analysis format.
+        Filename patterns with wild cards (e.g. "foo*.h5") are supported.
+    start : int
+        What frame to start at in the full set of files.
+    stop : int
+        What frame to stop at in the full set of files.
+    prod_sel : 1D data selection
+        Valid numpy index for a 1D array, specifying what data to read
+        along the correlation product axis.
+    freq_sel : 1D data selection
+        Valid numpy index for a 1D array, specifying what data to read
+        along the frequency axis.
+    datasets : list of strings
+        Names of datasets to include from acquisition files. Default is to
+        include all datasets found in the acquisition files.
+    out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        Underlying hdf5 like container that will store the data for the
+        BaseData instance.
+
+    Returns
+    -------
+    corrdata:
+        A `CorrData` object with the requested data.
+    """
+
     # First open all the files and collect necessary data for all of them.
     dtypes = _check_files_acq1(acq_files)
     # Figure how much of the total data to read.
@@ -2976,6 +3018,38 @@ def andata_from_archive2(
     datasets,
     out_group,
 ):
+    """Create an Andata object from a version 2.0.0 archive format acq.
+
+    Parameters
+    ----------
+    cls:
+        class of object to create
+    acq_files : filename, `h5py.File` or list there-of or filename pattern
+        Files to convert from acquisition format to analysis format.
+        Filename patterns with wild cards (e.g. "foo*.h5") are supported.
+    start : int
+        What frame to start at in the full set of files.
+    stop : int
+        What frame to stop at in the full set of files.
+    prod_sel : 1D data selection
+        Valid numpy index for a 1D array, specifying what data to read
+        along the correlation product axis.
+    freq_sel : 1D data selection
+        Valid numpy index for a 1D array, specifying what data to read
+        along the frequency axis.
+    datasets : list of strings
+        Names of datasets to include from acquisition files. Default is to
+        include all datasets found in the acquisition files.
+    out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        Underlying hdf5 like container that will store the data for the
+        BaseData instance.
+
+    Returns:
+    -------
+    andata : `cls` instance
+        The andata object for the requested data
+    """
+
     # XXX For short term force to CorrData class.  Will be fixed once archive
     # files carry 'acquisition_type' attribute.
     # andata_objs = [ cls(d) for d in acq_files ]

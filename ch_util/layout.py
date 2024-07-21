@@ -53,8 +53,7 @@ sever connexions                              :func:`sever_connexion<ch_util._db
 set component properties                      :meth:`component.set_property<ch_util._db_tables.component.set_property>`
                                               :func:`set_property<ch_util._db_tables.set_property>`
 get component properties                      :meth:`component.get_property<ch_util._db_tables.component.get_property>`
-make/sever many connexions and set many       :func:`enter_ltf`
-component properties at the same time
+perform bulk updates                          :func:`enter_ltf`
 add component history notes                   :meth:`component.add_history<ch_util._db_tables.component.add_history>`
 add link to component documentation           :meth:`component.add_doc<ch_util._db_tables.component.add_doc>`
 create a global flag                          :meth:`global_flag.start<ch_util._db_tables.global_flag.start>`
