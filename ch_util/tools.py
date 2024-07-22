@@ -34,6 +34,7 @@ such as :func:`get_feed_positions` operate on this list.
 - :py:meth:`get_holographic_index`
 - :py:meth:`change_pathfinder_location`
 - :py:meth:`change_chime_location`
+- :py:meth:`beam_index2number`
 
 This can determine if we are connected to any of the following:
 
@@ -118,7 +119,6 @@ given a list of the feeds in the data. For more advanced usage
 Miscellaneous
 =============
 
-- :py:meth:`invert_no_zero`
 - :py:meth:`ensure_list`
 """
 
@@ -1091,8 +1091,28 @@ def hk_to_sensor(graph, inp):
     return None
 
 
-# Parse a serial number into crate, slot, and sma number
 def parse_chime_serial(sn):
+    """Parse a serial number into crate, slot, and SMA number.
+
+    Parameters
+    ----------
+    sn: str
+        Serial number to parse
+
+    Returns
+    -------
+    crate: int
+        Crate number
+    slot: int
+        Slot number
+    sma: int
+        SMA number
+
+    Raises
+    ------
+    RuntimeError:
+        `sn` did not have the correct format.
+    """
     mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1108,6 +1128,27 @@ def parse_chime_serial(sn):
 
 
 def parse_pathfinder_serial(sn):
+    """Parse a pathfinder serial number into crate, slot, and SMA number.
+
+    Parameters
+    ----------
+    sn: str
+        Serial number to parse
+
+    Returns
+    -------
+    crate: int
+        Crate number
+    slot: int
+        Slot number
+    sma: int
+        SMA number
+
+    Raises
+    ------
+    RuntimeError:
+        `sn` did not have the correct format.
+    """
     mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
@@ -1123,6 +1164,25 @@ def parse_pathfinder_serial(sn):
 
 
 def parse_old_serial(sn):
+    """Parse an old 8/16-channel serial number into slot, and SMA number.
+
+    Parameters
+    ----------
+    sn: str
+        Serial number to parse
+
+    Returns
+    -------
+    slot: int
+        Slot number
+    sma: int
+        SMA number
+
+    Raises
+    ------
+    RuntimeError:
+        `sn` did not have the correct format.
+    """
     mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
@@ -1545,6 +1605,7 @@ def get_feed_positions(feeds, get_zpos=False):
 
 
 def fake_tone_database():
+    """A fake correlator input database for GBO/TONE."""
     positions_and_polarizations = [
         ("S", [15.08, -1.61]),
         ("E", [15.08, -1.61]),
@@ -2506,6 +2567,7 @@ def beam_index2number(beam_index):
 
 
 def invert_no_zero(*args, **kwargs):
+    """Deprecated - use 'caput.tools.invert_no_zero'"""
     from caput import tools
     import warnings
 

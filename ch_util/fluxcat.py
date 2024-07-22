@@ -1307,6 +1307,19 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
 
 def get_epoch(date):
+    """Return the epoch for a date.
+
+    Parameters
+    ----------
+    date : datetime.datetime
+        Date to calculate epoch
+
+    Returns
+    -------
+    epoch : float
+        The fractional-year epoch
+    """
+
     def sinceEpoch(date):  # returns seconds since epoch
         return time.mktime(date.timetuple())
 
@@ -1322,6 +1335,22 @@ def get_epoch(date):
 
 
 def varname(name):
+    """Create a python variable name from `name`.
+
+    The variable name replaces spaces in `name` with
+    underscores and adds a leading underscore if `name`
+    starts with a digit.
+
+    Parameters
+    ----------
+    name : str
+        The name to create a variable name for
+
+    Returns
+    -------
+    varname : str
+        The python variable name.
+    """
     varname = name.replace(" ", "_")
 
     if varname[0].isdigit():
@@ -1331,6 +1360,17 @@ def varname(name):
 
 
 def format_source_name(input_name):
+    """Standardise the name of a source.
+
+    Parameters
+    ----------
+    input_name: str
+        The name to format
+
+    Returns
+    formatted_name: str
+        The name after formatting.
+    """
     # Address some common naming conventions.
     if input_name.startswith("NAME "):
         # SIMBAD prefixes common source names with 'NAME '.

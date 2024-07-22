@@ -95,14 +95,14 @@ master_doc = "index"
 
 # General information about the project.
 project = "ch_util"
-copyright = "2013, CHIME Collaboration"
+copyright = "2013–2024, CHIME Collaboration"
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = ch_util.__version__
+version = ".".join(ch_util.__version__.split(".")[:3])
 # The full version, including alpha/beta/rc tags.
 release = ch_util.__version__
 

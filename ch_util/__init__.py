@@ -7,16 +7,14 @@ Submodules
 .. autosummary::
     :toctree: _autosummary
 
-    _db_tables
     andata
     cal_utils
     chan_monitor
-    connectdb
-    data_index
     data_quality
     ephemeris
     finder
     fluxcat
+    hfbcat
     holography
     layout
     ni_utils
