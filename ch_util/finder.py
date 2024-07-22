@@ -46,6 +46,8 @@ import socket
 import peewee as pw
 import re
 
+import caput.time as ctime
+
 import chimedb.core as db
 import chimedb.data_index as di
 from . import layout, ephemeris
@@ -664,8 +666,8 @@ class Finder(object):
             start_time = 0
         if end_time is None:
             end_time = time.time()
-        start_time = ephemeris.ensure_unix(start_time)
-        end_time = ephemeris.ensure_unix(end_time)
+        start_time = ctime.ensure_unix(start_time)
+        end_time = ctime.ensure_unix(end_time)
         old_start_time, old_end_time = self.time_range
         start_time = max(start_time, old_start_time)
         end_time = min(end_time, old_end_time)
@@ -733,8 +735,8 @@ class Finder(object):
             start_time = 0
         if end_time is None:
             end_time = time.time()
-        start_time = ephemeris.ensure_unix(start_time)
-        end_time = ephemeris.ensure_unix(end_time)
+        start_time = ctime.ensure_unix(start_time)
+        end_time = ctime.ensure_unix(end_time)
         range_start, range_end = self.time_range
         start_time = max(start_time, range_start)
         end_time = min(end_time, range_end)
@@ -915,11 +917,9 @@ class Finder(object):
         Total 242094.394565 seconds of data.
         """
 
-        from . import ephemeris
-
         delta_RA = (end_RA - start_RA) % 360
         mid_RA = (start_RA + delta_RA / 2.0) % 360
-        time_delta = delta_RA * 4 * 60.0 * ephemeris.SIDEREAL_S
+        time_delta = delta_RA * 4 * 60.0 * ctime.SIDEREAL_S
         self.include_transits(mid_RA, time_delta=time_delta)
 
     def exclude_RA_interval(self, start_RA, end_RA):
@@ -938,11 +938,10 @@ class Finder(object):
         Look under include_RA_interval for very similar example.
 
         """
-        from . import ephemeris
 
         delta_RA = (end_RA - start_RA) % 360
         mid_RA = (start_RA + delta_RA / 2.0) % 360
-        time_delta = delta_RA * 4 * 60.0 * ephemeris.SIDEREAL_S
+        time_delta = delta_RA * 4 * 60.0 * ctime.SIDEREAL_S
         self.exclude_transits(mid_RA, time_delta=time_delta)
 
     def include_transits(self, body, time_delta=None):
@@ -996,7 +995,7 @@ class Finder(object):
 
         Examples
         --------
-        >>> from ch_util import (finder, ephemeris)
+        >>> from ch_util import finder
         >>> from datetime import datetime
         >>> f = finder.Finder()
         >>> f.only_corr()
@@ -1204,8 +1203,8 @@ class Finder(object):
                     start, stop = layout.get_global_flag_times(f.id)
                     if stop is None:
                         stop = time.time()
-                    start = ephemeris.ensure_unix(start)
-                    stop = ephemeris.ensure_unix(stop)
+                    start = ctime.ensure_unix(start)
+                    stop = ctime.ensure_unix(stop)
                     flag_times.append((start, stop))
                 overlap = _check_intervals_overlap(time_intervals, flag_times)
             if mode is GF_WARN:
@@ -1246,8 +1245,8 @@ class Finder(object):
                     start, stop = f.start_time, f.finish_time
                     if stop is None:
                         stop = time.time()
-                    start = ephemeris.ensure_unix(start)
-                    stop = ephemeris.ensure_unix(stop)
+                    start = ctime.ensure_unix(start)
+                    stop = ctime.ensure_unix(stop)
                     flag_times.append((start, stop))
                 overlap = _check_intervals_overlap(time_intervals, flag_times)
                 if overlap:
@@ -1326,15 +1325,13 @@ class Finder(object):
 
         """
 
-        from . import ephemeris
-
         print("acquisition | name | start | length (hrs) | N files")
         row_proto = "%4d  |  %-36s  |  %s  |  %7.2f  |  %4d"
         for ii, acq in enumerate(self.acqs):
             start = acq.start_time
             finish = acq.finish_time
             length = (finish - start) / 3600.0
-            start = ephemeris.unix_to_datetime(start)
+            start = ctime.unix_to_datetime(start)
             start = start.strftime("%Y-%m-%d %H:%M")
             name = acq.name
             n_files = acq.n_timed_files

@@ -16,6 +16,8 @@ Auxiliary functions are still lacking documentation.
 
 import numpy as np
 
+import caput.time as ctime
+
 import ch_util.ephemeris as ch_eph
 from ch_util import andata
 from ch_util import tools
@@ -364,7 +366,7 @@ def _cut_non_chime(data, visi, chan_array, inputs=None):
     input_map = data.input
     tmstp = data.index_map["time"]["ctime"]  # time stamp
     # Datetime halfway through data:
-    half_time = ch_eph.unix_to_datetime(tmstp[int(len(tmstp) // 2)])
+    half_time = ctime.unix_to_datetime(tmstp[int(len(tmstp) // 2)])
     # Get information on correlator inputs, if not already supplied
     if inputs is None:
         inputs = tools.get_correlator_inputs(half_time)
@@ -899,7 +901,7 @@ def _create_plot(
 
     # For title, use start time stamp:
     title = "Good channels result for {0}".format(
-        ch_eph.unix_to_datetime(tmstp1[0]).date()
+        ctime.unix_to_datetime(tmstp1[0]).date()
     )
 
     # I need to know the slot for each channel:
@@ -985,14 +987,14 @@ def _create_plot(
                 if time_unit == "days":
                     plt.xlabel(
                         "Time (days since {0} UTC)".format(
-                            ch_eph.unix_to_datetime(tmstp1[0])
+                            ctime.unix_to_datetime(tmstp1[0])
                         ),
                         fontsize=10,
                     )
                 else:
                     plt.xlabel(
                         "Time (hours since {0} UTC)".format(
-                            ch_eph.unix_to_datetime(tmstp1[0])
+                            ctime.unix_to_datetime(tmstp1[0])
                         ),
                         fontsize=10,
                     )

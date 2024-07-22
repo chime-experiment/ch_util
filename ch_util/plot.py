@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 import warnings
 import datetime
 import scipy.signal as sig
+
+import caput.time as ctime
+
 from . import andata
 from . import ephemeris
 
@@ -406,8 +409,8 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
     n_bins = int(n_bins)
     start_time = datetime.datetime(date[0], date[1], date[2], 8, 0, 0)  # UTC-8
     end_time = start_time + datetime.timedelta(days=1)
-    unix_start = ephemeris.datetime_to_unix(start_time)
-    unix_end = ephemeris.datetime_to_unix(end_time)
+    unix_start = ctime.datetime_to_unix(start_time)
+    unix_end = ctime.datetime_to_unix(end_time)
     print("Re-binning full day data to plot")
 
     if axis == "solar":
@@ -430,8 +433,8 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
         for ii in range(len(tmstp)):
             in_range = (tmstp[ii] > start_range[0]) and (tmstp[ii] < end_range[1])
             if in_range:
-                sf_time = ephemeris.unix_to_skyfield_time(tmstp[ii])
-                sun = ephemeris.skyfield_wrapper.ephemeris["sun"]
+                sf_time = ctime.unix_to_skyfield_time(tmstp[ii])
+                sun = ctime.skyfield_wrapper.ephemeris["sun"]
                 obs = ephemeris.chime.skyfield_obs().at(sf_time)
                 azim = obs.observe(sun).apparent().altaz()[1].radians
 

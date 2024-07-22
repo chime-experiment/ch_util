@@ -2,6 +2,9 @@
 
 import numpy as np
 import copy
+
+import caput.time as ctime
+
 from chimedb import data_index
 from ch_util import ephemeris, finder
 
@@ -14,7 +17,7 @@ R = np.array(
 )  # Cylinder rotation matrix
 C = 2.9979e8
 PHI = ephemeris.CHIMELATITUDE * np.pi / 180.0  # DRAO Latitue
-SD = 24.0 * 3600.0 * ephemeris.SIDEREAL_S  # Sidereal day
+SD = 24.0 * 3600.0 * ctime.SIDEREAL_S  # Sidereal day
 
 _DEFAULT_NODE_SPOOF = {"scinet_online": "/scratch/k/krs/jrs65/chime/archive/online/"}
 # _DEFAULT_NODE_SPOOF = {'gong': '/mnt/gong/archive'} # For tests on Marimba
@@ -739,7 +742,7 @@ class ChanMonitor(object):
         bsep2=218,
     ):
         """Initialize class from date"""
-        t1 = ephemeris.datetime_to_unix(date)
+        t1 = ctime.datetime_to_unix(date)
         return cls(
             t1,
             freq_sel=freq_sel,
@@ -933,7 +936,7 @@ class ChanMonitor(object):
         from ch_util import tools
 
         # Get CHIME ON channels:
-        half_time = ephemeris.unix_to_datetime(tms[int(len(tms) // 2)])
+        half_time = ctime.unix_to_datetime(tms[int(len(tms) // 2)])
         corr_inputs = tools.get_correlator_inputs(half_time)
         self.corr_inputs = tools.reorder_correlator_inputs(input_map, corr_inputs)
         pwds = tools.is_chime_on(self.corr_inputs)  # Which inputs are CHIME ON antennas
@@ -954,7 +957,7 @@ class ChanMonitor(object):
 
         input_map = data.input
         tms = data.time
-        half_time = ephemeris.unix_to_datetime(tms[int(len(tms) // 2)])
+        half_time = ctime.unix_to_datetime(tms[int(len(tms) // 2)])
         corr_inputs = tools.get_correlator_inputs(half_time)
         corr_inputs = tools.reorder_correlator_inputs(input_map, corr_inputs)
         pwds = tools.is_chime_on(corr_inputs)  # Which inputs are CHIME ON antennas
@@ -1099,8 +1102,8 @@ class ChanMonitor(object):
         self.night_acq_list = f_night.get_results()
 
         # Create a list of acquisitions that flag out sunrise, sun transit, and sunset
-        mm = ephemeris.unix_to_datetime(self.t1).month
-        dd = ephemeris.unix_to_datetime(self.t1).day
+        mm = ctime.unix_to_datetime(self.t1).month
+        dd = ctime.unix_to_datetime(self.t1).day
         mm = mm + float(dd) / 30.0
 
         fct = 3.0
