@@ -17,9 +17,14 @@ from scipy.interpolate import interp1d
 from scipy.linalg import lstsq, inv
 
 from caput import memh5, time as ctime
+
 from chimedb import dataset as ds
 from chimedb.dataset.utils import state_id_of_type, unique_unmasked_entry
-from ch_util import ephemeris, tools
+
+from ch_ephem.observers import chime
+import ch_ephem.sources
+
+from ch_util import tools
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -2474,13 +2479,13 @@ def thermal_amplitude(delta_T, freq):
 def _el_to_dec(el):
     """Convert from el = sin(zenith angle) to declination in degrees."""
 
-    return np.degrees(np.arcsin(el)) + ephemeris.CHIMELATITUDE
+    return np.degrees(np.arcsin(el)) + chime.latitude
 
 
 def _dec_to_el(dec):
     """Convert from declination in degrees to el = sin(zenith angle)."""
 
-    return np.sin(np.radians(dec - ephemeris.CHIMELATITUDE))
+    return np.sin(np.radians(dec - chime.latitude))
 
 
 def get_reference_times_file(
@@ -2691,10 +2696,10 @@ def get_reference_times_dataset_id(
 
     # The CHIME calibration sources
     _source_dict = {
-        "cyga": ephemeris.CygA,
-        "casa": ephemeris.CasA,
-        "taua": ephemeris.TauA,
-        "vira": ephemeris.VirA,
+        "cyga": ch_ephem.sources.CygA,
+        "casa": ch_ephem.sources.CasA,
+        "taua": ch_ephem.sources.TauA,
+        "vira": ch_ephem.sources.VirA,
     }
 
     # Get the set of gain IDs for each time stamp
@@ -2728,9 +2733,7 @@ def get_reference_times_dataset_id(
 
         # Calculate the source transit time, and sanity check it
         source = _source_dict[d["source_name"]]
-        d["source_transit"] = ephemeris.transit_times(
-            source, d["gen_time"] - 24 * 3600.0
-        )
+        d["source_transit"] = chime.transit_times(source, d["gen_time"] - 24 * 3600.0)
         cal_diff_hours = (d["gen_time"] - d["source_transit"]) / 3600
         if cal_diff_hours > 3:
             logger.warn(

@@ -8,9 +8,9 @@ import datetime
 import scipy.signal as sig
 
 import caput.time as ctime
+from ch_ephem.observers import chime
 
 from . import andata
-from . import ephemeris
 
 
 def waterfall(
@@ -435,7 +435,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
             if in_range:
                 sf_time = ctime.unix_to_skyfield_time(tmstp[ii])
                 sun = ctime.skyfield_wrapper.ephemeris["sun"]
-                obs = ephemeris.chime.skyfield_obs().at(sf_time)
+                obs = chime.skyfield_obs().at(sf_time)
                 azim = obs.observe(sun).apparent().altaz()[1].radians
 
                 in_start_range = (tmstp[ii] > start_range[0]) and (

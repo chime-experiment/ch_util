@@ -21,9 +21,11 @@ import numpy as np
 import peewee as pw
 
 import caput.time as ctime
-from chimedb.core.orm import base_model
 
-from ch_util import ephemeris
+import ch_ephem
+from ch_ephem.observers import chime
+
+from chimedb.core.orm import base_model
 
 # Global variables and constants.
 # ================================
@@ -109,9 +111,9 @@ class HolographyObservation(base_model):
             Any notes on this observation.
         """
 
-        start_time = ephemeris.lsa_to_unix(
+        start_time = chime.lsa_to_unix(
             start_lst * 360 / 24,
-            ctime.datetime_to_unix(ephemeris.parse_date(start_day)),
+            ctime.datetime_to_unix(ch_ephem.time.parse_date(start_day)),
         )
         duration_unix = duration_lst * (3600.0) * ctime.SIDEREAL_S
 
@@ -466,7 +468,7 @@ class HolographyObservation(base_model):
                 return None
 
         # DRAO longitude in hours
-        DRAO_lon = ephemeris.chime.longitude * 24.0 / 360.0
+        DRAO_lon = chime.longitude * 24.0 / 360.0
 
         if verbose:
             print(" ")
@@ -563,7 +565,7 @@ class HolographyObservation(base_model):
 
         from skyfield.positionlib import Angle
 
-        DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0 / 360.0
+        DRAO_lon = chime.longitude * 24.0 / 360.0
 
         def sidlst_to_csd(sid, lst, sid_ref, t_ref):
             """
@@ -586,7 +588,9 @@ class HolographyObservation(base_model):
             output : float
                 CHIME sidereal day
             """
-            csd_ref = int(ephemeris.csd(ctime.datetime_to_unix(t_ref.utc_datetime())))
+            csd_ref = int(
+                chime.lsd_to_unix(ctime.datetime_to_unix(t_ref.utc_datetime()))
+            )
             csd = sid - sid_ref + csd_ref
             return csd + lst / ctime.SIDEREAL_S / 24.0
 
@@ -684,13 +688,15 @@ class HolographyObservation(base_model):
 
                         ant_data["ha"] = Angle(
                             radians=ha.radians
-                            - ephemeris.galt_pointing_model_ha(ha, dec).radians,
+                            - ch_ephem.pointing.galt_pointing_model_ha(ha, dec).radians,
                             preference="hours",
                         )
 
                         ant_data["dec_cirs"] = Angle(
                             radians=dec.radians
-                            - ephemeris.galt_pointing_model_dec(ha, dec).radians,
+                            - ch_ephem.pointing.galt_pointing_model_dec(
+                                ha, dec
+                            ).radians,
                             preference="degrees",
                         )
 
@@ -702,7 +708,7 @@ class HolographyObservation(base_model):
                         )
 
                     ant_data["t"] = ctime.unix_to_skyfield_time(
-                        ephemeris.csd_to_unix(ant_data["csd"])
+                        chime.lsd_to_unix(ant_data["csd"])
                     )
 
                     # Correct RA from equinox to CIRS coords (both in radians)
@@ -718,7 +724,7 @@ class HolographyObservation(base_model):
                         preference="hours",
                     )
 
-                    obs = ephemeris.Star_cirs(
+                    obs = ch_ephem.coord.star_cirs(
                         ra=ant_data["ra_cirs"],
                         dec=ant_data["dec_cirs"],
                         epoch=ant_data["t"],

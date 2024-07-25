@@ -24,7 +24,8 @@ import time
 from caput import misc
 import caput.time as ctime
 
-from . import ephemeris
+import ch_ephem.catalogs
+
 from .tools import ensure_list
 
 # Define nominal frequency. Sources in catalog are ordered according to
@@ -33,10 +34,10 @@ from .tools import ensure_list
 FREQ_NOMINAL = 600.0
 
 # Define the source collections that should be loaded when this module is imported.
-DIR_COLLECTIONS = os.path.join(os.path.dirname(__file__), "catalogs")
+# These catalogs are provided by ch_ephem.
 DEFAULT_COLLECTIONS = [
-    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json"),
-    os.path.join(DIR_COLLECTIONS, "specfind_v2_5Jy_vollmer2009.json"),
+    "primary_calibrators_perley2016",
+    "specfind_v2_5Jy_vollmer2009",
 ]
 
 
@@ -1284,6 +1285,41 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             elif ext == ".pickle":
                 collection_dict = pickle.load(fp)
 
+        return cls.load_dict(
+            collection_dict, collection_name, overwrite, set_globals, verbose
+        )
+
+    @classmethod
+    def load_dict(
+        cls,
+        collection_dict,
+        collection_name,
+        overwrite=0,
+        set_globals=False,
+        verbose=False,
+    ):
+        """
+        Load the contents of a dict into the catalog.
+
+        Parameters
+        ----------
+        collection_dict : dict
+            keys are source names, values are the sources
+        collection_name : str
+            Name of the collection
+        overwrite : int between 0 and 2
+            Action to take in the event that this source is already in the catalog:
+            - 0 - Return the existing entry.
+            - 1 - Add any measurements to the existing entry.
+            - 2 - Overwrite the existing entry.
+            Default is 0.
+        set_globals : bool
+            If True, this creates a variable in the global space
+            for each source in the file.  Default is False.
+        verbose : bool
+            If True, print some basic info about the contents of
+            the file as it is loaded. Default is False.
+        """
         # Add this to the list of files
         cls._collections[collection_name] = list(collection_dict.keys())
 
@@ -1470,4 +1506,4 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 # Load the default collections
 for col in DEFAULT_COLLECTIONS:
-    FluxCatalog.load(col)
+    FluxCatalog.load_dict(ch_ephem.catalogs.load(col), col)

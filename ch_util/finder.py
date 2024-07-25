@@ -48,9 +48,11 @@ import re
 
 import caput.time as ctime
 
+from ch_ephem.observers import chime
+
 import chimedb.core as db
 import chimedb.data_index as di
-from . import layout, ephemeris
+from . import layout
 
 from chimedb.dataflag import DataFlagType, DataFlag
 
@@ -162,8 +164,8 @@ class Finder(object):
 
     Search for transits of a given source.
 
-    >>> from ch_util import ephemeris
-    >>> f.include_transits(ephemeris.CasA, time_delta=3600)
+    >>> import ch_ephem.sources
+    >>> f.include_transits(ch_ephem.sources.CasA, time_delta=3600)
     >>> f.print_results_summary()
     interval | acquisition | offset from start (s) | length (s) | N files
        1  |  20140219T145849Z_abbot_corr  |   452087.2  |     3600.0  |  2
@@ -279,7 +281,7 @@ class Finder(object):
             for i in self._acq_info:
                 acqs.join(i)
         self._acqs = list(acqs)
-        self._time_range = (ephemeris.CSD_ZERO, time.time())
+        self._time_range = (chime.lsd_start_day, time.time())
         self._time_intervals = None
         self._time_exclusions = []
         self._atmel_restrict = None
@@ -959,11 +961,12 @@ class Finder(object):
 
         Examples
         --------
-        >>> from ch_util import (finder, ephemeris)
+        >>> from ch_util import finder
+        >>> import ch_ephem.sources
         >>> from datetime import datetime
         >>> f = finder.Finder()
         >>> f.set_time_range(datetime(2014,02,20), datetime(2014,02,22))
-        >>> f.include_transits(ephemeris.CasA, time_delta=3600)
+        >>> f.include_transits(ch_ephem.sources.CasA, time_delta=3600)
         >>> f.print_results_summary()
         interval | acquisition | offset from start (s) | length (s) | N files
            1  |  20140219T145849Z_abbot_corr  |   107430.9  |     3600.0  |  2
@@ -976,7 +979,7 @@ class Finder(object):
 
         if not time_delta:
             time_delta = self.min_interval * 2
-        ttimes = ephemeris.transit_times(body, *self.time_range)
+        ttimes = chime.transit_times(body, *self.time_range)
         for ttime in ttimes:
             self.include_time_interval(
                 ttime - time_delta / 2.0, ttime + time_delta / 2.0
@@ -1080,7 +1083,7 @@ class Finder(object):
 
         if not time_delta:
             time_delta = self.min_interval * 2
-        ttimes = ephemeris.transit_times(body, *self.time_range)
+        ttimes = chime.transit_times(body, *self.time_range)
         for ttime in ttimes:
             self.exclude_time_interval(
                 ttime - time_delta / 2.0, ttime + time_delta / 2.0
@@ -1089,23 +1092,23 @@ class Finder(object):
     def exclude_daytime(self):
         """Add time intervals to exclude all day time data."""
 
-        rise_times = ephemeris.solar_rising(
+        rise_times = chime.solar_rising(
             self.time_range[0] - 24 * 3600.0, self.time_range[1]
         )
 
         for rise_time in rise_times:
-            set_time = ephemeris.solar_setting(rise_time)
+            set_time = chime.solar_setting(rise_time)
             self.exclude_time_interval(rise_time, set_time)
 
     def exclude_nighttime(self):
         """Add time intervals to exclude all night time data."""
 
-        set_times = ephemeris.solar_setting(
+        set_times = chime.solar_setting(
             self.time_range[0] - 24 * 3600.0, self.time_range[1]
         )
 
         for set_time in set_times:
-            rise_time = ephemeris.solar_rising(set_time)
+            rise_time = chime.solar_rising(set_time)
             self.exclude_time_interval(set_time, rise_time)
 
     def exclude_sun(self, time_delta=4000.0, time_delta_rise_set=4000.0):
@@ -1122,21 +1125,21 @@ class Finder(object):
         """
 
         # Sunrise
-        rise_times = ephemeris.solar_rising(
+        rise_times = chime.solar_rising(
             self.time_range[0] - time_delta_rise_set, self.time_range[1]
         )
         for rise_time in rise_times:
             self.exclude_time_interval(rise_time, rise_time + time_delta_rise_set)
 
         # Sunset
-        set_times = ephemeris.solar_setting(
+        set_times = chime.solar_setting(
             self.time_range[0], self.time_range[1] + time_delta_rise_set
         )
         for set_time in set_times:
             self.exclude_time_interval(set_time - time_delta_rise_set, set_time)
 
         # Sun transit
-        transit_times = ephemeris.solar_transit(
+        transit_times = chime.solar_transit(
             self.time_range[0] - time_delta / 2.0, self.time_range[1] + time_delta / 2.0
         )
         for transit_time in transit_times:

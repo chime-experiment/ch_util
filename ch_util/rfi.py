@@ -32,7 +32,9 @@ from typing import Tuple, Optional, Union
 import numpy as np
 import scipy.signal as sig
 
-from . import tools, ephemeris
+from ch_ephem.observers import chime
+
+from . import tools
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -147,7 +149,7 @@ def flag_dataset(
     if "time" in data.index_map:
         timestamp = data.time[0]
     elif "ra" in data.index_map:
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
 
     freq_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
@@ -245,7 +247,7 @@ def number_deviations(
         timestamp = data.time[0]
     elif "ra" in data.index_map:
         twidth = int(time_width * len(data.ra[:]) / 86164.0) + 1
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
     else:
         raise TypeError(
             f"Expected data type with a `time` or `ra` axis. Got {type(data)}."
@@ -417,7 +419,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     if "time" in data.index_map:
         timestamp = data.time[0]
     elif "ra" in data.index_map:
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
 
     drawn_bool_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     good_data = np.logical_not(drawn_bool_mask)

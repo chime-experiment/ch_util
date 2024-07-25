@@ -18,7 +18,6 @@ import numpy as np
 
 import caput.time as ctime
 
-import ch_util.ephemeris as ch_eph
 from ch_util import andata
 from ch_util import tools
 from ch_util import ni_utils
@@ -496,14 +495,16 @@ def _cut_daytime(visi, tmstp):
     Returns a list of arrays if multiple nights are present.
     """
 
+    from ch_ephem.observers import chime
+
     tstp = tmstp[1] - tmstp[0]  # Get time step
 
-    risings = ch_eph.solar_rising(tmstp[0], tmstp[-1])
-    settings = ch_eph.solar_setting(tmstp[0], tmstp[-1])
+    risings = chime.solar_rising(tmstp[0], tmstp[-1])
+    settings = chime.solar_setting(tmstp[0], tmstp[-1])
 
     if len(risings) == 0 and len(settings) == 0:
-        next_rising = ch_eph.solar_rising(tmstp[-1])
-        next_setting = ch_eph.solar_setting(tmstp[-1])
+        next_rising = chime.solar_rising(tmstp[-1])
+        next_setting = chime.solar_setting(tmstp[-1])
 
         if next_setting < next_rising:
             # All data is in daylight time
@@ -690,13 +691,15 @@ def _cut_sun_transit(cut_vis, tmstp, tcut=120.0):
 
     """
 
+    from ch_ephem.observers import chime
+
     # Start looking for transits tcut minutes before start time:
     st_time = tmstp[0] - tcut * 60.0
     # Stop looking for transits tcut minutes after end time:
     end_time = tmstp[-1] + tcut * 60.0
 
     # Find Sun transits between start time and end time:
-    sun_trans = ch_eph.solar_transit(st_time, end_time)
+    sun_trans = chime.solar_transit(st_time, end_time)
 
     cut_tmstp = tmstp  # Time stamps to be cut
     tstp = tmstp[1] - tmstp[0]  # Get time step

@@ -13,6 +13,7 @@ dynamic = ["readme", "version"]
 license = {file = "LICENSE"}
 dependencies = [
     "caput[compression] @ git+https://github.com/radiocosmology/caput.git",
+    "ch_ephem @ git+https://github.com/chime-experiment/ch_ephem.git", 
     "chimedb @ git+https://github.com/chime-experiment/chimedb.git",
     "chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git",
     "chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git",

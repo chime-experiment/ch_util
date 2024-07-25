@@ -131,60 +131,25 @@ from typing import Tuple
 from caput import pfb
 from caput.interferometry import projected_distance, fringestop_phase
 
-from ch_util import ephemeris
+import ch_ephem.observers
 
-# Currently the position between the Pathfinder and 26m have been
-# calibrated with holography, but positions between CHIME and
-# Pathfinder/26m have not (they were determined from high-res
-# satellite images and are only approximate).  We need to
-# use CHIME holography data to constrain distance [x, y, z] between
-# CHIME and 26m.  I then recommend defining our coordinate system
-# such that center of CHIME array is the origin (so leaving variable
-# _CHIME_POS alone, and updating _PF_POS and _26M_POS appropriately.)
+# All telescope geometry (rotation, roll, offsets) moved to ch_ephem/instruments.yaml
+#
+# To access them:
+#
+# >>> from ch_ephem.observers import pathfinder
+# >>> PF_POS = pathfinder.offset
+# >>> PF_ROT = pathfinder.rotation
+# >>> PF_ROLL = pathfinder.roll
+#
+# etc.
 
-# CHIME geometry
-_CHIME_POS = [0.0, 0.0, 0.0]
-# CHIME rotation from north. Anti-clockwise looking at the ground (degrees).
-# See DocLib #695 for more information.
-_CHIME_ROT = -0.071
+# Private data
+# ============
 
-# 26m geometry
-_26M_POS = [254.162124, 21.853934, 18.93]
 _26M_B = 2.14  # m
-
-# Pathfinder geometry
-_PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = 1.986  # Pathfinder rotation from north (towards west) in degrees
 _PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
-# KKO geometry
-_KKO_POS = [0.0, 0.0, 0.0]
-_KKO_ROT = 0.6874
-_KKO_ROLL = 0.5888
-_PCO_POS = _KKO_POS
-_PCO_ROT = _KKO_ROT  # Aliases for backwards-compatibility
-# KKO_ROT = rotation of cylinder axis from North. Anti-clockwise looking at the ground (degrees).
-# KKO_ROLL = roll of cylinder toward east from Vertical. Anti-clockwise looking North along the focal line.
-# See Doclib #1530 and #1121 for more information.
-
-# GBO geometry
-_GBO_POS = [0.0, 0.0, 0.0]
-_GBO_ROT = -27.3745
-_GBO_ROLL = -30.0871
-
-# HCO geometry
-_HCO_POS = [0.0, 0.0, 0.0]
-_HCO_ROT = -0.8023
-_HCO_ROLL = 1.0556
-
-
-# Lat/Lon
-_LAT_LON = {
-    "chime": [49.3207125, -119.623670],
-    "pathfinder": [49.3202245, -119.6183635],
-    "galt_26m": [49.320909, -119.620174],
-    "gbo_tone": [38.4292962636, -79.8451625395],
-}
 
 # Classes
 # =======
@@ -442,8 +407,10 @@ class PathfinderAntenna(ArrayAntenna):
         Flag indicating that the antenna is powered.
     """
 
-    _rotation = _PF_ROT
-    _offset = _PF_POS
+    from ch_ephem.observers import pathfinder as _pathfinder
+
+    _rotation = _pathfinder.rotation
+    _offset = _pathfinder.offset
 
     # The delay relative to other inputs isn't really known. Set to NaN so we
     # don't make any mistakes
@@ -455,17 +422,21 @@ class PathfinderAntenna(ArrayAntenna):
 class CHIMEAntenna(ArrayAntenna):
     """Antenna that is part of CHIME."""
 
-    _rotation = _CHIME_ROT
-    _offset = _CHIME_POS
+    from ch_ephem.observers import chime as _chime
+
+    _rotation = _chime.rotation
+    _offset = _chime.offset
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
 class KKOAntenna(ArrayAntenna):
     """KKO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _KKO_ROT
-    _roll = _KKO_ROLL
-    _offset = _KKO_POS
+    from ch_ephem.observers import kko as _kko
+
+    _rotation = _kko.rotation
+    _roll = _kko.roll
+    _offset = _kko.offset
     _delay = np.nan
 
 
@@ -475,18 +446,22 @@ PCOAntenna = KKOAntenna  # Alias for backwards-compatibility
 class GBOAntenna(ArrayAntenna):
     """GBO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _GBO_ROT
-    _roll = _GBO_ROLL
-    _offset = _GBO_POS
+    from ch_ephem.observers import gbo as _gbo
+
+    _rotation = _gbo.rotation
+    _roll = _gbo.roll
+    _offset = _gbo.offset
     _delay = np.nan
 
 
 class HCOAntenna(ArrayAntenna):
     """HCRO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _HCO_ROT
-    _roll = _HCO_ROLL
-    _offset = _HCO_POS
+    from ch_ephem.observers import hco as _hco
+
+    _rotation = _hco.rotation
+    _roll = _hco.roll
+    _offset = _hco.offset
     _delay = np.nan
 
 
@@ -495,8 +470,10 @@ class TONEAntenna(ArrayAntenna):
     Let's allow for a global rotation and offset.
     """
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
+    from ch_ephem.observers import tone as _tone
+
+    _rotation = _tone.rotation
+    _offset = _tone.offset
     _delay = np.nan
 
 
@@ -674,6 +651,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
+        from ch_ephem.observers import galt
+
         return HolographyAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
@@ -682,7 +661,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             pol=pdir,
             antenna=ant.sn,
             rf_thru=rft_sn,
-            pos=_26M_POS,
+            pos=galt.offset,
         )
 
     # If we are still here, we are a CHIME/Pathfinder feed
@@ -871,11 +850,9 @@ def calibrate_temperature(raw):
     t : numpy array
         The temperature in degrees Kelvin.
     """
-    import numpy
-
     off = 150.0
     r_t = 2000.0 * (8320.0 / (raw - off) - 1.0)
-    return 1.0 / (1.0 / 298.0 + numpy.log(r_t / 1.0e4) / 3950.0)
+    return 1.0 / (1.0 / 298.0 + np.log(r_t / 1.0e4) / 3950.0)
 
 
 def antenna_to_lna(graph, ant, pol):
@@ -1533,8 +1510,10 @@ def change_pathfinder_location(rotation=None, location=None, default=False):
     """
 
     if default:
-        rotation = _PF_ROT
-        location = _PF_POS
+        from ch_ephem.observers import pathfinder
+
+        rotation = pathfinder.rotation
+        location = pathfinder.offset
 
     if rotation is not None:
         PathfinderAntenna._rotation = rotation
@@ -1559,8 +1538,8 @@ def change_chime_location(rotation=None, location=None, default=False):
     """
 
     if default:
-        rotation = _CHIME_ROT
-        location = _CHIME_POS
+        rotation = ch_ephem.observers.chime.rotation
+        location = ch_ephem.observers.chime.offset
 
     if rotation is not None:
         CHIMEAntenna._rotation = rotation
@@ -2302,7 +2281,7 @@ def fringestop_time(
     csd=False,
     inplace=False,
     static_delays=True,
-    obs=ephemeris.chime,
+    obs=None,
 ):
     """Fringestop timestream data to a fixed source.
 
@@ -2336,6 +2315,9 @@ def fringestop_time(
     -------
     fringestopped_timestream : np.ndarray[nfreq, nprod, times]
     """
+
+    if obs is None:
+        from ch_ephem.observers import chime as obs
 
     # Check the shapes match
     nfeed = len(feeds)
@@ -2471,7 +2453,7 @@ def delay(
     prod_map=None,
     csd=False,
     static_delays=True,
-    obs=ephemeris.chime,
+    obs=None,
 ):
     """Calculate the delay in a visibilities observing a given source.
 
@@ -2504,9 +2486,13 @@ def delay(
     """
 
     import scipy.constants
+    from ch_ephem.coord import object_coords
+
+    if obs is None:
+        from ch_ephem.observers import chime as obs
 
     ra = (times % 1.0) * 360.0 if csd else obs.unix_to_lsa(times)
-    src_ra, src_dec = ephemeris.object_coords(src, times.mean(), obs=obs)
+    src_ra, src_dec = object_coords(src, times.mean(), obs=obs)
     ha = (np.radians(ra) - src_ra)[np.newaxis, :]
     latitude = np.radians(obs.latitude)
     # Get feed positions / c
