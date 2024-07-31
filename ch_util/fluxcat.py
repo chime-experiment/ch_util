@@ -421,7 +421,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
                 param=self.param,
                 param_cov=self.param_cov,
                 stats=self.stats,
-                **self.model_kwargs
+                **self.model_kwargs,
             )
 
             # Populate the kwargs that were used

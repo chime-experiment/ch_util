@@ -1,10 +1,54 @@
 [build-system]
-requires = ['setuptools', 'wheel', 'versioneer[toml]']
+requires = ["setuptools>=61.0.0", "wheel", "setuptools-git-versioning"]
+build-backend = "setuptools.build_meta"
 
-[tool.versioneer]
-VCS = "git"
-style = "pep440"
-versionfile_source = "ch_util/_version.py"
-versionfile_build = "ch_util/_version.py"
-tag_prefix = "v"
-parentdir_prefix = "ch_util-"
+[project]
+name = "ch_util"
+authors = [
+  {name = "The CHIME Collaboration", email = "dvw@phas.ubc.ca"}
+]
+description = "Utilities for CHIME"
+requires-python = ">=3.9"
+dynamic = ["readme", "version"]
+license = {file = "LICENSE"}
+dependencies = [
+    "caput[compression] @ git+https://github.com/radiocosmology/caput.git",
+    "chimedb @ git+https://github.com/chime-experiment/chimedb.git",
+    "chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git",
+    "chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git",
+    "chimedb.dataset @ git+https://github.com/chime-experiment/chimedb_dataset.git",
+    "bitshuffle",
+    "h5py",
+    "matplotlib",
+    "mpi4py",
+    "networkx >= 2.0",
+    "numpy >= 1.16,<2",
+    "peewee >= 3.14.1",
+    "scipy",
+    "skyfield >= 1.10"
+]
+
+[project.optional-dependencies]
+chimedb_config = [
+    "chimedb.config @ git+ssh://git@github.com/chime-experiment/chimedb_config.git"
+]
+doc = [
+    "mock",
+    "numpydoc",
+    "PyYAML",
+    "Sphinx",
+    "sphinx_rtd_theme",
+    "sphinxcontrib-katex"
+]
+test = [
+  "pytest >= 7.0"
+]
+
+[tool.setuptools.package-data]
+"ch_util.catalogs" = ["*.json"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[tool.setuptools-git-versioning]
+enabled = true

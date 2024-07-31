@@ -299,7 +299,7 @@ class BaseData(tod.TOData):
                 stop=stop,
                 datasets=datasets,
                 out_group=out_group,
-                **kwargs
+                **kwargs,
             )
 
             # Set an attribute on the time axis specifying alignment
@@ -1227,7 +1227,7 @@ class HKPData(memh5.MemDiskGroup):
                 f,
                 convert_attribute_strings=cls.convert_attribute_strings,
                 convert_dataset_strings=cls.convert_dataset_strings,
-                **kwargs
+                **kwargs,
             )
             for f in acq_files
         ]
