@@ -22,10 +22,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install pip requirements
-        run: |
-          pip install -r requirements.txt
-          pip install -r doc/requirements.txt
-          pip install .
+        run: pip install .[doc]
       - name: Sphinx build
         run: |
           git checkout -b gh-pages
