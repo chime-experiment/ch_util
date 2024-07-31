@@ -634,7 +634,7 @@ class TimingCorrection(andata.BaseData):
         tau_init=None,
         alpha_init=None,
         interpolate=False,
-        **kwargs
+        **kwargs,
     ):
         """Normalize the delay and alpha template to specific times.
 
@@ -1333,7 +1333,7 @@ class TimingCorrection(andata.BaseData):
                 prod,
                 reverse_stack,
                 input_flags=input_flags,
-                **kwargs
+                **kwargs,
             )
 
             if self.has_amplitude and self.has_coeff_alpha:
@@ -1343,7 +1343,7 @@ class TimingCorrection(andata.BaseData):
                     prod,
                     reverse_stack,
                     input_flags=input_flags,
-                    **kwargs
+                    **kwargs,
                 )
 
             # Loop over local frequencies and apply the timing correction
