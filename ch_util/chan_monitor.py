@@ -5,8 +5,11 @@ import copy
 
 import caput.time as ctime
 
+from ch_ephem.observers import chime
+import ch_ephem.sources
+
 from chimedb import data_index
-from ch_util import ephemeris, finder
+from ch_util import finder
 
 # Corrections to transit times due to 2deg rotation of cylinders:
 TTCORR = {"CygA": -94.4, "CasA": 152.3, "TauA": -236.9, "VirA": -294.5}
@@ -16,7 +19,7 @@ R = np.array(
     [[np.cos(CR), -np.sin(CR)], [np.sin(CR), np.cos(CR)]]
 )  # Cylinder rotation matrix
 C = 2.9979e8
-PHI = ephemeris.CHIMELATITUDE * np.pi / 180.0  # DRAO Latitue
+PHI = chime.latitude * np.pi / 180.0  # DRAO Latitue
 SD = 24.0 * 3600.0 * ctime.SIDEREAL_S  # Sidereal day
 
 _DEFAULT_NODE_SPOOF = {"scinet_online": "/scratch/k/krs/jrs65/chime/archive/online/"}
@@ -88,12 +91,12 @@ class FeedLocator(object):
         if self.source2 is not None:
             self.dec2 = self.source2._dec
         self.tt1 = (
-            ephemeris.transit_times(self.source1, self.tm1[0], self.tm1[-1])[0]
+            chime.transit_times(self.source1, self.tm1[0], self.tm1[-1])[0]
             + TTCORR[self.source1.name]
         )
         if self.source2 is not None:
             self.tt2 = (
-                ephemeris.transit_times(self.source2, self.tm2[0], self.tm2[-1])[0]
+                chime.transit_times(self.source2, self.tm2[0], self.tm2[-1])[0]
                 + TTCORR[self.source2.name]
             )
 
@@ -1135,7 +1138,12 @@ class ChanMonitor(object):
             self.set_acq_list()
 
         if srcs is None:
-            srcs = [ephemeris.CygA, ephemeris.CasA, ephemeris.TauA, ephemeris.VirA]
+            srcs = [
+                ch_ephem.sources.CygA,
+                ch_ephem.sources.CasA,
+                ch_ephem.sources.TauA,
+                ch_ephem.sources.VirA,
+            ]
         Ns = len(srcs)
 
         clr = [False] * Ns
@@ -1145,7 +1153,7 @@ class ChanMonitor(object):
             night_transit = np.array([])
             for acq in self.night_acq_list:
                 night_transit = np.append(
-                    night_transit, ephemeris.transit_times(src, *acq[1])
+                    night_transit, chime.transit_times(src, *acq[1])
                 )
 
             if night_transit.size:
@@ -1154,7 +1162,7 @@ class ChanMonitor(object):
             if src.name in ["CygA", "CasA"]:
                 transit = np.array([])
                 for acq in self.acq_list:
-                    transit = np.append(transit, ephemeris.transit_times(src, *acq[1]))
+                    transit = np.append(transit, chime.transit_times(src, *acq[1]))
 
                 if transit.size:
                     clr[ii] = True
