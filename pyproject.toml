@@ -45,6 +45,12 @@ test = [
   "pytest >= 7.0"
 ]
 
+[tool.ruff]
+lint.select = ["E", "F", "UP", "NPY", "BLE", "C4", "RET"]
+lint.ignore = [
+  "UP007"   # Can't convert to "X | Y" type hinting until 3.10
+]
+
 [tool.setuptools.package-data]
 "ch_util.catalogs" = ["*.json"]
 

@@ -7,10 +7,8 @@ import shutil
 import glob
 
 import numpy as np
-import h5py
 
 from ch_util import andata
-from caput.memh5 import MemGroup
 import data_paths
 
 tempdir = tempfile.mkdtemp()
@@ -70,10 +68,10 @@ class TestStack(unittest.TestCase):
     def test_no_prod_input_sel(self):
         """Test that you can't use input/prod sel on stacked data."""
         with self.assertRaises(ValueError):
-            ad = andata.CorrData.from_acq_h5(self.file_list, input_sel=[0, 15])
+            andata.CorrData.from_acq_h5(self.file_list, input_sel=[0, 15])
 
         with self.assertRaises(ValueError):
-            ad = andata.CorrData.from_acq_h5(self.file_list, prod_sel=[0, 15])
+            andata.CorrData.from_acq_h5(self.file_list, prod_sel=[0, 15])
 
 
 if __name__ == "__main__":

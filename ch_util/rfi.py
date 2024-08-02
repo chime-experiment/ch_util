@@ -27,7 +27,7 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
-from typing import Tuple, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import scipy.signal as sig
@@ -41,7 +41,8 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-# Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
+# Ranges of bad frequencies given by their start time (in unix time) and
+# corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
 BAD_FREQUENCIES = {
     "chime": [
@@ -309,7 +310,7 @@ def number_deviations(
 
 def get_autocorrelations(
     data, stack: bool = False, normalize: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Extract autocorrelations from a data stack.
 
     Parameters
@@ -715,7 +716,8 @@ def mad_cut_rolling(
         mfd = tools.invert_no_zero(nanmedian(data, axis=1))
         data *= mfd[:, np.newaxis]
 
-    # Add NaNs around the edges of the array so that we don't have to treat them separately
+    # Add NaNs around the edges of the array so that we don't have to
+    # treat them separately
     eshp = [nfreq + fwidth - 1, ntime + twidth - 1]
     exp_data = np.full(eshp, np.nan, dtype=data.dtype)
     exp_data[foff : foff + nfreq, toff : toff + ntime] = data
@@ -792,9 +794,7 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
         np.sinc(2.0 * tau_cut * (freq[:, np.newaxis] - freq[np.newaxis, :])) / epsilon
     )
 
-    pinv = np.linalg.pinv(cov * mflag, hermitian=True) * mflag
-
-    return pinv
+    return np.linalg.pinv(cov * mflag, hermitian=True) * mflag
 
 
 def iterative_hpf_masking(

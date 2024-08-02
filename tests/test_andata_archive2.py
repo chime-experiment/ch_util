@@ -6,10 +6,9 @@ import numpy as np
 import h5py
 
 from ch_util import andata
-from caput.memh5 import MemGroup
 import data_paths
 
-# archive_acq_dir = ("/scratch/k/krs/jrs65/chime_archive/20140913T055455Z_blanchard_corr/")
+# archive_acq_dir="/scratch/k/krs/jrs65/chime_archive/20140913T055455Z_blanchard_corr/"
 # archive_acq_fname_list = []
 # fmt_corr = re.compile("([0-9]{8})_([0-9]{4}).h5")
 # for f in os.listdir(archive_acq_dir):
@@ -279,7 +278,7 @@ class TestApplyGains2_2(unittest.TestCase):
 
 def _resolve_prod_input_sel(prod_sel, prod_map, input_sel, input_map):
     """Legacy code pasted here for regression testing."""
-    if (not prod_sel is None) and (not input_sel is None):
+    if (prod_sel is not None) and (input_sel is not None):
         # This should never happen due to previouse checks.
         raise ValueError("*input_sel* and *prod_sel* both specified.")
 
@@ -296,7 +295,7 @@ def _resolve_prod_input_sel(prod_sel, prod_map, input_sel, input_map):
                 input_sel.append(p0)
                 input_sel.append(p1)
             # ensure_1D here deals with h5py issue #425.
-            input_sel = andata._ensure_1D_selection(sorted(list(set(input_sel))))
+            input_sel = andata._ensure_1D_selection(sorted(set(input_sel)))
         else:
             input_sel = andata._ensure_1D_selection(input_sel)
             inputs = list(np.arange(len(input_map), dtype=int)[input_sel])

@@ -2,46 +2,61 @@
 This module is deprecated.
 
 For CHIME-specific stuff, use `ch_ephem`.
+
 For instrument-independent stuff, use `caput`.
 """
 
 import warnings
 
-warnings.warn("The ch_util.ephemeris module is deprecated.", DeprecationWarning)
-
-from caput.interferometry import sphdist
+from caput.interferometry import sphdist as sphdist
 from caput.time import (
-    unix_to_datetime,
-    datetime_to_unix,
-    datetime_to_timestr,
-    timestr_to_datetime,
-    leap_seconds_between,
-    time_of_day,
-    Observer,
-    unix_to_skyfield_time,
-    skyfield_time_to_unix,
-    skyfield_star_from_ra_dec,
-    skyfield_wrapper,
-    ensure_unix,
-    SIDEREAL_S,
-    STELLAR_S,
+    unix_to_datetime as unix_to_datetime,
+    datetime_to_unix as datetime_to_unix,
+    datetime_to_timestr as datetime_to_timestr,
+    timestr_to_datetime as timestr_to_datetime,
+    leap_seconds_between as leap_seconds_between,
+    time_of_day as time_of_day,
+    Observer as Observer,
+    unix_to_skyfield_time as unix_to_skyfield_time,
+    skyfield_time_to_unix as skyfield_time_to_unix,
+    skyfield_star_from_ra_dec as skyfield_star_from_ra_dec,
+    skyfield_wrapper as skyfield_wrapper,
+    ensure_unix as ensure_unix,
+    SIDEREAL_S as SIDEREAL_S,
+    STELLAR_S as STELLAR_S,
 )
 
-from ch_ephem.coord import star_cirs as Star_cirs
-from ch_ephem.coord import peak_ra as peak_RA
+from ch_ephem.coord import star_cirs as Star_cirs  # noqa F401
+from ch_ephem.coord import peak_ra as peak_RA  # noqa F401
 from ch_ephem.coord import (
-    cirs_radec,
-    object_coords,
-    hadec_to_bmxy,
-    bmxy_to_hadec,
-    get_range_rate,
+    cirs_radec as cirs_radec,
+    object_coords as object_coords,
+    hadec_to_bmxy as hadec_to_bmxy,
+    bmxy_to_hadec as bmxy_to_hadec,
+    get_range_rate as get_range_rate,
 )
-from ch_ephem.pointing import galt_pointing_model_ha, galt_pointing_model_dec
-from ch_ephem.sources import get_source_dictionary, CasA, CygA, TauA, VirA
-from ch_ephem.time import parse_date, utc_lst_to_mjd, chime_local_datetime
+from ch_ephem.pointing import (
+    galt_pointing_model_ha as galt_pointing_model_ha,
+    galt_pointing_model_dec as galt_pointing_model_dec,
+)
+from ch_ephem.sources import (
+    get_source_dictionary as get_source_dictionary,
+    source_dictionary as source_dictionary,
+    CasA as CasA,
+    CygA as CygA,
+    TauA as TauA,
+    VirA as VirA,
+)
+from ch_ephem.time import (
+    parse_date as parse_date,
+    utc_lst_to_mjd as utc_lst_to_mjd,
+    chime_local_datetime as chime_local_datetime,
+)
 from ch_ephem.observers import chime, tone, kko, gbo, hco
 
-from .hfbcat import get_doppler_shifted_freq
+from .hfbcat import get_doppler_shifted_freq as get_doppler_shifted_freq
+
+warnings.warn("The ch_util.ephemeris module is deprecated.", DeprecationWarning)
 
 CHIMELATITUDE = chime.latitude
 CHIMELONGITUDE = chime.longitude

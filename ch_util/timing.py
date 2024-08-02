@@ -134,7 +134,8 @@ class TimingCorrection(andata.BaseData):
             The coefficient of the spectral model of the amplitude variations of
             each of the noise source inputs versus time.
         weight_alpha: np.ndarray[nsource, ntime]
-            Estimate of the uncertainty (inverse variance) on the amplitude coefficients.
+            Estimate of the uncertainty (inverse variance) on the amplitude
+            coefficients.
         static_amp: np.ndarray[nfreq, nsource]
             The amplitude that was subtracted from each frequency and input prior to
             fitting for the amplitude variations.  This is necessary to remove the
@@ -143,7 +144,8 @@ class TimingCorrection(andata.BaseData):
             Inverse variance on static_amp.
         num_freq: np.ndarray[nsource, ntime]
             The number of frequencies used to determine the delay and alpha quantities.
-            If num_freq is 0, then that time is ignored when deriving the timing correction.
+            If num_freq is 0, then that time is ignored when deriving the timing
+            correction.
         coeff_tau: np.ndarray[ninput, nsource]
             If coeff is provided, then the timing correction applied to a particular
             input will be the linear combination of the tau correction from the
@@ -175,7 +177,7 @@ class TimingCorrection(andata.BaseData):
             else:
                 dset = tcorr.create_dataset(name, data=data)
 
-            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.string_)
+            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.bytes_)
 
         return tcorr
 
@@ -243,11 +245,9 @@ class TimingCorrection(andata.BaseData):
 
         # Now concatenate the files.  Dynamic datasets will be concatenated.
         # Static datasets will be extracted from the first file.
-        data = tod.concatenate(
+        return tod.concatenate(
             objs, out_group=out_group, start=start, stop=stop, datasets=datasets
         )
-
-        return data
 
     @property
     def freq(self):
@@ -297,7 +297,7 @@ class TimingCorrection(andata.BaseData):
 
             dset = self.create_flag("weight_tau", data=weight_tau)
             dset.attrs["axis"] = np.array(
-                DSET_SPEC["weight_tau"]["axis"], dtype=np.string_
+                DSET_SPEC["weight_tau"]["axis"], dtype=np.bytes_
             )
 
         return self.flags["weight_tau"]
@@ -339,7 +339,7 @@ class TimingCorrection(andata.BaseData):
 
             dset = self.create_flag("weight_alpha", data=weight_alpha)
             dset.attrs["axis"] = np.array(
-                DSET_SPEC["weight_alpha"]["axis"], dtype=np.string_
+                DSET_SPEC["weight_alpha"]["axis"], dtype=np.bytes_
             )
 
         return self.flags["weight_alpha"]
@@ -394,29 +394,34 @@ class TimingCorrection(andata.BaseData):
 
     @property
     def amp_to_delay(self):
-        """Return conversion from noise source amplitude variations to delay variations."""
+        """This is the conversion from noise source amplitude variations
+        to delay variations."""
         return self.attrs.get("amp_to_delay", None)
 
     @amp_to_delay.setter
     def amp_to_delay(self, val):
-        """Sets the conversion from noise source amplitude variations to delay variations.
+        """Set amp_to_delay
 
-        Note that setting this quantity will result in the following modification to the
-        timing correction:  tau --> tau - amp_to_delay * alpha.  This can be used to remove
-        variations introduced by the noise source distribution system from the timing correction
-        using the amplitude variations as a proxy for temperature.
+        Note that setting this quantity will result in the following
+        modification to the timing correction:
+
+            tau --> tau - amp_to_delay * alpha
+
+        This can be used to remove variations introduced by the noise
+        source distribution system from the timing correction using the
+        amplitude variations as a proxy for temperature.
         """
         if self.has_coeff_alpha:
             raise AttributeError(
                 "The amplitude variations are already being used to "
                 "correct the delay variations through the coeff_alpha dataset."
             )
-        elif val is not None:
+        if val is not None:
             self.attrs["amp_to_delay"] = val
 
     @amp_to_delay.deleter
     def amp_to_delay(self):
-        """Remove any conversion from noise source amplitude variations to delay variations."""
+        """Remove amp_to_delay"""
         if "amp_to_delay" in self.attrs:
             del self.attrs["amp_to_delay"]
 
@@ -431,8 +436,8 @@ class TimingCorrection(andata.BaseData):
         if "reference_noise_source" in self.datasets:
             iref = self.datasets["reference_noise_source"][:]
             return iref if np.unique(iref).size > 1 else iref[0]
-        else:
-            return self.zero_delay_noise_source
+
+        return self.zero_delay_noise_source
 
     @property
     def zero_delay_noise_source(self):
@@ -443,8 +448,8 @@ class TimingCorrection(andata.BaseData):
                 "Could not determine which input the delay template "
                 "is referenced with respect to."
             )
-        else:
-            return zero_tau[0]
+
+        return zero_tau[0]
 
     def set_coeff(
         self,
@@ -505,7 +510,7 @@ class TimingCorrection(andata.BaseData):
                 dset = self.create_flag(name, data=coeff[:, reod])
             else:
                 dset = self.create_dataset(name, data=coeff[:, reod])
-            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.string_)
+            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.bytes_)
 
         if reference_noise_source is not None:
             ref_sn_lookup = {
@@ -525,7 +530,7 @@ class TimingCorrection(andata.BaseData):
                 dset = self.create_flag(name, data=reference_reodered)
             else:
                 dset = self.create_dataset(name, data=reference_reodered)
-            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.string_)
+            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.bytes_)
 
         self.create_index_map("input", inputs)
 
@@ -573,23 +578,25 @@ class TimingCorrection(andata.BaseData):
         tref : unix time
             Reference the templates to the values at this time.
         window: float
-            Reference the templates to the median value over a window (in seconds)
-            around tref.  If nonzero, this will override the interpolate keyword.
+            Reference the templates to the median value over a window (in
+            seconds) around tref.  If nonzero, this will override the
+            interpolate keyword.
         interpolate : bool
-            Interpolate the delay template to time tref.  Otherwise take the measured time
-            nearest to tref.  The get_tau method is use to perform the interpolation, and
-            kwargs for that method will be passed along.
+            Interpolate the delay template to time tref.  Otherwise take
+            the measured time nearest to tref.  The get_tau method is use
+            to perform the interpolation, and kwargs for that method will
+            be passed along.
         """
         tref = ctime.ensure_unix(tref)
         tref_string = ctime.unix_to_datetime(tref).strftime("%Y-%m-%d %H:%M:%S %Z")
-        logger.info("Referencing timing correction with respect to %s." % tref_string)
+        logger.info(f"Referencing timing correction with respect to {tref_string}.")
         if window > 0.0:
             iref = np.flatnonzero(
                 (self.time >= (tref - window)) & (self.time <= (tref + window))
             )
             if iref.size > 0:
                 logger.info(
-                    "Using median of %d samples around reference time." % iref.size
+                    f"Using median of {iref.size} samples around reference time."
                 )
                 if self.has_num_freq:
                     tau_ref = np.zeros((self.nsource, 1), dtype=self.tau.dtype)
@@ -607,13 +614,11 @@ class TimingCorrection(andata.BaseData):
 
             else:
                 raise ValueError(
-                    "Timing correction not available for time %s." % tref_string
+                    f"Timing correction not available for time {tref_string}."
                 )
 
         elif (tref < self.time[0]) or (tref > self.time[-1]):
-            raise ValueError(
-                "Timing correction not available for time %s." % tref_string
-            )
+            raise ValueError(f"Timing correction not available for time {tref_string}.")
 
         else:
             if not interpolate:
@@ -770,7 +775,7 @@ class TimingCorrection(andata.BaseData):
         else:
             logger.info(
                 "Correcting delay template using amplitude template "
-                "with coefficient %0.1f." % self.amp_to_delay
+                f"with coefficient {self.amp_to_delay:.1f}."
             )
 
             # Determine which input the delay template is referenced to
@@ -823,7 +828,8 @@ class TimingCorrection(andata.BaseData):
         alpha: np.ndarray[nsource, ntime]
             Amplitude coefficient as a function of time for each of the noise sources.
         weight : np.ndarray[nsource, ntime]
-            The uncertainty on the amplitude coefficient, expressed as an inverse variance.
+            The uncertainty on the amplitude coefficient, expressed as an
+            inverse variance.
         """
         flag = self.num_freq[:] > 0 if self.has_num_freq else None
 
@@ -843,12 +849,13 @@ class TimingCorrection(andata.BaseData):
     def get_stacked_tau(
         self, timestamp, inputs, prod, reverse_stack, input_flags=None, **kwargs
     ):
-        """Return the appropriate delay for each stacked visibility at the requested time.
+        """Return the delay for each stacked visibility at the requested time.
 
-        Averages the delays from the noise source inputs that map to the set of redundant
-        baseline included in each stacked visibility.  This yields the appropriate
-        common-mode delay correction.  If input_flags is provided, then the bad inputs
-        that were excluded from the stack are also excluded from the delay template averaging.
+        Averages the delays from the noise source inputs that map to the
+        set of redundant baseline included in each stacked visibility.
+        This yields the appropriate common-mode delay correction.  If
+        input_flags is provided, then the bad inputs that were excluded
+        from the stack are also excluded from the delay template averaging.
 
         Parameters
         ----------
@@ -910,16 +917,18 @@ class TimingCorrection(andata.BaseData):
     def get_stacked_alpha(
         self, timestamp, inputs, prod, reverse_stack, input_flags=None, **kwargs
     ):
-        """Return the equivalent of `get_stacked_tau` for the noise source amplitude variations.
+        """Return the stacked alphas for the noise source amplitude variations.
 
-        Averages the alphas from the noise source inputs that map to the set of redundant
-        baseline included in each stacked visibility.  If input_flags is provided, then the
-        bad inputs that were excluded from the stack are also excluded from the alpha
-        template averaging.  This method can be used to generate a stacked alpha template
-        that can be used to correct a stacked tau template for variations in the noise source
-        distribution system.  However, it is recommended that the tau template be corrected
-        before stacking. This is accomplished by setting the `amp_to_delay` property
-        prior to calling `get_stacked_tau`.
+        Averages the alphas from the noise source inputs that map to the
+        set of redundant baseline included in each stacked visibility.  If
+        input_flags is provided, then the bad inputs that were excluded
+        from the stack are also excluded from the alpha template averaging.
+        This method can be used to generate a stacked alpha template that
+        can be used to correct a stacked tau template for variations in the
+        noise source distribution system.  However, it is recommended that
+        the tau template be corrected before stacking. This is accomplished
+        by setting the `amp_to_delay` property prior to calling
+        `get_stacked_tau`.
 
         Parameters
         ----------
@@ -942,7 +951,8 @@ class TimingCorrection(andata.BaseData):
         Returns
         -------
         alpha: np.ndarray[nstack, ntime]
-            Noise source amplitude variation as a function of time for each stacked visibility.
+            Noise source amplitude variation as a function of time for each
+            stacked visibility.
         """
         if not self.has_amplitude:
             raise AttributeError(
@@ -1077,11 +1087,14 @@ class TimingCorrection(andata.BaseData):
         return stacked_data
 
     def get_timing_correction(self, freq, timestamp, **kwargs):
-        """Return the phase correction from each noise source at the requested frequency and time.
+        """Return the phase correction from each noise source.
 
-        Assumes the phase correction scales with frequency nu as phi = 2 pi nu tau and uses the
-        get_tau method to interpolate over time. It acccepts and passes along keyword arguments
-        for that method.
+        Assumes the phase correction scales with frequency nu as
+
+            phi = 2 pi nu tau
+
+        and uses the get_tau method to interpolate over time. It acccepts and
+        passes along keyword arguments for that method.
 
         Parameters
         ----------
@@ -1093,9 +1106,11 @@ class TimingCorrection(andata.BaseData):
         Returns
         -------
         gain: np.ndarray[nfreq, nsource, ntime]
-            Complex gain containing a pure phase correction for each of the noise sources.
+            Complex gain containing a pure phase correction for each of the
+            noise sources.
         weight: np.ndarray[nfreq, nsource, ntime]
-            Uncerainty on the gain for each of the noise sources, expressed as an inverse variance.
+            Uncerainty on the gain for each of the noise sources,
+            expressed as an inverse variance.
         """
         tau, wtau = self.get_tau(timestamp, **kwargs)
 
@@ -1230,14 +1245,16 @@ class TimingCorrection(andata.BaseData):
         Parameters
         ----------
         timestream : andata.CorrData / equivalent or np.ndarray[nfreq, nprod, ntime]
-            If timestream is an np.ndarray containing the visiblities, then you
-            must also pass the corresponding freq, prod, input, and time axis as kwargs.
-            Otherwise these quantities are obtained from the attributes of CorrData.
-            If the visibilities have been stacked, then you must additionally pass the
-            stack and reverse_stack axis as kwargs, and (optionally) the input flags.
+            If timestream is an np.ndarray containing the visiblities, the
+            you must also pass the corresponding freq, prod, input, and
+            time axis as kwargs.  Otherwise these quantities are obtained
+            from the attributes of CorrData.  If the visibilities have been
+            stacked, then you must additionally pass the stack and
+            reverse_stack axis as kwargs, and (optionally) the input flags.
         copy : bool
-            Create a copy of the input visibilities.  Apply the timing correction to
-            the copy and return it, leaving the original untouched.  Default is False.
+            Create a copy of the input visibilities.  Apply the timing
+            correction to the copy and return it, leaving the original
+            untouched.  Default is False.
         freq : np.ndarray[nfreq, ]
             Frequency in MHz.
             Must be passed as keyword argument if timestream is an np.ndarray.
@@ -1260,8 +1277,9 @@ class TimingCorrection(andata.BaseData):
             Must be passed as keyword argument if timestream is an np.ndarray
             and the visibilities have been stacked.
         input_flags : np.ndarray [ninput, ntime]
-            Array indicating which inputs were good at each time.  Non-zero value
-            indicates that an input was good.  Optional.  Only used for stacked visibilities.
+            Array indicating which inputs were good at each time.  Non-zero
+            value indicates that an input was good.  Optional.  Only used for
+            stacked visibilities.
 
         Returns
         -------
@@ -1271,8 +1289,9 @@ class TimingCorrection(andata.BaseData):
         else:
             None
                 Correction is applied to the input visibility data.  Also,
-                if timestream is an andata.CorrData instance and the gain dataset exists,
-                then it will be updated with the complex gains that have been applied.
+                if timestream is an andata.CorrData instance and the gain
+                dataset exists, then it will be updated with the complex
+                gains that have been applied.
         """
         if isinstance(timestream, np.ndarray):
             is_obj = False
@@ -1367,8 +1386,7 @@ class TimingCorrection(andata.BaseData):
 
         # If a copy was requested, then return the
         # new vis with phase correction applied
-        if copy:
-            return vis
+        return vis if copy else None
 
     def summary(self):
         """Provide a summary of the timing correction.
@@ -1394,7 +1412,7 @@ class TimingCorrection(andata.BaseData):
 
         fmt = "%-10s %10s %10s %15s %15s"
         hdr = fmt % ("", "PHI0", "TAU0", "SIGMA(TAU)", "SIGMA(TAU)")
-        per = fmt % ("", "", "", "@ %0.2f sec" % step, "@ %0.2f hr" % span)
+        per = fmt % ("", "", "", f"@ {step:.2f} sec", f"@ {span:.2f} hr")
         unt = fmt % ("INPUT", "[rad]", "[nsec]", "[psec]", "[psec]")
         line = "".join(["-"] * 65)
         summary = [line, hdr, per, unt, line]
@@ -1470,7 +1488,7 @@ class TimingData(andata.CorrData, TimingCorrection):
         )
 
         # Load the data into an andata.CorrData object
-        corr_data = super(TimingData, cls).from_acq_h5(
+        corr_data = super().from_acq_h5(
             acq_files, apply_gain=apply_gain, datasets=datasets, **kwargs
         )
 
@@ -1536,7 +1554,7 @@ class TimingData(andata.CorrData, TimingCorrection):
         # Create index map containing names of parameters
         param = ["intercept", "slope", "quad", "cube", "quart", "quint"]
         param = param[0 : res["static_phi_fit"].shape[0]]
-        data.create_index_map("param", np.array(param, dtype=np.string_))
+        data.create_index_map("param", np.array(param, dtype=np.bytes_))
 
         # Create datasets containing the timing correction
         for name, arr in res.items():
@@ -1546,7 +1564,7 @@ class TimingData(andata.CorrData, TimingCorrection):
             else:
                 dset = data.create_dataset(name, data=arr)
 
-            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.string_)
+            dset.attrs["axis"] = np.array(spec["axis"], dtype=np.bytes_)
 
         # Delete the temporary corr_data object
         del corr_data
@@ -1567,7 +1585,7 @@ class TimingData(andata.CorrData, TimingCorrection):
             presented as quantiles over frequency for each of the
             noise source products.
         """
-        summary = super(TimingData, self).summary()
+        summary = super().summary()
 
         vis = self.apply_timing_correction(
             self.vis[:],
@@ -1623,7 +1641,7 @@ class TimingData(andata.CorrData, TimingCorrection):
         return summary
 
 
-class TimingInterpolator(object):
+class TimingInterpolator:
     """Interpolation that is aware of flagged data and weights.
 
     Flagged data is ignored during the interpolation. The weights from
@@ -1728,7 +1746,7 @@ class TimingInterpolator(object):
 def load_timing_correction(
     files, start=None, stop=None, window=43200.0, instrument="chime", **kwargs
 ):
-    """Find and load the appropriate timing correction for a list of corr acquisition files.
+    """Find and load the timing correction for a list of corr acquisition files.
 
     For example, if the instrument keyword is set to 'chime',
     then this function will accept all types of chime corr acquisition files,
@@ -1773,7 +1791,7 @@ def load_timing_correction(
     if not acq_inst.startswith(instrument) or (acq_type != "corr"):
         raise RuntimeError(
             "This function is only able to parse corr type files "
-            "from the specified instrument (currently %s)." % instrument
+            f"from the specified instrument (currently {instrument})."
         )
 
     # Search for all timing acquisitions on this node
@@ -1781,9 +1799,10 @@ def load_timing_correction(
         glob.glob(os.path.join(node, "_".join(["*", instrument + "timing", acq_type])))
     )
     if not tdirs:
-        raise RuntimeError("No timing acquisitions found on node %s." % node)
+        raise RuntimeError(f"No timing acquisitions found on node {node}.")
 
-    # Determine the start time of the requested acquistion and the available timing acquisitions
+    # Determine the start time of the requested acquistion and the available
+    # timing acquisitions
     acq_start = ctime.datetime_to_unix(ctime.timestr_to_datetime(acq_date))
 
     tacq_start = np.array(
@@ -1794,7 +1813,7 @@ def load_timing_correction(
     # Find the closest timing acquisition to the requested acquisition
     iclose = np.argmin(np.abs(acq_start - tacq_start))
     if np.abs(acq_start - tacq_start[iclose]) > 60.0:
-        raise RuntimeError("Cannot find appropriate timing acquisition for %s." % acq)
+        raise RuntimeError(f"Cannot find appropriate timing acquisition for {acq}.")
 
     # Grab all timing files from this acquisition
     tfiles = sorted(glob.glob(os.path.join(tdirs[iclose], "*.h5")))
@@ -1811,9 +1830,7 @@ def load_timing_correction(
     tstop = int(np.argmin(np.abs(time_stop - tdata.time)))
 
     # Load into TimingData object
-    data = TimingData.from_acq_h5(tfiles, start=tstart, stop=tstop, **kwargs)
-
-    return data
+    return TimingData.from_acq_h5(tfiles, start=tstart, stop=tstop, **kwargs)
 
 
 # ancillary functions
@@ -1909,22 +1926,22 @@ def construct_delay_template(
         time averaged phase versus frequency.  Default is 2.
     static_phi: np.ndarray[nfreq, nsource]
         Subtract this quantity from the noise source phase prior to fitting
-        for the timing correction.  If None, then this will be estimated from the median
-        of the noise source phase over time.
+        for the timing correction.  If None, then this will be estimated from
+        the median of the noise source phase over time.
     weight_static_phi: np.ndarray[nfreq, nsource]
-        Inverse variance of the time averaged phased.  Set to zero for frequencies and inputs
-        that are missing or should be ignored.  If None, then this will be estimated from the
-        residuals of the fit.
+        Inverse variance of the time averaged phased.  Set to zero for
+        frequencies and inputs that are missing or should be ignored.
+        If None, then this will be estimated from the residuals of the fit.
     static_phi_fit: np.ndarray[nparam, nsource]
         Polynomial fit to static_phi versus frequency.
     static_amp: np.ndarray[nfreq, nsource]
         Subtract this quantity from the noise source amplitude prior to fitting
-        for the amplitude variations.  If None, then this will be estimated from the median
-        of the noise source amplitude over time.
+        for the amplitude variations.  If None, then this will be estimated from
+        the median of the noise source amplitude over time.
     weight_static_amp: np.ndarray[nfreq, nsource]
-        Inverse variance of the time averaged amplitude.  Set to zero for frequencies and inputs
-        that are missing or should be ignored.  If None, then this will be estimated from the
-        residuals of the fit.
+        Inverse variance of the time averaged amplitude.  Set to zero for
+        frequencies and inputs that are missing or should be ignored.  If None,
+        then this will be estimated from the residuals of the fit.
 
     Returns
     -------
@@ -2042,7 +2059,7 @@ def construct_delay_template(
 
     # If requested discard frequencies and times that have high frac_lost
     if hasattr(data, "flags") and ("frac_lost" in data.flags):
-        logger.info("Fraction of data kept must be greater than %0.2f." % min_frac_kept)
+        logger.info(f"Fraction of data kept must be greater than {min_frac_kept:.2f}.")
 
         frac_kept = 1.0 - data.flags["frac_lost"][:].view(np.ndarray)
         flg &= frac_kept[:, np.newaxis, :] >= min_frac_kept
@@ -2104,7 +2121,8 @@ def construct_delay_template(
         phi = phi[:].view(np.ndarray)
         ww = ww[:].view(np.ndarray)
 
-    # If a frequency is flagged more than `threshold` fraction of the time, then flag it entirely
+    # If a frequency is flagged more than `threshold` fraction of the time,
+    # then flag it entirely
     ww *= (
         (
             np.sum(ww > 0.0, axis=-1, dtype=np.float32, keepdims=True)
@@ -2113,13 +2131,14 @@ def construct_delay_template(
         > threshold
     ).astype(np.float32)
 
+    fraction = (
+        100.0
+        * np.sum(np.any(ww > 0.0, axis=(1, 2)), dtype=np.float32)
+        / float(ww.shape[0])
+    )
     logger.info(
-        "%0.1f percent of frequencies will be used to construct timing correction."
-        % (
-            100.0
-            * np.sum(np.any(ww > 0.0, axis=(1, 2)), dtype=np.float32)
-            / float(ww.shape[0]),
-        )
+        f"{fraction:.1f} percent of frequencies will be used "
+        "to construct timing correction."
     )
 
     # If the starting values for the mean and variance were not provided,
@@ -2208,12 +2227,12 @@ def construct_delay_template(
         if check_amp:
             nsigma = np.abs(ramp) * np.sqrt(weight_static_amp[:, :, np.newaxis])
             not_outlier *= (nsigma < nsigma_amp[iter_weight]).astype(np.float32)
-            msg.append("nsigma_amp = %0.1f" % nsigma_amp[iter_weight])
+            msg.append(f"nsigma_amp = {nsigma_amp[iter_weight]:.1f}")
 
         if check_phi:
             nsigma = np.abs(rphi) * np.sqrt(weight_static_phi[:, :, np.newaxis])
             not_outlier *= (nsigma < nsigma_phi[iter_weight]).astype(np.float32)
-            msg.append("nsigma_phi = %0.1f" % nsigma_phi[iter_weight])
+            msg.append(f"nsigma_phi = {nsigma_phi[iter_weight]:.1f}")
 
         if check_amp or check_phi:
             ww *= not_outlier
@@ -2272,22 +2291,22 @@ def construct_delay_template(
         data.redistribute("freq")
 
     # Return results
-    return dict(
-        tau=tau,
-        alpha=alpha,
-        weight_tau=weight_tau,
-        weight_alpha=weight_alpha,
-        static_phi=static_phi,
-        static_amp=static_amp,
-        weight_static_phi=weight_static_phi,
-        weight_static_amp=weight_static_amp,
-        static_phi_fit=static_phi_fit,
-        num_freq=num_freq,
-        phi=phi,
-        amp=amp,
-        weight_phi=weight_phi,
-        weight_amp=weight_amp,
-    )
+    return {
+        "tau": tau,
+        "alpha": alpha,
+        "weight_tau": weight_tau,
+        "weight_alpha": weight_alpha,
+        "static_phi": static_phi,
+        "static_amp": static_amp,
+        "weight_static_phi": weight_static_phi,
+        "weight_static_amp": weight_static_amp,
+        "static_phi_fit": static_phi_fit,
+        "num_freq": num_freq,
+        "phi": phi,
+        "amp": amp,
+        "weight_phi": weight_phi,
+        "weight_amp": weight_amp,
+    }
 
 
 def map_input_to_noise_source(inputs, noise_sources):
@@ -2340,12 +2359,10 @@ def map_input_to_noise_source(inputs, noise_sources):
     source_names = list(map(parse_serial, noise_sources["correlator_input"]))
 
     # Map each input to a noise source
-    imap = [
+    return [
         np.argmax([count_startswith(inp, src) for src in source_names])
         for inp in input_names
     ]
-
-    return imap
 
 
 def eigen_decomposition(vis, flag):
@@ -2459,8 +2476,8 @@ def fit_poly_to_phase(freq, resp, resp_error, nparam=2):
             _func_poly_phase, x, y, p0=p0.copy(), sigma=err, absolute_sigma=False
         )
 
-    except Exception as excep:
-        logger.warning("Nonlinear phase fit failed with error:  %s" % excep)
+    except (ValueError, RuntimeError) as excep:
+        logger.warning(f"Nonlinear phase fit failed with error: {excep}")
         # Fit failed, return the initial parameter estimates
         popt = p0
         pcov = np.zeros((nparam, nparam), dtype=np.float64)
@@ -2573,13 +2590,11 @@ def _search_nearest(x, xeval):
     index_previous = np.maximum(0, index_next - 1)
     index_next = np.minimum(x.size - 1, index_next)
 
-    index = np.where(
+    return np.where(
         np.abs(xeval - x[index_previous]) < np.abs(xeval - x[index_next]),
         index_previous,
         index_next,
     )
-
-    return index
 
 
 def _interpolation_nearest(x, y, var, xeval):

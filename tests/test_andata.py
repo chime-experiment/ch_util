@@ -181,8 +181,8 @@ def test_vis_shortcuts(corr_data):
         b = a.base
         if b is None:
             return a
-        else:
-            return getbase(b)
+
+        return getbase(b)
 
     vis = np.arange(60)
     vis.shape = (3, 2, 10)

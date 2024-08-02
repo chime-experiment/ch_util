@@ -3,6 +3,7 @@ Catalog of HFB test targets
 """
 
 from __future__ import annotations
+
 import numpy as np
 from typing import TYPE_CHECKING, Optional, Union
 
@@ -156,8 +157,8 @@ def get_doppler_shifted_freq(
                 "in ch_util.hfbcat.HFBCatalog. "
                 f"Got source {source} with names {source.names}"
             )
-        else:
-            freq_rest = HFBCatalog[source.names].freq_abs
+
+        freq_rest = HFBCatalog[source.names].freq_abs
 
     # Prepare rest frequencies for broadcasting
     freq_rest = np.asarray(ensure_list(freq_rest))[:, np.newaxis]
@@ -169,9 +170,7 @@ def get_doppler_shifted_freq(
     # Compute observed frequencies from rest frequencies
     # using relativistic Doppler effect
     beta = range_rate / speed_of_light
-    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
-
-    return freq_obs
+    return freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
 
 
 # Load the HFB target list

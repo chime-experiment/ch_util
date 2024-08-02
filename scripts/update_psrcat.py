@@ -27,7 +27,7 @@ pulsars = [
         holo.HolographySource.name.regexp("^[BJ][0-9]{4}\+[0-9]*$")
     )
 ]
-print("Found {:d} pulsars in database.".format(len(pulsars)))
+print(f"Found {len(pulsars):d} pulsars in database.")
 
 # Query ATNF catalog
 flux_fields = [
@@ -69,18 +69,14 @@ for spec in specs.table:
             name = psr
             break
     if name is None:
-        print(
-            "Failed to match ATNF entry {} to queried database pulsars.".format(
-                alt_names
-            )
-        )
+        print(f"Failed to match ATNF entry {alt_names} to queried database pulsars.")
         continue
 
     # Create a new catalog entry
     if name in FluxCatalog:
-        print("{} already in catalog. Skipping.".format(name))
-        print("Alt names: {}".format(alt_names))
-        print("Found: {}".format(FluxCatalog[name].name))
+        print(f"{name} already in catalog. Skipping.")
+        print(f"Alt names: {alt_names}")
+        print(f"Found: {FluxCatalog[name].name}")
         continue
 
     # Add flux measurements
@@ -106,5 +102,5 @@ for spec in specs.table:
     entry.fit_model()
 
 # Dump to file
-print("Saving catalog to: %s" % CATALOG_NAME)
+print("Saving catalog to: " + CATALOG_NAME)
 FluxCatalog.dump(CATALOG_NAME)

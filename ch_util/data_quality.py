@@ -108,7 +108,8 @@ def good_channels(
 
     And to create a plot of the results:
 
-    >>> good_gains, good_noise, good_fit, test_chans = good_channels(data,test_freq=3,res_plot=True)
+    >>> good_gains, good_noise, good_fit, test_chans = \
+    ... good_channels(data,test_freq=3,res_plot=True)
 
     """
 
@@ -131,9 +132,9 @@ def good_channels(
         n_samp = t_step * bwdth
 
     # Processing noise synced data, if noise_synced != False:
-    if noise_synced == False:
+    if noise_synced is False:
         pass
-    elif noise_synced == True:
+    elif noise_synced is True:
         if is_gated_format:
             # If data is gated, ignore noise_synced argument:
             msg = (
@@ -145,12 +146,12 @@ def good_channels(
         else:
             # Process noise synced data:
             data = ni_utils.process_synced_data(data)
-    elif noise_synced == None:
+    elif noise_synced is None:
         # If noise_synced is not given, try to read ni_enable from data:
         try:
             # Newer data have a noise-injection flag
             ni_enable = data.attrs["fpga.ni_enable"][0].astype(bool)
-        except:
+        except KeyError:
             # If no info is found, run function to determine ni_enable:
             ni_enable = _check_ni(data, test_freq)
         # If noise injection is enabled and data is not gated:
@@ -164,7 +165,7 @@ def good_channels(
     autos_index, autos_chan = _get_autos_index(prod_array_full)
     # Select auto-corrs and test_freq only:
     visi = np.array([data.vis[test_freq, jj, :] for jj in autos_index])
-    chan_array = np.array([chan for chan in autos_chan])
+    chan_array = np.array(autos_chan)
     tmstp = data.index_map["time"]["ctime"]
 
     # Remove non-chime channels (Noise source, RFI, 26m...):
@@ -434,7 +435,7 @@ def _noise_test(visi, tmstp, n_samp, tol):
                 rnt[ii] = rnt_med
 
         # List of good noise channels (Initialized with all True):
-        good_noise = np.ones((Nchans))
+        good_noise = np.ones(Nchans)
         # Test noise against tolerance and isnan, isinf:
         for ii in range(Nchans):
             is_nan_inf = np.isnan(rnt[ii]) or np.isinf(rnt[ii])
@@ -469,7 +470,7 @@ def _radiom_noise(trace, n_samp, wind=100):
     # Use MAD to estimate RMS. More robust against RFI/correlator spikes.
     # sqrt(2) factor is due to my subtracting even - odd time bins.
     # 1.4826 factor is to go from MAD to RMS of a normal distribution:
-    # rms = [ np.std(entry)/np.sqrt(2) for entry in t_s ] # Using MAD to estimate rms for now
+    # rms = [ np.std(entry)/np.sqrt(2) for entry in t_s ] # Using MAD to estimate rms
     rms = [
         np.median([np.abs(entry[ii] - np.median(entry)) for ii in range(len(entry))])
         * 1.4826
@@ -633,30 +634,28 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
     Nact = len(test_chans)  # Number of active channels
     if good_noise is not None:
         Nnoisy = Nact - int(np.sum(good_noise))
+        percent = Nnoisy * 100.0 / Nact
         print(
-            "Noisy channels: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Nnoisy, Nact, Nnoisy * 100 / Nact
-            )
+            f"Noisy channels: {Nnoisy} out of {Nact} active channels ({percent:2.1f}%)"
         )
         good_chans = good_chans * good_noise
     else:
         Nnoisy = None
     if good_gains is not None:
         Ngains = Nact - int(np.sum(good_gains))
+        percent = Ngains * 100.0 / Nact
         print(
-            "High digital gains: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Ngains, Nact, Ngains * 100 / Nact
-            )
+            "High digital gains: "
+            f"{Ngains} out of {Nact} active channels ({percent:2.1f}%)"
         )
         good_chans = good_chans * good_gains
     else:
         Ngains = None
     if good_fit is not None:
         Nfit = Nact - int(np.sum(good_fit))
+        percent = Nfit * 100.0 / Nact
         print(
-            "Bad fit to T_sky: {0} out of {1} active channels ({2:2.1f}%)".format(
-                Nfit, Nact, Nfit * 100 / Nact
-            )
+            f"Bad fit to T_sky: {Nfit} out of {Nact} active channels ({percent:2.1f}%)"
         )
         good_chans = good_chans * good_fit
     else:
@@ -666,11 +665,8 @@ def _stats_print(good_noise, good_gains, good_fit, test_chans):
 
     if not ((good_noise is None) and (good_gains is None) and (good_fit is None)):
         Nbad = Nact - int(np.sum(good_chans))
-        print(
-            "Overall bad: {0} out of {1} active channels ({2:2.1f}%)\n".format(
-                Nbad, Nact, Nbad * 100 / Nact
-            )
-        )
+        percent = Nbad * 100.0 / Nact
+        print(f"Overall bad: {Nbad} out of {Nact} active channels ({percent:2.1f}%)\n")
     else:
         Nbad = None
 
@@ -726,10 +722,9 @@ def _median_filter(visi, ks=3):
     from scipy.signal import medfilt
 
     # Median filter visibilities:
-    cut_vis = np.array(
+    return np.array(
         [medfilt(visi[jj, :].real, kernel_size=ks) for jj in range(visi.shape[0])]
     )
-    return cut_vis
 
 
 def _get_template(cut_vis_full, stand_chans):
@@ -775,7 +770,7 @@ def _get_template(cut_vis_full, stand_chans):
         indices = np.delete(indices, max_ind)
     # Cut-out channels with largest deviations:
     cut_vis = np.array(
-        [cut_vis[jj, :] for jj in range(len(cut_vis)) if not (jj in del_ind)]
+        [cut_vis[jj, :] for jj in range(len(cut_vis)) if jj not in del_ind]
     )
 
     Nchans = cut_vis.shape[0]  # Number of channels after cut
@@ -840,7 +835,7 @@ def _fit_template(Ts, cut_vis, tol):
 
     from scipy.optimize import curve_fit
 
-    class Template(object):
+    class Template:
         def __init__(self, tmplt):
             self.tmplt = tmplt
 
@@ -903,9 +898,7 @@ def _create_plot(
     tmstp2 = cut_tmstp
 
     # For title, use start time stamp:
-    title = "Good channels result for {0}".format(
-        ctime.unix_to_datetime(tmstp1[0]).date()
-    )
+    title = f"Good channels result for {ctime.unix_to_datetime(tmstp1[0]).date()}"
 
     # I need to know the slot for each channel:
     def get_slot(channel):
@@ -973,7 +966,7 @@ def _create_plot(
         plt.ylim(med - 7.0 * mad, med + 7.0 * mad)
 
         # labels:
-        plt.ylabel("Ch{0} (Sl.{1})".format(chan, get_slot(chan)), fontsize=8)
+        plt.ylabel(f"Ch{chan} (Sl.{get_slot(chan)})", fontsize=8)
 
         # Hide numbering:
         frame = plt.gca()
@@ -989,16 +982,12 @@ def _create_plot(
                 # Put x-labels on bottom plots:
                 if time_unit == "days":
                     plt.xlabel(
-                        "Time (days since {0} UTC)".format(
-                            ctime.unix_to_datetime(tmstp1[0])
-                        ),
+                        f"Time (days since {ctime.unix_to_datetime(tmstp1[0])} UTC)",
                         fontsize=10,
                     )
                 else:
                     plt.xlabel(
-                        "Time (hours since {0} UTC)".format(
-                            ctime.unix_to_datetime(tmstp1[0])
-                        ),
+                        f"Time (hours since {ctime.unix_to_datetime(tmstp1[0])} UTC)",
                         fontsize=10,
                     )
 
@@ -1011,7 +1000,7 @@ def _create_plot(
         elif chan == 192:
             plt.title("East cyl. P2(E-W)", fontsize=12)
 
-    filename = "plot_fit_{0}.pdf".format(int(time.time()))
+    filename = f"plot_fit_{int(time.time())}.pdf"
     plt.savefig(filename)
     plt.close()
-    print("Finished creating plot. File name: {0}".format(filename))
+    print(f"Finished creating plot. File name: {filename}")

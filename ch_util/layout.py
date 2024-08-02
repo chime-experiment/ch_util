@@ -125,69 +125,70 @@ Constants
 - :py:const:`EVENT_ALL`
 - :py:const:`ORDER_ASC`
 - :py:const:`ORDER_DESC`
-"""
+"""  # noqa: E501
 
 import datetime
-import inspect
 import logging
+from logging import NullHandler
 import networkx as nx
 import os
 import peewee as pw
-import re
 
 import chimedb.core
 
 import caput.time as ctime
 
-_property = property  # Do this since there is a class "property" in _db_tables.
+# Do this since there is a class "property" in _db_tables.
+from builtins import property as _property
 from ._db_tables import (
-    EVENT_AT,
-    EVENT_BEFORE,
-    EVENT_AFTER,
-    EVENT_ALL,
-    ORDER_ASC,
-    ORDER_DESC,
-    _check_fail,
-    _plural,
-    _are,
-    AlreadyExists,
-    NoSubgraph,
-    BadSubgraph,
-    DoesNotExist,
-    UnknownUser,
-    NoPermission,
-    LayoutIntegrity,
-    PropertyType,
-    PropertyUnchanged,
-    ClosestDraw,
-    set_user,
-    graph_obj,
-    global_flag_category,
-    global_flag,
-    component_type,
-    component_type_rev,
-    external_repo,
-    component,
-    component_history,
-    component_doc,
-    connexion,
-    property_type,
-    property_component,
-    property,
-    event_type,
-    timestamp,
-    event,
-    predef_subgraph_spec,
-    predef_subgraph_spec_param,
-    user_permission_type,
-    user_permission,
-    compare_connexion,
-    add_component,
-    remove_component,
-    set_property,
-    make_connexion,
-    sever_connexion,
+    EVENT_AT as EVENT_AT,
+    EVENT_BEFORE as EVENT_BEFORE,
+    EVENT_AFTER as EVENT_AFTER,
+    EVENT_ALL as EVENT_ALL,
+    ORDER_ASC as ORDER_ASC,
+    ORDER_DESC as ORDER_DESC,
+    _check_fail as _check_fail,
+    _plural as _plural,
+    _are as _are,
+    AlreadyExists as AlreadyExists,
+    NoSubgraph as NoSubgraph,
+    BadSubgraph as BadSubgraph,
+    DoesNotExist as DoesNotExist,
+    UnknownUser as UnknownUser,
+    NoPermission as NoPermission,
+    LayoutIntegrity as LayoutIntegrity,
+    PropertyType as PropertyType,
+    PropertyUnchanged as PropertyUnchanged,
+    ClosestDraw as ClosestDraw,
+    set_user as set_user,
+    graph_obj as graph_obj,
+    global_flag_category as global_flag_category,
+    global_flag as global_flag,
+    component_type as component_type,
+    component_type_rev as component_type_rev,
+    external_repo as external_repo,
+    component as component,
+    component_history as component_history,
+    component_doc as component_doc,
+    connexion as connexion,
+    property_type as property_type,
+    property_component as property_component,
+    property as property,
+    event_type as event_type,
+    timestamp as timestamp,
+    event as event,
+    predef_subgraph_spec as predef_subgraph_spec,
+    predef_subgraph_spec_param as predef_subgraph_spec_param,
+    user_permission_type as user_permission_type,
+    user_permission as user_permission,
+    compare_connexion as compare_connexion,
+    add_component as add_component,
+    remove_component as remove_component,
+    set_property as set_property,
+    make_connexion as make_connexion,
+    sever_connexion as sever_connexion,
 )
+from ._db_tables import connect_peewee_tables as connect_database
 
 # Legacy name
 from chimedb.core import NotFoundError as NotFound
@@ -197,13 +198,10 @@ os.environ["TZ"] = "UTC"
 # Logging
 # =======
 
-# Set default logging handler to avoid "No handlers could be found for logger
-# 'layout'" warnings.
-from logging import NullHandler
-
-
 # All peewee-generated logs are logged to this namespace.
 logger = logging.getLogger("layout")
+# Set default logging handler to avoid "No handlers could be found for logger
+# 'layout'" warnings.
 logger.addHandler(NullHandler())
 
 
@@ -211,7 +209,7 @@ logger.addHandler(NullHandler())
 # =======
 
 
-class subgraph_spec(object):
+class subgraph_spec:
     """Specifications for extracting a subgraph from a full graph.
 
     The subgraph specification can be created from scratch by passing the
@@ -271,7 +269,7 @@ class subgraph_spec(object):
     Most of them are as short as we would expect, but there are some
     complications. Let's look at that first one by printing out its LTF:
 
-    >>> print sg[0].ltf
+    >>> print(sg[0].ltf)
     # C-can thru to RFT thru.
     CANAD0B
     RFTA15B attenuation=10 therm_avail=ch7
@@ -303,7 +301,7 @@ class subgraph_spec(object):
     >>> sg_spec.terminate += ["200m coax", "HK hydra", "50m coax"]
     >>> sg_spec.hide += ["200m coax", "HK hydra", "50m coax"]
     >>> sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec)
-    >>> print [s.order() for s in sg]
+    >>> print([s.order() for s in sg])
     [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
     3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
@@ -323,7 +321,7 @@ class subgraph_spec(object):
     CANBL1B
     >>> sg_spec.hide = []
     >>> bad_sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec, sn)
-    >>> print bad_sg.ltf()
+    >>> print(bad_sg.ltf())
     # C-can thru to c-can thru.
     CANBL1B
     CXS0017
@@ -342,7 +340,7 @@ class subgraph_spec(object):
 
     >>> sg_spec.oneway = [["SMA coax", "RFT thru"]]
     >>> bad_sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec, sn)
-    >>> print bad_sg.ltf()
+    >>> print(bad_sg.ltf())
     # C-can thru to RFT thru.
     CANBL1B
     CXS0017
@@ -380,7 +378,7 @@ class subgraph_spec(object):
             elif param.action == "H":
                 h.append(param.type1_id)
             else:
-                raise RuntimeError('Unknown subgraph action type "%s".' % param.action)
+                raise RuntimeError(f'Unknown subgraph action type "{param.action}".')
         return cls(s, t, o, h)
 
     @_property
@@ -453,14 +451,16 @@ class graph(nx.Graph):
     `networkx.Graph <http://networkx.github.io/documentation/networkx-1.9.1/>`_
     methods:
 
-    >>> print g.order(), g.size()
+    >>> print(g.order(), g.size())
     2483 2660
 
     There are some convenience methods for our implementation. For example, you
     can easily find components by component type:
 
-    >>> print g.component(type = "reflector")
-    [<layout.component object at 0x7fd1b2cda710>, <layout.component object at 0x7fd1b2cda810>, <layout.component object at 0x7fd1b2cfb7d0>]
+    >>> print(g.component(type = "reflector"))
+    [<layout.component object at 0x7fd1b2cda710>,
+    <layout.component object at 0x7fd1b2cda810>,
+    <layout.component object at 0x7fd1b2cfb7d0>]
 
     Note that the graph nodes are :obj:`component` objects. You can also use the
     :meth:`component` method to search for components by serial number:
@@ -469,15 +469,17 @@ class graph(nx.Graph):
 
     Node properties are stored as per usual for :class:`networkx.Graph` objects:
 
-    >>> print g.nodes[ant]
-    {'_rev_id': 11L, '_type_id': 2L, u'pol1_orient': <layout.property object at 0x7f31ed323fd0>, '_type_name': u'antenna', '_id': 32L, u'pol2_orient': <layout.property object at 0x7f31ed2c8790>, '_rev_name': u'B'}
+    >>> print(g.nodes[ant])
+    {'_rev_id': 11L, '_type_id': 2L, '_type_name': 'antenna', '_id': 32L,
+    'pol1_orient': <layout.property object at 0x7f31ed323fd0>,
+    'pol2_orient': <layout.property object at 0x7f31ed2c8790>, '_rev_name': 'B'}
 
     Note, however, that there are some internally-used properties (starting with
     an underscore). The :meth:`node_property` returns a dictionary of properties
     without these private memebers:
 
     >>> for p in g.node_property(ant).values():
-    ...   print "%s = %s %s" % (p.type.name, p.value, p.type.units if p.type.units else "")
+    ...   print(p.type.name, "=", p.value, p.type.units if p.type.units else "")
     pol1_orient = S
     pol2_orient = E
 
@@ -485,7 +487,7 @@ class graph(nx.Graph):
     component, using :meth:`closest_of_type`:
 
     >>> slt_type = layout.component_type.get(name = "cassette slot")
-    >>> print g.closest_of_type(ant, slt_type).sn
+    >>> print(g.closest_of_type(ant, slt_type).sn)
     CSS004C0
 
     Use of :meth:`closest_of_type` can be subtle for components separated by long
@@ -504,8 +506,8 @@ class graph(nx.Graph):
         self._time = time
         self._sg_spec = None
         self._sg_spec_start = None
-        self._sn_dict = dict()
-        self._ctype_dict = dict()
+        self._sn_dict = {}
+        self._ctype_dict = {}
 
         # We will cache all the component types, revisions and properties now,
         # since these will be used constantly by the graph.
@@ -572,13 +574,12 @@ class graph(nx.Graph):
             "JOIN timestamp t1 ON e.start_id = t1.id "
             "LEFT JOIN timestamp t2 ON e.end_id = t2.id "
             "WHERE e.active = 1 AND e1.type_id = 1 AND e2.type_id = 1 AND "
-            "e1t1.time <= '%s' AND "
-            "(e1.end_id IS NULL OR e1t2.time > '%s') AND "
-            "e2t1.time <= '%s' AND "
-            "(e2.end_id IS NULL OR e2t2.time > '%s') AND "
-            "t1.time <= '%s' AND "
-            "(e.end_id IS NULL OR t2.time > '%s');"
-            % (time, time, time, time, time, time)
+            f"e1t1.time <= '{time}' AND "
+            f"(e1.end_id IS NULL OR e1t2.time > '{time}') AND "
+            f"e2t1.time <= '{time}' AND "
+            f"(e2.end_id IS NULL OR e2t2.time > '{time}') AND "
+            f"t1.time <= '{time}' AND "
+            f"(e.end_id IS NULL OR t2.time > '{time}');"
         )
         # print sql
         conn_list = chimedb.core.proxy.execute_sql(sql)
@@ -604,10 +605,10 @@ class graph(nx.Graph):
             "JOIN timestamp t1 ON e.start_id = t1.id "
             "LEFT JOIN timestamp t2 ON e.end_id = t2.id "
             "WHERE e.active = 1 AND ce.type_id = 1 AND "
-            "ct1.time <= '%s' AND "
-            "(ce.end_id IS NULL OR ct2.time > '%s') AND "
-            "t1.time <= '%s' AND "
-            "(e.end_id IS NULL OR t2.time > '%s');" % (time, time, time, time)
+            f"ct1.time <= '{time}' AND "
+            f"(ce.end_id IS NULL OR ct2.time > '{time}') AND "
+            f"t1.time <= '{time}' AND "
+            f"(e.end_id IS NULL OR t2.time > '{time}');"
         )
         prop_list = chimedb.core.proxy.execute_sql(sql)
         for r in prop_list:
@@ -618,8 +619,8 @@ class graph(nx.Graph):
 
         if sg_spec:
             return graph.from_graph(g, sg_spec, sg_start_sn)
-        else:
-            return g
+
+        return g
 
     def _ensure_add(self, id, sn, type, rev):
         """Robustly add a component, avoiding duplication."""
@@ -667,11 +668,11 @@ class graph(nx.Graph):
         >>> g = layout.graph.from_db(datetime(2014, 10, 5, 12, 0))
         >>> rft = g.component(comp = "RFTK07B")
         >>> for p in g.node_property(rft).values():
-        ...   print "%s = %s %s" % (p.type.name, p.value, p.type.units if p.type.units else "")
+        ...   print(p.type.name, "=", p.value, p.type.units if p.type.units else "")
         attenuation = 10 dB
         therm_avail = ch1
         """
-        ret = dict()
+        ret = {}
         for key, val in self.nodes[n].items():
             if key[0] != "_":
                 ret[key] = val
@@ -712,7 +713,7 @@ class graph(nx.Graph):
         >>> from ch_util import graph
         >>> from datetime import datetime
         >>> g = layout.graph.from_db(datetime(2014, 10, 5, 12, 0))
-        >>> print g.component("CXA0005A").type_rev.name
+        >>> print(g.component("CXA0005A").type_rev.name)
         B
         >>> for r in g.component(type = "reflector"):
         ...   print r.sn
@@ -730,7 +731,7 @@ class graph(nx.Graph):
             try:
                 ret = self._sn_dict[sn]
             except KeyError:
-                raise NotFound('Serial number "%s" is not in the graph.' % (sn))
+                raise NotFound('Serial number "{sn}" is not in the graph.')
         elif not type:
             ret = self.nodes()
         else:
@@ -745,9 +746,7 @@ class graph(nx.Graph):
                 if sort_sn:
                     ret.sort(key=lambda x: x.sn)
             except KeyError:
-                raise NotFound(
-                    'No components of type "%s" are in the graph.' % type_name
-                )
+                raise NotFound(f'No components of type "{type_name}" are in the graph.')
         return ret
 
     def _subgraph_recurse(self, gr, comp1, sg, done, last_no_hide):
@@ -814,7 +813,7 @@ class graph(nx.Graph):
         A list of :obj:`graph` objects, one for each subgraph found. If, however,
         *g* is set to :obj:`None`, a reference to the input graph is returned.
         """
-        if sg_spec == None:
+        if sg_spec is None:
             return g
         if sg_spec.start in sg_spec.terminate:
             raise BadSubgraph(
@@ -841,8 +840,8 @@ class graph(nx.Graph):
             raise NotFound("No subgraph was found.")
         if sg_start_sn:
             return ret[-1]
-        else:
-            return ret
+
+        return ret
 
     def _print_chain(self, chain):
         if len(chain) <= 1:
@@ -851,11 +850,11 @@ class graph(nx.Graph):
         ret = ""
         ctype1 = chain[0].type.name
         ctype2 = chain[-1].type.name
-        ret = "# %s to %s.\n" % (ctype1[0].upper() + ctype1[1:], ctype2)
+        ret = "# " + (ctype1[0].upper() + ctype1[1:]) + " to " + ctype2 + ".\n"
         for c in chain:
             ret += c.sn
             for prop, value in self.node_property(c).items():
-                ret += " %s=%s" % (prop, value.value)
+                ret += " " + prop + "=" + value.value
             ret += "\n"
         ret += "\n"
 
@@ -923,8 +922,8 @@ class graph(nx.Graph):
                     layout.component_type.get(name = "HK preamp").id,
                     layout.component_type.get(name = "HK hydra").id]
         >>> sg_spec = layout.subgraph_spec(start, terminate, [], hide)
-        >>> sg = layout.graph.from_db(datetime(2014, 11, 20, 12, 0), sg_spec, "ANT0108B")
-        >>> print sg.ltf()
+        >>> sg = layout.graph.from_db(datetime(2014, 11, 20, 12, 0), sg_spec,"ANT0108B")
+        >>> print(sg.ltf())
         # Antenna to correlator input.
         ANT0108B pol1_orient=S pol2_orient=E
         PL0108B1
@@ -1052,8 +1051,8 @@ class graph(nx.Graph):
         # Return the shortest path (or None if not found)
         if one:
             return shortest[0]
-        else:
-            return shortest
+
+        return shortest
 
     def closest_of_type(self, comp, type, type_exclude=None, ignore_draws=True):
         """Searches for the closest connected component of a given type.
@@ -1099,38 +1098,41 @@ class graph(nx.Graph):
         >>> import layout
         >>> from datetime import datetime
         >>> g = layout.graph.from_db(datetime(2014, 11, 5, 12, 0))
-        >>> print g.closest_of_type("ANT0044B", "cassette slot").sn
+        >>> print(g.closest_of_type("ANT0044B", "cassette slot").sn)
         CSS004C0
 
         The example above is simple as the two components are adjacent:
 
-        >>> print [c.sn for c in g.shortest_path_to_type("ANT0044B", "cassette slot")]
-        [u'ANT0044B', u'CSS004C0']
+        >>> print([c.sn for c in g.shortest_path_to_type("ANT0044B", "cassette slot")])
+        ['ANT0044B', 'CSS004C0']
 
         In general, though, you need to take care when
         using this method and make judicious use of the **type_exclude** parameter.
         For example, consider the following example:
 
-        >>> print g.closest_of_type("K7BP16-00040112", "RFT thru").sn
+        >>> print(g.closest_of_type("K7BP16-00040112", "RFT thru").sn)
         RFTB15B
 
         It seems OK on the surface, but the path it has used is probably not what
         you want:
 
-        >>> print [c.sn for c in g.shortest_path_to_type("K7BP16-00040112", "RFT thru")]
-        [u'K7BP16-00040112', u'K7BP16-000401', u'K7BP16-00040101', u'FLA0280B', u'RFTB15B']
+        >>> print([c.sn for c in g.shortest_path_to_type("K7BP16-00040112","RFT thru")])
+        ['K7BP16-00040112', 'K7BP16-000401', 'K7BP16-00040101', 'FLA0280B', 'RFTB15B']
 
         We need to block the searcher from going into the correlator card slot and
         then back out another input, which we can do like so:
 
-        >>> print g.closest_of_type("K7BP16-00040112", "RFT thru", type_exclude = "correlator card slot").sn
+        >>> print(g.closest_of_type("K7BP16-00040112", "RFT thru",
+        ... type_exclude = "correlator card slot").sn)
         RFTQ15B
 
         The reason the first search went through the correlator card slot is because
         there are delay cables and splitters involved.
 
-        >>> print [c.sn for c in g.shortest_path_to_type("K7BP16-00040112", "RFT thru", type_exclude = "correlator card slot")]
-        [u'K7BP16-00040112', u'CXS0279', u'CXA0018A', u'CXA0139B', u'SPL001AP2', u'SPL001A', u'SPL001AP3', u'CXS0281', u'RFTQ15B']
+        >>> print([c.sn for c in g.shortest_path_to_type("K7BP16-00040112",
+        ... "RFT thru", type_exclude = "correlator card slot")])
+        ['K7BP16-00040112', 'CXS0279', 'CXA0018A', 'CXA0139B', 'SPL001AP2',
+        'SPL001A', 'SPL001AP3', 'CXS0281', 'RFTQ15B']
 
         The shortest path really was through the correlator card slot, until we
         explicitly rejected such paths.
@@ -1238,8 +1240,8 @@ def _add_to_chain(chain, sn, prop, sever, fail_comp):
         if chain[-1] == "//":
             if len(chain) < 2:
                 raise SyntaxError(
-                    'Confused about chain ending in "%s". Is the '
-                    "first serial number valid?" % (chain[-1])
+                    f'Confused about chain ending in "{chain[-1]}". '
+                    "Is the first serial number valid?"
                 )
             try:
                 _add_to_sever(chain[-2]["comp"].sn, sn, sever, fail_comp)
@@ -1248,31 +1250,30 @@ def _add_to_chain(chain, sn, prop, sever, fail_comp):
             del chain[-2]
             del chain[-1]
 
-    chain.append(dict())
+    chain.append({})
     try:
         chain[-1]["comp"] = component.get(sn=sn)
         for k in range(len(prop)):
             if len(prop[k].split("=")) != 2:
-                raise SyntaxError('Confused by the property command "%s".' % prop[k])
+                raise SyntaxError(f'Confused by the property command "{prop[k]}".')
             chain[-1][prop[k].split("=")[0]] = prop[k].split("=")[1]
     except pw.DoesNotExist:
-        if not sn in fail_comp:
+        if sn not in fail_comp:
             fail_comp.append(sn)
 
 
 def _id_from_multi(cls, o):
     if isinstance(o, int):
         return o
-    elif isinstance(o, cls):
+
+    if isinstance(o, cls):
         return o.id
-    else:
-        return cls.get(name=o).id
+
+    return cls.get(name=o).id
 
 
 # Public Functions
 # ================
-
-from ._db_tables import connect_peewee_tables as connect_database
 
 
 def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
@@ -1297,9 +1298,9 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
     """
 
     try:
-        with open(ltf, "r") as myfile:
+        with open(ltf) as myfile:
             ltf = myfile.readlines()
-    except IOError:
+    except OSError:
         try:
             ltf = ltf.splitlines()
         except AttributeError:
@@ -1311,31 +1312,31 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
     chain.append([])
     sever = []
     i = 0
-    for l in ltf:
-        if len(l) and l[0] == "#":
+    for line in ltf:
+        if len(line) and line[0] == "#":
             continue
         severed = False
         try:
-            if l.split()[1] == "//":
+            if line.split()[1] == "//":
                 severed = True
         except IndexError:
             pass
 
-        if not len(l) or l.isspace() or severed or l[0:2] == "$$":
+        if not len(line) or line.isspace() or severed or line[0:2] == "$$":
             if severed:
-                _add_to_sever(l.split()[0], l.split()[2], sever, fail_comp)
+                _add_to_sever(line.split()[0], line.split()[2], sever, fail_comp)
             if multi_sn:
-                _add_to_chain(chain[i], multi_sn, prop, sever, fail_comp)
+                _add_to_chain(chain[i], multi_sn, multi_prop, sever, fail_comp)
                 multi_sn = False
             chain.append([])
             i += 1
             continue
 
-        l = l.replace("\n", "")
-        l = l.strip()
+        line = line.replace("\n", "")
+        line = line.strip()
 
-        sn = l.split()[0]
-        prop = l.split()[1:]
+        sn = line.split()[0]
+        prop = line.split()[1:]
 
         # Check to see if this is a multiple-line SN.
         if multi_sn:
@@ -1372,9 +1373,8 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
         fail_comp,
         False,
         DoesNotExist,
-        "The following component%s "
-        "%s not in the DB and must be added first"
-        % (_plural(fail_comp), _are(fail_comp)),
+        f"The following component{_plural(fail_comp)} "
+        f"{_are(fail_comp)} not in the DB and must be added first",
     )
 
     conn_list = []
@@ -1384,16 +1384,13 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
             comp1 = c[i - 1]["comp"]
             comp2 = c[i]["comp"]
             if comp1.sn == comp2.sn:
-                logger.info(
-                    "Skipping auto connexion: %s <=> %s." % (comp1.sn, comp2.sn)
-                )
+                logger.info(f"Skipping auto connexion: {comp1.sn} <=> {comp2.sn}.")
             else:
                 conn = connexion.from_pair(comp1, comp2)
                 try:
                     if conn.is_permanent(time):
                         logger.info(
-                            "Skipping permanent connexion: %s <=> %s."
-                            % (comp1.sn, comp2.sn)
+                            f"Skipping permanent connexion: {comp1.sn} <=> {comp2.sn}."
                         )
                     elif conn not in conn_list:
                         conn_list.append(conn)
@@ -1407,7 +1404,7 @@ def enter_ltf(ltf, time=datetime.datetime.now(), notes=None, force=False):
                 try:
                     prop_list.append([comp, property_type.get(name=p), c[i][p]])
                 except pw.DoesNotExist:
-                    raise DoesNotExist('Property type "%s" does not exist.' % p)
+                    raise DoesNotExist(f'Property type "{p}" does not exist.')
     make_connexion(conn_list, time, False, notes, force)
     sever_connexion(sever, time, notes, force)
     for p in prop_list:
@@ -1437,7 +1434,12 @@ def get_global_flag_times(flag):
     else:
         query_ = global_flag.select().where(global_flag.id == flag)
 
-    flag_ = query_.join(graph_obj).join(event).where(event.active == True).get()
+    flag_ = (
+        query_.join(graph_obj)
+        .join(event)
+        .where(event.active == True)  # noqa: E712
+        .get()
+    )
 
     event_ = event.get(graph_obj=flag_.id, active=True)
 
@@ -1472,7 +1474,7 @@ def global_flags_between(start_time, end_time, severity=None):
     query = global_flag.select()
     if severity:
         query = query.where(global_flag.severity == severity)
-    query = query.join(graph_obj).join(event).where(event.active == True)
+    query = query.join(graph_obj).join(event).where(event.active == True)  # noqa: E712
 
     # Set aliases for the join
     ststamp = timestamp.alias()
