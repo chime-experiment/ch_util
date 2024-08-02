@@ -144,11 +144,10 @@ import ch_ephem.observers
 #
 # etc.
 
-# Private data
-# ============
+# Data
+# ====
 
-_26M_B = 2.14  # m
-_PF_SPACE = 22.0  # Pathfinder cylinder spacing
+PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
 
 # Classes
@@ -2515,6 +2514,7 @@ def delay(
 
     # Add the b-term for baselines including the 26m Galt telescope
     if bterm:
+        _26M_B = 2.14  # m
         b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
 
         galt_feeds = get_holographic_index(feeds)
