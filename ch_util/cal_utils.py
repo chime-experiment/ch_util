@@ -8,7 +8,7 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 import inspect
 import logging
-from typing import Dict, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import scipy.stats
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-class FitTransit(object, metaclass=ABCMeta):
+class FitTransit(metaclass=ABCMeta):
     """Base class for fitting models to point source transits.
 
     The `fit` method should be used to populate the `param`, `param_cov`, `chisq`,
@@ -60,7 +60,7 @@ class FitTransit(object, metaclass=ABCMeta):
     """
 
     _tval = {}
-    component = np.array(["complex"], dtype=np.string_)
+    component = np.array(["complex"], dtype=np.bytes_)
 
     def __init__(self, *args, **kwargs):
         """Instantiates a FitTransit object.
@@ -164,7 +164,7 @@ class FitTransit(object, metaclass=ABCMeta):
         dtype = ha.dtype
 
         if not np.isscalar(width) and (width.shape != shp):
-            ValueError("Keyword with must be scalar or have shape %s." % str(shp))
+            ValueError(f"Keyword with must be scalar or have shape {shp!s}.")
 
         self.param = np.full(shp + (self.nparam,), np.nan, dtype=dtype)
         self.param_cov = np.full(shp + (self.nparam, self.nparam), np.nan, dtype=dtype)
@@ -190,8 +190,8 @@ class FitTransit(object, metaclass=ABCMeta):
                         absolute_sigma=absolute_sigma,
                         **kwargs,
                     )
-                except Exception as error:
-                    logger.debug("Index %s failed with error: %s" % (str(ind), error))
+                except (ValueError, KeyError) as error:
+                    logger.debug(f"Index {ind!s} failed with error: {error}")
                     continue
 
                 self.param[ind] = param
@@ -209,7 +209,7 @@ class FitTransit(object, metaclass=ABCMeta):
         parameter_names : np.ndarray[nparam,]
             Names of the parameters.
         """
-        return np.array(["param%d" % p for p in range(self.nparam)], dtype=np.string_)
+        return np.array(["param%d" % p for p in range(self.nparam)], dtype=np.bytes_)
 
     @property
     def param_corr(self):
@@ -240,6 +240,7 @@ class FitTransit(object, metaclass=ABCMeta):
         """
         if self.param is not None:
             return self.param.shape[:-1] or None
+        return None
 
     @property
     def nparam(self):
@@ -261,7 +262,8 @@ class FitTransit(object, metaclass=ABCMeta):
         Returns
         -------
         ncomponent : int
-            Number of components (i.e, real and imag, amp and phase, complex) that have been fit.
+            Number of components (i.e, real and imag, amp and phase,
+            complex) that have been fit.
         """
         return self.component.size
 
@@ -407,7 +409,7 @@ class FitPoly(FitTransit):
         poly_type : str
             Type of polynomial.  Can be 'standard', 'hermite', or 'chebyshev'.
         """
-        super(FitPoly, self).__init__(poly_type=poly_type, *args, **kwargs)
+        super().__init__(poly_type=poly_type, *args, **kwargs)
 
         self._set_polynomial_model(poly_type)
 
@@ -430,8 +432,8 @@ class FitPoly(FitTransit):
             self._root = np.polynomial.chebyshev.chebroots
         else:
             raise ValueError(
-                "Do not recognize polynomial type %s."
-                "Options are 'standard', 'hermite', or 'chebyshev'." % poly_type
+                f"Do not recognize polynomial type {poly_type}."
+                "Options are 'standard', 'hermite', or 'chebyshev'."
             )
 
         self.poly_type = poly_type
@@ -460,7 +462,7 @@ class FitRealImag(FitTransit):
     methods for predicting the uncertainty on each.
     """
 
-    component = np.array(["real", "imag"], dtype=np.string_)
+    component = np.array(["real", "imag"], dtype=np.bytes_)
 
     def uncertainty_real(self, ha, alpha=0.32, elementwise=False):
         """Predicts the uncertainty on real component at given hour angle(s).
@@ -526,11 +528,10 @@ class FitRealImag(FitTransit):
             Uncertainty on the response.
         """
         with np.errstate(all="ignore"):
-            err = np.sqrt(
+            return np.sqrt(
                 self.uncertainty_real(ha, alpha=alpha, elementwise=elementwise) ** 2
                 + self.uncertainty_imag(ha, alpha=alpha, elementwise=elementwise) ** 2
             )
-        return err
 
     def _jacobian(self, ha):
         raise NotImplementedError(
@@ -571,9 +572,7 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         if even and odd:
             raise RuntimeError("Cannot request both even AND odd.")
 
-        super(FitPolyRealPolyImag, self).__init__(
-            poly_deg=poly_deg, even=even, odd=odd, *args, **kwargs
-        )
+        super().__init__(poly_deg=poly_deg, even=even, odd=odd, *args, **kwargs)
 
         self.poly_deg = poly_deg
         self.even = even
@@ -756,7 +755,7 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
         return np.array(
             ["%s_poly_real_coeff%d" % (self.poly_type, p) for p in range(self.nparr)]
             + ["%s_poly_imag_coeff%d" % (self.poly_type, p) for p in range(self.npari)],
-            dtype=np.string_,
+            dtype=np.bytes_,
         )
 
     def peak(self):
@@ -772,7 +771,7 @@ class FitAmpPhase(FitTransit):
     methods for predicting the uncertainty on each.
     """
 
-    component = np.array(["amplitude", "phase"], dtype=np.string_)
+    component = np.array(["amplitude", "phase"], dtype=np.bytes_)
 
     def uncertainty_amp(self, ha, alpha=0.32, elementwise=False):
         """Predicts the uncertainty on amplitude at given hour angle(s).
@@ -838,11 +837,10 @@ class FitAmpPhase(FitTransit):
             Uncertainty on the response.
         """
         with np.errstate(all="ignore"):
-            err = np.abs(self._model(ha, elementwise=elementwise)) * np.sqrt(
+            return np.abs(self._model(ha, elementwise=elementwise)) * np.sqrt(
                 self.uncertainty_amp(ha, alpha=alpha, elementwise=elementwise) ** 2
                 + self.uncertainty_phi(ha, alpha=alpha, elementwise=elementwise) ** 2
             )
-        return err
 
     def _jacobian(self, ha):
         raise NotImplementedError(
@@ -878,7 +876,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         poly_deg_phi : int
             Degree of the polynomial to fit to phase.
         """
-        super(FitPolyLogAmpPolyPhase, self).__init__(
+        super().__init__(
             poly_deg_amp=poly_deg_amp, poly_deg_phi=poly_deg_phi, *args, **kwargs
         )
 
@@ -974,7 +972,9 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
             if window is not None:
                 if kk > 0:
-                    center = self.peak(param=coeff)
+                    raise RuntimeError("coeff is not defined")
+                    # Where is `coeff` supposed to be defined?
+                    # center = self.peak(param=coeff)
 
                 if np.isnan(center):
                     raise RuntimeError("No peak found.")
@@ -1147,14 +1147,14 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         return np.array(
             ["%s_poly_amp_coeff%d" % (self.poly_type, p) for p in range(self.npara)]
             + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
-            dtype=np.string_,
+            dtype=np.bytes_,
         )
 
 
 class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
     """Class that enables fits of a gaussian to amplitude and a polynomial to phase."""
 
-    component = np.array(["complex"], dtype=np.string_)
+    component = np.array(["complex"], dtype=np.bytes_)
     npara = 3
 
     def __init__(self, poly_deg_phi=5, *args, **kwargs):
@@ -1165,9 +1165,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         poly_deg_phi : int
             Degree of the polynomial to fit to phase.
         """
-        super(FitGaussAmpPolyPhase, self).__init__(
-            poly_deg_phi=poly_deg_phi, *args, **kwargs
-        )
+        super().__init__(poly_deg_phi=poly_deg_phi, *args, **kwargs)
 
         self.poly_deg_phi = poly_deg_phi
         self.nparp = poly_deg_phi + 1
@@ -1287,16 +1285,17 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
             model_amp = peak_amplitude * np.exp(-4.0 * np.log(2.0) * (dxr / fwhm) ** 2)
             model_phase = self._eval(xr, poly_coeff)
 
-            model = np.concatenate(
+            return np.concatenate(
                 (model_amp * np.cos(model_phase), model_amp * np.sin(model_phase))
             )
-
-            return model
 
         return fit_func
 
     def _get_fit_jac(self):
-        """Generates a function that can be used by `curve_fit` to compute jacobian of the model."""
+        """Get `curve_fit` Jacobian
+
+        Generates a function that can be used by `curve_fit` to compute
+        Jacobian of the model."""
 
         def fit_jac(x, *param):
             """Function used by `curve_fit` to compute the jacobian.
@@ -1424,7 +1423,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         return np.array(
             ["peak_amplitude", "centroid", "fwhm"]
             + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
-            dtype=np.string_,
+            dtype=np.bytes_,
         )
 
     @property
@@ -1643,32 +1642,32 @@ def fit_point_source_map(
             "fringe_rate": 22.0 * freq * 1e6 / 3e8,
         }
 
-        lb_dict = {
-            "peak_amplitude": 0.0,
-            "centroid_x": ra0 - 1.5,
-            "centroid_y": dec0 - 0.75,
-            "fwhm_x": 0.5,
-            "fwhm_y": 0.5,
-            "offset": offset0 - 2.0 * np.abs(offset0),
-            "fringe_rate": -200.0,
-        }
+        # lb_dict = {
+        #    "peak_amplitude": 0.0,
+        #    "centroid_x": ra0 - 1.5,
+        #    "centroid_y": dec0 - 0.75,
+        #    "fwhm_x": 0.5,
+        #    "fwhm_y": 0.5,
+        #    "offset": offset0 - 2.0 * np.abs(offset0),
+        #    "fringe_rate": -200.0,
+        # }
 
-        ub_dict = {
-            "peak_amplitude": 1.5 * peak0,
-            "centroid_x": ra0 + 1.5,
-            "centroid_y": dec0 + 0.75,
-            "fwhm_x": 6.0,
-            "fwhm_y": 6.0,
-            "offset": offset0 + 2.0 * np.abs(offset0),
-            "fringe_rate": 200.0,
-        }
+        # ub_dict = {
+        #    "peak_amplitude": 1.5 * peak0,
+        #    "centroid_x": ra0 + 1.5,
+        #    "centroid_y": dec0 + 0.75,
+        #    "fwhm_x": 6.0,
+        #    "fwhm_y": 6.0,
+        #    "offset": offset0 + 2.0 * np.abs(offset0),
+        #    "fringe_rate": 200.0,
+        # }
 
         p0 = np.array([p0_dict[key] for key in param_name])
 
-        bounds = (
-            np.array([lb_dict[key] for key in param_name]),
-            np.array([ub_dict[key] for key in param_name]),
-        )
+        # bounds = (
+        #    np.array([lb_dict[key] for key in param_name]),
+        #    np.array([ub_dict[key] for key in param_name]),
+        # )
 
         # Define model
         if do_dirty:
@@ -1696,11 +1695,8 @@ def fit_point_source_map(
                 sigma=this_rms,
                 absolute_sigma=True,
             )  # , bounds=bounds)
-        except Exception as error:
-            print(
-                "index %s: %s"
-                % ("(" + ", ".join(["%d" % ii for ii in index]) + ")", error)
-            )
+        except ValueError as error:
+            print("index (" + ", ".join(["%d" % ii for ii in index]) + "):", error)
             continue
 
         # Save the results
@@ -2081,11 +2077,13 @@ def fit_histogram(
     Parameters
     ----------
     arr : np.ndarray
-        1D array containing the data.  Arrays with more than one dimension are flattened.
+        1D array containing the data.  Arrays with more than one dimension
+        are flattened.
     bins : int or sequence of scalars or str
         - If `bins` is an int, it defines the number of equal-width bins in `rng`.
-        - If `bins` is a sequence, it defines a monotonically increasing array of bin edges,
-          including the rightmost edge, allowing for non-uniform bin widths.
+        - If `bins` is a sequence, it defines a monotonically increasing
+            array of bin edges, including the rightmost edge, allowing for
+            non-uniform bin widths.
         - If `bins` is a string, it defines a method for computing the bins.
     rng : (float, float)
         The lower and upper range of the bins.  If not provided, then the range spans
@@ -2096,7 +2094,8 @@ def fit_histogram(
     test_normal : bool
         Apply the Shapiro-Wilk and Anderson-Darling tests for normality to the data.
     return_histogram : bool
-        Return the histogram.  Otherwise return only the best fit parameters and test statistics.
+        Return the histogram.  Otherwise return only the best fit parameters
+        and test statistics.
 
     Returns
     -------
@@ -2119,7 +2118,8 @@ def fit_histogram(
     pte : float
         The probability to observe the chi-squared of the fit.
 
-    If `return_histogram` is True, then `results` will also contain the following fields:
+    If `return_histogram` is True, then `results` will also contain the
+    following fields:
 
         bin_centre : np.ndarray
             The bin centre of the histogram.
@@ -2132,7 +2132,7 @@ def fit_histogram(
             stat : float
                 The Shapiro-Wilk test statistic.
             pte : float
-                The probability to observe `stat` if the data were drawn from a gaussian.
+                The probability to observe `stat` if the data were drawn from a gaussian
         anderson : dict
             stat : float
                 The Anderson-Darling test statistic.
@@ -2264,8 +2264,8 @@ def flag_outliers(raw, flag, window=25, nsigma=5.0):
     window : int
         Window size (in number of samples) used to determine local median.
     nsigma : float
-        Data is considered an outlier if it is greater than this number of median absolute
-        deviations away from the local median.
+        Data is considered an outlier if it is greater than this number of
+        median absolute deviations away from the local median.
     Returns
     -------
     not_outlier : np.ndarray[nsample,]
@@ -2315,9 +2315,7 @@ def flag_outliers(raw, flag, window=25, nsigma=5.0):
 
     sig = 1.4826 * np.nanmedian(_sliding_window(expanded_resid, rwidth), axis=-1)
 
-    not_outlier = resid < (nsigma * sig)
-
-    return not_outlier
+    return resid < (nsigma * sig)
 
 
 def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
@@ -2343,11 +2341,13 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
     Returns
     -------
     interp_gain : np.ndarray[nfreq, ninput]
-        For frequencies with `flag = True`, this will be equal to gain.  For frequencies with
-        `flag = False`, this will be an interpolation of the gains with `flag = True`.
+        For frequencies with `flag = True`, this will be equal to gain.
+        For frequencies with `flag = False`, this will be an interpolation
+        of the gains with `flag = True`.
     interp_weight : np.ndarray[nfreq, ninput]
-        For frequencies with `flag = True`, this will be equal to weight.  For frequencies with
-        `flag = False`, this will be the expected uncertainty on the interpolation.
+        For frequencies with `flag = True`, this will be equal to weight.
+        For frequencies with `flag = False`, this will be the expected
+        uncertainty on the interpolation.
     """
     from sklearn import gaussian_process
     from sklearn.gaussian_process.kernels import Matern, ConstantKernel
@@ -2448,9 +2448,7 @@ def interpolate_gain_quiet(*args, **kwargs):
 
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn")
-        results = interpolate_gain(*args, **kwargs)
-
-    return results
+        return interpolate_gain(*args, **kwargs)
 
 
 def thermal_amplitude(delta_T, freq):
@@ -2492,7 +2490,7 @@ def get_reference_times_file(
     times: np.ndarray,
     cal_file: memh5.MemGroup,
     logger: Optional[logging.Logger] = None,
-) -> Dict[str, np.ndarray]:
+) -> dict[str, np.ndarray]:
     """For a given set of times determine when and how they were calibrated.
 
     This uses the pre-calculated calibration time reference files.
@@ -2513,9 +2511,9 @@ def get_reference_times_file(
     reftime_result : dict
         A dictionary containing four entries:
 
-        - reftime: Unix time of same length as `times`. Reference times of transit of the
-          source used to calibrate the data at each time in `times`. Returns `NaN` for
-          times without a reference.
+        - reftime: Unix time of same length as `times`. Reference times of
+          transit of the source used to calibrate the data at each time in
+          `times`. Returns `NaN` for times without a reference.
         - reftime_prev: The Unix time of the previous gain update. Only set for time
           samples that need to be interpolated, otherwise `NaN`.
         - interp_start: The Unix time of the start of the interpolation period. Only
@@ -2647,21 +2645,19 @@ def get_reference_times_file(
         logger.warning(msg.format(n_bad_times, ntimes))
 
     # Bundle result in dictionary
-    result = {
+    return {
         "reftime": reftime,
         "reftime_prev": reftime_prev,
         "interp_start": interp_start,
         "interp_stop": interp_stop,
     }
 
-    return result
-
 
 def get_reference_times_dataset_id(
     times: np.ndarray,
     dataset_ids: np.ndarray,
     logger: Optional[logging.Logger] = None,
-) -> Dict[str, Union[np.ndarray, Dict]]:
+) -> dict[str, Union[np.ndarray, dict]]:
     """Calculate the relevant calibration reference times from the dataset IDs.
 
     .. warning::
@@ -2722,7 +2718,7 @@ def get_reference_times_dataset_id(
         # After restart we sometimes have only a timing update without a source
         # reference. These aren't valid for our purposes here, and can be distinguished
         # at the update_id doesn't contain source information, and is thus shorter
-        d["valid"] = any([src in split_id for src in _source_dict.keys()])
+        d["valid"] = any(src in split_id for src in _source_dict.keys())
         d["interpolated"] = "transition" in split_id
         # If it's not a valid update we shouldn't try to extract everything else
         if not d["valid"]:

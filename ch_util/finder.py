@@ -39,23 +39,22 @@ Routines
 """
 
 import logging
-import os
 from os import path
 import time
 import socket
 import peewee as pw
-import re
 
 import caput.time as ctime
 
 from ch_ephem.observers import chime
 
-import chimedb.core as db
+from chimedb.core.exceptions import CHIMEdbError
 import chimedb.data_index as di
-from . import layout
-
+from chimedb.data_index.orm import file_info_table
 from chimedb.dataflag import DataFlagType, DataFlag
 
+from . import layout
+from ._db_tables import connect_peewee_tables as connect_database
 from .holography import HolographySource, HolographyObservation
 
 # Module Constants
@@ -67,12 +66,6 @@ GF_WARN = "gf_warn"
 GF_ACCEPT = "gf_accept"
 
 
-# Initializing connection to database.
-# ====================================
-
-from ._db_tables import connect_peewee_tables as connect_database
-
-
 # High level interface to the data index
 # ======================================
 
@@ -80,12 +73,8 @@ from ._db_tables import connect_peewee_tables as connect_database
 # finder.
 _acq_info_table = [di.CorrAcqInfo, di.HKAcqInfo, di.RawadcAcqInfo]
 
-# Import list of tables that have a ``start_time`` and ``end_time``
-# field: they are necessary to do any time-based search.
-from chimedb.data_index.orm import file_info_table
 
-
-class Finder(object):
+class Finder:
     """High level searching of the CHIME data index.
 
     This class gives a convenient way to search and filter data acquisitions
@@ -218,19 +207,19 @@ class Finder(object):
     3 | 20141009T222415Z_ben_hk              |       0 |    5745 |    2 |      0
     >>> res = f.get_results(file_condition = (di.HKFileInfo.atmel_name == "LNA"))
     >>> for r in res:
-    ...   print "No. files: %d" % (len(r[0]))
+    ...   print("No. files: %d" % (len(r[0]))
     No. files: 8
     No. files: 1
     No. files: 19
     No. files: 1
     >>> data = res[0].as_loaded_data()
     >>> for m in data.mux:
-    ...   print "Mux %d: %s", (m, data.chan(m))
+    ...   print("Mux %d: %s", (m, data.chan(m)))
     Mux 0: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     Mux 1: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
     Mux 2: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    >>> print "Here are the raw data for Mux 1, Channel 14:", data.tod(14, 1)
-    Here are the raw data for Mux 1, Channel 14: [ 1744.19091797  1766.34472656  1771.03356934 ...,  1928.61279297 1938.90075684  1945.53491211]
+    >>> print(data.tod(14, 1))
+    [1744.190917, 1766.344726, 1771.033569, ..., 1928.612792, 1938.900756, 1945.534912]
 
     In the above example, the restriction to LNA housekeeping could also have
     been accomplished with the convenience method :meth:`Finder.set_hk_input`:
@@ -374,8 +363,8 @@ class Finder(object):
 
         if self._time_intervals is None:
             return [self.time_range]
-        else:
-            return list(self._time_intervals)
+
+        return list(self._time_intervals)
 
     def _append_time_interval(self, interval):
         if self._time_intervals is None:
@@ -686,7 +675,7 @@ class Finder(object):
             )
         self.filter_acqs_by_files(cond)
 
-        if not self._time_intervals is None:
+        if self._time_intervals is not None:
             time_intervals = _trim_intervals_range(
                 self.time_intervals, (start_time, end_time)
             )
@@ -744,8 +733,8 @@ class Finder(object):
         end_time = min(end_time, range_end)
         if start_time < end_time:
             return (start_time, end_time)
-        else:
-            return None
+
+        return None
 
     def include_time_interval(self, start_time, end_time):
         """Include a time interval.
@@ -1018,7 +1007,7 @@ class Finder(object):
         sources = sources.where(HolographySource.name == source)
         if len(sources) == 0:
             msg = (
-                "No sources found in the database that match: {0}\n".format(source)
+                f"No sources found in the database that match: {source}\n"
                 + "Returning full time range"
             )
             logging.warning(msg)
@@ -1030,7 +1019,7 @@ class Finder(object):
         if require_quality:
             obs = obs.select().where(
                 (HolographyObservation.quality_flag == 0)
-                | (HolographyObservation.quality_flag == None)
+                | (HolographyObservation.quality_flag == None)  # noqa E712
             )
 
         found_obs = False
@@ -1043,10 +1032,8 @@ class Finder(object):
                 self.include_time_interval(ob.start_time, ob.finish_time)
         if not found_obs:
             msg = (
-                "No observation of the source ({0}) was found within the time range.\n".format(
-                    source
-                )
-                + "Returning full time range"
+                f"No observation of the source ({source}) "
+                "was found within the time range. Returning full time range"
             )
             logging.warning(msg)
 
@@ -1195,37 +1182,34 @@ class Finder(object):
             if mode is GF_ACCEPT:
                 # Do nothing.
                 continue
-            else:
-                # Need to actually get the flags.
-                global_flags = layout.global_flags_between(
-                    acq_start, acq_finish, severity
-                )
-                global_flag_names = [gf.name for gf in global_flags]
-                flag_times = []
-                for f in global_flags:
-                    start, stop = layout.get_global_flag_times(f.id)
-                    if stop is None:
-                        stop = time.time()
-                    start = ctime.ensure_unix(start)
-                    stop = ctime.ensure_unix(stop)
-                    flag_times.append((start, stop))
-                overlap = _check_intervals_overlap(time_intervals, flag_times)
+
+            # Need to actually get the flags.
+            global_flags = layout.global_flags_between(acq_start, acq_finish, severity)
+            global_flag_names = [gf.name for gf in global_flags]
+            flag_times = []
+            for f in global_flags:
+                start, stop = layout.get_global_flag_times(f.id)
+                if stop is None:
+                    stop = time.time()
+                start = ctime.ensure_unix(start)
+                stop = ctime.ensure_unix(stop)
+                flag_times.append((start, stop))
+            overlap = _check_intervals_overlap(time_intervals, flag_times)
+
             if mode is GF_WARN:
                 if overlap:
                     msg = (
-                        "Global flag with severity '%s' present in data"
+                        f"Global flag with severity '{severity}' present in data"
                         " search results and warning requested."
-                        " Global flag name: %s"
-                        % (severity, global_flag_names[overlap[1]])
+                        " Global flag name: " + global_flag_names[overlap[1]]
                     )
                     logging.warning(msg)
             elif mode is GF_RAISE:
                 if overlap:
                     msg = (
-                        "Global flag with severity '%s' present in data"
+                        f"Global flag with severity '{severity}' present in data"
                         " search results and exception requested."
-                        " Global flag name: %s"
-                        % (severity, global_flag_names[overlap[1]])
+                        " Global flag name: " + global_flag_names[overlap[1]]
                     )
                     raise DataFlagged(msg)
             elif mode is GF_REJECT:
@@ -1239,8 +1223,8 @@ class Finder(object):
         if len(self.data_flag_types) > 0:
             df_types = [t.name for t in DataFlagType.select()]
             for dft in self.data_flag_types:
-                if not dft in df_types:
-                    raise RuntimeError("Could not find data flag type {}.".format(dft))
+                if dft not in df_types:
+                    raise RuntimeError(f"Could not find data flag type {dft}.")
                 flag_times = []
                 for f in DataFlag.select().where(
                     DataFlag.type == DataFlagType.get(name=dft)
@@ -1386,7 +1370,7 @@ class Finder(object):
                 total_data += length
                 total_size += s
                 interval_number += 1
-        print("Total %6.f seconds, %6.f MB of data." % (total_data, total_size))
+        print(f"Total {total_data:6.f} seconds, {total_size:6.f} MB of data.")
 
 
 def _trim_intervals_range(intervals, time_range, min_interval=0.0):
@@ -1397,8 +1381,8 @@ def _trim_intervals_range(intervals, time_range, min_interval=0.0):
         end = min(end, range_end)
         if end <= start + min_interval:
             continue
-        else:
-            out.append((start, end))
+
+        out.append((start, end))
     return out
 
 
@@ -1426,10 +1410,11 @@ def _check_intervals_overlap(intervals1, intervals2):
             start2, stop2 = intervals2[jj]
             if start1 < stop2 and start2 < stop1:
                 return ii, jj
+    return None
 
 
 def _validate_gf_value(value):
-    if not value in (GF_REJECT, GF_RAISE, GF_WARN, GF_ACCEPT):
+    if value not in (GF_REJECT, GF_RAISE, GF_WARN, GF_ACCEPT):
         raise ValueError(
             "Global flag behaviour must be one of"
             " the *GF_REJECT*, *GF_RAISE*, *GF_WARN*, *GF_ACCEPT*"
@@ -1441,7 +1426,7 @@ def _get_global_flag_times_by_name_event_id(flag):
     if isinstance(flag, str):
         event = (
             layout.event.select()
-            .where(layout.event.active == True)
+            .where(layout.event.active == True)  # noqa: E712
             .join(
                 layout.global_flag, on=(layout.event.graph_obj == layout.global_flag.id)
             )
@@ -1568,8 +1553,7 @@ class BaseDataInterval(tuple):
         for k, v in kwargs.items():
             if v is not None:
                 setattr(reader, k, v)
-        data = reader.read()
-        return data
+        return reader.read()
 
 
 class CorrDataInterval(BaseDataInterval):
@@ -1600,7 +1584,7 @@ class CorrDataInterval(BaseDataInterval):
             Data interval loaded into memory.
 
         """
-        return super(CorrDataInterval, self).as_loaded_data(
+        return super().as_loaded_data(
             prod_sel=prod_sel, freq_sel=freq_sel, datasets=datasets
         )
 
@@ -1728,15 +1712,12 @@ def files_in_range(
 
     if not node_spoof:
         return [path.join(af.root, acq_name, af.name) for af in query]
-    else:
-        return [path.join(node_spoof[af.node_name], acq_name, af.name) for af in query]
+
+    return [path.join(node_spoof[af.node_name], acq_name, af.name) for af in query]
 
 
 # Exceptions
 # ==========
-
-# This is the base CHIMEdb exception
-from chimedb.core.exceptions import CHIMEdbError
 
 
 class DataFlagged(CHIMEdbError):

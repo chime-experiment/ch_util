@@ -13,7 +13,9 @@ import data_paths
 
 comm = MPI.COMM_WORLD
 
-# fnames = glob.glob('/scratch/k/krs/jrs65/chime_archive/20140916T173334Z_blanchard_corr/000[0-1]*_0000.h5')
+# fnames = glob.glob(
+# '/scratch/k/krs/jrs65/chime_archive/20140916T173334Z_blanchard_corr/000[0-1]*_0000.h5'
+# )
 
 # All the test data file names.
 # Test data files have 32 frequencies, 136 products, and 31, 17 times.

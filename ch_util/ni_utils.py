@@ -1,12 +1,10 @@
 """Tools for noise injection data"""
 
 import numpy as np
-import os
 import datetime
 from numpy import linalg as LA
 from scipy import linalg as sciLA
 import warnings
-import copy
 from caput import memh5
 from caput import mpiarray
 
@@ -222,10 +220,10 @@ def process_synced_data(data, ni_params=None, only_off=False):
 
                 # Add noise source dataset
                 gate_dset = newdata.create_dataset(
-                    "gated_vis{0}".format(i + 1), data=vis_noise, distributed=dist
+                    f"gated_vis{i + 1}", data=vis_noise, distributed=dist
                 )
                 gate_dset.attrs["axis"] = np.array(
-                    ["freq", "prod", "gated_time{0}".format(i + 1)]
+                    ["freq", "prod", f"gated_time{i + 1}"]
                 )
                 gate_dset.attrs["folding_period"] = folding_period
                 gate_dset.attrs["folding_start"] = folding_start
@@ -417,10 +415,12 @@ def _find_ni_params(data, verbose=0):
 
     if verbose:
         for i in range(N_ni_sources):
-            print("\nPWM signal from board %s is enabled" % ni_board[i])
-            print("Period: %i GPU integrations" % ni_period)
-            print("High time: %i GPU integrations" % ni_high_time[i])
-            print("FPGA offset: %i GPU integrations\n" % ni_offset[i])
+            print("")
+            print(f"PWM signal from board {ni_board[i]} is enabled")
+            print(f"Period: {ni_period} GPU integrations")
+            print(f"High time: {ni_high_time[i]} GPU integrations")
+            print(f"FPGA offset: {ni_offset[i]} GPU integrations")
+            print("")
 
     # Number of fpga frames within a GPU integration
     int_period = data.attrs["gpu.gpu_intergration_period"][0]
@@ -440,9 +440,7 @@ def _find_ni_params(data, verbose=0):
         for i in range(N_ni_sources)
     ]
 
-    ni_params = {"ni_period": ni_period, "ni_on_bins": ni_on_bins}
-
-    return ni_params
+    return {"ni_period": ni_period, "ni_on_bins": ni_on_bins}
 
 
 def process_gated_data(data, only_off=False):
@@ -544,10 +542,10 @@ def process_gated_data(data, only_off=False):
         )
         memh5.copyattrs(data["gated_vis1"].attrs, gate_dset.attrs)
 
-    # The CHIME pipeline uses gpu.gpu_intergration_period to estimate the integration period
-    # for both the on and off gates. That number has to be changed (divided by 2) since
-    # with fast gating one integration period has 1/2 of data for the on gate and 1/2
-    # for the off gate
+    # The CHIME pipeline uses gpu.gpu_intergration_period to estimate the
+    # integration period for both the on and off gates. That number has to be
+    # changed (divided by 2) since with fast gating one integration period has
+    # 1/2 of data for the on gate and 1/2 for the off gate
     newdata.attrs["gpu.gpu_intergration_period"] = (
         data.attrs["gpu.gpu_intergration_period"] // 2
     )
@@ -555,7 +553,7 @@ def process_gated_data(data, only_off=False):
     return newdata
 
 
-class ni_data(object):
+class ni_data:
     """Provides analysis utilities for CHIME noise injection data.
 
     This is just a wrapper for all the utilities created in this module.
@@ -592,12 +590,12 @@ class ni_data(object):
         self.Nadc_channels = Nadc_channels
         self.raw_vis = Reader_read_obj.vis
         self.Nfreqs = np.size(self.raw_vis, 0)  # Number of frequencies
-        if adc_ch_ref != None:
+        if adc_ch_ref is not None:
             self.adc_ch_ref = adc_ch_ref
         else:
             self.adc_ch_ref = self.adc_channels[0]  # Default reference channel
 
-        if fbin_ref != None:
+        if fbin_ref is not None:
             self.fbin_ref = fbin_ref
         else:  # Default reference frequency bin (rather arbitrary)
             self.fbin_ref = self.Nfreqs // 3
@@ -650,7 +648,7 @@ class ni_data(object):
         """
 
         self.channels = np.arange(self.Nadc_channels)
-        if masked_channels != None:
+        if masked_channels is not None:
             self.channels = np.delete(self.channels, masked_channels)
 
         self.Nchannels = len(self.channels)
@@ -753,8 +751,7 @@ def utvec2mat(n, utvec):
     iu = np.triu_indices(n)
     A = np.zeros((n, n), dtype=np.complex128)
     A[iu] = utvec  # Filling uppper triangle of A
-    A = A + np.triu(A, 1).conj().T  # Filling lower triangle of A
-    return A
+    return A + np.triu(A, 1).conj().T  # Filling lower triangle of A
 
 
 def ktrprod(A, B):
@@ -1035,7 +1032,7 @@ def ni_gains_evalues_tf(
     Ntimeframes = np.size(vis_gated, 2)
 
     # Create NaN matrices to hold the gains and eigenvalues
-    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.complex) * (
+    gains = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=complex) * (
         np.nan + 1j * np.nan
     )
     evals = np.zeros((Nfreqs, Nchannels, Ntimeframes), dtype=np.float64) * np.nan
@@ -1190,7 +1187,8 @@ def subtract_sky_noise(vis, Nchannels, timestamp, adc_ch_ref, fbin_ref):
         # Visibilities with noise off for cycle i
         vis_off_cycle_i = vis[:, :, index_end_on_cycle[i] + 1 : index_start_on_cycle[i]]
 
-        # New lines to find indices of maximum and minimum point of each cycle based on the reference channel
+        # New lines to find indices of maximum and minimum point of each cycle
+        # based on the reference channel
         index_max_i = auto_ref[
             index_start_on_cycle[i] : index_end_on_cycle[i + 1] + 1
         ].argmax()
@@ -1201,8 +1199,10 @@ def subtract_sky_noise(vis, Nchannels, timestamp, adc_ch_ref, fbin_ref):
         vis_off_dec.append(vis_off_cycle_i[:, :, index_min_i])
 
         # Instead of averaging all the data with noise on of a cycle, we take the median
-        # vis_on_dec.append(np.median(vis_on_cycle_i.real, axis=2)+1j*np.median(vis_on_cycle_i.imag, axis=2))
-        # vis_off_dec.append(np.median(vis_off_cycle_i.real, axis=2)+1j*np.median(vis_off_cycle_i.imag, axis=2))
+        # vis_on_dec.append(np.median(vis_on_cycle_i.real, axis=2)+1j
+        #    * np.median(vis_on_cycle_i.imag, axis=2))
+        # vis_off_dec.append(np.median(vis_off_cycle_i.real, axis=2)+1jr
+        #    * np.median(vis_off_cycle_i.imag, axis=2))
         timestamp_on_dec.append(
             np.mean(timestamp[index_start_on_cycle[i] : index_end_on_cycle[i + 1] + 1])
         )
@@ -1267,7 +1267,7 @@ def gains2utvec_tf(gains):
 
     >>> from ch_util import andata
     >>> from ch_util import import ni_utils as ni
-    >>> data = andata.Reader('/scratch/k/krs/jrs65/chime_archive/20140916T173334Z_blanchard_corr/000[0-3]*.h5')
+    >>> data = andata.Reader('/data/20140916T173334Z_blanchard_corr/000[0-3]*.h5')
     >>> readdata = data.read()
     >>> nidata = ni.ni_data(readdata, 16)
     >>> nidata.get_ni_gains()
@@ -1283,7 +1283,7 @@ def gains2utvec_tf(gains):
     Ntimeframes = np.size(gains, 2)  # Number of time frames
     Nchannels = np.size(gains, 1)
     Ncorrprods = Nchannels * (Nchannels + 1) // 2  # Number of correlation products
-    G_ut = np.zeros((Nfreqs, Ncorrprods, Ntimeframes), dtype=np.complex)
+    G_ut = np.zeros((Nfreqs, Ncorrprods, Ntimeframes), dtype=complex)
 
     for f in range(Nfreqs):
         for t in range(Ntimeframes):

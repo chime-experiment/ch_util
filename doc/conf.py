@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 #
 # ch_util documentation build configuration file, created by
 # sphinx-quickstart on Thu Oct 10 12:52:16 2013.
