@@ -965,6 +965,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
         # Calculate vandermonde matrix
         A = self._vander(ha, self.poly_deg_amp)
         center = 0.0
+        coeff = None
 
         # Iterate to obtain model estimate for amplitude
         for kk in range(niter):
@@ -972,9 +973,7 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
 
             if window is not None:
                 if kk > 0:
-                    raise RuntimeError("coeff is not defined")
-                    # Where is `coeff` supposed to be defined?
-                    # center = self.peak(param=coeff)
+                    center = self.peak(param=coeff)
 
                 if np.isnan(center):
                     raise RuntimeError("No peak found.")
