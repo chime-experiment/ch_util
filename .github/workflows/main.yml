@@ -64,7 +64,7 @@ jobs:
         python-version: ${{ matrix.python-version }}
 
     - name: Install ch_util
-      run: pip install -e .[test] --no-binary bitshuffle
+      run: pip install -e .[test]
 
     - name: Run tests
       run: pytest .
