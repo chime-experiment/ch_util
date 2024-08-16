@@ -324,6 +324,7 @@ class FluxCatalog(metaclass=MetaFluxCatalog):
         param_cov=None,
         measurements=None,
         overwrite=0,
+        warn_alternate=False,
     ):
         """
         Instantiates a FluxCatalog object for an astronomical source.
@@ -371,6 +372,10 @@ class FluxCatalog(metaclass=MetaFluxCatalog):
             - 1 - Add the measurements to the existing entry.
             - 2 - Overwrite the existing entry.
             Default is 0.
+
+        warn_alternate : bool
+            If True, a warning is issued when attempting to add an alternate name
+            which is already held by another source. Default is False.
         """
 
         # The name argument is a unique identifier into the catalog.
@@ -442,11 +447,12 @@ class FluxCatalog(metaclass=MetaFluxCatalog):
             # Add alternate names to class dictionary so they can be searched quickly
             for alt_name in self.alternate_names:
                 if alt_name in self._alternate_name_lookup:
-                    alt_source = self._alternate_name_lookup[alt_name]
-                    warnings.warn(
-                        f"The alternate name {alt_name} is already "
-                        f"held by the source {alt_source}."
-                    )
+                    if warn_alternate:
+                        alt_source = self._alternate_name_lookup[alt_name]
+                        warnings.warn(
+                            f"The alternate name {alt_name} is already "
+                            f"held by the source {alt_source}."
+                        )
                 else:
                     self._alternate_name_lookup[alt_name] = self.name
 
