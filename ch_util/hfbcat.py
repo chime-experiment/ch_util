@@ -39,6 +39,10 @@ class HFBCatalog(FluxCatalog):
         "freq_abs",
     ]
 
+    _entries = {}
+    _collections = {}
+    _alternate_name_lookup = {}
+
     def __init__(
         self,
         name,
