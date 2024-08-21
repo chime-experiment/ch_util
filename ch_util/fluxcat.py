@@ -243,7 +243,7 @@ class CurvedPowerLaw(FitSpectrum):
 
 class MetaFluxCatalog(type):
     """Metaclass for FluxCatalog.  Defines magic methods
-    for the class that can act on and provice access to the
+    for the class that can act on and provide access to the
     catalog of all astronomical sources.
     """
 
@@ -444,7 +444,7 @@ class FluxCatalog(metaclass=MetaFluxCatalog):
                 if alt_name in self._alternate_name_lookup:
                     alt_source = self._alternate_name_lookup[alt_name]
                     warnings.warn(
-                        f"The alternate name {alt_name} is already "
+                        f"The alternate name {alt_name} for {self.name} is already "
                         f"held by the source {alt_source}."
                     )
                 else:
