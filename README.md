@@ -8,16 +8,15 @@ To get `ch_util`, use git to clone the repository:
 
 	$ git clone git@github.com:chime-experiment/ch_util.git
 
-
 ## Python Installation
 
-To install the `ch_util` python package:
+To install the `ch_util` python package from a clone of the repository:
 
-	$ python setup.py install [--user]
+	$ pip install .
+ 
+Or work in editable mode:
 
-Or work in develop mode:
-
-	$ python setup.py develop [--user]
+	$ pip install -e .
 
 Alternatively installation can be done by `pip` directly from the GitHub repository:
 
