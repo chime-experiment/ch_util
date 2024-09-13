@@ -2061,17 +2061,19 @@ def fast_pack_product_array(arr):
     more general.
     """
 
-    assert arr.ndim == 2
-    assert arr.shape[0] == arr.shape[1]
+    assert arr.ndim >= 2
+    assert arr.shape[-1] == arr.shape[-2]
 
-    nfeed = arr.shape[0]
+    nfeed = arr.shape[-1]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float64)
+    shp = arr.shape[:-2] + (nprod,)
+
+    ret = np.zeros(shp, dtype=arr.dtype)
     iout = 0
 
     for i in range(nfeed):
-        ret[iout : (iout + nfeed - i)] = arr[i, i:]
+        ret[..., iout : (iout + nfeed - i)] = arr[..., i, i:]
         iout += nfeed - i
 
     return ret
