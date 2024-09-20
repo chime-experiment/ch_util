@@ -16,7 +16,7 @@ overridden = False
 
 
 # For echoing stdout to a file.
-class tee_stdout(object):
+class tee_stdout:
     def __init__(self, stdout, fp):
         self.stdout = stdout
         self.fp = fp
@@ -37,10 +37,11 @@ class tee_stdout(object):
 def parse_cmd(x):
     if not x:
         return False
+
     if not re.match(r"\$CMD\$.+", x):
         return False
-    else:
-        return x[5:]
+
+    return x[5:]
 
 
 def test_cmd_done(x):
@@ -88,40 +89,41 @@ def get_barcode(msg, test=None, fmt="", override=True):
     overridden = False
 
     for i in range(0, 3):
-        x = input("    Scan %s barcode: " % msg)
+        x = input(f"    Scan {msg} barcode: ")
         if parse_cmd(x):
             if parse_cmd(x) == CMD_OVERRIDE:
                 return input("   Override in effect. Enter any barcode: ")
-            else:
-                return x
-        elif test:
+
+            return x
+
+        if test:
             if test(x):
                 return x
-            else:
-                x1 = x
-                print('    Was expecting format "%s"!' % fmt)
-                if override:
-                    x = input("    Same barcode to over-ride, or correct: ")
+
+            x1 = x
+            print(f'    Was expecting format "{fmt}"!')
+            if override:
+                x = input("    Same barcode to over-ride, or correct: ")
+                if x == x1:
+                    x = input("    Confirm over-ride by entering once more: ")
                     if x == x1:
-                        x = input("    Confirm over-ride by entering once more: ")
-                        if x == x1:
-                            print("    Over-ride successful.")
-                            overridden = True
-                            return x
-                        elif test(x):
-                            return x
-                        else:
-                            print(
-                                "    Bad over-ride and barcode not of format "
-                                '"%s". Try again.' % fmt
-                            )
-                    elif test(x):
+                        print("    Over-ride successful.")
+                        overridden = True
                         return x
-                    else:
-                        print(
-                            "    Bad over-ride and barcode not of format "
-                            '"%s". Try again.' % fmt
-                        )
+                    if test(x):
+                        return x
+
+                    print(
+                        "    Bad over-ride and barcode not of format "
+                        f'"{fmt}". Try again.'
+                    )
+                elif test(x):
+                    return x
+                else:
+                    print(
+                        "    Bad over-ride and barcode not of format "
+                        f'"{fmt}". Try again.'
+                    )
         else:
             return x
     print("    Giving up and cancelling current scan.")
@@ -190,12 +192,10 @@ def get_can():
 
 def commit_chain(fp, cmd, chain, name):
     if not parse_cmd(cmd) == CMD_CANCEL:
-        fp.write(
-            "# Chain type: %s. Scanned: %s.\n"
-            % (name, datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        )
+        now = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        fp.write(f"# Chain type: {name}. Scanned: {now}.\n")
         for x in chain:
-            fp.write("%s\n" % x)
+            fp.write(x + "\n")
         fp.write("\n")
         fp.flush()
         print("  Chain written to disc.")
@@ -218,9 +218,9 @@ def get_freeform_chain(fp):
             if parse_cmd(x) == CMD_DONE or parse_cmd(x) == CMD_DONE_QUIT:
                 commit_chain(fp, x, chain, "free form")
                 break
-            else:
-                print("  Cancelling.")
-                return
+
+            print("  Cancelling.")
+            return
         if len(chain):
             if x == chain[-1]:
                 print(
@@ -233,43 +233,41 @@ def get_freeform_chain(fp):
                     x = input("  Chain complete. Enter anything to commit, or CANCEL: ")
                     commit_chain(fp, x, chain, "free form")
                     break
-                else:
-                    chain.append(x)
-            else:
-                chain.append(x)
-        else:
-            chain.append(x)
+
+        chain.append(x)
+
         print("  Chain so far: ", chain)
         print()
 
 
 def get_chain(fp, get_list, name):
     chain = []
-    print("Starting chain of type: %s." % name)
+    print(f"Starting chain of type: {name}.")
     print("-" * 80)
-    for l in get_list:
+    for item in get_list:
         while 1:
-            x = l()
+            x = item()
             if parse_cmd(x) or not x:
                 if parse_cmd(x) == CMD_DONE or parse_cmd(x) == CMD_DONE_QUIT:
                     print(
                         "  Preset chains cannot be fininshed early. Finish or cancel."
                     )
                     continue
-                else:
-                    print("  Cancelling chain.")
-                    return False
+
+                print("  Cancelling chain.")
+                return False
             chain.append(x)
             print("  Chain so far: ", chain)
             print()
-            if overridden == False:
+            if not overridden:
                 break
     x = input("  Chain complete. Enter anything to commit, or CANCEL: ")
     commit_chain(fp, x, chain, name)
+    return None
 
 
 if len(sys.argv) != 2:
-    print("Usage: %s <OUTPUT FILE>" % sys.argv[0])
+    print(f"Usage: {sys.argv[0]} <OUTPUT FILE>")
     exit()
 
 # Predefined chains.
@@ -286,7 +284,8 @@ fp_log = open(sys.argv[1] + ".log", "a")
 # sys.stdout = tee_stdout(sys.stdout, fp_log)
 sys.stdin = tee_stdout(sys.stdin, fp_log)
 
-fp.write("USER %s\n" % input("Please enter/scan your name: "))
+name = input("Please enter/scan your name: ")
+fp.write(f"USER {name}\n")
 fp.flush()
 
 while 1:

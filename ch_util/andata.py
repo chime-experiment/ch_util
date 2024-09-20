@@ -8,15 +8,10 @@ import re
 
 import numpy as np
 import h5py
-from bitshuffle import h5
+from bitshuffle import h5 as h5
 
 from caput import memh5, tod
 import caput.time as ctime
-
-tmp = h5  # To appease linters who complain about unused imports.
-
-
-ni_msg = "Ask Kiyo to implement this."
 
 
 # Datasets in the Acq files whose shape is the same as the visibilities.
@@ -80,11 +75,10 @@ class BaseData(tod.TOData):
 
         new_cls = subclass_from_obj(cls, h5_data)
 
-        self = super(BaseData, new_cls).__new__(new_cls)
-        return self
+        return super().__new__(new_cls)
 
     def __init__(self, h5_data=None, **kwargs):
-        super(BaseData, self).__init__(h5_data, **kwargs)
+        super().__init__(h5_data, **kwargs)
         if self._data.file.mode == "r+":
             self._data.require_group("cal")
             self._data.require_group("flags")
@@ -216,17 +210,16 @@ class BaseData(tod.TOData):
             # Already a calculated timestamp.
             return self.index_map["time"][:]
 
-        else:
-            time = _timestamp_from_fpga_cpu(
-                self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
-            )
+        time = _timestamp_from_fpga_cpu(
+            self.index_map["time"]["ctime"], 0, self.index_map["time"]["fpga_count"]
+        )
 
-            alignment = self.index_attrs["time"].get("alignment", 0)
+        alignment = self.index_attrs["time"].get("alignment", 0)
 
-            if alignment != 0:
-                time = time + alignment * abs(np.median(np.diff(time)) / 2)
+        if alignment != 0:
+            time = time + alignment * abs(np.median(np.diff(time)) / 2)
 
-            return time
+        return time
 
     @classmethod
     def _interpret_and_read(cls, acq_files, start, stop, datasets, out_group):
@@ -299,7 +292,7 @@ class BaseData(tod.TOData):
                 stop=stop,
                 datasets=datasets,
                 out_group=out_group,
-                **kwargs
+                **kwargs,
             )
 
             # Set an attribute on the time axis specifying alignment
@@ -472,11 +465,10 @@ class CorrData(BaseData):
         if versiontuple(archive_version) < versiontuple("2.0.0"):
             # Nothing to do for input_sel as there is not input axis.
             if input_sel is not None:
-                msg = (
+                raise ValueError(
                     "*input_sel* specified for archive version"
                     " 1.0 data which has no input axis."
                 )
-                raise ValueError(msg)
             prod_sel = _ensure_1D_selection(prod_sel)
             data = andata_from_acq1(
                 acq_files, start, stop, prod_sel, freq_sel, datasets, out_group
@@ -509,7 +501,7 @@ class CorrData(BaseData):
 
             # Remove the FPGA applied gains (need to invert them first).
             if apply_gain and any(
-                [re.match(ACQ_VIS_DATASETS, key) for key in data.datasets]
+                re.match(ACQ_VIS_DATASETS, key) for key in data.datasets
             ):
                 from ch_util import tools
 
@@ -678,8 +670,7 @@ class CorrData(BaseData):
         comm = kwargs.pop("comm", None)
 
         if kwargs:
-            msg = "Received unknown keyword arguments {}."
-            raise ValueError(msg.format(kwargs.keys()))
+            raise ValueError(f"Received unknown keyword arguments {kwargs.keys()}.")
 
         # If want a distributed file, just pass straight off to a private method
         if distributed:
@@ -697,7 +688,7 @@ class CorrData(BaseData):
                 comm=comm,
             )
 
-        return super(CorrData, cls).from_acq_h5(
+        return super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -756,7 +747,7 @@ class CorrData(BaseData):
         )
 
         # Load just the local part of the data.
-        local_data = super(CorrData, cls).from_acq_h5(
+        local_data = super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -794,7 +785,8 @@ class CorrData(BaseData):
 
         # Iterate over the datasets and copy them over
         for name, old_dset in local_data.datasets.items():
-            # If this should be distributed, extract the sections and turn them into an MPIArray
+            # If this should be distributed, extract the sections and turn them
+            # into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
             else:
@@ -811,7 +803,8 @@ class CorrData(BaseData):
 
         # Iterate over the flags and copy them over
         for name, old_dset in local_data.flags.items():
-            # If this should be distributed, extract the sections and turn them into an MPIArray
+            # If this should be distributed, extract the sections and turn them
+            # into an MPIArray
             if name in _DIST_DSETS:
                 array = mpiarray.MPIArray.wrap(old_dset._data, axis=0, comm=comm)
             else:
@@ -895,7 +888,7 @@ class CorrData(BaseData):
         if freq_sel is None:
             freq_sel = slice(None)
         if not isinstance(freq_sel, slice):
-            raise ValueError("freq_sel must be a slice object, not %s" % repr(freq_sel))
+            raise ValueError("freq_sel must be a slice object, not " + repr(freq_sel))
 
         # Create the time selection
         time_sel = slice(start, stop)
@@ -1010,7 +1003,7 @@ class HKData(BaseData):
         try:
             self._chan
         except AttributeError:
-            self._chan = dict()
+            self._chan = {}
         try:
             return self._chan[mux]
         except KeyError:
@@ -1148,7 +1141,7 @@ class HKData(BaseData):
         --------
         Examples are analogous to those of :meth:`CorrData.from_acq_h5`.
         """
-        return super(HKData, cls).from_acq_h5(
+        return super().from_acq_h5(
             acq_files=acq_files,
             start=start,
             stop=stop,
@@ -1227,7 +1220,7 @@ class HKPData(memh5.MemDiskGroup):
                 f,
                 convert_attribute_strings=cls.convert_attribute_strings,
                 convert_dataset_strings=cls.convert_dataset_strings,
-                **kwargs
+                **kwargs,
             )
             for f in acq_files
         ]
@@ -1464,8 +1457,8 @@ class HKPData(memh5.MemDiskGroup):
 
         if unstack:
             return resampled_df.unstack(group_columns)
-        else:
-            return resampled_df.reset_index(group_columns)
+
+        return resampled_df.reset_index(group_columns)
 
 
 class WeatherData(BaseData):
@@ -1478,8 +1471,8 @@ class WeatherData(BaseData):
         """
         if "time" in self.index_map:
             return self.index_map["time"]
-        else:
-            return self.index_map["station_time_blockhouse"]
+
+        return self.index_map["station_time_blockhouse"]
 
     @property
     def temperature(self):
@@ -1489,8 +1482,8 @@ class WeatherData(BaseData):
         """
         if "blockhouse" in self.keys():
             return self["blockhouse"]["outTemp"]
-        else:
-            return self["outTemp"]
+
+        return self["outTemp"]
 
     def dataset_name_allowed(self, name):
         """Permits datasets in the root and 'blockhouse' groups."""
@@ -1524,13 +1517,13 @@ class RawADCData(BaseData):
                 data = dataset
             else:
                 raise RuntimeError(
-                    "Dataset (%s) has unexpected shape [%s]."
-                    % (dataset.name, repr(dataset.shape))
+                    f"Dataset ({dataset.name}) "
+                    f"has unexpected shape [{dataset.shape!r}]."
                 )
             return data
 
         andata_objs = [RawADCData(d) for d in acq_files]
-        data = concatenate(
+        return concatenate(
             andata_objs,
             out_group=out_group,
             start=start,
@@ -1540,17 +1533,18 @@ class RawADCData(BaseData):
             convert_attribute_strings=cls.convert_attribute_strings,
             convert_dataset_strings=cls.convert_dataset_strings,
         )
-        return data
 
 
 class GainFlagData(BaseData):
     """Subclass of :class:`BaseData` for gain, digitalgain, and flag input acquisitions.
 
-    These acquisitions consist of a collection of updates to the real-time pipeline ordered
-    chronologically.  In most cases the updates do not occur at a regular cadence.
-    The time that each update occured can be accessed via `self.index_map['update_time']`.
-    In addition, each update is given a unique update ID that can be accessed via
-    `self.datasets['update_id']` and can be searched using the `self.search_update_id` method.
+    These acquisitions consist of a collection of updates to the real-time
+    pipeline ordered chronologically.  In most cases the updates do not
+    occur at a regular cadence.  The time that each update occured can be
+    accessed via `self.index_map['update_time']`.  In addition, each update
+    is given a unique update ID that can be accessed via
+    `self.datasets['update_id']` and can be searched using the
+    `self.search_update_id` method.
     """
 
     def resample(self, dataset, timestamp, transpose=False):
@@ -1603,18 +1597,15 @@ class GainFlagData(BaseData):
 
         dmax = np.max(timestamp) - np.max(self.time)
         if dmax > 0.0:
-            msg = (
+            warnings.warn(
                 "Requested timestamps are after the latest update_time "
-                "by as much as %0.2f hours." % (dmax / 3600.0,)
+                f"by as much as {dmax / 3600.0:.2f} hours."
             )
-            warnings.warn(msg)
 
-        index = np.digitize(timestamp, self.time, right=False) - 1
-
-        return index
+        return np.digitize(timestamp, self.time, right=False) - 1
 
     def search_update_id(self, pattern, is_regex=False):
-        """Find the index into the `update_time` axis corresponding to a particular `update_id`.
+        """Find the index into the `update_time` axis for a particular `update_id`.
 
         Parameters
         ----------
@@ -1633,14 +1624,13 @@ class GainFlagData(BaseData):
 
         ptn = pattern if is_regex else fnmatch.translate(pattern)
         regex = re.compile(ptn)
-        index = np.array(
+        return np.array(
             [ii for ii, uid in enumerate(self.update_id[:]) if regex.match(uid)]
         )
-        return index
 
     @property
     def time(self):
-        """Aliases `index_map['update_time']` to `time` for `caput.tod` functionality."""
+        """Returns `index_map['update_time']` for `caput.tod` functionality."""
         return self.index_map["update_time"]
 
     @property
@@ -1835,9 +1825,7 @@ class BaseReader(tod.Reader):
 
         """
 
-        super(BaseReader, self).select_time_range(
-            start_time=start_time, stop_time=stop_time
-        )
+        super().select_time_range(start_time=start_time, stop_time=stop_time)
 
     def read(self, out_group=None):
         """Read the selected data.
@@ -1872,7 +1860,7 @@ class CorrReader(BaseReader):
     data_class = CorrData
 
     def __init__(self, files):
-        super(CorrReader, self).__init__(files)
+        super().__init__(files)
         data_empty = self._data_empty
         prod = data_empty.prod
         freq = data_empty.index_map["freq"]
@@ -1937,11 +1925,10 @@ class CorrReader(BaseReader):
             # Check to make sure this is a valid index for the product axis.
             self.prod["input_a"][value]
             if self.input_sel is not None:
-                msg = (
+                raise ValueError(
                     "*input_sel* is set and cannot specify both *prod_sel*"
                     " and *input_sel*."
                 )
-                raise ValueError(msg)
         self._prod_sel = value
 
     @property
@@ -1963,11 +1950,10 @@ class CorrReader(BaseReader):
             # Check to make sure this is a valid index for the product axis.
             self.input["chan_id"][value]
             if self.prod_sel is not None:
-                msg = (
+                raise ValueError(
                     "*prod_sel* is set and cannot specify both *prod_sel*"
                     " and *input_sel*."
                 )
-                raise ValueError(msg)
         self._input_sel = value
 
     @property
@@ -2102,8 +2088,7 @@ class CorrReader(BaseReader):
             try:
                 first_match = matches[0][0]
             except IndexError:
-                msg = "No match for frequency %f MHz." % frequencies[ii]
-                raise ValueError(msg)
+                raise ValueError("No match for frequency {frequencies[ii]} MHz.")
             freq_inds.append(first_match)
         self.freq_sel = freq_inds
 
@@ -2224,8 +2209,7 @@ def subclass_from_obj(cls, obj):
     # If obj is a filename, open it and recurse.
     if isinstance(obj, str):
         with h5py.File(obj, "r") as f:
-            cls = subclass_from_obj(cls, f)
-        return cls
+            return subclass_from_obj(cls, f)
 
     new_cls = cls
     acquisition_type = None
@@ -2267,8 +2251,7 @@ def _open_files(files, opened):
 def _ensure_1D_selection(selection):
     if isinstance(selection, tuple):
         if len(selection) != 1:
-            msg = "Wrong number of indices."
-            raise ValueError(msg)
+            raise ValueError("Wrong number of indices.")
         selection = selection[0]
     if selection is None:
         selection = np.s_[:]
@@ -2283,8 +2266,7 @@ def _ensure_1D_selection(selection):
 
     if isinstance(selection, np.ndarray):
         if selection.ndim != 1:
-            msg = "Data selections may only be one dimensional."
-            raise ValueError(msg)
+            raise ValueError("Data selections may only be one dimensional.")
         # The following is more efficient and solves h5py issue #425. Converts
         # to integer selection.
         if len(selection) == 1:
@@ -2417,8 +2399,7 @@ def _input_sel_from_prod_sel(prod_sel, prod_map):
         input_sel.append(p0)
         input_sel.append(p1)
     # ensure_1D here deals with h5py issue #425.
-    input_sel = _ensure_1D_selection(sorted(list(set(input_sel))))
-    return input_sel
+    return _ensure_1D_selection(sorted(set(input_sel)))
 
 
 def _prod_sel_from_input_sel(input_sel, input_map, prod_map):
@@ -2428,14 +2409,12 @@ def _prod_sel_from_input_sel(input_sel, input_map, prod_map):
         if p[0] in inputs and p[1] in inputs:
             prod_sel.append(ii)
     # ensure_1D here deals with h5py issue #425.
-    prod_sel = _ensure_1D_selection(prod_sel)
-    return prod_sel
+    return _ensure_1D_selection(prod_sel)
 
 
 def _stack_sel_from_prod_sel(prod_sel, stack_rmap):
     stack_sel = stack_rmap["stack"][prod_sel]
-    stack_sel = _ensure_1D_selection(sorted(list(set(stack_sel))))
-    return stack_sel
+    return _ensure_1D_selection(sorted(set(stack_sel)))
 
 
 def _prod_sel_from_stack_sel(stack_sel, stack_map, stack_rmap):
@@ -2448,8 +2427,7 @@ def _prod_sel_from_stack_sel(stack_sel, stack_map, stack_rmap):
     for ii in range(len(stack_inds)):
         prod_sel.append(stack_rmap_sort_inds[left_indeces[ii] : right_indeces[ii]])
     prod_sel = np.concatenate(prod_sel)
-    prod_sel = _ensure_1D_selection(sorted(list(set(prod_sel))))
-    return prod_sel
+    return _ensure_1D_selection(sorted(set(prod_sel)))
 
 
 def versiontuple(v):
@@ -2551,7 +2529,8 @@ def _unwrap_fpga_counts(data):
     # Correct the FPGA counts by adding on the counts lost by wrapping
     fpga_corrected = time_map["fpga_count"] + num_wraps * 2**32
 
-    # Create an array to represent the new time dataset, and fill in the corrected values
+    # Create an array to represent the new time dataset,
+    # and fill in the corrected values
     _time_dtype = [("fpga_count", np.uint64), ("ctime", np.float64)]
     new_time_map = np.zeros(time_map.shape, dtype=_time_dtype)
     new_time_map["fpga_count"] = fpga_corrected
@@ -2629,11 +2608,10 @@ def _copy_dataset_acq1(
         if dataset_name == "vis":
             # Convert to 64 but complex.
             if set(split_dsets.keys()) != {"imag", "real"}:
-                msg = (
+                raise ValueError(
                     "Visibilities should have fields 'real' and 'imag'"
-                    " and instead have %s." % str(list(split_dsets.keys()))
+                    f" and instead have {split_dsets.keys()}."
                 )
-                raise ValueError(msg)
             vis_data = np.empty(split_dsets["real"].shape, dtype=np.complex64)
             vis_data.real[:] = split_dsets["real"]
             vis_data.imag[:] = split_dsets["imag"]
@@ -2709,15 +2687,15 @@ def _check_files_acq1(files):
                     first_dset = False
                 else:
                     if open_file[key].shape != this_dset_shape:
-                        msg = "Datasets in a file do not all have same shape."
-                        raise ValueError(msg)
+                        raise ValueError(
+                            "Datasets in a file do not all have same shape."
+                        )
         if first_file:
             dtypes = this_dtypes
             first_file = False
         else:
             if this_dtypes != dtypes:
-                msg = "Files do not have compatible datasets."
-                raise ValueError(msg)
+                raise ValueError("Files do not have compatible datasets.")
     return dtypes
 
 
@@ -2728,8 +2706,7 @@ def _get_header_info_acq1(h5_file):
     # Now need to calculate the time stamps.
     timestamp_data = h5_file["timestamp"]
     if not len(timestamp_data):
-        msg = "Acquisition file contains zero frames"
-        raise AnDataError(msg)
+        raise AnDataError("Acquisition file contains zero frames")
     time = np.empty(
         len(timestamp_data), dtype=[("fpga_count", "<u4"), ("ctime", "<f8")]
     )
@@ -2753,17 +2730,13 @@ def _resolve_header_info_acq1(header_info):
     time_list = [first_info["time"]]
     for info in header_info[1:]:
         if not np.allclose(info["freq"]["width"], freq["width"]):
-            msg = "Files do not have consistent frequency bin widths."
-            raise ValueError(msg)
+            raise ValueError("Files do not have consistent frequency bin widths.")
         if not np.allclose(info["freq"]["centre"], freq["centre"]):
-            msg = "Files do not have consistent frequency bin centres."
-            raise ValueError(msg)
+            raise ValueError("Files do not have consistent frequency bin centres.")
         if not np.all(info["prod"] == prod):
-            msg = "Files do not have consistent correlation products."
-            raise ValueError(msg)
+            raise ValueError("Files do not have consistent correlation products.")
         if not np.all(info["datasets"] == datasets):
-            msg = "Files do not have consistent data sets."
-            raise ValueError(msg)
+            raise ValueError("Files do not have consistent data sets.")
         time_list.append(info["time"])
     time = np.concatenate(time_list)
     return time, prod, freq, datasets
@@ -2819,51 +2792,48 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
                     it.iternext()
         if "cal" in dataset.attrs:
             if len(dataset.attrs["cal"]) != 1:
-                msg = "Mismatch between dataset and it's cal attribute."
-                raise AttributeError(msg)
+                raise AttributeError("Mismatch between dataset and it's cal attribute.")
             out_cal = {"": dataset.attrs["cal"][0]}
         else:
             out_cal = {}
         return {"": out}, out_cal
-    else:
-        fields = list(dataset[0].dtype.fields.keys())
-        # If there is a 'cal' attribute, make sure it's the right shape.
+
+    fields = list(dataset[0].dtype.fields.keys())
+    # If there is a 'cal' attribute, make sure it's the right shape.
+    if "cal" in dataset.attrs:
+        if dataset.attrs["cal"].shape != (1,):
+            raise AttributeError("'cal' attribute has more than one element.")
+        if len(list(dataset.attrs["cal"].dtype.fields.keys())) != len(fields):
+            raise AttributeError("'cal' attribute not compatible with dataset dtype.")
+    out = {}
+    out_cal = {}
+    # Figure out what fields there are and allocate memory.
+    for field in fields:
+        dtype = dataset[0][field].dtype
+        out_arr = np.empty(out_shape, dtype=dtype)
+        out[field] = out_arr
         if "cal" in dataset.attrs:
-            if dataset.attrs["cal"].shape != (1,):
-                msg = "'cal' attribute has more than one element."
-                raise AttributeError(msg)
-            if len(list(dataset.attrs["cal"].dtype.fields.keys())) != len(fields):
-                msg = "'cal' attribute not compatible with dataset dtype."
-                raise AttributeError(msg)
-        out = {}
-        out_cal = {}
-        # Figure out what fields there are and allocate memory.
+            out_cal[field] = memh5.bytes_to_unicode(dataset.attrs["cal"][0][field])
+    for jj, ii in enumerate(np.arange(ntime)[time_slice]):
+        # Copy data for efficient read.
+        record = dataset[ii]  # Copies to memory.
         for field in fields:
-            dtype = dataset[0][field].dtype
-            out_arr = np.empty(out_shape, dtype=dtype)
-            out[field] = out_arr
-            if "cal" in dataset.attrs:
-                out_cal[field] = memh5.bytes_to_unicode(dataset.attrs["cal"][0][field])
-        for jj, ii in enumerate(np.arange(ntime)[time_slice]):
-            # Copy data for efficient read.
-            record = dataset[ii]  # Copies to memory.
-            for field in fields:
-                if not back_shape:
-                    out[field][jj] = record[field]
-                elif len(back_shape) == 1:
-                    out[field][:, jj] = record[field][:]
-                else:
-                    # Multidimensional, try to be more efficient.
-                    it = np.nditer(record[..., 0], flags=["multi_index"], order="C")
-                    while not it.finished:
-                        # Reverse the multiindex for the out array.
-                        ind = it.multi_index + (slice(None),)
-                        ind_rev = list(ind)
-                        ind_rev.reverse()
-                        ind_rev = tuple(ind_rev) + (jj,)
-                        out[field][ind_rev] = record[field][ind]
-                        it.iternext()
-        return out, out_cal
+            if not back_shape:
+                out[field][jj] = record[field]
+            elif len(back_shape) == 1:
+                out[field][:, jj] = record[field][:]
+            else:
+                # Multidimensional, try to be more efficient.
+                it = np.nditer(record[..., 0], flags=["multi_index"], order="C")
+                while not it.finished:
+                    # Reverse the multiindex for the out array.
+                    ind = it.multi_index + (slice(None),)
+                    ind_rev = list(ind)
+                    ind_rev.reverse()
+                    ind_rev = tuple(ind_rev) + (jj,)
+                    out[field][ind_rev] = record[field][ind]
+                    it.iternext()
+    return out, out_cal
 
 
 def _data_attrs_from_acq_attrs_acq1(acq_attrs):
@@ -2989,12 +2959,10 @@ def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_g
             if not vis_shape:
                 vis_shape = dtypes[dataset_name].shape
             elif dtypes[dataset_name].shape != vis_shape or len(vis_shape) != 2:
-                msg = (
-                    "Expected the following datasets to be"
-                    " identically shaped and 3D in Acq files: %s."
-                    % str(ACQ_VIS_SHAPE_DATASETS)
+                raise ValueError(
+                    "Expected the following datasets to be identically "
+                    f"shaped and 3D in Acq files: {ACQ_VIS_SHAPE_DATASETS!s}."
                 )
-                raise ValueError(msg)
             _copy_dataset_acq1(
                 dataset_name, acq_files, start, stop, data, prod_sel, freq_sel
             )
@@ -3260,9 +3228,7 @@ def _generate_input_map(serials, chans=None):
     else:
         chan_iter = list(zip(chans, serials))
 
-    imap = np.array(list(chan_iter), dtype=_imap_dtype)
-
-    return imap
+    return np.array(list(chan_iter), dtype=_imap_dtype)
 
 
 def _get_versiontuple(afile):
@@ -3291,7 +3257,7 @@ def _remap_stone_abbot(afile):
     serial_map = {1: "0003", 33: "0033", -1: "????"}  # Stone  # Abbot  # Unknown
 
     # Construct new array of index_map
-    serial_pat = "29821-0000-%s-C%%i" % serial_map[serial]
+    serial_pat = "29821-0000-" + serial_map[serial] + "-C%i"
     inputmap = _generate_input_map([serial_pat % ci for ci in range(8)])
 
     # Copy out old index_map/input if it exists
@@ -3316,7 +3282,8 @@ def _remap_blanchard(afile):
 
     # Use time to check if blanchard was in the crate or not
     if last_time < BPC_END:
-        # Find list of channels and adc serial using different methods depending on the archive file version
+        # Find list of channels and adc serial using different methods depending
+        # on the archive file version
         if _get_versiontuple(afile) < versiontuple("2.0.0"):
             # The older files have no index_map/input so we need to guess/construct it.
             chanlist = list(range(16))
@@ -3328,7 +3295,7 @@ def _remap_blanchard(afile):
             adc_serial = afile.index_map["input"]["adc_serial"][0]
 
         # Construct new array of index_map
-        serial_pat = "29821-0000-%s-C%%02i" % adc_serial
+        serial_pat = "29821-0000-" + adc_serial + "-C%02i"
         inputmap = _generate_input_map([serial_pat % ci for ci in chanlist])
 
     else:
@@ -3372,7 +3339,8 @@ def _remap_slotX(afile):
 
 
 def _remap_crate_corr(afile, slot):
-    # Worker routine for remapping the new style files for blanchard, first9ucrate and slotX
+    # Worker routine for remapping the new style files for blanchard,
+    # first9ucrate and slotX
 
     if _get_versiontuple(afile) < versiontuple("2.0.0"):
         raise Exception("Only functions with archive 2.0.0 files.")
@@ -3508,7 +3476,8 @@ def _insert_gains(data, input_sel):
         except KeyError:
             ninput_orig = data.history["acq"]["number_of_antennas"]
 
-        # In certain files this entry is a length-1 array, turn it into a scalar if it is not
+        # In certain files this entry is a length-1 array,
+        # turn it into a scalar if it is not
         if isinstance(ninput_orig, np.ndarray):
             ninput_orig = ninput_orig[0]
 
@@ -3573,7 +3542,8 @@ def _insert_gains(data, input_sel):
         # Check that the gain datasets have been loaded
         if ("gain_coeff" not in data.datasets) or ("gain_exp" not in data.datasets):
             warnings.warn(
-                "Required gain datasets not loaded from file (> v2.2.0), using unit gains."
+                "Required gain datasets not loaded from file (> v2.2.0), "
+                "using unit gains."
             )
 
         else:

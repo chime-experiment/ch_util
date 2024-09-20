@@ -52,15 +52,20 @@ Example
 Fetch the inputs for blanchard during layout 38::
 
     >>> from datetime import datetime
-    >>> inputs = get_correlator_inputs(datetime(2016,05,23,00), correlator='pathfinder')
+    >>> inputs = get_correlator_inputs(datetime(2016,05,23,00),
+    ... correlator='pathfinder')
     >>> inputs[1]
-    CHIMEAntenna(id=1, reflector=u'W_cylinder', antenna=u'ANT0123B', powered=True, pos=9.071800000000001, input_sn=u'K7BP16-00040401', pol=u'S', corr=u'K7BP16-0004', cyl=0)
+    CHIMEAntenna(id=1, reflector=u'W_cylinder', antenna=u'ANT0123B',
+    powered=True, pos=9.071800000000001, input_sn=u'K7BP16-00040401',
+    pol=u'S', corr=u'K7BP16-0004', cyl=0)
     >>> print "NS position:", inputs[1].pos
     NS position: 9.0718
     >>> print "Polarisation:", inputs[1].pol
     Polarisation: S
     >>> inputs[3]
-    CHIMEAntenna(id=3, reflector=u'W_cylinder', antenna=u'ANT0128B', powered=True, pos=9.681400000000002, input_sn=u'K7BP16-00040403', pol=u'S', corr=u'K7BP16-0004', cyl=0)
+    CHIMEAntenna(id=3, reflector=u'W_cylinder', antenna=u'ANT0128B',
+    powered=True, pos=9.681400000000002, input_sn=u'K7BP16-00040403',
+    pol=u'S', corr=u'K7BP16-0004', cyl=0)
 
 Housekeeping Inputs
 ===================
@@ -122,75 +127,44 @@ Miscellaneous
 - :py:meth:`ensure_list`
 """
 
+from __future__ import annotations
+
 import datetime
 import numpy as np
 import scipy.linalg as la
 import re
-from typing import Tuple
 
 from caput import pfb
-from caput.interferometry import projected_distance, fringestop_phase
+from caput.interferometry import (
+    projected_distance,
+    fringestop_phase as fringestop_phase,
+)
 
-from ch_util import ephemeris
+import ch_ephem.observers
 
-# Currently the position between the Pathfinder and 26m have been
-# calibrated with holography, but positions between CHIME and
-# Pathfinder/26m have not (they were determined from high-res
-# satellite images and are only approximate).  We need to
-# use CHIME holography data to constrain distance [x, y, z] between
-# CHIME and 26m.  I then recommend defining our coordinate system
-# such that center of CHIME array is the origin (so leaving variable
-# _CHIME_POS alone, and updating _PF_POS and _26M_POS appropriately.)
+# All telescope geometry (rotation, roll, offsets) moved to
+# ch_ephem/instruments.yaml
+#
+# To access them:
+#
+# >>> from ch_ephem.observers import pathfinder
+# >>> PF_POS = pathfinder.offset
+# >>> PF_ROT = pathfinder.rotation
+# >>> PF_ROLL = pathfinder.roll
+#
+# etc.
 
-# CHIME geometry
-_CHIME_POS = [0.0, 0.0, 0.0]
-# CHIME rotation from north. Anti-clockwise looking at the ground (degrees).
-# See DocLib #695 for more information.
-_CHIME_ROT = -0.071
+# Data
+# ====
 
-# 26m geometry
-_26M_POS = [254.162124, 21.853934, 18.93]
-_26M_B = 2.14  # m
+PF_SPACE = 22.0  # Pathfinder cylinder spacing
 
-# Pathfinder geometry
-_PF_POS = [373.754961, -54.649866, 0.0]
-_PF_ROT = 1.986  # Pathfinder rotation from north (towards west) in degrees
-_PF_SPACE = 22.0  # Pathfinder cylinder spacing
-
-# KKO geometry
-_KKO_POS = [0.0, 0.0, 0.0]
-_KKO_ROT = 0.6874
-_KKO_ROLL = 0.5888
-_PCO_POS = _KKO_POS
-_PCO_ROT = _KKO_ROT  # Aliases for backwards-compatibility
-# KKO_ROT = rotation of cylinder axis from North. Anti-clockwise looking at the ground (degrees).
-# KKO_ROLL = roll of cylinder toward east from Vertical. Anti-clockwise looking North along the focal line.
-# See Doclib #1530 and #1121 for more information.
-
-# GBO geometry
-_GBO_POS = [0.0, 0.0, 0.0]
-_GBO_ROT = -27.3745
-_GBO_ROLL = -30.0871
-
-# HCO geometry
-_HCO_POS = [0.0, 0.0, 0.0]
-_HCO_ROT = -0.8023
-_HCO_ROLL = 1.0556
-
-
-# Lat/Lon
-_LAT_LON = {
-    "chime": [49.3207125, -119.623670],
-    "pathfinder": [49.3202245, -119.6183635],
-    "galt_26m": [49.320909, -119.620174],
-    "gbo_tone": [38.4292962636, -79.8451625395],
-}
 
 # Classes
 # =======
 
 
-class HKInput(object):
+class HKInput:
     """A housekeeping input.
 
     Parameters
@@ -232,7 +206,7 @@ class HKInput(object):
         return ret
 
 
-class CorrInput(object):
+class CorrInput:
     """Base class for describing a correlator input.
 
     Meant to be subclassed by actual types of inputs.
@@ -276,16 +250,14 @@ class CorrInput(object):
             for k in ["id", "crate", "slot", "sma", "corr_order", "delay"]
         ]
 
-        kv = ["%s=%s" % (k, repr(v)) for k, v in prop if v is not None] + [
-            "%s=%s" % (k, repr(v)) for k, v in self.__dict__.items() if k[0] != "_"
+        return [k + "=" + repr(v) for k, v in prop if v is not None] + [
+            k + "=" + repr(v) for k, v in self.__dict__.items() if k[0] != "_"
         ]
-
-        return kv
 
     def __repr__(self):
         kv = self._attribute_strings()
 
-        return "%s(%s)" % (self.__class__.__name__, ", ".join(kv))
+        return self.__class__.name__ + "(" + ", ".join(kv) + ")"
 
     @property
     def id(self):
@@ -299,8 +271,8 @@ class CorrInput(object):
         """
         if hasattr(self, "_id"):
             return self._id
-        else:
-            return serial_to_id(self.input_sn)
+
+        return serial_to_id(self.input_sn)
 
     @id.setter
     def id(self, val):
@@ -400,10 +372,10 @@ class ArrayAntenna(Antenna):
     flag = None
 
     def _attribute_strings(self):
-        kv = super(ArrayAntenna, self)._attribute_strings()
+        kv = super()._attribute_strings()
         if self.pos is not None:
-            pos = ", ".join(["%0.2f" % pp for pp in self.pos])
-            kv.append("pos=[%s]" % pos)
+            pos = ", ".join([f"{pp:.2f}" for pp in self.pos])
+            kv.append(f"pos=[{pos}]")
         return kv
 
     @property
@@ -422,8 +394,7 @@ class ArrayAntenna(Antenna):
 
             return pos
 
-        else:
-            return None
+        return None
 
     @pos.setter
     def pos(self, val):
@@ -442,8 +413,10 @@ class PathfinderAntenna(ArrayAntenna):
         Flag indicating that the antenna is powered.
     """
 
-    _rotation = _PF_ROT
-    _offset = _PF_POS
+    from ch_ephem.observers import pathfinder as _pathfinder
+
+    _rotation = _pathfinder.rotation
+    _offset = _pathfinder.offset
 
     # The delay relative to other inputs isn't really known. Set to NaN so we
     # don't make any mistakes
@@ -455,17 +428,21 @@ class PathfinderAntenna(ArrayAntenna):
 class CHIMEAntenna(ArrayAntenna):
     """Antenna that is part of CHIME."""
 
-    _rotation = _CHIME_ROT
-    _offset = _CHIME_POS
+    from ch_ephem.observers import chime as _chime
+
+    _rotation = _chime.rotation
+    _offset = _chime.offset
     _delay = 0  # Treat CHIME antennas as defining the delay zero point
 
 
 class KKOAntenna(ArrayAntenna):
     """KKO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _KKO_ROT
-    _roll = _KKO_ROLL
-    _offset = _KKO_POS
+    from ch_ephem.observers import kko as _kko
+
+    _rotation = _kko.rotation
+    _roll = _kko.roll
+    _offset = _kko.offset
     _delay = np.nan
 
 
@@ -475,18 +452,22 @@ PCOAntenna = KKOAntenna  # Alias for backwards-compatibility
 class GBOAntenna(ArrayAntenna):
     """GBO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _GBO_ROT
-    _roll = _GBO_ROLL
-    _offset = _GBO_POS
+    from ch_ephem.observers import gbo as _gbo
+
+    _rotation = _gbo.rotation
+    _roll = _gbo.roll
+    _offset = _gbo.offset
     _delay = np.nan
 
 
 class HCOAntenna(ArrayAntenna):
     """HCRO outrigger antenna for the CHIME/FRB project."""
 
-    _rotation = _HCO_ROT
-    _roll = _HCO_ROLL
-    _offset = _HCO_POS
+    from ch_ephem.observers import hco as _hco
+
+    _rotation = _hco.rotation
+    _roll = _hco.roll
+    _offset = _hco.offset
     _delay = np.nan
 
 
@@ -495,8 +476,10 @@ class TONEAntenna(ArrayAntenna):
     Let's allow for a global rotation and offset.
     """
 
-    _rotation = 0.00
-    _offset = [0.00, 0.00, 0.00]
+    from ch_ephem.observers import tone as _tone
+
+    _rotation = _tone.rotation
+    _offset = _tone.offset
     _delay = np.nan
 
 
@@ -524,10 +507,8 @@ class HolographyAntenna(Antenna):
 def _ensure_graph(graph):
     from . import layout
 
-    try:
-        graph.sg_spec
-    except:
-        graph = layout.graph(graph)
+    if not isinstance(graph, layout.graph):
+        return layout.graph(graph)
     return graph
 
 
@@ -554,21 +535,17 @@ def _get_feed_position(lay, rfl, foc, cas, slt, slot_factor):
     pos : list
         x,y,z coordinates of the feed relative to the centre of the focal line.
     """
-    try:
-        pos = [0.0] * 3
+    pos = [0.0] * 3
 
-        for node in [rfl, foc, cas, slt]:
-            prop = lay.node_property(node)
+    for node in [rfl, foc, cas, slt]:
+        prop = lay.node_property(node)
 
-            for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
-                if dim in prop:
-                    pos[ind] += float(prop[dim].value)  # in metres
+        for ind, dim in enumerate(["x_offset", "y_offset", "z_offset"]):
+            if dim in prop:
+                pos[ind] += float(prop[dim].value)  # in metres
 
-        if "y_offset" not in lay.node_property(slt):
-            pos[1] += (float(slt.sn[-1]) - slot_factor) * 0.3048
-
-    except:
-        pos = None
+    if "y_offset" not in lay.node_property(slt):
+        pos[1] += (float(slt.sn[-1]) - slot_factor) * 0.3048
 
     return pos
 
@@ -630,7 +607,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             if rft is not None:
                 break
 
-    # If the antenna does not exist, it might be the RFI antenna, the noise source, or empty
+    # If the antenna does not exist, it might be the RFI antenna,
+    # the noise source, or empty
     if ant is None:
         if rfi_antenna is not None:
             rfl = lay.closest_of_type(
@@ -655,18 +633,17 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         return Blank(id=chan_id, input_sn=corr_input.sn, corr=corr_sn)
 
     # Determine polarization from antenna properties
+    keydict = {
+        "H": "hpol_orient",
+        "V": "vpol_orient",
+        "1": "pol1_orient",
+        "2": "pol2_orient",
+    }
+
+    pkey = keydict[pol.sn[-1]]
     try:
-        keydict = {
-            "H": "hpol_orient",
-            "V": "vpol_orient",
-            "1": "pol1_orient",
-            "2": "pol2_orient",
-        }
-
-        pkey = keydict[pol.sn[-1]]
         pdir = lay.node_property(ant)[pkey].value
-
-    except:
+    except KeyError:
         pdir = None
 
     # Determine serial number of RF thru
@@ -674,6 +651,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
     # If the cassette does not exist, must be holography antenna
     if slt is None:
+        from ch_ephem.observers import galt
+
         return HolographyAntenna(
             id=chan_id,
             input_sn=corr_input.sn,
@@ -682,7 +661,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             pol=pdir,
             antenna=ant.sn,
             rf_thru=rft_sn,
-            pos=_26M_POS,
+            pos=galt.offset,
         )
 
     # If we are still here, we are a CHIME/Pathfinder feed
@@ -734,18 +713,18 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    elif cyl == 0 or cyl == 1:
+    if cyl == 0 or cyl == 1:
         # Dealing with a pathfinder feed
 
         # Determine y_offset
+        pos = [0.0] * 3
+
+        pos[0] = cyl * PF_SPACE
+
+        cas_prop = lay.node_property(cas)
+        slt_prop = lay.node_property(slt)
+
         try:
-            pos = [0.0] * 3
-
-            pos[0] = cyl * _PF_SPACE
-
-            cas_prop = lay.node_property(cas)
-            slt_prop = lay.node_property(slt)
-
             d1 = float(cas_prop["dist_to_n_end"].value) / 100.0  # in metres
             d2 = float(slt_prop["dist_to_edge"].value) / 100.0  # in metres
             orient = cas_prop["slot_zero_pos"].value
@@ -754,8 +733,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
 
             # Turn into distance increasing from South to North.
             pos[1] = 20.0 - pos[1]
-
-        except:
+        except KeyError:
             pos = None
 
         # Try and determine if the FLA is powered or not. Paths without an
@@ -784,7 +762,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    elif cyl == 6:
+    if cyl == 6:
         # Dealing with an KKO feed
 
         # Determine position
@@ -806,7 +784,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    elif cyl == 7:
+    if cyl == 7:
         # Dealing with a GBO feed
 
         # Determine position
@@ -828,7 +806,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             flag=flag,
         )
 
-    elif cyl == 8:
+    if cyl == 8:
         # Dealing with a HCO feed
 
         # Determine position
@@ -849,6 +827,8 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
             rf_thru=rft_sn,
             flag=flag,
         )
+
+    raise RuntimeError("Fell out of the bottom of _get_input_props!")
 
 
 # Public Functions
@@ -871,11 +851,9 @@ def calibrate_temperature(raw):
     t : numpy array
         The temperature in degrees Kelvin.
     """
-    import numpy
-
     off = 150.0
     r_t = 2000.0 * (8320.0 / (raw - off) - 1.0)
-    return 1.0 / (1.0 / 298.0 + numpy.log(r_t / 1.0e4) / 3950.0)
+    return 1.0 / (1.0 / 298.0 + np.log(r_t / 1.0e4) / 3950.0)
 
 
 def antenna_to_lna(graph, ant, pol):
@@ -986,7 +964,7 @@ def sensor_to_hk(graph, comp):
 
         return HKInput(atmel, chan, int(mux.sn[-2]))
 
-    elif comp.type.name == "FLA" or comp.type.name == "RFT thru":
+    if comp.type.name == "FLA" or comp.type.name == "RFT thru":
         if comp.type.name == "FLA":
             try:
                 comp = graph.neighbour_of_type(comp, "RFT thru")[0]
@@ -1003,8 +981,8 @@ def sensor_to_hk(graph, comp):
         )
 
         return HKInput(atmel, int(hydra.sn[-1]), None)
-    else:
-        raise ValueError("You can only pass components of type LNA, FLA or RFT thru.")
+
+    raise ValueError("You can only pass components of type LNA, FLA or RFT thru.")
 
 
 def hk_to_sensor(graph, inp):
@@ -1116,9 +1094,7 @@ def parse_chime_serial(sn):
     mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
-        raise RuntimeError(
-            "Serial number %s does not match expected CHIME format." % sn
-        )
+        raise RuntimeError(f"Serial number {sn} does not match expected CHIME format.")
 
     crate = int(mo.group(1))
     slot = int(mo.group(2))
@@ -1153,7 +1129,7 @@ def parse_pathfinder_serial(sn):
 
     if mo is None:
         raise RuntimeError(
-            "Serial number %s does not match expected Pathfinder format." % sn
+            f"Serial number {sn} does not match expected Pathfinder format."
         )
 
     crate = mo.group(1)
@@ -1187,7 +1163,7 @@ def parse_old_serial(sn):
 
     if mo is None:
         raise RuntimeError(
-            "Serial number %s does not match expected 8/16 channel format." % sn
+            f"Serial number {sn} does not match expected 8/16 channel format."
         )
 
     slot = mo.group(1)
@@ -1230,8 +1206,7 @@ def serial_to_id(serial):
             96,
             32,
         ]
-        channel = c[slot] + sma if slot > 0 else sma
-        return channel
+        return c[slot] + sma if slot > 0 else sma
 
     # Determine ID
     try:
@@ -1306,7 +1281,7 @@ def serial_to_location(serial):
     return default
 
 
-def get_default_frequency_map_stream() -> Tuple[np.ndarray]:
+def get_default_frequency_map_stream() -> tuple[np.ndarray]:
     """Get the default CHIME frequency map stream.
 
     Level order is [shuffle, crate, slot, link].
@@ -1355,7 +1330,7 @@ def order_frequency_map_stream(fmap: np.ndarray, stream_id: np.ndarray) -> np.nd
         shuffle, crate, slot, link for each frequency
     """
 
-    def decode_stream_id(sid: int) -> Tuple[int]:
+    def decode_stream_id(sid: int) -> tuple[int]:
         link = sid & 15
         slot = (sid >> 4) & 15
         crate = (sid >> 8) & 15
@@ -1371,9 +1346,7 @@ def order_frequency_map_stream(fmap: np.ndarray, stream_id: np.ndarray) -> np.nd
             x[f].append(decoded_stream[ii])
 
     # TODO: maybe implement some checks here
-    stream = np.array([i[0] for i in x], dtype=np.int32)
-
-    return stream
+    return np.array([i[0] for i in x], dtype=np.int32)
 
 
 def get_correlator_inputs(lay_time, correlator=None, connect=True):
@@ -1431,9 +1404,6 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
             correlator = "FCG"
         elif correlator.lower() == "tone":
             # A hack to return GBO correlator inputs
-            correlator = "tone"
-            connect = False
-            laytime = 0
             return fake_tone_database()
 
     if not connect_this_rank():
@@ -1446,12 +1416,13 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
     # Fetch layout_tag start time if we received a layout num
     if isinstance(lay_time, int):
         raise ValueError("Layout IDs are no longer supported.")
-    elif isinstance(lay_time, datetime.datetime):
+
+    if isinstance(lay_time, datetime.datetime):
         layout_graph = layout.graph.from_db(lay_time)
     elif isinstance(lay_time, layout.graph):
         layout_graph = lay_time
     else:
-        raise ValueError("Unsupported argument lay_time=%s" % repr(lay_time))
+        raise ValueError(f"Unsupported argument lay_time={lay_time!r}")
 
     # Fetch all the input components
     inputs = []
@@ -1471,7 +1442,7 @@ def get_correlator_inputs(lay_time, correlator=None, connect=True):
         try:
             corr = layout_graph.component(correlator)
         except layout.NotFound:
-            raise ValueError("Unknown correlator %s" % correlator)
+            raise ValueError("Unknown correlator: " + correlator)
 
         # Cut out SMA coaxes so we don't go outside of the correlator
         sg = set(layout_graph.nodes())
@@ -1533,8 +1504,10 @@ def change_pathfinder_location(rotation=None, location=None, default=False):
     """
 
     if default:
-        rotation = _PF_ROT
-        location = _PF_POS
+        from ch_ephem.observers import pathfinder
+
+        rotation = pathfinder.rotation
+        location = pathfinder.offset
 
     if rotation is not None:
         PathfinderAntenna._rotation = rotation
@@ -1559,8 +1532,8 @@ def change_chime_location(rotation=None, location=None, default=False):
     """
 
     if default:
-        rotation = _CHIME_ROT
-        location = _CHIME_POS
+        rotation = ch_ephem.observers.chime.rotation
+        location = ch_ephem.observers.chime.offset
 
     if rotation is not None:
         CHIMEAntenna._rotation = rotation
@@ -1658,11 +1631,10 @@ def get_feed_polarisations(feeds):
     Returns
     -------
     pol : np.ndarray
-        Array of characters giving polarisation. If not an array feed returns '0'.
+        Array of characters giving polarisation. If not an array feed returns
+        '0'.
     """
-    pol = np.array([(f.pol if is_array(f) else "0") for f in feeds])
-
-    return pol
+    return np.array([(f.pol if is_array(f) else "0") for f in feeds])
 
 
 def is_array(feed):
@@ -1786,7 +1758,10 @@ def get_noise_channel(inputs):
 
 
 def is_array_on(inputs, *args):
-    """Check if inputs are attached to an array antenna AND powered on AND flagged as good.
+    """Check if inputs are on.
+
+    Input are on if they are attached to an array antenna AND powered on AND
+    flagged as good.
 
     Parameters
     ----------
@@ -1811,8 +1786,7 @@ def is_array_on(inputs, *args):
         )
 
     # Assume that the argument is a sequence otherwise
-    else:
-        return [is_array_on(inp) for inp in inputs]
+    return [is_array_on(inp) for inp in inputs]
 
 
 # Create an is_chime_on alias for backwards compatibility
@@ -1852,14 +1826,15 @@ def reorder_correlator_inputs(input_map, corr_inputs):
 
 
 def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
-    """Ensure that only baselines between array antennas are used to represent the stack.
+    """Ensure only baselines between array antennas are used to represent the stack.
 
-    The correlator will have inputs that are not connected to array antennas.  These inputs
-    are flagged as bad and are not included in the stack, however, products that contain
-    their `chan_id` can still be used to represent a characteristic baseline in the `stack`
-    index map.  This method creates a new `stack` index map that, if possible, only contains
-    products between two array antennas.  This new `stack` index map should be used when
-    calculating baseline distances to fringestop stacked data.
+    The correlator will have inputs that are not connected to array antennas.
+    These inputs are flagged as bad and are not included in the stack, however,
+    products that contain their `chan_id` can still be used to represent a
+    characteristic baseline in the `stack` index map.  This method creates a new
+    `stack` index map that, if possible, only contains products between two
+    array antennas.  This new `stack` index map should be used when calculating
+    baseline distances to fringestop stacked data.
 
     Parameters
     ----------
@@ -1869,7 +1844,8 @@ def redefine_stack_index_map(input_map, prod, stack, reverse_stack):
     prod : np.ndarray[nprod,] of dtype=('input_a', 'input_b')
         The correlation products as pairs of inputs.
     stack : np.ndarray[nstack,] of dtype=('prod', 'conjugate')
-        The index into the `prod` axis of a characteristic baseline included in the stack.
+        The index into the `prod` axis of a characteristic baseline included
+        in the stack.
     reverse_stack :  np.ndarray[nprod,] of dtype=('stack', 'conjugate')
         The index into the `stack` axis that each `prod` belongs.
 
@@ -1919,8 +1895,8 @@ def cmap(i, j, n):
     """
     if i <= j:
         return (n * (n + 1) // 2) - ((n - i) * (n - i + 1) // 2) + (j - i)
-    else:
-        return cmap(j, i, n)
+
+    return cmap(j, i, n)
 
 
 def icmap(ix, n):
@@ -2011,7 +1987,8 @@ def unpack_product_array(prod_arr, axis=1, feeds=None):
 def pack_product_array(exp_arr, axis=1):
     """Pack full correlation matrices into upper triangular form.
 
-    It replaces the two feed axes of the matrix, with a single upper triangle product axis.
+    It replaces the two feed axes of the matrix, with a single upper
+    triangle product axis.
 
 
     Parameters
@@ -2104,7 +2081,8 @@ def rankN_approx(A, rank=1):
 def eigh_no_diagonal(A, niter=5, eigvals=None):
     """Eigenvalue decomposition ignoring the diagonal elements.
 
-    The diagonal elements are iteratively replaced with those from a rank=1 approximation.
+    The diagonal elements are iteratively replaced with those from a rank=1
+    approximation.
 
     Parameters
     ----------
@@ -2304,7 +2282,7 @@ def fringestop_time(
     csd=False,
     inplace=False,
     static_delays=True,
-    obs=ephemeris.chime,
+    obs=None,
 ):
     """Fringestop timestream data to a fixed source.
 
@@ -2339,6 +2317,9 @@ def fringestop_time(
     fringestopped_timestream : np.ndarray[nfreq, nprod, times]
     """
 
+    if obs is None:
+        from ch_ephem.observers import chime as obs
+
     # Check the shapes match
     nfeed = len(feeds)
     nprod = len(prod_map) if prod_map is not None else nfeed * (nfeed + 1) // 2
@@ -2346,8 +2327,8 @@ def fringestop_time(
 
     if timestream.shape != expected_shape:
         raise ValueError(
-            "The shape of the timestream %s does not match the expected shape %s"
-            % (timestream.shape, expected_shape)
+            f"The shape of the timestream ({timestream.shape}) "
+            f"does not match the expected shape: {expected_shape}"
         )
 
     delays = delay(
@@ -2434,8 +2415,8 @@ def decorrelation(
 
     if timestream.shape[1:] != expected_shape:
         raise ValueError(
-            "The shape of the timestream %s does not match the expected shape %s"
-            % (timestream.shape, expected_shape)
+            f"The shape of the timestream ({timestream.shape}) "
+            f"does not match the expected shape: {expected_shape}"
         )
 
     delays = delay(
@@ -2473,7 +2454,7 @@ def delay(
     prod_map=None,
     csd=False,
     static_delays=True,
-    obs=ephemeris.chime,
+    obs=None,
 ):
     """Calculate the delay in a visibilities observing a given source.
 
@@ -2506,9 +2487,13 @@ def delay(
     """
 
     import scipy.constants
+    from ch_ephem.coord import object_coords
+
+    if obs is None:
+        from ch_ephem.observers import chime as obs
 
     ra = (times % 1.0) * 360.0 if csd else obs.unix_to_lsa(times)
-    src_ra, src_dec = ephemeris.object_coords(src, times.mean(), obs=obs)
+    src_ra, src_dec = object_coords(src, times.mean(), obs=obs)
     ha = (np.radians(ra) - src_ra)[np.newaxis, :]
     latitude = np.radians(obs.latitude)
     # Get feed positions / c
@@ -2531,6 +2516,7 @@ def delay(
 
     # Add the b-term for baselines including the 26m Galt telescope
     if bterm:
+        _26M_B = 2.14  # m
         b_delay = _26M_B / scipy.constants.c * np.cos(src_dec)
 
         galt_feeds = get_holographic_index(feeds)
@@ -2564,8 +2550,7 @@ def beam_index2number(beam_index):
     """
     beam_ew_index = beam_index // 256
     beam_ns_index = beam_index % 256
-    beam_number = 1000 * beam_ew_index + beam_ns_index
-    return beam_number
+    return 1000 * beam_ew_index + beam_ns_index
 
 
 def invert_no_zero(*args, **kwargs):
@@ -2574,7 +2559,7 @@ def invert_no_zero(*args, **kwargs):
     import warnings
 
     warnings.warn(
-        f"Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
+        "Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
         category=DeprecationWarning,
     )
     return tools.invert_no_zero(*args, **kwargs)

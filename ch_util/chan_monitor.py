@@ -5,8 +5,11 @@ import copy
 
 import caput.time as ctime
 
+from ch_ephem.observers import chime
+import ch_ephem.sources
+
 from chimedb import data_index
-from ch_util import ephemeris, finder
+from ch_util import finder
 
 # Corrections to transit times due to 2deg rotation of cylinders:
 TTCORR = {"CygA": -94.4, "CasA": 152.3, "TauA": -236.9, "VirA": -294.5}
@@ -16,14 +19,14 @@ R = np.array(
     [[np.cos(CR), -np.sin(CR)], [np.sin(CR), np.cos(CR)]]
 )  # Cylinder rotation matrix
 C = 2.9979e8
-PHI = ephemeris.CHIMELATITUDE * np.pi / 180.0  # DRAO Latitue
+PHI = chime.latitude * np.pi / 180.0  # DRAO Latitue
 SD = 24.0 * 3600.0 * ctime.SIDEREAL_S  # Sidereal day
 
 _DEFAULT_NODE_SPOOF = {"scinet_online": "/scratch/k/krs/jrs65/chime/archive/online/"}
 # _DEFAULT_NODE_SPOOF = {'gong': '/mnt/gong/archive'} # For tests on Marimba
 
 
-class FeedLocator(object):
+class FeedLocator:
     """This class contains functions that do all the computations to
     determine feed positions from data. It also determines the quality
     of data and returns a list of good inputs and frequencies.
@@ -88,12 +91,12 @@ class FeedLocator(object):
         if self.source2 is not None:
             self.dec2 = self.source2._dec
         self.tt1 = (
-            ephemeris.transit_times(self.source1, self.tm1[0], self.tm1[-1])[0]
+            chime.transit_times(self.source1, self.tm1[0], self.tm1[-1])[0]
             + TTCORR[self.source1.name]
         )
         if self.source2 is not None:
             self.tt2 = (
-                ephemeris.transit_times(self.source2, self.tm2[0], self.tm2[-1])[0]
+                chime.transit_times(self.source2, self.tm2[0], self.tm2[-1])[0]
                 + TTCORR[self.source2.name]
             )
 
@@ -230,14 +233,13 @@ class FeedLocator(object):
         for ii in range(Nmax):
             yslp, a = yparams(fr, yslp)
             a_incr = abs(a - a_prev) / (abs(a + a_prev) * 0.5)
-            pass_y = a_incr < 1e-2
             if a_incr.all():
                 break
-            else:
-                a_prev = a
+
+            a_prev = a
 
         # TODO: now it's only one per chan. Change rotation coda appropriatelly
-        c_ydists = (
+        return (
             a
             / 1e6
             * C
@@ -250,8 +252,6 @@ class FeedLocator(object):
                 )
             )
         )
-
-        return c_ydists
 
     def get_c_ydist_perfreq(self, ph1=None, ph2=None):
         """Old N-S dists function. TO be used only in case a continuum of
@@ -301,14 +301,12 @@ class FeedLocator(object):
             [c_ydists + base_up, c_ydists + base_ctr, c_ydists + base_down]
         )
         idxs = np.argmin(abs(dist_opts - c_ydists0[np.newaxis, np.newaxis, :]), axis=0)
-        c_ydists = np.array(
+        return np.array(
             [
                 [dist_opts[idxs[ii, jj], ii, jj] for jj in range(self.Npr)]
                 for ii in range(self.Nfr)
             ]
         )
-
-        return c_ydists
 
     # TODO: change to 'yparams'
     def params_ft(self, tm, vis, dec, x0_shift=5.0):
@@ -341,7 +339,6 @@ class FeedLocator(object):
         from scipy.optimize import curve_fit
 
         freqs = self.freqs
-        prods = self.prods
 
         # Gaussian function for fit:
         def gaus(x, A, mu, sig2):
@@ -399,8 +396,7 @@ class FeedLocator(object):
                 try:
                     popt, pcov = curve_fit(gaus, fr_ord, ft_ord[ii, jj, :], p0[ii, jj])
                     prms[ii, jj] = np.array(popt)
-                # TODO: look for the right exception:
-                except:
+                except (KeyError, ValueError):
                     # TODO: Use masked arrays instead of None?
                     prms[ii, jj] = [None] * 3
 
@@ -422,7 +418,7 @@ class FeedLocator(object):
     # to make it more consistent
     def get_xdist(self, ft_prms, dec):
         """E-W"""
-        xdists = (
+        return (
             -ft_prms[..., 1]
             * SD
             * C
@@ -434,8 +430,6 @@ class FeedLocator(object):
                 * np.sin(np.pi / 2.0 - dec)
             )
         )
-
-        return xdists
 
     def data_quality(self):
         """ """
@@ -523,7 +517,7 @@ class FeedLocator(object):
 
     def set_good_ipts(self, base_ipts):
         """Good_prods to good_ipts"""
-        inp_list = [inpt for inpt in self.inputs]  # Full input list
+        inp_list = [self.inputs]  # Full input list
         self.good_ipts = np.zeros(self.inputs.shape, dtype=bool)
         for ii, inprd in enumerate(self.inprds):
             if inprd[0] not in base_ipts:
@@ -557,11 +551,9 @@ class FeedLocator(object):
         # Positions:
         pstns = np.dot(psd_inv, dists)
         # Add position of base_input
-        inp_list = [inpt for inpt in self.inputs]  # Full input list
+        inp_list = [self.inputs]  # Full input list
         bs_inpt_idx = inp_list.index(base_ipt)  # Original index of base_ipt
-        pstns = np.insert(pstns, bs_inpt_idx, 0.0)
-
-        return pstns
+        return np.insert(pstns, bs_inpt_idx, 0.0)
 
     def get_postns(self):
         """ """
@@ -582,13 +574,14 @@ class FeedLocator(object):
         def get_centre(xdists, tol):
             """Returns the median (across frequencies) of NS separation dists for each
             baseline if this median is withing *tol* of a multiple of 22 meters. Else,
-            returns the multiple of 22 meters closest to this median (up to 3*22=66 meters)
+            returns the multiple of 22 meters closest to this median (up to 3*22=66
+            meters)
             """
             xmeds = np.nanmedian(xdists, axis=0)
             cylseps = np.arange(-1, 2) * 22.0 if self.PATH else np.arange(-3, 4) * 22.0
             devs = abs(xmeds[:, np.newaxis] - cylseps[np.newaxis, :])
             devmins = devs.min(axis=1)
-            centres = np.array(
+            return np.array(
                 [
                     (
                         xmeds[ii]  # return median
@@ -598,8 +591,6 @@ class FeedLocator(object):
                     for ii in range(devmins.size)
                 ]
             )
-
-            return centres
 
         xcentre1 = get_centre(xds1, tol)
         xerr1 = abs(xds1 - xcentre1[np.newaxis, :])
@@ -658,7 +649,7 @@ class FeedLocator(object):
         return good_chans, good_freqs
 
 
-class ChanMonitor(object):
+class ChanMonitor:
     """This class provides the user interface to FeedLocator.
 
     It initializes instances of FeedLocator (normally one per polarization)
@@ -666,9 +657,9 @@ class ChanMonitor(object):
     agreement/disagreement with the layout database, etc.)
 
     Feed locator should not
-    have to sepparate the visibilities in data to run the test on and data not to run the
-    test on. ChanMonitor should make the sepparation and provide FeedLocator with the right
-    data cube to test.
+    have to sepparate the visibilities in data to run the test on and data
+    not to run the test on. ChanMonitor should make the sepparation and
+    provide FeedLocator with the right data cube to test.
 
     Parameters
     ----------
@@ -786,15 +777,13 @@ class ChanMonitor(object):
         grds = [grd if clr[ii] else 0 for ii, grd in enumerate(grds)]
 
         # Source candidates ordered in decreasing quality
-        src_cndts = [
+        return [
             src
             for grd, src in sorted(
                 zip(grds, srcs), key=lambda entry: entry[0], reverse=True
             )
             if grd != 0
         ]
-
-        return src_cndts
 
     def get_pol_prod_idx(self, pol_inpt_idx):
         """ """
@@ -1025,7 +1014,7 @@ class ChanMonitor(object):
                     # TODO: correct process_synced_data to not crash when no NS
                     try:
                         self.dat1 = ni_utils.process_synced_data(self.dat1)
-                    except:
+                    except (KeyError, ValueError):
                         pass
                     self.freqs = self.dat1.freq
                     self.prods = self.dat1.prod
@@ -1048,7 +1037,7 @@ class ChanMonitor(object):
                     # TODO: correct process_synced_data to not crash when no NS
                     try:
                         self.dat2 = ni_utils.process_synced_data(self.dat2)
-                    except:
+                    except (KeyError, ValueError):
                         pass
                     self.tm2 = self.dat2.time
                     break
@@ -1069,7 +1058,7 @@ class ChanMonitor(object):
             f = copy.deepcopy(self.finder)
         else:
             f = finder.Finder(node_spoof=_DEFAULT_NODE_SPOOF)
-            f.filter_acqs((data_index.ArchiveInst.name == "pathfinder"))
+            f.filter_acqs(data_index.ArchiveInst.name == "pathfinder")
             f.only_corr()
             f.set_time_range(self.t1, self.t2)
 
@@ -1090,7 +1079,7 @@ class ChanMonitor(object):
 
         # Create a Finder object and focus on time range
         f = finder.Finder(node_spoof=_DEFAULT_NODE_SPOOF)
-        f.filter_acqs((data_index.ArchiveInst.name == "pathfinder"))
+        f.filter_acqs(data_index.ArchiveInst.name == "pathfinder")
         f.only_corr()
         f.set_time_range(self.t1, self.t2)
 
@@ -1135,7 +1124,12 @@ class ChanMonitor(object):
             self.set_acq_list()
 
         if srcs is None:
-            srcs = [ephemeris.CygA, ephemeris.CasA, ephemeris.TauA, ephemeris.VirA]
+            srcs = [
+                ch_ephem.sources.CygA,
+                ch_ephem.sources.CasA,
+                ch_ephem.sources.TauA,
+                ch_ephem.sources.VirA,
+            ]
         Ns = len(srcs)
 
         clr = [False] * Ns
@@ -1145,7 +1139,7 @@ class ChanMonitor(object):
             night_transit = np.array([])
             for acq in self.night_acq_list:
                 night_transit = np.append(
-                    night_transit, ephemeris.transit_times(src, *acq[1])
+                    night_transit, chime.transit_times(src, *acq[1])
                 )
 
             if night_transit.size:
@@ -1154,7 +1148,7 @@ class ChanMonitor(object):
             if src.name in ["CygA", "CasA"]:
                 transit = np.array([])
                 for acq in self.acq_list:
-                    transit = np.append(transit, ephemeris.transit_times(src, *acq[1]))
+                    transit = np.append(transit, chime.transit_times(src, *acq[1]))
 
                 if transit.size:
                     clr[ii] = True
@@ -1213,8 +1207,8 @@ bswp2 and bsep2 arguments
         if self.source2 is None:
             if self.source1 is None:
                 raise RuntimeError("No sources available.")
-            else:
-                self.single_source_check()
+
+            self.single_source_check()
         else:
             Nipts = len(self.inputs)
             self.good_ipts = np.zeros(Nipts, dtype=bool)
@@ -1288,8 +1282,7 @@ bswp2 and bsep2 arguments
                     self.expostns[ii][0] = fl.expx[jj]
                     self.expostns[ii][1] = fl.expy[jj]
 
-        good_frac = float(np.sum(fl.good_ipts)) / float(fl.good_ipts.size)
-        return good_frac
+        return float(np.sum(fl.good_ipts)) / float(fl.good_ipts.size)
 
     def get_res_sing_src(self, fl):
         """ """
@@ -1298,5 +1291,4 @@ bswp2 and bsep2 arguments
                 if fl_ipt == ipt:
                     self.good_ipts[ii] = fl.good_ipts[jj]
 
-        good_frac = float(np.sum(fl.good_ipts)) / float(fl.good_ipts.size)
-        return good_frac
+        return float(np.sum(fl.good_ipts)) / float(fl.good_ipts.size)

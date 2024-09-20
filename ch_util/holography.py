@@ -21,9 +21,11 @@ import numpy as np
 import peewee as pw
 
 import caput.time as ctime
-from chimedb.core.orm import base_model
 
-from ch_util import ephemeris
+import ch_ephem
+from ch_ephem.observers import chime
+
+from chimedb.core.orm import base_model
 
 # Global variables and constants.
 # ================================
@@ -109,9 +111,9 @@ class HolographyObservation(base_model):
             Any notes on this observation.
         """
 
-        start_time = ephemeris.lsa_to_unix(
+        start_time = chime.lsa_to_unix(
             start_lst * 360 / 24,
-            ctime.datetime_to_unix(ephemeris.parse_date(start_day)),
+            ctime.datetime_to_unix(ch_ephem.time.parse_date(start_day)),
         )
         duration_unix = duration_lst * (3600.0) * ctime.SIDEREAL_S
 
@@ -197,26 +199,27 @@ class HolographyObservation(base_model):
 
         output_params = {}
 
-        with open(post_report_file, "r") as f:
-            lines = [line for line in f]
-            for l in lines:
-                if (l.find("Source")) != -1:
-                    srcnm = re.search("Source:\s+(.*?)\s+", l).group(1)
+        with open(post_report_file) as f:
+            for line in f:
+                if (line.find("Source")) != -1:
+                    srcnm = re.search("Source:\s+(.*?)\s+", line).group(1)
                     if srcnm in cls.source_alias:
                         srcnm = cls.source_alias[srcnm]
-                if (l.find("DURATION")) != -1:
+                if (line.find("DURATION")) != -1:
                     output_params["DURATION"] = float(
-                        re.search("DURATION:\s+(.*?)\s+", l).group(1)
+                        re.search("DURATION:\s+(.*?)\s+", line).group(1)
                     )
 
                 # convert Julian Date to Skyfield time object
-                if (l.find("JULIAN DATE")) != -1:
+                if (line.find("JULIAN DATE")) != -1:
                     output_params["start_time"] = ts.ut1(
-                        jd=float(re.search("JULIAN DATE:\s+(.*?)\s+", l).group(1))
+                        jd=float(re.search("JULIAN DATE:\s+(.*?)\s+", line).group(1))
                     )
 
-                if l.find("SID:") != -1:
-                    output_params["SID"] = int(re.search("SID:\s(.*?)\s+", l).group(1))
+                if line.find("SID:") != -1:
+                    output_params["SID"] = int(
+                        re.search("SID:\s(.*?)\s+", line).group(1)
+                    )
             try:
                 output_params["src"] = HolographySource.get(name=srcnm)
             except pw.DoesNotExist:
@@ -283,7 +286,7 @@ class HolographyObservation(base_model):
                     ant_log["dec"],
                 )
                 if verbose:
-                    print("onsource_dist = {:.2f} deg".format(onsource_dist))
+                    print(f"onsource_dist = {onsource_dist:.2f} deg")
                 onsource = np.where(dist.degrees < onsource_dist)[0]
 
                 if len(onsource) > 0:
@@ -301,14 +304,13 @@ class HolographyObservation(base_model):
                     if stdoffset > 0.05 or meanoffset > ONSOURCE_DIST_TO_FLAG:
                         obs["quality_flag"] += QUALITY_OFFSOURCE
                         print(
-                            (
-                                "Mean offset: {:.4f}. Std offset: {:.4f}. "
-                                "Setting quality flag to {}."
-                            ).format(meanoffset, stdoffset, QUALITY_OFFSOURCE)
+                            f"Mean offset: {meanoffset:.4f}. "
+                            f"Std offset: {stdoffset:.4f}. "
+                            f"Setting quality flag to {QUALITY_OFFSOURCE}."
                         )
                         noteout = (
                             "Questionable on source. Mean, STD(offset) : "
-                            "{:.3f}, {:.3f}. {}".format(meanoffset, stdoffset, noteout)
+                            f"{meanoffset:.3f}, {stdoffset:.3f}. {noteout}"
                         )
                     obs["quality_flag"] |= quality_flag
                     if verbose:
@@ -329,9 +331,8 @@ class HolographyObservation(base_model):
                             )
                         )
                         print(
-                            "Mean offset: {:.4f}. Std offset: {:.4f}.".format(
-                                meanoffset, stdoffset
-                            )
+                            f"Mean offset: {meanoffset:.4f}. "
+                            f"Std offset: {stdoffset:.4f}."
                         )
 
                     cls.create_from_dict(obs, verbose=verbose, notes=noteout, **kwargs)
@@ -447,26 +448,23 @@ class HolographyObservation(base_model):
                         # check possible.
 
                     if dup_found:
-                        tf = ts.utc(ctime.unix_to_datetime(entry.finish_time))
                         print(
-                            "Tried to add  :  {} {}; LST={:.3f}".format(
-                                src.name, t.utc_datetime().strftime(DATE_FMT_STR), ttlst
-                            )
+                            f"Tried to add  :  {src.name} "
+                            f"{t.utc_datetime().strftime(DATE_FMT_STR)}; "
+                            f"LST={ttlst:.3f}"
                         )
                         print(
-                            "Existing entry:  {} {}; LST={:.3f}".format(
-                                entry.source.name,
-                                tt.utc_datetime().strftime(DATE_FMT_STR),
-                                ttlst,
-                            )
+                            f"Existing entry:  {entry.source.name} "
+                            f"{tt.utc_datetime().strftime(DATE_FMT_STR)}; "
+                            f"LST={ttlst:.3f}"
                         )
             if dup_found:
                 return existing_db_entry
-            else:
-                return None
+
+            return None
 
         # DRAO longitude in hours
-        DRAO_lon = ephemeris.chime.longitude * 24.0 / 360.0
+        DRAO_lon = chime.longitude * 24.0 / 360.0
 
         if verbose:
             print(" ")
@@ -563,8 +561,6 @@ class HolographyObservation(base_model):
 
         from skyfield.positionlib import Angle
 
-        DRAO_lon = ephemeris.CHIMELONGITUDE * 24.0 / 360.0
-
         def sidlst_to_csd(sid, lst, sid_ref, t_ref):
             """
             Convert an integer DRAO sidereal day and LST to a float
@@ -586,7 +582,9 @@ class HolographyObservation(base_model):
             output : float
                 CHIME sidereal day
             """
-            csd_ref = int(ephemeris.csd(ctime.datetime_to_unix(t_ref.utc_datetime())))
+            csd_ref = int(
+                chime.lsd_to_unix(ctime.datetime_to_unix(t_ref.utc_datetime()))
+            )
             csd = sid - sid_ref + csd_ref
             return csd + lst / ctime.SIDEREAL_S / 24.0
 
@@ -597,7 +595,7 @@ class HolographyObservation(base_model):
             doobs = True
 
             filename = log.split("/")[-1]
-            basedir = "/tmp/26mlog/{}/".format(os.getlogin())
+            basedir = f"/tmp/26mlog/{os.getlogin()}/"
             basename, extension = filename.split(".")
             post_report_file = basename + ".POST_REPORT"
             ant_file = basename + ".ANT"
@@ -605,20 +603,18 @@ class HolographyObservation(base_model):
             if extension == "zip":
                 try:
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
-                except:
+                except ValueError:
                     print(
-                        "Failed to extract {} into {}. Moving right along...".format(
-                            post_report_file, basedir
-                        )
+                        f"Failed to extract {post_report_file} into {basedir}. "
+                        "Moving right along..."
                     )
                     doobs = False
                 try:
                     zipfile.ZipFile(log).extract(ant_file, path=basedir)
-                except:
+                except ValueError:
                     print(
-                        "Failed to extract {} into {}. Moving right along...".format(
-                            ant_file, basedir
-                        )
+                        f"Failed to extract {ant_file} into {basedir}. "
+                        "Moving right along..."
                     )
                     doobs = False
 
@@ -628,8 +624,7 @@ class HolographyObservation(base_model):
                         basedir + post_report_file
                     )
 
-                    with open(os.path.join(basedir, ant_file), "r") as f:
-                        lines = [line for line in f]
+                    with open(os.path.join(basedir, ant_file)) as f:
                         ant_data = {"sid": np.array([])}
                         lsth = []
                         lstm = []
@@ -643,8 +638,8 @@ class HolographyObservation(base_model):
                         decm = []
                         decs = []
 
-                        for l in lines:
-                            arr = l.split()
+                        for line in f:
+                            arr = line.split()
 
                             try:
                                 lst_hms = [float(x) for x in arr[2].split(":")]
@@ -668,12 +663,8 @@ class HolographyObservation(base_model):
                                 ant_data["sid"] = np.append(
                                     ant_data["sid"], int(arr[1])
                                 )
-                            except:
-                                print(
-                                    "Failed in file {} for line \n{}".format(
-                                        ant_file, l
-                                    )
-                                )
+                            except IndexError:
+                                print(f"Failed in file {ant_file} for line \n{line}")
                                 if len(ant_data["sid"]) != len(decs):
                                     print("WARNING: mismatch in list lengths.")
 
@@ -684,13 +675,15 @@ class HolographyObservation(base_model):
 
                         ant_data["ha"] = Angle(
                             radians=ha.radians
-                            - ephemeris.galt_pointing_model_ha(ha, dec).radians,
+                            - ch_ephem.pointing.galt_pointing_model_ha(ha, dec).radians,
                             preference="hours",
                         )
 
                         ant_data["dec_cirs"] = Angle(
                             radians=dec.radians
-                            - ephemeris.galt_pointing_model_dec(ha, dec).radians,
+                            - ch_ephem.pointing.galt_pointing_model_dec(
+                                ha, dec
+                            ).radians,
                             preference="degrees",
                         )
 
@@ -702,7 +695,7 @@ class HolographyObservation(base_model):
                         )
 
                     ant_data["t"] = ctime.unix_to_skyfield_time(
-                        ephemeris.csd_to_unix(ant_data["csd"])
+                        chime.lsd_to_unix(ant_data["csd"])
                     )
 
                     # Correct RA from equinox to CIRS coords (both in radians)
@@ -718,7 +711,7 @@ class HolographyObservation(base_model):
                         preference="hours",
                     )
 
-                    obs = ephemeris.Star_cirs(
+                    obs = ch_ephem.coord.star_cirs(
                         ra=ant_data["ra_cirs"],
                         dec=ant_data["dec_cirs"],
                         epoch=ant_data["t"],
@@ -729,8 +722,8 @@ class HolographyObservation(base_model):
 
                     ant_data_list.append(ant_data)
                     post_report_list.append(post_report_params)
-                except:
-                    print("Parsing {} failed".format(post_report_file))
+                except (ValueError, KeyError):
+                    print(f"Parsing {post_report_file} failed")
 
         if return_post_report_params:
             return post_report_list, ant_data_list
@@ -778,12 +771,13 @@ class HolographyObservation(base_model):
 
         Example
         -------
-        from ch_util import holography as hl
-        import glob
 
-        obs = hl.HolographyObservation
-        logs = glob.glob('/path/to/logs/*JUN18*.zip')
-        obs_list, dup_obs_list, missing = obs.create_from_post_reports(logs, dryrun=False)
+        >>> from ch_util import holography as hl
+        >>> import glob
+        >>> obs = hl.HolographyObservation
+        >>> logs = glob.glob('/path/to/logs/*JUN18*.zip')
+        >>> obs_list, dup_obs_list, missing = \
+        ... obs.create_from_post_reports(logs, dryrun=False)
         """
         # check notes. Can be a string (in which case duplicate it), None (in
         # which case do nothing) or a list (in which case use it if same length
@@ -801,7 +795,7 @@ class HolographyObservation(base_model):
 
         for log, note in zip(logs, notesarr):
             if verbose:
-                print("Working on {}".format(log))
+                print(f"Working on {log}")
             filename = log.split("/")[-1]
             # basedir = '/'.join(log.split('/')[:-1]) + '/'
             basedir = "/tmp/"
@@ -814,12 +808,8 @@ class HolographyObservation(base_model):
             if extension == "zip":
                 try:
                     zipfile.ZipFile(log).extract(post_report_file, path=basedir)
-                except Exception:
-                    print(
-                        "failed to find {}. Moving right along...".format(
-                            post_report_file
-                        )
-                    )
+                except ValueError:
+                    print(f"failed to find {post_report_file}. Moving right along...")
                     doobs = False
             elif extension != "POST_REPORT":
                 print(

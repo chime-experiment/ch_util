@@ -44,7 +44,7 @@ def main():
 
     for ii, d in enumerate(data_list):
         out_f = h5py.File(OUT_FILENAMES[ii], "w")
-        tdata = andata.concatenate(
+        andata.concatenate(
             [d],
             start=STARTS[ii],
             stop=STOPS[ii],

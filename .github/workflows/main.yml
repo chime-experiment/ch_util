@@ -9,14 +9,13 @@ on:
 
 jobs:
 
-  lint-code:
-
+  black-check:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
@@ -26,15 +25,33 @@ jobs:
     - name: Check code with black
       run: black --check .
 
+  ruff-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+
+    - name: Install ruff
+      run: pip install ruff
+
+    - name: Check code with ruff
+      run: ruff check .
+
   run-tests:
 
     strategy:
       matrix:
-        python-version: [3.9, 3.11]
+        python-version: [3.9, 3.12]
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Install apt dependencies
       run: |
@@ -42,29 +59,24 @@ jobs:
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install pip dependencies
-      run: |
-        pip install wheel
-        pip install mpi4py
-        pip install numpy
-        pip install cython
-        pip install h5py
-        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
-        pip install pytest
+    - name: Install ch_util
+      run: pip install -e .[test] --no-binary bitshuffle
 
     - name: Run tests
-      run: pytest --ignore=tests/test_db.py tests/
+      run: pytest .
 
 
   build-docs:
 
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
 
     - name: Install apt dependencies
       run: |
@@ -72,19 +84,12 @@ jobs:
         sudo apt-get install -y libopenmpi-dev openmpi-bin libhdf5-serial-dev
 
     - name: Set up Python 3.11
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v5
       with:
         python-version: "3.11"
 
-    - name: Install pip dependencies
-      run: |
-        pip install wheel
-        pip install mpi4py
-        pip install numpy
-        pip install cython
-        pip install h5py
-        pip install --use-deprecated=legacy-resolver -e . --no-binary bitshuffle
-        pip install -r doc/requirements.txt
+    - name: Install requirements
+      run: pip install -e .[doc]
 
     - name: Build sphinx docs
       run: sphinx-build -W -b html doc/ doc/_build/html

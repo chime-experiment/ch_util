@@ -3,21 +3,22 @@ Catalog of HFB test targets
 """
 
 from __future__ import annotations
-import os
-import numpy as np
-from typing import TYPE_CHECKING, Union
 
-from . import ephemeris
+import numpy as np
+from typing import TYPE_CHECKING, Optional, Union
+
+import ch_ephem.catalogs
+
 from .fluxcat import FluxCatalog
 from .tools import ensure_list
 
 if TYPE_CHECKING:
     import skyfield.starlib.Star
+    import caput.time.Observer
 
 # Define the source collection that should be loaded when this module is imported.
-HFB_COLLECTION = os.path.join(
-    os.path.dirname(__file__), "catalogs", "hfb_target_list.json"
-)
+# This is a catalog provided by ch_ephem.
+HFB_COLLECTION = "hfb_target_list"
 
 
 class HFBCatalog(FluxCatalog):
@@ -37,6 +38,10 @@ class HFBCatalog(FluxCatalog):
         "alternate_names",
         "freq_abs",
     ]
+
+    _entries = {}
+    _collections = {}
+    _alternate_name_lookup = {}
 
     def __init__(
         self,
@@ -91,7 +96,7 @@ def get_doppler_shifted_freq(
     source: Union[skyfield.starlib.Star, str],
     date: Union[float, list],
     freq_rest: Union[float, list] = None,
-    obs: ephemeris.Observer = ephemeris.chime,
+    obs: Optional[caput.time.Observer] = None,
 ) -> np.array:
     """Calculate Doppler shifted frequency of spectral feature with rest
     frequency `freq_rest`, seen towards source `source` at time `date`, due to
@@ -136,6 +141,10 @@ def get_doppler_shifted_freq(
     """
 
     from scipy.constants import c as speed_of_light
+    from ch_ephem.coord import get_range_rate
+
+    if obs is None:
+        from ch_ephem.observers import chime as obs
 
     # For source string inputs, get skyfield Star object from HFB catalog
     if isinstance(source, str):
@@ -152,23 +161,21 @@ def get_doppler_shifted_freq(
                 "in ch_util.hfbcat.HFBCatalog. "
                 f"Got source {source} with names {source.names}"
             )
-        else:
-            freq_rest = HFBCatalog[source.names].freq_abs
+
+        freq_rest = HFBCatalog[source.names].freq_abs
 
     # Prepare rest frequencies for broadcasting
     freq_rest = np.asarray(ensure_list(freq_rest))[:, np.newaxis]
 
     # Get rate at which the distance between the observer and source changes
     # (positive for observer and source moving appart)
-    range_rate = ephemeris.get_range_rate(source, date, obs)
+    range_rate = get_range_rate(source, date, obs)
 
     # Compute observed frequencies from rest frequencies
     # using relativistic Doppler effect
     beta = range_rate / speed_of_light
-    freq_obs = freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
-
-    return freq_obs
+    return freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
 
 
 # Load the HFB target list
-HFBCatalog.load(HFB_COLLECTION)
+HFBCatalog.load_dict(ch_ephem.catalogs.load(HFB_COLLECTION), HFB_COLLECTION)

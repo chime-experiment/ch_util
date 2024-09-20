@@ -24,7 +24,8 @@ import time
 from caput import misc
 import caput.time as ctime
 
-from . import ephemeris
+import ch_ephem.catalogs
+
 from .tools import ensure_list
 
 # Define nominal frequency. Sources in catalog are ordered according to
@@ -33,15 +34,15 @@ from .tools import ensure_list
 FREQ_NOMINAL = 600.0
 
 # Define the source collections that should be loaded when this module is imported.
-DIR_COLLECTIONS = os.path.join(os.path.dirname(__file__), "catalogs")
+# These catalogs are provided by ch_ephem.
 DEFAULT_COLLECTIONS = [
-    os.path.join(DIR_COLLECTIONS, "primary_calibrators_perley2016.json"),
-    os.path.join(DIR_COLLECTIONS, "specfind_v2_5Jy_vollmer2009.json"),
+    "primary_calibrators_perley2016",
+    "specfind_v2_5Jy_vollmer2009",
 ]
 
 
 # ==================================================================================
-class FitSpectrum(object, metaclass=ABCMeta):
+class FitSpectrum(metaclass=ABCMeta):
     """A base class for modeling and fitting spectra.  Any spectral model
     used by FluxCatalog should be derived from this class.
 
@@ -145,12 +146,12 @@ class CurvedPowerLaw(FitSpectrum):
     freq_pivot : float
         The pivot frequency :math:`\\nu' = \\nu / freq_pivot`.
         Default is :py:const:`FREQ_NOMINAL`.
-    """
+    """  # noqa: E501
 
     def __init__(self, freq_pivot=FREQ_NOMINAL, nparam=2, *args, **kwargs):
         """Instantiates a CurvedPowerLaw object"""
 
-        super(CurvedPowerLaw, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         # Set the additional model kwargs
         self.freq_pivot = freq_pivot
@@ -242,7 +243,7 @@ class CurvedPowerLaw(FitSpectrum):
 
 class MetaFluxCatalog(type):
     """Metaclass for FluxCatalog.  Defines magic methods
-    for the class that can act on and provice access to the
+    for the class that can act on and provide access to the
     catalog of all astronomical sources.
     """
 
@@ -270,7 +271,7 @@ class MetaFluxCatalog(type):
         return obj is not None
 
 
-class FluxCatalog(object, metaclass=MetaFluxCatalog):
+class FluxCatalog(metaclass=MetaFluxCatalog):
     """
     Class for cataloging astronomical sources and predicting
     their flux density at radio frequencies based on spectral fits
@@ -378,7 +379,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         # overwrite argument.
         if (overwrite < 2) and (name in FluxCatalog):
             # Return existing entry
-            print("%s already has an entry in catalog." % name, end=" ")
+            print(f"{name} already has an entry in catalog.", end=" ")
             if overwrite == 0:
                 print("Returning existing entry.")
                 self = FluxCatalog[name]
@@ -421,7 +422,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
                 param=self.param,
                 param_cov=self.param_cov,
                 stats=self.stats,
-                **self.model_kwargs
+                **self.model_kwargs,
             )
 
             # Populate the kwargs that were used
@@ -441,9 +442,10 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             # Add alternate names to class dictionary so they can be searched quickly
             for alt_name in self.alternate_names:
                 if alt_name in self._alternate_name_lookup:
+                    alt_source = self._alternate_name_lookup[alt_name]
                     warnings.warn(
-                        "The alternate name %s is already held by the source %s."
-                        % (alt_name, self._alternate_name_lookup[alt_name])
+                        f"The alternate name {alt_name} for {self.name} is already "
+                        f"held by the source {alt_source}."
                     )
                 else:
                     self._alternate_name_lookup[alt_name] = self.name
@@ -555,7 +557,6 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
             Default is False.
         """
 
-        import matplotlib
         import matplotlib.pyplot as plt
 
         # Define plot parameters
@@ -709,9 +710,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         else:
             args = [freq]
 
-        flux = self._model.predict(*args)
-
-        return flux
+        return self._model.predict(*args)
 
     def predict_uncertainty(self, freq, epoch=None):
         """Calculate the uncertainty in the estimate of the flux density
@@ -739,9 +738,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         else:
             args = [freq]
 
-        flux_uncertainty = self._model.uncertainty(*args)
-
-        return flux_uncertainty
+        return self._model.uncertainty(*args)
 
     def to_dict(self):
         """Returns an ordered dictionary containing attributes
@@ -767,20 +764,12 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         """Returns a string containing basic information about the source.
         Called by the print statement.
         """
-        source_string = (
-            "{0:<25.25s} {1:>6.2f} {2:>6.2f} {3:>6d} {4:^15.1f} {5:^15.1f}".format(
-                self.name,
-                self.ra,
-                self.dec,
-                len(self),
-                self.predict_flux(FREQ_NOMINAL),
-                100.0
-                * self.predict_uncertainty(FREQ_NOMINAL)
-                / self.predict_flux(FREQ_NOMINAL),
-            )
+        flux = self.predict_flux(FREQ_NOMINAL)
+        percent = 100.0 * self.predict_uncertainty(FREQ_NOMINAL) / flux
+        return (
+            f"{self.name:<25.25s} {self.ra:>6.2f} {self.dec:>6.2f} "
+            f"{len(self):>6d} {flux:^15.1f} {percent:^15.1f}"
         )
-
-        return source_string
 
     def __len__(self):
         """Returns the number of measurements of the source."""
@@ -792,20 +781,22 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         out = []
 
         # Define header
-        hdr = "{0:<10s} {1:>8s} {2:>8s} {3:>6s} {4:>8s} {5:>8s}   {6:<60s}".format(
-            "Frequency", "Flux", "Error", "Flag", "Catalog", "Epoch", "Citation"
+        hdr = (
+            f"{'Frequency':<10s} {'Flux':>8s} {'Error':>8s} {'Flag':>6s} "
+            f"{'Catalog':>8s} {'Epoch':>8s}   {'Citation':<60s}"
         )
 
-        units = "{0:<10s} {1:>8s} {2:>8s} {3:>6s} {4:>8s} {5:>8s}   {6:<60s}".format(
-            "[MHz]", "[Jy]", "[%]", "", "", "", ""
+        units = (
+            f"{'[MHz]':<10s} {'[Jy]':>8s} {'[%]':>8s} "
+            f"{'':>6s} {'':>8s} {'':>8s}   {'':<60s}"
         )
 
         # Setup the title
         out.append("".join(["="] * max(len(hdr), len(units))))
-        out.append("NAME: {0:s}".format(self.name.replace("_", " ")))
-        out.append("RA:   {0:>6.2f} deg".format(self.ra))
-        out.append("DEC:  {0:>6.2f} deg".format(self.dec))
-        out.append("{0:d} Measurements".format(len(self.measurements)))
+        out.append("NAME: " + self.name.replace("_", " "))
+        out.append(f"RA:   {self.ra:>6.2f} deg")
+        out.append(f"DEC:  {self.dec:>6.2f} deg")
+        out.append(f"{len(self.measurements):d} Measurements")
 
         out.append("".join(["-"] * max(len(hdr), len(units))))
         out.append(hdr)
@@ -909,17 +900,14 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         catalog_string = []
 
         # Print the header
-        hdr = "{0:<25s} {1:^6s} {2:^6s} {3:>6s} {4:^15s} {5:^15s}".format(
-            "Name", "RA", "Dec", "Nmeas", "Flux", "Error"
+        hdr = (
+            f"{'Name':<25s} {'RA':^6s} {'Dec':^6s} "
+            f"{'Nmeas':>6s} {'Flux':^15s} {'Error':^15s}"
         )
 
-        units = "{0:<25s} {1:^6s} {2:^6s} {3:>6s} {4:^15s} {5:^15s}".format(
-            "",
-            "[deg]",
-            "[deg]",
-            "",
-            "@%d MHz [Jy]" % FREQ_NOMINAL,
-            "@%d MHz [%%]" % FREQ_NOMINAL,
+        units = (
+            f"{'':<25s} {'[deg]':^6s} {'[deg]':^6s} {'':>6s} "
+            f"{f'@{FREQ_NOMINAL} MHz [Jy]':^15s} {f'@{FREQ_NOMINAL} MHz [%]':^15s}"
         )
 
         catalog_string.append("".join(["-"] * max(len(hdr), len(units))))
@@ -1002,7 +990,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Check if the object was found
         if obj is None:
-            raise KeyError("%s was not found." % fkey)
+            raise KeyError(f"{fkey} was not found.")
 
         # Return the body corresponding to this source
         return obj
@@ -1146,7 +1134,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
                 full_path = os.path.join(root, filename)
 
                 # Read into dictionary
-                with open(full_path, "r") as fp:
+                with open(full_path) as fp:
                     collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
 
                 # Append (path, number of sources, source names) to list
@@ -1218,7 +1206,7 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
         ext = os.path.splitext(filename)[1]
 
         if ext not in [".pickle", ".json"]:
-            raise ValueError("Do not recognize '%s' extension." % ext)
+            raise ValueError(f"Do not recognize '{ext}' extension.")
 
         try:
             os.makedirs(path)
@@ -1272,18 +1260,53 @@ class FluxCatalog(object, metaclass=MetaFluxCatalog):
 
         # Check if the file actually exists and has the correct extension
         if not os.path.isfile(filename):
-            raise ValueError("%s does not exist." % filename)
+            raise ValueError(f"{filename} does not exist.")
 
         if ext not in [".pickle", ".json"]:
-            raise ValueError("Do not recognize '%s' extension." % ext)
+            raise ValueError(f"Do not recognize '{ext}' extension.")
 
         # Load contents of file into a dictionary
-        with open(filename, "r") as fp:
+        with open(filename) as fp:
             if ext == ".json":
                 collection_dict = json.load(fp, object_hook=json_numpy_obj_hook)
             elif ext == ".pickle":
                 collection_dict = pickle.load(fp)
 
+        return cls.load_dict(
+            collection_dict, collection_name, overwrite, set_globals, verbose
+        )
+
+    @classmethod
+    def load_dict(
+        cls,
+        collection_dict,
+        collection_name,
+        overwrite=0,
+        set_globals=False,
+        verbose=False,
+    ):
+        """
+        Load the contents of a dict into the catalog.
+
+        Parameters
+        ----------
+        collection_dict : dict
+            keys are source names, values are the sources
+        collection_name : str
+            Name of the collection
+        overwrite : int between 0 and 2
+            Action to take in the event that this source is already in the catalog:
+            - 0 - Return the existing entry.
+            - 1 - Add any measurements to the existing entry.
+            - 2 - Overwrite the existing entry.
+            Default is 0.
+        set_globals : bool
+            If True, this creates a variable in the global space
+            for each source in the file.  Default is False.
+        verbose : bool
+            If True, print some basic info about the contents of
+            the file as it is loaded. Default is False.
+        """
         # Add this to the list of files
         cls._collections[collection_name] = list(collection_dict.keys())
 
@@ -1394,11 +1417,8 @@ def format_source_name(input_name):
     # Remove multiple spaces.  Replace single spaces with underscores.
     output_name = "_".join(output_name.split())
 
-    # Put the name in all uppercase.
-    output_name = output_name.upper()
-
-    # Return properly formatted name
-    return output_name
+    # Return the name in all uppercase.
+    return output_name.upper()
 
 
 class NumpyEncoder(json.JSONEncoder):
@@ -1414,7 +1434,11 @@ class NumpyEncoder(json.JSONEncoder):
                 assert cont_obj.flags["C_CONTIGUOUS"]
                 obj_data = cont_obj.data
             data_b64 = base64.b64encode(obj_data)
-            return dict(__ndarray__=data_b64, dtype=str(obj.dtype), shape=obj.shape)
+            return {
+                "__ndarray__": data_b64,
+                "dtype": str(obj.dtype),
+                "shape": obj.shape,
+            }
         # Let the base class default method raise the TypeError
         return json.JSONEncoder(self, obj)
 
@@ -1470,4 +1494,4 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
 
 # Load the default collections
 for col in DEFAULT_COLLECTIONS:
-    FluxCatalog.load(col)
+    FluxCatalog.load_dict(ch_ephem.catalogs.load(col), col)

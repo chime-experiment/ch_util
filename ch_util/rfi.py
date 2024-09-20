@@ -27,19 +27,22 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
-from typing import Tuple, Optional, Union
+from typing import Optional, Union
 
 import numpy as np
 import scipy.signal as sig
 
-from . import tools, ephemeris
+from ch_ephem.observers import chime
+
+from . import tools
 
 # Set up logging
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
 
-# Ranges of bad frequencies given by their start time (in unix time) and corresponding start and end frequencies (in MHz)
+# Ranges of bad frequencies given by their start time (in unix time) and
+# corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
 BAD_FREQUENCIES = {
     "chime": [
@@ -147,7 +150,7 @@ def flag_dataset(
     if "time" in data.index_map:
         timestamp = data.time[0]
     elif "ra" in data.index_map:
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
 
     freq_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     auto_ii, auto_mask = np.logical_or(auto_mask, freq_mask[:, np.newaxis, np.newaxis])
@@ -245,7 +248,7 @@ def number_deviations(
         timestamp = data.time[0]
     elif "ra" in data.index_map:
         twidth = int(time_width * len(data.ra[:]) / 86164.0) + 1
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
     else:
         raise TypeError(
             f"Expected data type with a `time` or `ra` axis. Got {type(data)}."
@@ -307,7 +310,7 @@ def number_deviations(
 
 def get_autocorrelations(
     data, stack: bool = False, normalize: bool = False
-) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
     """Extract autocorrelations from a data stack.
 
     Parameters
@@ -417,7 +420,7 @@ def spectral_cut(data, fil_window=15, only_autos=False):
     if "time" in data.index_map:
         timestamp = data.time[0]
     elif "ra" in data.index_map:
-        timestamp = ephemeris.csd_to_unix(data.attrs["lsd"])
+        timestamp = chime.lsd_to_unix(data.attrs["lsd"])
 
     drawn_bool_mask = frequency_mask(data.freq[:], timestamp=timestamp)
     good_data = np.logical_not(drawn_bool_mask)
@@ -713,7 +716,8 @@ def mad_cut_rolling(
         mfd = tools.invert_no_zero(nanmedian(data, axis=1))
         data *= mfd[:, np.newaxis]
 
-    # Add NaNs around the edges of the array so that we don't have to treat them separately
+    # Add NaNs around the edges of the array so that we don't have to
+    # treat them separately
     eshp = [nfreq + fwidth - 1, ntime + twidth - 1]
     exp_data = np.full(eshp, np.nan, dtype=data.dtype)
     exp_data[foff : foff + nfreq, toff : toff + ntime] = data
@@ -790,9 +794,7 @@ def highpass_delay_filter(freq, tau_cut, flag, epsilon=1e-10):
         np.sinc(2.0 * tau_cut * (freq[:, np.newaxis] - freq[np.newaxis, :])) / epsilon
     )
 
-    pinv = np.linalg.pinv(cov * mflag, hermitian=True) * mflag
-
-    return pinv
+    return np.linalg.pinv(cov * mflag, hermitian=True) * mflag
 
 
 def iterative_hpf_masking(

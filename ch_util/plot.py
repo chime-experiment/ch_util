@@ -1,16 +1,15 @@
 """Plotting routines for CHIME data"""
 
 import numpy as np
-import scipy as sp
 import matplotlib.pyplot as plt
 import warnings
 import datetime
 import scipy.signal as sig
 
 import caput.time as ctime
+from ch_ephem.observers import chime
 
 from . import andata
-from . import ephemeris
 
 
 def waterfall(
@@ -88,20 +87,19 @@ def waterfall(
 
     # waterfall() does not accept 'complex'
     if part_sel == "complex":
-        msg = 'waterfall() does not take "complex" for "part_sel"' " argument."
-        raise ValueError(msg)
+        raise ValueError('waterfall() does not take "complex" for "part_sel" argument.')
 
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
     # Set title, if given:
-    if title != None:
+    if title is not None:
         ax.set_title(title)
 
     # Setting labels, if given:
-    if x_label != None:
+    if x_label is not None:
         ax.set_xlabel(x_label)
-    if y_label != None:
+    if y_label is not None:
         ax.set_ylabel(y_label)
 
     # Preparing data shape for plotting:
@@ -112,8 +110,7 @@ def waterfall(
         tmstp = _select_time(data, time_sel)
 
     # Apply median filter, if 'med_filt' is given:
-    if med_filt != None:
-        msg = "Warning: Wrong value for 'med_filt'. Ignoring argument."
+    if med_filt is not None:
         if med_filt[0] == "new":
             # Apply median filter:
             plt_data, baseline = _med_filter(
@@ -123,7 +120,7 @@ def waterfall(
                 # Save baseline to file, if given:
                 fileBaseOut = open(med_filt[4], "w")
                 for ii in range(len(baseline)):
-                    fileBaseOut.write("{0}\n".format(baseline[ii, 0]))
+                    fileBaseOut.write(baseline[ii, 0] + "\n")
                 fileBaseOut.close()
         elif med_filt[0] == "old":
             # Reshape baseline to ensure type and shape:
@@ -131,10 +128,10 @@ def waterfall(
             # Normalize data:
             plt_data = plt_data / baseline
         else:
-            print(msg)
+            print("Warning: Wrong value for 'med_filt'. Ignoring argument.")
 
     # Shape data to full day, if 'full_day' is given:
-    if full_day != None:
+    if full_day is not None:
         plt_data = _full_day_shape(
             plt_data,
             tmstp,
@@ -148,7 +145,7 @@ def waterfall(
     wtfl = ax.imshow(plt_data[::-1, :], **kwargs)
 
     # Ajust aspect ratio of image if aspect is provided:
-    if aspect != None:
+    if aspect is not None:
         _force_aspect(ax, aspect)
 
         # Ajust colorbar size:
@@ -161,22 +158,22 @@ def waterfall(
         cbar = fig.colorbar(wtfl)
 
     # Set label to colorbar, if given:
-    if cbar_label != None:
+    if cbar_label is not None:
         cbar.set_label(cbar_label)
 
     # Output depends on keyword arguments:
-    if show_plot == True:
+    if show_plot is True:
         plt.show()
-    elif (show_plot != None) and (show_plot != False):
-        msg = (
+    elif (show_plot is not None) and (show_plot is not False):
+        warnings.warn(
             'Optional keyword argument "show_plot" should receive either'
-            ' "True" or "False". Received "{0}". Ignoring argument.'.format(show_plot)
+            f' "True" or "False". Received "{show_plot}". Ignoring argument.',
+            SyntaxWarning,
         )
-        warnings.warn(msg, SyntaxWarning)
 
     # Save to file if filename is provided:
-    if out_file != None:
-        if res != None:
+    if out_file is not None:
+        if res is not None:
             fig.savefig(out_file, dpi=res)
         else:
             fig.savefig(out_file)
@@ -286,11 +283,10 @@ def _coerce_data_shape(
         data = data.vis
     if data.ndim != 3:
         if data.ndim != 3 - len(axes):
-            msg = (
-                "Could no interpret input data axes. Got %dD data and need"
-                " coerse to %dD data"
-            ) % (data.ndim, 3 - len(axes))
-            raise ValueError(msg)
+            raise ValueError(
+                f"Could not interpret input data axes. Got {data.ndim}D data and need"
+                f" coerse to {3 - len(axes)}D data"
+            )
         # Temporarily make the data 3D (for slicing), will reshape in the end.
         shape = data.shape
         for axis in axes:
@@ -319,14 +315,13 @@ def _coerce_data_shape(
     axes.reverse()
     for axis in axes:
         if not shape[axis] == 1:
-            msg = "Need to eliminate axis %d but it is not length 1." % axis
-            raise ValueError(msg)
+            ValueError(f"Need to eliminate axis {axis} but it is not length 1.")
         shape = shape[:axis] + shape[axis + 1 :]
     data.shape = shape
 
     # Selects what part to plot:
     # Defaults to plotting real part of data.
-    if part_sel == "real" or part_sel == None:
+    if part_sel == "real" or part_sel is None:
         data = data.real
     elif part_sel == "imag":
         data = data.imag
@@ -337,12 +332,11 @@ def _coerce_data_shape(
     elif part_sel == "complex":
         pass
     else:
-        msg = (
+        raise ValueError(
             'Optional keyword argument "part_sel" has to receive'
             ' one of "real", "imag", "mag", "phase" or "complex".'
-            ' Received "{0}"'.format(part_sel)
+            f' Received "{part_sel}"'
         )
-        raise ValueError(msg)
 
     return data
 
@@ -435,7 +429,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
             if in_range:
                 sf_time = ctime.unix_to_skyfield_time(tmstp[ii])
                 sun = ctime.skyfield_wrapper.ephemeris["sun"]
-                obs = ephemeris.chime.skyfield_obs().at(sf_time)
+                obs = chime.skyfield_obs().at(sf_time)
                 azim = obs.observe(sun).apparent().altaz()[1].radians
 
                 in_start_range = (tmstp[ii] > start_range[0]) and (
@@ -464,7 +458,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
                             break
 
         # Set azimuth ticks, if given:
-        if ax != None:
+        if ax is not None:
             tck_stp = n_bins / 6.0
             ticks = np.array(
                 [
@@ -506,7 +500,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
                         break
 
         # Set time ticks, if given:
-        if ax != None:
+        if ax is not None:
             tck_stp = n_bins / 6.0
             ticks = np.array(
                 [
@@ -523,7 +517,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
             # Set label:
             ax.set_xlabel("Time (UTC-8 hours)")
 
-    print("Number of 10-second bins added to full day data: {0}".format(n_added))
+    print(f"Number of 10-second bins added to full day data: {n_added}")
 
     # Set new array to NaN for subsequent masking:
     Z = np.ones((1024, n_bins))
@@ -534,7 +528,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
     for ii in range(n_bins):
         n_col = len(values_to_sum[ii])
         if n_col > 0:
-            col = np.zeros((1024))
+            col = np.zeros(1024)
             for jj in range(n_col):
                 col = col + data[:, values_to_sum[ii][jj]]
             Z[:, ii] = col / float(n_col)
@@ -577,27 +571,29 @@ def _force_aspect(ax, aspect=1.0):
 
 
 def _med_filter(data, n_bins=200, i_bin=0, filt_window=37):
-    """Normalize a 2D array by its power spectrum averaged over 'n_bins' starting at 'i_bin'.
+    """Normalize a 2D array.
+
+    The array is normalized by its power spectrum averaged over 'n_bins'
+    starting at 'i_bin'.
 
     Parameters
     ----------
     data : numpy.ndarray
-    Data to be normalized
-
+        Data to be normalized
     n_bins : integer
-    Number of bins over which to average the power spectrum
-
+        Number of bins over which to average the power spectrum
     i_bin : integer
-    First bin of the range over which to average the power spectrum
-
+        First bin of the range over which to average the power spectrum
     filt_window : integer
-    Width of the window for the median filter. The filter is applied
-    once with this window and a second time with 1/3 of this window width.
+        Width of the window for the median filter. The filter is applied
+        once with this window and a second time with 1/3 of this window width.
 
     Returns
     -------
-    rel_power : 2d array normalized by average power spectrum (baseline)
-    medfilt_baseline : Average power spectrum
+    rel_power
+        2d array normalized by average power spectrum (baseline)
+    medfilt_baseline
+        Average power spectrum
 
     Issues
     ------
