@@ -2029,26 +2029,34 @@ def pack_product_array(exp_arr, axis=1):
 
 def fast_pack_product_array(arr):
     """
-    Equivalent to ch_util.tools.pack_product_array(arr, axis=0),
+    Equivalent to ch_util.tools.pack_product_array(arr, axis=-1),
     but 10^5 times faster for full CHIME!
 
-    Currently assumes that arr is a 2D array of shape (nfeeds, nfeeds),
-    and returns a 1D array of length (nfeed*(nfeed+1))/2.  This case
-    is all we need for phase calibration, but pack_product_array() is
-    more general.
+    Parameters
+    ----------
+    arr : np.ndarray[..., nfeed, nfeed]
+        Array of full correlation matrices.
+
+    Returns
+    -------
+    ret : np.ndarray[..., nprod]
+        Array containing products packed in upper triangle format
+        with nprod = nfeed*(nfeed+1))/2.
     """
 
-    assert arr.ndim == 2
-    assert arr.shape[0] == arr.shape[1]
+    assert arr.ndim >= 2
+    assert arr.shape[-1] == arr.shape[-2]
 
-    nfeed = arr.shape[0]
+    nfeed = arr.shape[-1]
     nprod = (nfeed * (nfeed + 1)) // 2
 
-    ret = np.zeros(nprod, dtype=np.float64)
+    shp = arr.shape[:-2] + (nprod,)
+
+    ret = np.zeros(shp, dtype=arr.dtype)
     iout = 0
 
     for i in range(nfeed):
-        ret[iout : (iout + nfeed - i)] = arr[i, i:]
+        ret[..., iout : (iout + nfeed - i)] = arr[..., i, i:]
         iout += nfeed - i
 
     return ret

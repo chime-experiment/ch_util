@@ -1998,7 +1998,7 @@ def guess_fwhm(freq, pol="X", dec=None, sigma=False, voltage=False, seconds=Fals
 
     # Divide by declination to convert to degrees hour angle
     if dec is not None:
-        sig /= np.cos(dec)
+        sig = sig / np.cos(dec)
 
     # If requested, convert to seconds
     if seconds:
@@ -2369,7 +2369,7 @@ def interpolate_gain(freq, gain, weight, flag=None, length_scale=30.0):
         train = np.flatnonzero(flag[:, ii])
         test = np.flatnonzero(~flag[:, ii])
 
-        if train.size > 0:
+        if (train.size > 0) and (test.size > 0):
             xtest = x[test, :]
 
             xtrain = x[train, :]
