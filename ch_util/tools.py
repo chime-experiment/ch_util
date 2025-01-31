@@ -257,7 +257,7 @@ class CorrInput:
     def __repr__(self):
         kv = self._attribute_strings()
 
-        return self.__class__.name__ + "(" + ", ".join(kv) + ")"
+        return self.__class__.__name__ + "(" + ", ".join(kv) + ")"
 
     @property
     def id(self):
