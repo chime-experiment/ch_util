@@ -690,8 +690,8 @@ class TimingCorrection(andata.BaseData):
                 tau_init = tau_init[:, np.newaxis]
             else:
                 raise ValueError(
-                    "Initial tau has size %d, but there are %d noise sources."
-                    % (tau_init.size, tau_ref.shape[0])
+                    f"Initial tau has size {tau_init.size}, "
+                    f"but there are {tau_ref.shape[0]} noise sources."
                 )
 
         if alpha_init is None:
@@ -701,8 +701,8 @@ class TimingCorrection(andata.BaseData):
                 alpha_init = alpha_init[:, np.newaxis]
             else:
                 raise ValueError(
-                    "Initial alpha has size %d, but there are %d noise sources."
-                    % (alpha_init.size, alpha_ref.shape[0])
+                    f"Initial alpha has size {alpha_init.size}, "
+                    f"but there are {alpha_ref.shape[0]} noise sources."
                 )
 
         tau_ref = np.concatenate((tau_init, tau_ref), axis=-1)
@@ -2115,7 +2115,7 @@ def construct_delay_template(
         nsource = amp.local_shape[1]
         ilocal = range(amp.local_offset[1], amp.local_offset[1] + nsource)
 
-        logger.info("I am processing %d noise source inputs." % nsource)
+        logger.info("I am processing {nsource} noise source inputs.")
 
         amp = amp[:].view(np.ndarray)
         phi = phi[:].view(np.ndarray)
@@ -2178,7 +2178,7 @@ def construct_delay_template(
 
     # Estimate variance of each frequency from residuals
     for iter_weight in range(max_iter_weight):
-        msg = ["Iteration %d of %d" % (iter_weight + 1, max_iter_weight)]
+        msg = [f"Iteration {iter_weight + 1} of {max_iter_weight}"]
 
         dphi = _correct_phase_wrap(phi - static_phi[:, :, np.newaxis])
         damp = amp - static_amp[:, :, np.newaxis]
@@ -2447,8 +2447,8 @@ def fit_poly_to_phase(freq, resp, resp_error, nparam=2):
 
     if flg.size < (nparam + 1):
         msg = (
-            "Number of data points must be greater than number of parameters (%d)."
-            % nparam
+            "Number of data points must be greater than number of parameters "
+            + f"({nparam})."
         )
         raise RuntimeError(msg)
 

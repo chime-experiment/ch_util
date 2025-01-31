@@ -26,7 +26,8 @@ dependencies = [
     "numpy >= 1.24",
     "peewee >= 3.14.1",
     "scipy",
-    "skyfield >= 1.10"
+    "skyfield >= 1.10",
+    "tabulate"
 ]
 
 [project.optional-dependencies]

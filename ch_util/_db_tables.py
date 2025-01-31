@@ -187,7 +187,7 @@ def set_user(u):
     # Find the user.
     if isinstance(u, int):
         q = chimedb.core.proxy.execute_sql(
-            "SELECT user_id FROM chimewiki.user WHERE user_id = %d;" % u
+            f"SELECT user_id FROM chimewiki.user WHERE user_id = {u};"
         )
     else:
         q = chimedb.core.proxy.execute_sql(
@@ -359,7 +359,7 @@ class global_flag(event_table):
         e = event.create(
             graph_obj=o, type=event_type.global_flag(), start=start, end=None
         )
-        logger.info("Created global flag as event %d." % e.id)
+        logger.info(f"Created global flag as event {e.id}.")
         return g
 
     def end(self, time=datetime.datetime.now(), notes=None):
@@ -649,7 +649,7 @@ class component(event_table):
         h = component_history.create(id=o, comp=self, notes=notes)
         t_stamp = timestamp.create(time=time, notes=timestamp_notes)
         e = event.create(graph_obj=o, type=event_type.comp_history(), start=t_stamp)
-        logger.info("Added component history as event %d." % e.id)
+        logger.info(f"Added component history as event {e.id}.")
         return h
 
     def add_doc(self, repo, ref, time=datetime.datetime.now(), notes=None):
@@ -681,7 +681,7 @@ class component(event_table):
         d = component_doc.create(id=o, comp=self, repo=repo, ref=ref)
         t_stamp = timestamp.create(time=time, notes=notes)
         e = event.create(graph_obj=o, type=event_type.comp_doc(), start=t_stamp)
-        logger.info("Added component document as event %d." % e.id)
+        logger.info(f"Added component document as event {e.id}.")
         return d
 
     def get_property(self, type=None, time=datetime.datetime.now()):
@@ -1216,7 +1216,7 @@ class event(base_model):
         fail = []
 
         if not self.active:
-            logger.info("Event %d is already deactivated." % (self.id))
+            logger.info(f"Event {self.id} is already deactivated.")
             return
 
         # If this is about component availability, do not deactivate if it is
@@ -1278,7 +1278,7 @@ class event(base_model):
 
         self.active = False
         self.save()
-        logger.info("Deactivated event %d." % self.id)
+        logger.info(f"Deactivated event {self.id}.")
 
     def _replace(self, start=None, end=None, force_end=False):
         """Replace one or both timestamps for an event.
@@ -1474,7 +1474,7 @@ def _graph_obj_iter(sel, obj, time, when, order, active):
         elif order == ORDER_DESC:
             ret = ret.order_by(timestamp.time.desc())
         else:
-            raise ValueError("Unknown value of 'when' passed (%d)." % when)
+            raise ValueError(f"Unknown value of 'when' passed ({when}).")
 
     return ret
 
@@ -1668,18 +1668,16 @@ def add_component(comp, time=datetime.datetime.now(), notes=None, force=False):
                 time, event_type.comp_avail(), EVENT_AFTER, ORDER_ASC
             ).get()
             e_old._replace(start=t_stamp)
-            logger.debug(
-                "Added %s by replacing previous event %d." % (comp.sn, e_old.id)
-            )
+            logger.debug(f"Added {comp.sn} by replacing previous event {e_old.id}.")
         except pw.DoesNotExist:
             e = event.create(
                 graph_obj=comp.id, type=event_type.comp_avail(), start=t_stamp
             )
-            logger.debug("Added %s with new event %d." % (comp.sn, e.id))
+            logger.debug(f"Added {comp.sn} with new event {e.id}.")
     if len(to_add):
         logger.info(
-            "Added %d new component%s: %s"
-            % (len(to_add), _plural(to_add), ", ".join(to_add_sn))
+            f"Added {len(to_add)} new component{_plural(to_add)}: "
+            + ", ".join(to_add_sn)
         )
     else:
         logger.info("Added no new component.")
@@ -1823,11 +1821,10 @@ def remove_component(comp, time=datetime.datetime.now(), notes=None, force=False
     for e in ev:
         e.end = t_stamp
         e.save()
-        logger.debug("Removed component by ending event %d." % e.id)
+        logger.debug(f"Removed component by ending event {e.id}.")
     if len(ev):
         logger.info(
-            "Removed %d component%s: %s."
-            % (len(ev), _plural(ev), ", ".join(ev_comp_sn))
+            f"Removed {len(ev)} component{_plural(ev)}: " + ", ".join(ev_comp_sn)
         )
     else:
         logger.info("Removed no component.")
@@ -1915,8 +1912,9 @@ def set_property(
         fail,
         force,
         PropertyUnchanged,
-        "The following component%s "
-        "property does not change" % ("'s" if len(fail) == 1 else "s'"),
+        "The following component"
+        + ("'s" if len(fail) == 1 else "s'")
+        + " property does not change",
     )
 
     # End any events that need to be ended.
@@ -1930,8 +1928,9 @@ def set_property(
     # If no value was passed, then we are done.
     if not value:
         logger.info(
-            "Removed property %s from the following %d component%s: %s."
-            % (type.name, len(to_end), _plural(to_end), ", ".join(to_end_sn))
+            f"Removed property {type.name} from the following {len(to_end)} "
+            + f"component{_plural(to_end)}: "
+            + ", ".join(to_end_sn)
         )
         return
 
@@ -2014,7 +2013,7 @@ def make_connexion(
             # starting at this new time.
             e_old = c.event(time, EVENT_AFTER, ORDER_ASC).get()
             e_old._replace(start=t_stamp)
-            logger.debug("Added connexion by replacing previous event %d." % e_old.id)
+            logger.debug(f"Added connexion by replacing previous event {e_old.id}.")
         except pw.DoesNotExist:
             try:
                 conn = connexion.from_pair(c.comp1, c.comp2, allow_new=False)
@@ -2027,11 +2026,11 @@ def make_connexion(
             else:
                 e_type = event_type.connexion()
             e = event.create(graph_obj=o, type=e_type, start=t_stamp)
-            logger.debug("Added connexion with new event %d." % e.id)
+            logger.debug(f"Added connexion with new event {e.id}.")
     if len(to_conn):
         logger.info(
-            "Added %d new connexion%s: %s"
-            % (len(to_conn), _plural(to_conn), ", ".join(to_conn_sn))
+            f"Added {len(to_conn)} new connexion{_plural(to_conn)}: "
+            + ", ".join(to_conn_sn)
         )
     else:
         logger.info("Added no new connexions.")
@@ -2109,11 +2108,10 @@ def sever_connexion(conn, time=datetime.datetime.now(), notes=None, force=False)
     for e in ev:
         e.end = t_stamp
         e.save()
-        logger.debug("Severed connexion by ending event %d." % e.id)
+        logger.debug(f"Severed connexion by ending event {e.id}.")
     if len(ev):
         logger.info(
-            "Severed %d connexion%s: %s."
-            % (len(ev), _plural(ev), ", ".join(ev_conn_sn))
+            f"Severed {len(ev)} connexion{_plural(ev)}: " + ", ".join(ev_conn_sn)
         )
     else:
         logger.info("Severed no connexion.")

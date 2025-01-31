@@ -209,7 +209,7 @@ class FitTransit(metaclass=ABCMeta):
         parameter_names : np.ndarray[nparam,]
             Names of the parameters.
         """
-        return np.array(["param%d" % p for p in range(self.nparam)], dtype=np.bytes_)
+        return np.array([f"param{p}" for p in range(self.nparam)], dtype=np.bytes_)
 
     @property
     def param_corr(self):
@@ -753,8 +753,8 @@ class FitPolyRealPolyImag(FitPoly, FitRealImag):
     def parameter_names(self):
         """Array of strings containing the name of the fit parameters."""
         return np.array(
-            ["%s_poly_real_coeff%d" % (self.poly_type, p) for p in range(self.nparr)]
-            + ["%s_poly_imag_coeff%d" % (self.poly_type, p) for p in range(self.npari)],
+            [f"{self.poly_type}_poly_real_coeff{p}" for p in range(self.nparr)]
+            + [f"{self.poly_type}_poly_imag_coeff{p}" for p in range(self.npari)],
             dtype=np.bytes_,
         )
 
@@ -1144,8 +1144,8 @@ class FitPolyLogAmpPolyPhase(FitPoly, FitAmpPhase):
     def parameter_names(self):
         """Array of strings containing the name of the fit parameters."""
         return np.array(
-            ["%s_poly_amp_coeff%d" % (self.poly_type, p) for p in range(self.npara)]
-            + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
+            [f"{self.poly_type}_poly_amp_coeff{p}" for p in range(self.npara)]
+            + [f"{self.poly_type}_poly_phi_coeff{p}" for p in range(self.nparp)],
             dtype=np.bytes_,
         )
 
@@ -1421,7 +1421,7 @@ class FitGaussAmpPolyPhase(FitPoly, FitAmpPhase):
         """Array of strings containing the name of the fit parameters."""
         return np.array(
             ["peak_amplitude", "centroid", "fwhm"]
-            + ["%s_poly_phi_coeff%d" % (self.poly_type, p) for p in range(self.nparp)],
+            + [f"{self.poly_type}_poly_phi_coeff{p}" for p in range(self.nparp)],
             dtype=np.bytes_,
         )
 
@@ -1695,7 +1695,7 @@ def fit_point_source_map(
                 absolute_sigma=True,
             )  # , bounds=bounds)
         except ValueError as error:
-            print("index (" + ", ".join(["%d" % ii for ii in index]) + "):", error)
+            print("index (" + ", ".join([str(ii) for ii in index]) + "):", error)
             continue
 
         # Save the results

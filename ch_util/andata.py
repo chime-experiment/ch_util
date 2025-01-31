@@ -979,7 +979,7 @@ class HKData(BaseData):
         for dummy, d in self.datasets.items():
             if d.attrs["mux_address"] == mux:
                 return d
-        raise ValueError("No dataset with mux = %d is present." % (mux))
+        raise ValueError(f"No dataset with mux = {mux} is present.")
 
     def chan(self, mux=-1):
         """Convenience access to the list of channels in a given mux.
@@ -1062,7 +1062,7 @@ class HKData(BaseData):
         try:
             idx = list(self.index_map[chan_map]).index(chan)
         except KeyError:
-            raise ValueError("No channel %d exists for mux %d." % (chan, mux))
+            raise ValueError(f"No channel {chan} exists for mux {mux}.")
 
         # Return the data.
         return ds[idx, :]
@@ -3381,8 +3381,7 @@ def _remap_crate_corr(afile, slot):
     ]
 
     # Create new list of serials
-    serial_pat = crate_serial + ("%02i%%02i" % int(slot))
-    serials = [serial_pat % ci for ci in chanlist]
+    serials = [f"{crate_serial}{slot:02}{ci:02}" for ci in chanlist]
 
     # Create a list of channel ids (taking into account that they are
     # meaningless for the old crate)
@@ -3517,9 +3516,7 @@ def _insert_gains(data, input_sel):
                 elif key in data.history["acq"]:
                     g_data = data.history["acq"][key]
                 else:
-                    warnings.warn(
-                        "Cannot find gain entry [%s] for channel %i" % (key, chan)
-                    )
+                    warnings.warn(f"Cannot find gain entry [{key}] for channel {chan}")
                     continue
 
                 # Unpack the gain values and construct the gain array

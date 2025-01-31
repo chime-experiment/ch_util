@@ -198,9 +198,9 @@ class HKInput:
         self.mux = mux
 
     def __repr__(self):
-        ret = "<HKInput atmel=%s chan=%d " % (self.atmel.sn, self.chan)
+        ret = f"<HKInput atmel={self.atmel.sn} chan={self.chan} "
         if self.mux:
-            ret += "mux=%d>" % self.mux
+            ret += f"mux={self.mux}>"
         else:
             ret += "(no mux)>"
         return ret
@@ -1046,7 +1046,7 @@ def hk_to_sensor(graph, inp):
                 )
 
             # Construct the S/N of the mux connector and get it.
-            sn = "%s%d%s" % (thing.sn, inp.mux, "A" if inp.chan < 8 else "B")
+            sn = thing.sn + str(inp.mux) + ("A" if inp.chan < 8 else "B")
             try:
                 mux_card = graph.component(comp=sn)
             except layout.NotFound:
