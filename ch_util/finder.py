@@ -147,20 +147,22 @@ class Finder:
     >>> f.only_corr()
     >>> f.set_time_range(datetime(2014,2,24), datetime(2014,2,25))
     >>> f.print_results_summary()
-    interval | acquisition | offset from start (s) | length (s) | N files
-       1  |  20140219T145849Z_abbot_corr  |   378053.1  |    86400.0  |  25
-       2  |  20140224T051212Z_stone_corr  |        0.0  |    67653.9  |  19
-    Total 154053.858720 seconds of data.
+      #  acquisition                    start (s)    len (s)    files       MB
+    ---  ---------------------------  -----------  ---------  -------  -------
+      0  20140219T145849Z_abbot_corr       378053    86400         25  3166.08
+      1  20140224T051212Z_stone_corr            0    67653.9       19  2406.78
+    Total 154054 seconds,   5573 MB of data.
 
     Search for transits of a given source.
 
     >>> import ch_ephem.sources
     >>> f.include_transits(ch_ephem.sources.CasA, time_delta=3600)
     >>> f.print_results_summary()
-    interval | acquisition | offset from start (s) | length (s) | N files
-       1  |  20140219T145849Z_abbot_corr  |   452087.2  |     3600.0  |  2
-       2  |  20140224T051212Z_stone_corr  |    55288.0  |     3600.0  |  2
-    Total 7200.000000 seconds of data.
+      #  acquisition                    start (s)    len (s)    files       MB
+    ---  ---------------------------  -----------  ---------  -------  -------
+      0  20140219T145849Z_abbot_corr     452092         3600        2  253.286
+      1  20140224T051212Z_stone_corr      55292.9       3600        2  253.346
+    Total   7200 seconds,    507 MB of data.
 
     To read the data,
 
@@ -184,50 +186,45 @@ class Finder:
     ...               & (di.CorrAcqInfo.nprod == 36)
     ...               & (di.ArchiveInst.name == 'stone'))
     >>> f.print_results_summary()
-    interval | acquisition | offset from start (s) | length (s) | N files
-       1  |  20140211T020307Z_stone_corr  |        0.0  |      391.8  |  108
-       2  |  20140128T135105Z_stone_corr  |        0.0  |     4165.2  |  104
-       3  |  20131208T070336Z_stone_corr  |        0.0  |     1429.8  |  377
-       4  |  20140212T014603Z_stone_corr  |        0.0  |     2424.4  |  660
-       5  |  20131210T060233Z_stone_corr  |        0.0  |     1875.3  |  511
-       6  |  20140210T021023Z_stone_corr  |        0.0  |      874.1  |  240
-    Total 11160.663510 seconds of data.
+      #  acquisition                    start (s)    len (s)    files        MB
+    ---  ---------------------------  -----------  ---------  -------  --------
+      0  20140211T020307Z_stone_corr            0    391.764      108   13594.1
+      1  20140128T135105Z_stone_corr            0   4165.22       104  131711
+      2  20131208T070336Z_stone_corr            0   1429.78       377   47676.4
+      3  20140212T014603Z_stone_corr            0   2424.43       660   83604.1
+      4  20131210T060233Z_stone_corr            0   1875.32       511   64704.8
+      5  20140210T021023Z_stone_corr            0    874.144      240   30286.4
+    Total  11161 seconds, 371577 MB of data.
+
 
     Here is an example that uses node spoofing and also filters files within
     acquisitions to include only LNA housekeeping files:
 
-    >>> f = finder.Finder(node_spoof = {"gong" : "/mnt/gong/archive",
-                                            "suzu" : "/mnt/suzu/hk_data"})
+    >>> f = finder.Finder(node_spoof={"scinet_hpss": "/dev/null"})
     >>> f.only_hk()
     >>> f.set_time_range(datetime(2014, 9, 1), datetime(2014, 10, 10))
     >>> f.print_results_summary()
-    # | acquisition                          |start (s)| len (s) |files |     MB
-    0 | 20140830T005410Z_ben_hk              |  169549 |  419873 |   47 |   2093
-    1 | 20140905T203905Z_ben_hk              |       0 |   16969 |    2 |      0
-    2 | 20140908T153116Z_ben_hk              |       0 | 1116260 |   56 |      4
-    3 | 20141009T222415Z_ben_hk              |       0 |    5745 |    2 |      0
+      #  acquisition                start (s)           len (s)    files            MB
+    ---  -----------------------  -----------  ----------------  -------  ------------
+      0  20140830T005410Z_ben_hk       169549  419873                 47  2093
+      1  20140905T203905Z_ben_hk            0   16969.1                2     0.0832596
+      2  20140908T153116Z_ben_hk            0       1.11626e+06       56     4.45599
+      3  20141009T222415Z_ben_hk            0    5744.8                2     0.191574
+    Total 1558847 seconds,   2098 MB of data.
     >>> res = f.get_results(file_condition = (di.HKFileInfo.atmel_name == "LNA"))
     >>> for r in res:
-    ...   print("No. files: %d" % (len(r[0]))
+    ...   print(f"No. files: {len(r[0])}")
+    ...
     No. files: 8
     No. files: 1
     No. files: 19
     No. files: 1
-    >>> data = res[0].as_loaded_data()
-    >>> for m in data.mux:
-    ...   print("Mux %d: %s", (m, data.chan(m)))
-    Mux 0: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    Mux 1: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    Mux 2: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15]
-    >>> print(data.tod(14, 1))
-    [1744.190917, 1766.344726, 1771.033569, ..., 1928.612792, 1938.900756, 1945.534912]
 
     In the above example, the restriction to LNA housekeeping could also have
     been accomplished with the convenience method :meth:`Finder.set_hk_input`:
 
     >>> f.set_hk_input("LNA")
     >>> res = f.get_results()
-
     """
 
     # Constructors and setup
@@ -1368,8 +1365,8 @@ class Finder:
                 total_data += length
                 total_size += s
                 interval_number += 1
-        tabulate.tabulate(rows, headers=titles)
-        print(f"Total {total_data:6.f} seconds, {total_size:6.f} MB of data.")
+        print(tabulate.tabulate(rows, headers=titles))
+        print(f"Total {total_data:6.0f} seconds, {total_size:6.0f} MB of data.")
 
 
 def _trim_intervals_range(intervals, time_range, min_interval=0.0):
