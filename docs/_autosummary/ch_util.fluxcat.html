@@ -1,0 +1,903 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.fluxcat &mdash; ch_util 24.10.0.post3+git.573a0d63 documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.10/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=91adb8b6" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=5399a8a6"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=be8ff15f"></script>
+      <script src="../_static/auto-render.min.js?v=ad136472"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.hfbcat" href="ch_util.hfbcat.html" />
+    <link rel="prev" title="ch_util.finder" href="ch_util.finder.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ephemeris.html">ch_util.ephemeris</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.fluxcat</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.CurvedPowerLaw"><code class="docutils literal notranslate"><span class="pre">CurvedPowerLaw</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.FitSpectrum"><code class="docutils literal notranslate"><span class="pre">FitSpectrum</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.FluxCatalog"><code class="docutils literal notranslate"><span class="pre">FluxCatalog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.MetaFluxCatalog"><code class="docutils literal notranslate"><span class="pre">MetaFluxCatalog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.NumpyEncoder"><code class="docutils literal notranslate"><span class="pre">NumpyEncoder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.format_source_name"><code class="docutils literal notranslate"><span class="pre">format_source_name()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.get_epoch"><code class="docutils literal notranslate"><span class="pre">get_epoch()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.json_numpy_obj_hook"><code class="docutils literal notranslate"><span class="pre">json_numpy_obj_hook()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.fluxcat.varname"><code class="docutils literal notranslate"><span class="pre">varname()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.fluxcat</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.fluxcat.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.fluxcat">
+<span id="ch-util-fluxcat"></span><h1>ch_util.fluxcat<a class="headerlink" href="#module-ch_util.fluxcat" title="Link to this heading"></a></h1>
+<p>Catalog the measured flux densities of astronomical sources</p>
+<p>This module contains tools for cataloging astronomical sources
+and predicting their flux density at radio frequencies based on
+previous measurements.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.fluxcat.format_source_name" title="ch_util.fluxcat.format_source_name"><code class="xref py py-obj docutils literal notranslate"><span class="pre">format_source_name</span></code></a>(input_name)</p></td>
+<td><p>Standardise the name of a source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.fluxcat.get_epoch" title="ch_util.fluxcat.get_epoch"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_epoch</span></code></a>(date)</p></td>
+<td><p>Return the epoch for a date.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.fluxcat.json_numpy_obj_hook" title="ch_util.fluxcat.json_numpy_obj_hook"><code class="xref py py-obj docutils literal notranslate"><span class="pre">json_numpy_obj_hook</span></code></a>(dct)</p></td>
+<td><p>Decodes a previously encoded numpy ndarray with proper shape and dtype.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.fluxcat.varname" title="ch_util.fluxcat.varname"><code class="xref py py-obj docutils literal notranslate"><span class="pre">varname</span></code></a>(name)</p></td>
+<td><p>Create a python variable name from <cite>name</cite>.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.fluxcat.CurvedPowerLaw" title="ch_util.fluxcat.CurvedPowerLaw"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CurvedPowerLaw</span></code></a>([freq_pivot, nparam])</p></td>
+<td><p>Class to fit a spectrum to a polynomial in log-log space, given by</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.fluxcat.FitSpectrum" title="ch_util.fluxcat.FitSpectrum"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitSpectrum</span></code></a>([param, param_cov, stats])</p></td>
+<td><p>A base class for modeling and fitting spectra.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.fluxcat.FluxCatalog" title="ch_util.fluxcat.FluxCatalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FluxCatalog</span></code></a>(name[, ra, dec, ...])</p></td>
+<td><p>Class for cataloging astronomical sources and predicting their flux density at radio frequencies based on spectral fits to previous measurements.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.fluxcat.MetaFluxCatalog" title="ch_util.fluxcat.MetaFluxCatalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">MetaFluxCatalog</span></code></a></p></td>
+<td><p>Metaclass for FluxCatalog.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.fluxcat.NumpyEncoder" title="ch_util.fluxcat.NumpyEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NumpyEncoder</span></code></a>(*[, skipkeys, ensure_ascii, ...])</p></td>
+<td><p>Constructor for JSONEncoder, with sensible defaults.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.fluxcat.CurvedPowerLaw">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">CurvedPowerLaw</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq_pivot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nparam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#CurvedPowerLaw"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.CurvedPowerLaw" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.fluxcat.FitSpectrum" title="ch_util.fluxcat.FitSpectrum"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitSpectrum</span></code></a></p>
+<p>Class to fit a spectrum to a polynomial in log-log space, given by</p>
+<div class="math">
+\[\ln{S} = a_{0} + a_{1} \ln{\nu'} + a_{2} \ln{\nu'}^2 + a_{3} \ln{\nu'}^3 + \dots
+
+\]</div>
+<p>where <span class="math">\(S\)</span> is the flux density, <span class="math">\(\nu'\)</span> is the (normalized) frequency,
+and <span class="math">\(a_{i}\)</span> are the fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>nparam</strong> (<em>int</em>) – Number of parameters.  This sets the order of the polynomial.
+Default is 2 (powerlaw).</p></li>
+<li><p><strong>freq_pivot</strong> (<em>float</em>) – The pivot frequency <span class="math">\(\nu' = \nu / freq_pivot\)</span>.
+Default is <code class="xref py py-const docutils literal notranslate"><span class="pre">FREQ_NOMINAL</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Instantiates a CurvedPowerLaw object</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">FitSpectrum</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FitSpectrum"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A base class for modeling and fitting spectra.  Any spectral model
+used by FluxCatalog should be derived from this class.</p>
+<p>The <cite>fit</cite> method should be used to populate the <cite>param</cite>, <cite>param_cov</cite>, and <cite>stats</cite>
+attributes.  The <cite>predict</cite> and <cite>uncertainty</cite> methods can then be used to obtain
+the flux density and uncertainty at arbitrary frequencies.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum.param">
+<span class="sig-name descname"><span class="pre">param</span></span><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum.param" title="Link to this definition"></a></dt>
+<dd><p>Best-fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nparam, ]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum.param_cov">
+<span class="sig-name descname"><span class="pre">param_cov</span></span><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum.param_cov" title="Link to this definition"></a></dt>
+<dd><p>Covariance of the fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nparam, nparam]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum.stats">
+<span class="sig-name descname"><span class="pre">stats</span></span><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum.stats" title="Link to this definition"></a></dt>
+<dd><p>Dictionary that contains statistics related to the fit.
+Must include ‘chisq’ and ‘ndof’.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Abstract</span> <span class="pre">Methods</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">----------------</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Any</span> <span class="pre">subclass</span> <span class="pre">of</span> <span class="pre">FitSpectrum</span> <span class="pre">must</span> <span class="pre">define</span> <span class="pre">these</span> <span class="pre">methods</span></span></dt>
+<dd><p>fit
+_get_x
+_fit_func
+_deriv_fit_func</p>
+</dd></dl>
+
+<p>Instantiates a FitSpectrum object.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FitSpectrum.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum.predict" title="Link to this definition"></a></dt>
+<dd><p>Predicts the flux density at a particular frequency.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FitSpectrum.uncertainty">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FitSpectrum.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FitSpectrum.uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on the flux density at a
+particular frequency.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">FluxCatalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alternate_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'CurvedPowerLaw'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stats</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param_cov</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">measurements</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Class for cataloging astronomical sources and predicting
+their flux density at radio frequencies based on spectral fits
+to previous measurements.</p>
+<p>Class methods act upon and provide access to the catalog of
+all sources.  Instance methods act upon and provide access
+to individual sources.  All instances are stored in an
+internal class dictionary.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.fields" title="Link to this definition"></a></dt>
+<dd><p>List of attributes that are read-from and written-to the
+JSON catalog files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.model_lookup">
+<span class="sig-name descname"><span class="pre">model_lookup</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.model_lookup" title="Link to this definition"></a></dt>
+<dd><p>Dictionary that provides access to the various models that
+can be fit to the spectrum.  These models should be
+subclasses of FitSpectrum.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Instantiates a FluxCatalog object for an astronomical source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>string</em>) – Name of the source.  The convention for the source name is to
+use the MAIN_ID in the SIMBAD database in all uppercase letters
+with spaces replaced by underscores.</p></li>
+<li><p><strong>ra</strong> (<em>float</em>) – Right Ascension in degrees.</p></li>
+<li><p><strong>dec</strong> (<em>float</em>) – Declination in degrees.</p></li>
+<li><p><strong>alternate_names</strong> (<em>list</em><em> of </em><em>strings</em>) – Alternate names for the source.  Ideally should include all alternate names
+present in the SIMBAD database using the naming convention specified above.</p></li>
+<li><p><strong>model</strong> (<em>string</em>) – Name of FitSpectrum subclass.</p></li>
+<li><p><strong>model_kwargs</strong> (<em>dict</em>) – Dictionary containing keywords required by the model.</p></li>
+<li><p><strong>stats</strong> (<em>dict</em>) – Dictionary containing statistics from model fit.</p></li>
+<li><p><strong>param</strong> (<em>list</em><em>, </em><em>length nparam</em>) – Best-fit parameters.</p></li>
+<li><p><strong>param_cov</strong> (<em>2D-list</em><em>, </em><em>size nparam x nparam</em>) – Estimate of covariance of fit parameters.</p></li>
+<li><p><strong>measurements</strong> (<em>2D-list</em><em>, </em><em>size nmeas x 7</em>) – List of measurements of the form:
+[freq, flux, eflux, flag, catalog, epoch, citation].
+Should use the add_measurement method to populate this list.</p></li>
+<li><p><strong>overwrite</strong> (<em>int between 0 and 2</em>) – Action to take in the event that this source is already in the catalog:
+- 0 - Return the existing entry.
+- 1 - Add the measurements to the existing entry.
+- 2 - Overwrite the existing entry.
+Default is 0.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.add_measurement">
+<span class="sig-name descname"><span class="pre">add_measurement</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eflux</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">citation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.add_measurement"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.add_measurement" title="Link to this definition"></a></dt>
+<dd><p>Add entries to the list of measurements.  Each argument/keyword
+can be a list of items with length equal to ‘len(flux)’, or
+alternatively a single item in which case the same value is used
+for all measurements.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>float</em><em>, </em><em>list</em><em> of </em><em>floats</em>) – Frequency in MHz.</p></li>
+<li><p><strong>flux</strong> (<em>float</em><em>, </em><em>list</em><em> of </em><em>floats</em>) – Flux density in Jansky.</p></li>
+<li><p><strong>eflux</strong> (<em>float</em><em>, </em><em>list</em><em> of </em><em>floats</em>) – Uncertainty on flux density in Jansky.</p></li>
+<li><p><strong>flag</strong> (<em>bool</em><em>, </em><em>list</em><em> of </em><em>bool</em>) – If True, use this measurement in model fit.
+Default is True.</p></li>
+<li><p><strong>catalog</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>list</em><em> of </em><em>strings</em><em> or </em><em>Nones</em>) – Name of the catalog from which this measurement originates.
+Default is None.</p></li>
+<li><p><strong>epoch</strong> (<em>float</em><em> or </em><em>None</em><em>, </em><em>list</em><em> of </em><em>floats</em><em> or </em><em>Nones</em>) – Year when this measurement was taken.
+Default is None.</p></li>
+<li><p><strong>citation</strong> (<em>string</em><em> or </em><em>None</em><em>, </em><em>list</em><em> of </em><em>strings</em><em> or </em><em>Nones</em>) – Citation where this measurement can be found
+(e.g., ‘Baars et al. (1977)’).
+Default is None.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.available_collections">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">available_collections</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.available_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.available_collections" title="Link to this definition"></a></dt>
+<dd><p>Search the local directory for potential collections that
+can be loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>collections</strong> – List containing a tuple for each collection.  The tuple contains
+the filename of the collection (str) and the sources it contains
+(list of str).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of (str, [str, …])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.catalog">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">catalog</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.catalog" title="Link to this definition"></a></dt>
+<dd><p>Catalog from which each measurement originates.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.citation">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">citation</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.citation" title="Link to this definition"></a></dt>
+<dd><p>Citation where more information on each measurement
+can be found.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.delete">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delete</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.delete"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.delete" title="Link to this definition"></a></dt>
+<dd><p>Deletes a source from the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>source_name</strong> (<em>str</em>) – Name of the astronomical source.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.dump">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">dump</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.dump"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.dump" title="Link to this definition"></a></dt>
+<dd><p>Dumps the contents of the catalog to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>filename</strong> (<em>str</em>) – Valid path name.  Should have .json or .pickle extension.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.eflux">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">eflux</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.eflux" title="Link to this definition"></a></dt>
+<dd><p>Error on the flux measurements in Jansky.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.epoch">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">epoch</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.epoch" title="Link to this definition"></a></dt>
+<dd><p>Year that each measurement occured.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.fit_model">
+<span class="sig-name descname"><span class="pre">fit_model</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.fit_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.fit_model" title="Link to this definition"></a></dt>
+<dd><p>Fit the measurements stored in the ‘measurements’ attribute with the
+spectral model specified in the ‘model’ attribute. This populates the
+‘param’, ‘param_cov’, and ‘stats’ attributes.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.flag">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flag</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.flag" title="Link to this definition"></a></dt>
+<dd><p>Boolean flag indicating what measurements are used
+in the spectral fit.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.flux">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">flux</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.flux" title="Link to this definition"></a></dt>
+<dd><p>Flux measurements in Jansky.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.freq">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">freq</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.freq" title="Link to this definition"></a></dt>
+<dd><p>Frequency of measurements in MHz.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.from_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flux_body_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Instantiates a FluxCatalog object for an astronomical source
+from a dictionary of kwargs.  Used when loading sources from a
+JSON catalog file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – Name of the astronomical source.</p></li>
+<li><p><strong>flux_body_dict</strong> (<em>dict</em>) – Dictionary containing some or all of the keyword arguments
+listed in the __init__ function for this class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>obj</strong> – Object that can be used to predict the flux of this source,
+plot flux measurements, etc.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FluxCatalog instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.get">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.get" title="Link to this definition"></a></dt>
+<dd><p>Searches the catalog for a source.  First checks against the
+‘name’ of each entry, then checks against the ‘alternate_names’
+of each entry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – Name of the astronomical source.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>obj</strong> – Object that can be used to predict the flux of this source,
+plot flux measurements, etc.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>FluxCatalog instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.iter">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iter</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.iter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.iter" title="Link to this definition"></a></dt>
+<dd><p>Iterates through the sources in the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>it</strong> – Provides the name of each source in the catalog
+in the order specified by the ‘sort’ class method.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.iteritems">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">iteritems</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.iteritems"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.iteritems" title="Link to this definition"></a></dt>
+<dd><p>Iterates through the sources in the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>it</strong> – Provides (name, object) for each source in the catalog
+in the order specified by the ‘sort’ class method.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.keys">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">keys</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.keys"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.keys" title="Link to this definition"></a></dt>
+<dd><p>Alias for sort.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>names</strong> – List of source names in correct order.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.len">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">len</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.len"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.len" title="Link to this definition"></a></dt>
+<dd><p>Number of sources in the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>N</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.load">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_globals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.load"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.load" title="Link to this definition"></a></dt>
+<dd><p>Load the contents of a file into the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>filename</strong> (<em>str</em>) – Valid path name.  Should have .json or .pickle extension.</p></li>
+<li><p><strong>overwrite</strong> (<em>int between 0 and 2</em>) – Action to take in the event that this source is already in the catalog:
+- 0 - Return the existing entry.
+- 1 - Add any measurements to the existing entry.
+- 2 - Overwrite the existing entry.
+Default is 0.</p></li>
+<li><p><strong>set_globals</strong> (<em>bool</em>) – If True, this creates a variable in the global space
+for each source in the file.  Default is False.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, print some basic info about the contents of
+the file as it is loaded. Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.load_dict">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">load_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">collection_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">collection_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">set_globals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.load_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.load_dict" title="Link to this definition"></a></dt>
+<dd><p>Load the contents of a dict into the catalog.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>collection_dict</strong> (<em>dict</em>) – keys are source names, values are the sources</p></li>
+<li><p><strong>collection_name</strong> (<em>str</em>) – Name of the collection</p></li>
+<li><p><strong>overwrite</strong> (<em>int between 0 and 2</em>) – Action to take in the event that this source is already in the catalog:
+- 0 - Return the existing entry.
+- 1 - Add any measurements to the existing entry.
+- 2 - Overwrite the existing entry.
+Default is 0.</p></li>
+<li><p><strong>set_globals</strong> (<em>bool</em>) – If True, this creates a variable in the global space
+for each source in the file.  Default is False.</p></li>
+<li><p><strong>verbose</strong> (<em>bool</em>) – If True, print some basic info about the contents of
+the file as it is loaded. Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.loaded_collections">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">loaded_collections</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.loaded_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.loaded_collections" title="Link to this definition"></a></dt>
+<dd><p>Return the collections that have been loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>collections</strong> – List containing a tuple for each collection.  The tuple contains
+the filename of the collection (str) and the sources it contains
+(list of str).</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of (str, [str, …])</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.plot">
+<span class="sig-name descname"><span class="pre">plot</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">legend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">catalog</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">residuals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.plot"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.plot" title="Link to this definition"></a></dt>
+<dd><p>Plot the measurements, best-fit model, and confidence interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>legend</strong> (<em>bool</em>) – Show legend.  Default is True.</p></li>
+<li><p><strong>catalog</strong> (<em>bool</em>) – If True, then label and color code the measurements according to
+their catalog.  If False, then label and color code the measurements
+according to their citation.  Default is True.</p></li>
+<li><p><strong>residuals</strong> (<em>bool</em>) – Plot the residuals instead of the measurements and best-fit model.
+Default is False.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.predict_flux">
+<span class="sig-name descname"><span class="pre">predict_flux</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.predict_flux"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.predict_flux" title="Link to this definition"></a></dt>
+<dd><p>Predict the flux density of the source at a particular
+frequency and epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>float</em><em>, </em><em>np.array</em><em> of </em><em>floats</em>) – Frequency in MHz.</p></li>
+<li><p><strong>epoch</strong> (<em>float</em><em>, </em><em>np.array</em><em> of </em><em>floats</em>) – Year.  Defaults to current year.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>flux</strong> – Flux density in Jansky.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, np.array of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.predict_uncertainty">
+<span class="sig-name descname"><span class="pre">predict_uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.predict_uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.predict_uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Calculate the uncertainty in the estimate of the flux density
+of the source at a particular frequency and epoch.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>float</em><em>, </em><em>np.array</em><em> of </em><em>floats</em>) – Frequency in MHz.</p></li>
+<li><p><strong>epoch</strong> (<em>float</em><em>, </em><em>np.array</em><em> of </em><em>floats</em>) – Year.  Defaults to current year.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>flux_uncertainty</strong> – Uncertainty on the flux density in Jansky.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float, np.array of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.print_available_collections">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">print_available_collections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.print_available_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.print_available_collections" title="Link to this definition"></a></dt>
+<dd><p>Print information about the available collections.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – If True, then print all source names in addition to the names
+of the files and number of sources.  Default is False.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.print_loaded_collections">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">print_loaded_collections</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.print_loaded_collections"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.print_loaded_collections" title="Link to this definition"></a></dt>
+<dd><p>Print information about the collection that have been loaded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>verbose</strong> (<em>bool</em>) – If True, then print all source names in addition to the names
+of the files and number of sources.  Default is False.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.print_measurements">
+<span class="sig-name descname"><span class="pre">print_measurements</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.print_measurements"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.print_measurements" title="Link to this definition"></a></dt>
+<dd><p>Print all measurements.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.reversed">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reversed</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.reversed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.reversed" title="Link to this definition"></a></dt>
+<dd><p>Iterates through the sources in the catalog
+in reverse order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>it</strong> – Provides the name of each source in the catalog
+in the reverse order as that specified by the
+‘sort’ class method.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.skyfield">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">skyfield</span></span><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.skyfield" title="Link to this definition"></a></dt>
+<dd><p>Skyfield star representation <code class="xref py py-class docutils literal notranslate"><span class="pre">skyfield.starlib.Star</span></code>
+for the source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.sort">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sort</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.sort"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.sort" title="Link to this definition"></a></dt>
+<dd><p>Sorts the entries in the catalog by their flux density
+at FREQ_NOMINAL in descending order.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>names</strong> – List of source names in correct order.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.string">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">string</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.string"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.string" title="Link to this definition"></a></dt>
+<dd><p>Print basic information about the sources in the catalog.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.FluxCatalog.to_dict">
+<span class="sig-name descname"><span class="pre">to_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#FluxCatalog.to_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.FluxCatalog.to_dict" title="Link to this definition"></a></dt>
+<dd><p>Returns an ordered dictionary containing attributes
+for this instance object.  Used to dump the information
+stored in the instance object to a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flux_body_dict</strong> – Dictionary containing all attributes listed in
+the ‘fields’ class attribute.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.fluxcat.MetaFluxCatalog">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">MetaFluxCatalog</span></span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#MetaFluxCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.MetaFluxCatalog" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">type</span></code></p>
+<p>Metaclass for FluxCatalog.  Defines magic methods
+for the class that can act on and provide access to the
+catalog of all astronomical sources.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.fluxcat.NumpyEncoder">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">NumpyEncoder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">skipkeys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ensure_ascii</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_circular</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">allow_nan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_keys</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">indent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">separators</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#NumpyEncoder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.NumpyEncoder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">JSONEncoder</span></code></p>
+<p>Constructor for JSONEncoder, with sensible defaults.</p>
+<p>If skipkeys is false, then it is a TypeError to attempt
+encoding of keys that are not str, int, float or None.  If
+skipkeys is True, such items are simply skipped.</p>
+<p>If ensure_ascii is true, the output is guaranteed to be str
+objects with all incoming non-ASCII characters escaped.  If
+ensure_ascii is false, the output can contain non-ASCII characters.</p>
+<p>If check_circular is true, then lists, dicts, and custom encoded
+objects will be checked for circular references during encoding to
+prevent an infinite recursion (which would cause an RecursionError).
+Otherwise, no such check takes place.</p>
+<p>If allow_nan is true, then NaN, Infinity, and -Infinity will be
+encoded as such.  This behavior is not JSON specification compliant,
+but is consistent with most JavaScript based encoders and decoders.
+Otherwise, it will be a ValueError to encode such floats.</p>
+<p>If sort_keys is true, then the output of dictionaries will be
+sorted by key; this is useful for regression tests to ensure
+that JSON serializations can be compared on a day-to-day basis.</p>
+<p>If indent is a non-negative integer, then JSON array
+elements and object members will be pretty-printed with that
+indent level.  An indent level of 0 will only insert newlines.
+None is the most compact representation.</p>
+<p>If specified, separators should be an (item_separator, key_separator)
+tuple.  The default is (’, ‘, ‘: ‘) if <em>indent</em> is <code class="docutils literal notranslate"><span class="pre">None</span></code> and
+(‘,’, ‘: ‘) otherwise.  To get the most compact JSON representation,
+you should specify (‘,’, ‘:’) to eliminate whitespace.</p>
+<p>If specified, default is a function that gets called for objects
+that can’t otherwise be serialized.  It should return a JSON encodable
+version of the object or raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.fluxcat.NumpyEncoder.default">
+<span class="sig-name descname"><span class="pre">default</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#NumpyEncoder.default"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.NumpyEncoder.default" title="Link to this definition"></a></dt>
+<dd><p>If input object is an ndarray it will be converted into a dict
+holding dtype, shape and the data, base64 encoded.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.fluxcat.format_source_name">
+<span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">format_source_name</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#format_source_name"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.format_source_name" title="Link to this definition"></a></dt>
+<dd><p>Standardise the name of a source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_name</strong> (<em>str</em>) – The name to format</p></li>
+<li><p><strong>Returns</strong></p></li>
+<li><p><strong>formatted_name</strong> (<em>str</em>) – The name after formatting.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.fluxcat.get_epoch">
+<span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">get_epoch</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#get_epoch"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.get_epoch" title="Link to this definition"></a></dt>
+<dd><p>Return the epoch for a date.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>date</strong> (<em>datetime.datetime</em>) – Date to calculate epoch</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>epoch</strong> – The fractional-year epoch</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.fluxcat.json_numpy_obj_hook">
+<span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">json_numpy_obj_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dct</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#json_numpy_obj_hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.json_numpy_obj_hook" title="Link to this definition"></a></dt>
+<dd><p>Decodes a previously encoded numpy ndarray with proper shape and dtype.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dct</strong> – (dict) json encoded ndarray</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(ndarray) if input was an encoded ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.fluxcat.varname">
+<span class="sig-prename descclassname"><span class="pre">ch_util.fluxcat.</span></span><span class="sig-name descname"><span class="pre">varname</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/fluxcat.html#varname"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.fluxcat.varname" title="Link to this definition"></a></dt>
+<dd><p>Create a python variable name from <cite>name</cite>.</p>
+<p>The variable name replaces spaces in <cite>name</cite> with
+underscores and adds a leading underscore if <cite>name</cite>
+starts with a digit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name to create a variable name for</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>varname</strong> – The python variable name.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.finder.html" class="btn btn-neutral float-left" title="ch_util.finder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.hfbcat.html" class="btn btn-neutral float-right" title="ch_util.hfbcat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
