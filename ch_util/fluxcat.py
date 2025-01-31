@@ -669,7 +669,9 @@ class FluxCatalog(metaclass=MetaFluxCatalog):
 
         # Create block with statistics
         if not residuals:
-            txt = r"$\chi^2 = %0.2f$ $(%d)$" % (self.stats["chisq"], self.stats["ndof"])
+            txt = (
+                r"$\chi^2" + f' = {self.stats["chisq"]:0.2f}$ $({self.stats["ndof"]})$'
+            )
 
             plt.text(
                 0.95,
@@ -1475,7 +1477,7 @@ def _print_collection_summary(collection_name, source_names, verbose=True):
     nsrc = len(source_names)
 
     # Create a header containing the collection name and number of sources
-    header = collection_name + "  (%d Sources)" % nsrc
+    header = collection_name + f"  ({nsrc} Sources)"
     print(header)
 
     # Print the sources contained in this collection
