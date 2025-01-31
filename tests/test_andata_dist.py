@@ -1,6 +1,4 @@
-"""Tests of the distributed features of AnData.
-
-"""
+"""Tests of the distributed features of AnData."""
 
 import unittest
 

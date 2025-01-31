@@ -355,10 +355,8 @@ def get_autocorrelations(
 
         if not partial_stack and hasattr(data, "input_flags"):
             input_flags = data.input_flags[:]
-            logger.info(
-                "There are on average %d good inputs."
-                % np.mean(np.sum(input_flags, axis=0), axis=-1)
-            )
+            good_inputs = np.mean(np.sum(input_flags, axis=0), axis=-1)
+            logger.info(f"There are on average {good_inputs} good inputs.")
 
             if np.any(input_flags) and not np.all(input_flags):
                 logger.info("Applying input_flags to weight.")

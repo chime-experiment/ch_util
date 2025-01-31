@@ -92,7 +92,8 @@ def process_synced_data(data, ni_params=None, only_off=False):
             t_str = t.strftime("%Y %b %d %H:%M:%S UTC")
             err_str = (
                 "ni_params parameter is required for data before "
-                "%s (ctime=%i)." % (t_str, ctime_no_noise_inj_data)
+                + t_str
+                + f" (ctime={ctime_no_noise_inj_data})."
             )
             raise Exception(err_str)
 

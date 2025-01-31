@@ -43,6 +43,7 @@ from os import path
 import time
 import socket
 import peewee as pw
+import tabulate
 
 import caput.time as ctime
 
@@ -144,7 +145,7 @@ class Finder:
     >>> from datetime import datetime
     >>> f = finder.Finder()
     >>> f.only_corr()
-    >>> f.set_time_range(datetime(2014,02,24), datetime(2014,02,25))
+    >>> f.set_time_range(datetime(2014,2,24), datetime(2014,2,25))
     >>> f.print_results_summary()
     interval | acquisition | offset from start (s) | length (s) | N files
        1  |  20140219T145849Z_abbot_corr  |   378053.1  |    86400.0  |  25
@@ -1327,17 +1328,14 @@ class Finder:
     def print_results_summary(self):
         """Print a summary of the search results."""
 
-        row_proto = "%4d | %-36s | %7.f | %7.f | %4d | %6.f"
         total_data = 0.0
         total_size = 0.0
         interval_number = 0
-        titles = ("# ", " acquisition", "start (s)", "len (s) ", "files ", "MB ")
-        print("%5s|%-38s|%9s|%9s|%6s|%8s" % titles)
+        titles = ("#", "acquisition", "start (s)", "len (s)", "files", "MB")
+        rows = []
         for ii, acq in enumerate(self.acqs):
             acq_start = acq.start_time
             intervals = self.get_results_acq(ii)
-            # if len(intervals):
-            #  print intervals[0]
             for interval in intervals:
                 offset = interval[1][0] - acq_start
                 length = interval[1][1] - interval[1][0]
@@ -1366,10 +1364,11 @@ class Finder:
                 except TypeError:
                     s = 0
                 info = (interval_number, acq.name, offset, length, n_files, s)
-                print(row_proto % info)
+                rows.append(info)
                 total_data += length
                 total_size += s
                 interval_number += 1
+        tabulate.tabulate(rows, headers=titles)
         print(f"Total {total_data:6.f} seconds, {total_size:6.f} MB of data.")
 
 
