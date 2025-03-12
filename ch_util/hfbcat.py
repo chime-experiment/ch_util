@@ -5,7 +5,7 @@ Catalog of HFB test targets
 from __future__ import annotations
 
 import numpy as np
-from typing import TYPE_CHECKING, Optional, Union
+from typing import TYPE_CHECKING
 
 import ch_ephem.catalogs
 
@@ -93,10 +93,10 @@ class HFBCatalog(FluxCatalog):
 
 
 def get_doppler_shifted_freq(
-    source: Union[skyfield.starlib.Star, str],
-    date: Union[float, list],
-    freq_rest: Union[float, list] = None,
-    obs: Optional[caput.time.Observer] = None,
+    source: skyfield.starlib.Star | str,
+    date: float | list,
+    freq_rest: float | list = None,
+    obs: caput.time.Observer | None = None,
 ) -> np.array:
     """Calculate Doppler shifted frequency of spectral feature with rest
     frequency `freq_rest`, seen towards source `source` at time `date`, due to

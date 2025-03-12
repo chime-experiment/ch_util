@@ -27,7 +27,6 @@ For more control there are specific routines that can be called:
 
 import warnings
 import logging
-from typing import Optional, Union
 
 import numpy as np
 import scipy.signal as sig
@@ -448,9 +447,9 @@ def spectral_cut(data, fil_window=15, only_autos=False):
 
 def frequency_mask(
     freq_centre: np.ndarray,
-    freq_width: Optional[Union[np.ndarray, float]] = None,
-    timestamp: Optional[Union[np.ndarray, float]] = None,
-    instrument: Optional[str] = "chime",
+    freq_width: np.ndarray | float | None = None,
+    timestamp: np.ndarray | float | None = None,
+    instrument: str | None = "chime",
 ) -> np.ndarray:
     """Flag known bad frequencies.
 
