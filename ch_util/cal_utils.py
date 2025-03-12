@@ -8,7 +8,6 @@ from abc import ABCMeta, abstractmethod
 from datetime import datetime
 import inspect
 import logging
-from typing import Optional, Union
 
 import numpy as np
 import scipy.stats
@@ -2488,7 +2487,7 @@ def _dec_to_el(dec):
 def get_reference_times_file(
     times: np.ndarray,
     cal_file: memh5.MemGroup,
-    logger: Optional[logging.Logger] = None,
+    logger: logging.Logger | None = None,
 ) -> dict[str, np.ndarray]:
     """For a given set of times determine when and how they were calibrated.
 
@@ -2655,8 +2654,8 @@ def get_reference_times_file(
 def get_reference_times_dataset_id(
     times: np.ndarray,
     dataset_ids: np.ndarray,
-    logger: Optional[logging.Logger] = None,
-) -> dict[str, Union[np.ndarray, dict]]:
+    logger: logging.Logger | None = None,
+) -> dict[str, np.ndarray | dict]:
     """Calculate the relevant calibration reference times from the dataset IDs.
 
     .. warning::
