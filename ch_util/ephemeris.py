@@ -26,11 +26,8 @@ from caput.time import (
     STELLAR_S as STELLAR_S,
 )
 
-from ch_ephem.coord import star_cirs as Star_cirs  # noqa F401
 from ch_ephem.coord import peak_ra as peak_RA  # noqa F401
 from ch_ephem.coord import (
-    cirs_radec as cirs_radec,
-    object_coords as object_coords,
     hadec_to_bmxy as hadec_to_bmxy,
     bmxy_to_hadec as bmxy_to_hadec,
     get_range_rate as get_range_rate,
@@ -118,3 +115,15 @@ def solar_transit(start_time, end_time=None, obs=chime):
 
 def lunar_transit(start_time, end_time=None, obs=chime):
     return obs.lunar_transit(start_time, end_time)
+
+
+def cirs_radec(body, obs=chime):
+    return obs.cirs_radec(body)
+
+
+def Star_cirs(ra, dec, epoch, obs=chime):
+    return obs.star_cirs(ra, dec, epoch)
+
+
+def object_coords(body, date=None, deg=False, obs=chime):
+    return obs.object_coords(body, date, deg)
