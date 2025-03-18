@@ -1,24 +1,13 @@
-#!/usr/bin/env python
-
-"""Track Holography observations with the 26m telescope.
-"""
-
-# === Start Python 2/3 compatibility
-from __future__ import absolute_import, division, print_function
-from future.builtins import *  # noqa  pylint: disable=W0401, W0614
-from future.builtins.disabled import *  # noqa  pylint: disable=W0401, W0614
-
-# === End Python 2/3 compatibility
-
+"""Track Holography observations with the 26m telescope."""
 
 import peewee as pw
 import click
 
+from caput import time as ctime
+from ch_ephem.observers import chime
 import chimedb.core as db
-from ch_util import holography as hl
-from ch_util import ephemeris
 
-from caput import time
+from . import holography as hl
 
 source_alias = {"3C218": "HydraA", "3C348": "HerA", "3C123": "PerB"}
 
@@ -52,9 +41,7 @@ def new_source(name, ra, dec):
             )
             .get()
         )
-        print(
-            'Source "%s" with this RA and DEC already exists in database!' % source.name
-        )
+        print('Source "{source.name}" with this RA and DEC already exists in database!')
 
     except pw.DoesNotExist:
         try:
@@ -67,8 +54,8 @@ def new_source(name, ra, dec):
                 .get()
             )
             print(
-                'WARNING! Source "%s" is within 1 degree in RA and DEC of the source you are entering into the database!'
-                % source.name
+                f'WARNING! Source "{source.name}" is within 1 degree in RA and DEC '
+                "of the source you are entering into the database!"
             )
         except pw.DoesNotExist:
             pass
@@ -133,13 +120,19 @@ def new_obs(source, start_day, start_lst, duration_lst, notes, quality_flag):
     "--start_tol",
     type=float,
     default=60.0,
-    help="Time range tolerance in seconds (default: 60) around which to match duplicate observations",
+    help=(
+        "Time range tolerance in seconds around which to match "
+        "duplicate observations (default: 60)"
+    ),
 )
 @click.option(
     "--onsource_dist",
     type=float,
     default=0.1,
-    help="Distance in degrees (default: 0.1) beyond which to consider the telescope off source",
+    help=(
+        "Distance in degrees beyond which to consider the telescope off source"
+        " (default: 0.1) "
+    ),
 )
 @click.option("--verbose", "-v", type=bool, default=False, is_flag=True)
 @click.option(
@@ -157,7 +150,9 @@ def new_obs_ant(
     sidereal times in the .ANT file using the .POST_REPORT file to get the
     corresponding date.
 
-    This function is a wrapper for ch_util.holography.HolographyObservation.create_from_ant_logs.
+    This function is a wrapper for
+
+        ch_util.holography.HolographyObservation.create_from_ant_logs
 
     example: alpenhorn_holography new_obs_ant '/mnt/gong/26m_logs/post/*JUN18*.zip'
 
@@ -172,11 +167,7 @@ def new_obs_ant(
     db.connect(read_write=True)
 
     if files.split(".")[-1].lower() != "zip":
-        print(
-            'WARNING: File specified is not ".zip". Was that intentional?\n{}'.format(
-                files
-            )
-        )
+        print(f'WARNING: File specified is not ".zip". Was that intentional?\n{files}')
 
     filelist = glob.glob(files)
 
@@ -206,7 +197,10 @@ def new_obs_ant(
     "--start_tol",
     type=float,
     default=60.0,
-    help="Time range tolerance in seconds (default: 60) around which to match duplicate observations",
+    help=(
+        "Time range tolerance in seconds around which to match "
+        "duplicate observations (default: 60)"
+    ),
 )
 def new_obs_post_reports(files, notes, replace_dup, start_tol):
     """Create new entries for observations in specified zip archives using the
@@ -215,7 +209,9 @@ def new_obs_post_reports(files, notes, replace_dup, start_tol):
     when the 26 m reached the source or if the observation ran to completion.
     new_obs_ant will in most cases be more accurate.
 
-    This function is a wrapper for ch_util.holography.HolographyObservation.create_from_post_reports.
+    This function is a wrapper for:
+
+        ch_util.holography.HolographyObservation.create_from_post_reports
 
     example: alpenhorn_holography new_obs_ant '/mnt/gong/26m_logs/post/*JUN18*.zip'
     """
@@ -267,9 +263,9 @@ def new_obs_utc(source, start_time_utc, duration_lst, notes, quality_flag):
         raise click.BadParameter("Source was not found in the database")
 
     # Get the start time in unix
-    start_time = time.ensure_unix(time.timestr_to_datetime(start_time_utc))
+    start_time = ctime.ensure_unix(ctime.timestr_to_datetime(start_time_utc))
     # Get the duration in unix
-    duration_unix = duration_lst * (3600.0) / ephemeris.SIDEREAL_S
+    duration_unix = duration_lst * (3600.0) / ctime.SIDEREAL_S
 
     finish_time = start_time + duration_unix
 
@@ -301,8 +297,8 @@ def list_sources(sort):
 
     try:
         sources = sources.order_by(sort_options[sort])
-    except:
-        print('Sort key "{}" not known.'.format(sort))
+    except KeyError:
+        print(f'Sort key "{sort}" not known.')
 
     print_sources(sources)
 
@@ -325,11 +321,10 @@ def print_sources(sources):
                 s.name,
                 s.ra,
                 s.dec,
-                "{:2.0f}:{:02.0f}:{:05.2f}".format(
-                    ra_hms[0] * ra_hms[1], ra_hms[2], ra_hms[3]
-                ),
-                "{:+3.0f}:{:02.0f}:{:05.2f}".format(
-                    dec_dms[0] * dec_dms[1], dec_dms[2], dec_dms[3]
+                f"{ra_hms[0] * ra_hms[1]:2.0f}:{ra_hms[2]:02.0f}:{ra_hms[3]:05.2f}",
+                (
+                    f"{dec_dms[0] * dec_dms[1]:+3.0f}:"
+                    f"{dec_dms[2]:02.0f}:{dec_dms[3]:05.2f}"
                 ),
             ]
         )
@@ -353,13 +348,19 @@ def print_sources(sources):
 )
 @click.option(
     "--tz",
-    help='Specify time zone. "PDT": UTC-7. "PST": UTC-8. "EDT": UTC-4. "EST": UTC-5. "PT": "PST" or "PDT" depending on current date.',
+    help=(
+        'Specify time zone. "PDT": UTC-7. "PST": UTC-8. "EDT": UTC-4. '
+        '"EST": UTC-5. "PT": "PST" or "PDT" depending on current date.'
+    ),
 )
 @click.option(
     "--tzoffset",
     default=0,
     type=float,
-    help="Time zone offset from UTC in hours (default: 0).\n--tz parameter takes priority.",
+    help=(
+        "Time zone offset from UTC in hours (default: 0). "
+        "--tz parameter takes priority."
+    ),
 )
 @click.option(
     "--list_sources",
@@ -378,9 +379,7 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
     """List sources and observations."""
 
     import tabulate
-    from skyfield.api import load
     import numpy as np
-    from ch_util import ephemeris
     import datetime
     import pytz
 
@@ -411,11 +410,11 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
     if tz is not None:
         try:
             tzoffset = tzs[tz.upper()]
-        except:
-            print("Time zone {} not known. Known time zones:".format(tz))
+        except KeyError:
+            print(f"Time zone {tz} not known. Known time zones:")
             for key, value in tzs.items():
                 print(key, value)
-            print("Using UTC{:+.1f}.".format(tzoffset))
+            print(f"Using UTC{tzoffset:+.1f}.")
 
     sources = hl.HolographySource.select()
 
@@ -430,7 +429,7 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
 
     if days is not None:
         start_time = (
-            ephemeris.datetime_to_unix(datetime.datetime.today()) - days * 24.0 * 3600.0
+            ctime.datetime_to_unix(datetime.datetime.today()) - days * 24.0 * 3600.0
         )
         obs = obs.where(hl.HolographyObservation.start_time > start_time)
 
@@ -443,33 +442,28 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
 
     def _trim_notes(notes, wlen=10):
         if notes is None:
-            return
+            return None
         words = notes.split()
         if len(words) < wlen:
             return notes
-        else:
-            words = words[:10] + ["..."]
-            return " ".join(words)
+        words = words[:10] + ["..."]
+        return " ".join(words)
 
-    DRAO_lon = ephemeris._get_chime().longitude * 24.0 / 360.0
-    ts = ephemeris.skyfield_wrapper.timescale
+    DRAO_lon = chime.longitude * 24.0 / 360.0
+    ts = ctime.skyfield_wrapper.timescale
 
     obs_info = [
         [
             o.id,
             o.source.name,
-            ephemeris.unix_to_datetime(o.start_time + tzoffset * 3600.0).strftime(
+            ctime.unix_to_datetime(o.start_time + tzoffset * 3600.0).strftime(
                 "%Y-%m-%d %H:%M"
             ),
-            np.mod(
-                ts.utc(ephemeris.unix_to_datetime(o.start_time)).gmst + DRAO_lon, 24.0
-            ),
-            ephemeris.unix_to_datetime(o.finish_time + tzoffset * 3600.0).strftime(
+            np.mod(ts.utc(ctime.unix_to_datetime(o.start_time)).gmst + DRAO_lon, 24.0),
+            ctime.unix_to_datetime(o.finish_time + tzoffset * 3600.0).strftime(
                 "%Y-%m-%d %H:%M"
             ),
-            np.mod(
-                ts.utc(ephemeris.unix_to_datetime(o.finish_time)).gmst + DRAO_lon, 24.0
-            ),
+            np.mod(ts.utc(ctime.unix_to_datetime(o.finish_time)).gmst + DRAO_lon, 24.0),
             o.quality_flag,
             _trim_notes(o.notes),
         ]
@@ -479,9 +473,9 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
     obs_head = [
         "Id",
         "Name",
-        "Start time UTC" + "{:+.1f}".format(tzoffset),
+        "Start time UTC" + f"{tzoffset:+.1f}",
         "LST",
-        "Finish time UTC" + "{:+.1f}".format(tzoffset),
+        "Finish time UTC" + f"{tzoffset:+.1f}",
         "LST",
         "Quality",
         "Notes",
@@ -513,8 +507,8 @@ def delete_obs(obs_id):
         [
             obs.id,
             obs.source.name,
-            ephemeris.unix_to_datetime(obs.start_time),
-            ephemeris.unix_to_datetime(obs.finish_time),
+            ctime.unix_to_datetime(obs.start_time),
+            ctime.unix_to_datetime(obs.finish_time),
             obs.quality_flag,
         ]
     ]

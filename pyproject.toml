@@ -19,6 +19,7 @@ dependencies = [
     "chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git",
     "chimedb.dataset @ git+https://github.com/chime-experiment/chimedb_dataset.git",
     "bitshuffle",
+    "click",
     "h5py",
     "matplotlib",
     "mpi4py",
@@ -45,6 +46,9 @@ doc = [
 test = [
   "pytest >= 7.0"
 ]
+
+[project.scripts]
+alpenhorn_holography = "ch_util.holography_cli:cli"
 
 [tool.ruff]
 lint.select = ["E", "F", "UP", "NPY", "BLE", "C4", "RET"]
