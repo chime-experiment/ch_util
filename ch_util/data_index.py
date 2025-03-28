@@ -50,16 +50,6 @@ from chimedb.dataflag import (
     DataFlag as DataFlag,
 )
 
-from chimedb.data_index.util import (
-    fname_atmel as fname_atmel,
-    md5sum_file as md5sum_file,
-    parse_acq_name as parse_acq_name,
-    parse_corrfile_name as parse_corrfile_name,
-    parse_weatherfile_name as parse_weatherfile_name,
-    parse_hkfile_name as parse_hkfile_name,
-    detect_file_type as detect_file_type,
-)
-
 from ._db_tables import connect_peewee_tables as connect_database  # noqa F401
 
 from .holography import (
