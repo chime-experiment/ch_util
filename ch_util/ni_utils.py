@@ -5,8 +5,7 @@ import datetime
 from numpy import linalg as LA
 from scipy import linalg as sciLA
 import warnings
-from caput import memh5
-from caput import mpiarray
+from caput import containers, memdata, mpiarray
 
 from . import andata
 
@@ -127,16 +126,16 @@ def process_synced_data(data, ni_params=None, only_off=False):
         data.redistribute("freq")
 
         # Get distribution parameters
-        dist = isinstance(data.vis, memh5.MemDatasetDistributed)
+        dist = isinstance(data.vis, memdata.MemDatasetDistributed)
         comm = data.vis.comm
 
         # Construct new CorrData object for gated dataset
         newdata = andata.CorrData.__new__(andata.CorrData)
         if dist:
-            memh5.BasicCont.__init__(newdata, distributed=dist, comm=comm)
+            containers.Container.__init__(newdata, distributed=dist, comm=comm)
         else:
-            memh5.BasicCont.__init__(newdata, distributed=dist)
-        memh5.copyattrs(data.attrs, newdata.attrs)
+            containers.Container.__init__(newdata, distributed=dist)
+        memdata.copyattrs(data.attrs, newdata.attrs)
 
         # Add index maps to newdata
         newdata.create_index_map("freq", data.index_map["freq"])
@@ -165,7 +164,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
 
         # Add new visibility dataset
         vis_dset = newdata.create_dataset("vis", data=vis_sky, distributed=dist)
-        memh5.copyattrs(data.vis.attrs, vis_dset.attrs)
+        memdata.copyattrs(data.vis.attrs, vis_dset.attrs)
 
         # Add gain dataset (if exists) for noise OFF data.
         # Gain dataset also averaged (within a period)
@@ -183,7 +182,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
 
             # Add new gain dataset
             gain_dset = newdata.create_dataset("gain", data=gain, distributed=dist)
-            memh5.copyattrs(data.gain.attrs, gain_dset.attrs)
+            memdata.copyattrs(data.gain.attrs, gain_dset.attrs)
 
         # Pull out weight dataset if it exists.
         # vis_weight dataset also averaged (within a period)
@@ -205,7 +204,7 @@ def process_synced_data(data, ni_params=None, only_off=False):
             vis_weight_dset = newdata.create_flag(
                 "vis_weight", data=vis_weight, distributed=dist
             )
-            memh5.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
+            memdata.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
 
         # Add gated datasets for each noise source:
         if not only_off:
@@ -475,16 +474,16 @@ def process_gated_data(data, only_off=False):
     data.redistribute("freq")
 
     # Get distribution parameters
-    dist = isinstance(data.vis, memh5.MemDatasetDistributed)
+    dist = isinstance(data.vis, memdata.MemDatasetDistributed)
     comm = data.vis.comm
 
     # Construct new CorrData object for gated dataset
     newdata = andata.CorrData.__new__(andata.CorrData)
     if dist:
-        memh5.BasicCont.__init__(newdata, distributed=dist, comm=comm)
+        containers.Container.__init__(newdata, distributed=dist, comm=comm)
     else:
-        memh5.BasicCont.__init__(newdata, distributed=dist)
-    memh5.copyattrs(data.attrs, newdata.attrs)
+        containers.Container.__init__(newdata, distributed=dist)
+    memdata.copyattrs(data.attrs, newdata.attrs)
 
     # Add index maps to newdata
     newdata.create_index_map("freq", data.index_map["freq"])
@@ -504,7 +503,7 @@ def process_gated_data(data, only_off=False):
 
     # Add new visibility dataset
     vis_dset = newdata.create_dataset("vis", data=vis_off, distributed=dist)
-    memh5.copyattrs(data.vis.attrs, vis_dset.attrs)
+    memdata.copyattrs(data.vis.attrs, vis_dset.attrs)
 
     # Add gain dataset (if exists) for vis_off.
     # These will be the gains for both the noise on ON and OFF data
@@ -515,7 +514,7 @@ def process_gated_data(data, only_off=False):
             gain = mpiarray.MPIArray.wrap(gain, axis=0, comm=comm)
 
         gain_dset = newdata.create_dataset("gain", data=gain, distributed=dist)
-        memh5.copyattrs(data.gain.attrs, gain_dset.attrs)
+        memdata.copyattrs(data.gain.attrs, gain_dset.attrs)
 
     # Pull out weight dataset if it exists.
     # These will be the weights for both the noise on ON and OFF data
@@ -528,7 +527,7 @@ def process_gated_data(data, only_off=False):
         vis_weight_dset = newdata.create_flag(
             "vis_weight", data=vis_weight, distributed=dist
         )
-        memh5.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
+        memdata.copyattrs(data.weight.attrs, vis_weight_dset.attrs)
 
     # Add gated dataset (only gated_vis1 currently supported by correlator
     # with 50% duty cycle)
@@ -541,7 +540,7 @@ def process_gated_data(data, only_off=False):
         gate_dset = newdata.create_dataset(
             "gated_vis1", data=gated_vis1, distributed=dist
         )
-        memh5.copyattrs(data["gated_vis1"].attrs, gate_dset.attrs)
+        memdata.copyattrs(data["gated_vis1"].attrs, gate_dset.attrs)
 
     # The CHIME pipeline uses gpu.gpu_intergration_period to estimate the
     # integration period for both the on and off gates. That number has to be

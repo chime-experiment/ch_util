@@ -12,7 +12,7 @@ from .tools import ensure_list
 
 if TYPE_CHECKING:
     import skyfield.starlib.Star
-    import caput.time.Observer
+    from caput.astro.observer import Observer
 
 # Define the source collection(s) that should be loaded
 # when `HFBCatalog` is first used.
@@ -91,8 +91,8 @@ def get_doppler_shifted_freq(
     source: skyfield.starlib.Star | str,
     date: float | list,
     freq_rest: float | list = None,
-    obs: caput.time.Observer | None = None,
-) -> np.array:
+    obs: Observer | None = None,
+) -> np.ndarray:
     """Calculate Doppler shifted frequency of spectral feature with rest
     frequency `freq_rest`, seen towards source `source` at time `date`, due to
     Earth's motion and rotation, following the relativistic Doppler effect.

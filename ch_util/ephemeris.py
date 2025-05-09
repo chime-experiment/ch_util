@@ -8,22 +8,23 @@ For instrument-independent stuff, use `caput`.
 
 import warnings
 
-from caput.interferometry import sphdist as sphdist
-from caput.time import (
+from caput.astro.constants import SIDEREAL_S as SIDEREAL_S, STELLAR_S as STELLAR_S
+from caput.astro.coordinates.spherical import sphdist as sphdist
+from caput.astro.observer import Observer as Observer
+from caput.astro.skyfield import (
+    skyfield_star_from_ra_dec as skyfield_star_from_ra_dec,
+    skyfield_wrapper as skyfield_wrapper,
+    unix_to_skyfield_time as unix_to_skyfield_time,
+    skyfield_time_to_unix as skyfield_time_to_unix,
+)
+from caput.astro.time import (
     unix_to_datetime as unix_to_datetime,
     datetime_to_unix as datetime_to_unix,
     datetime_to_timestr as datetime_to_timestr,
     timestr_to_datetime as timestr_to_datetime,
     leap_seconds_between as leap_seconds_between,
     time_of_day as time_of_day,
-    Observer as Observer,
-    unix_to_skyfield_time as unix_to_skyfield_time,
-    skyfield_time_to_unix as skyfield_time_to_unix,
-    skyfield_star_from_ra_dec as skyfield_star_from_ra_dec,
-    skyfield_wrapper as skyfield_wrapper,
     ensure_unix as ensure_unix,
-    SIDEREAL_S as SIDEREAL_S,
-    STELLAR_S as STELLAR_S,
 )
 
 from ch_ephem.coord import peak_ra as peak_RA  # noqa F401

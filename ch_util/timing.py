@@ -65,8 +65,9 @@ import scipy.optimize
 from scipy.constants import speed_of_light
 
 from . import tools, andata, rfi
-from caput import memh5, mpiarray, tod
-import caput.time as ctime
+from caput import memdata, mpiarray
+from caput.containers import tod
+from caput.astro import time as ctime
 
 FREQ_TO_OMEGA = 2.0 * np.pi * 1e-6
 FREQ_PIVOT = 600.0
@@ -233,9 +234,9 @@ class TimingCorrection(andata.BaseData):
                     attrs["axis"] = np.array(ax)
 
                     arr = np.moveaxis(dataset[:], dim, -1)
-                    dataset = memh5.MemDatasetCommon.from_numpy_array(arr)
+                    dataset = memdata.MemDatasetCommon.from_numpy_array(arr)
 
-                    memh5.copyattrs(attrs, dataset.attrs)
+                    memdata.copyattrs(attrs, dataset.attrs)
 
             return dataset
 
@@ -1734,21 +1735,21 @@ class TimingData(andata.CorrData, TimingCorrection):
                     data.create_index_map(name, index_map[:])
 
             # Copy over the attributes
-            memh5.copyattrs(corr_data.attrs, data.attrs)
+            memdata.copyattrs(corr_data.attrs, data.attrs)
 
             # Iterate over the datasets and copy them over
             for name, old_dset in corr_data.datasets.items():
                 new_dset = data.create_dataset(
                     name, data=old_dset[:], distributed=old_dset.distributed
                 )
-                memh5.copyattrs(old_dset.attrs, new_dset.attrs)
+                memdata.copyattrs(old_dset.attrs, new_dset.attrs)
 
             # Iterate over the flags and copy them over
             for name, old_dset in corr_data.flags.items():
                 new_dset = data.create_flag(
                     name, data=old_dset[:], distributed=old_dset.distributed
                 )
-                memh5.copyattrs(old_dset.attrs, new_dset.attrs)
+                memdata.copyattrs(old_dset.attrs, new_dset.attrs)
 
         # Construct delay template
         res = construct_delay_template(corr_data, **cdt_kwargs)
@@ -2190,7 +2191,7 @@ def construct_delay_template(
         Number of frequencies used to construct the delay and amplitude templates.
     """
     # Check if we are distributed.  If so make sure we are distributed over time.
-    parallel = isinstance(data.vis, memh5.MemDatasetDistributed)
+    parallel = isinstance(data.vis, memdata.MemDatasetDistributed)
     if parallel:
         data.redistribute("time")
         comm = data.vis.comm

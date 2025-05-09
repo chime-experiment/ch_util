@@ -20,7 +20,8 @@ import zipfile
 import numpy as np
 import peewee as pw
 
-import caput.time as ctime
+import caput.astro.time as ctime
+from caput.astro.skyfield import skyfield_wrapper
 
 import ch_ephem
 from ch_ephem.observers import chime
@@ -195,7 +196,7 @@ class HolographyObservation(base_model):
         """
         import re
 
-        ts = ctime.skyfield_wrapper.timescale
+        ts = skyfield_wrapper.timescale
 
         output_params = {}
 
@@ -262,10 +263,10 @@ class HolographyObservation(base_model):
         none
         """
 
-        from caput.interferometry import sphdist
+        from caput.coordinates.spherical import sphdist
         from skyfield.positionlib import Angle
 
-        ts = ctime.skyfield_wrapper.timescale
+        ts = skyfield_wrapper.timescale
         DATE_FMT_STR = "%Y-%m-%d %H:%M:%S %z"
 
         pr_list, al_list = cls.parse_ant_logs(logs, return_post_report_params=True)
@@ -410,7 +411,7 @@ class HolographyObservation(base_model):
 
             If no duplicate is found: None
             """
-            ts = ctime.skyfield_wrapper.timescale
+            ts = skyfield_wrapper.timescale
 
             unixt = ctime.ensure_unix(t)
 

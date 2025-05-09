@@ -3,7 +3,8 @@
 import peewee as pw
 import click
 
-from caput import time as ctime
+from caput.astro import time as ctime
+from caput.astro.skyfield import skyfield_wrapper
 from ch_ephem.observers import chime
 import chimedb.core as db
 
@@ -450,7 +451,7 @@ def list(source, sort, tzoffset=0, tz=None, list_sources=True, days=None, recent
         return " ".join(words)
 
     DRAO_lon = chime.longitude * 24.0 / 360.0
-    ts = ctime.skyfield_wrapper.timescale
+    ts = skyfield_wrapper.timescale
 
     obs_info = [
         [

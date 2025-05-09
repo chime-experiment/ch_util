@@ -10,7 +10,7 @@ import warnings
 
 from ch_util import andata
 
-from caput.memh5 import MemGroup
+from caput.memdata import MemGroup
 import data_paths
 
 # All the test data file names.
