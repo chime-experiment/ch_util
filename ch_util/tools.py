@@ -135,10 +135,7 @@ import scipy.linalg as la
 import re
 
 from caput import pfb
-from caput.interferometry import (
-    projected_distance,
-    fringestop_phase as fringestop_phase,
-)
+from caput.coordinates.spherical import projected_distance
 
 import ch_ephem.observers
 

@@ -262,7 +262,7 @@ class HolographyObservation(base_model):
         none
         """
 
-        from caput.interferometry import sphdist
+        from caput.coordinates.spherical import sphdist
         from skyfield.positionlib import Angle
 
         ts = ctime.skyfield_wrapper.timescale
