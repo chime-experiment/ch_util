@@ -134,11 +134,8 @@ import numpy as np
 import scipy.linalg as la
 import re
 
-from caput import pfb
-from caput.interferometry import (
-    projected_distance,
-    fringestop_phase as fringestop_phase,
-)
+from caput.util import pfb
+from caput.astro.coordinates.spherical import projected_distance
 
 import ch_ephem.observers
 
@@ -2561,14 +2558,14 @@ def beam_index2number(beam_index):
 
 def invert_no_zero(*args, **kwargs):
     """Deprecated - use 'caput.tools.invert_no_zero'"""
-    from caput import tools
+    from caput.algorithms import invert_no_zero
     import warnings
 
     warnings.warn(
         "Function invert_no_zero is deprecated - use 'caput.tools.invert_no_zero'",
         category=DeprecationWarning,
     )
-    return tools.invert_no_zero(*args, **kwargs)
+    return invert_no_zero(*args, **kwargs)
 
 
 def ensure_list(obj, num=None):

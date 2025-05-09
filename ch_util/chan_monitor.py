@@ -3,7 +3,7 @@
 import numpy as np
 import copy
 
-import caput.time as ctime
+import caput.astro.time as ctime
 
 from ch_ephem.observers import chime
 import ch_ephem.sources

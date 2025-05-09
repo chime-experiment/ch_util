@@ -10,9 +10,10 @@ import numpy as np
 import h5py
 from bitshuffle import h5 as h5
 
-from caput import memh5, tod
-import caput.time as ctime
-
+from caput import memdata
+from caput.containers import tod
+from caput.util import typeutils
+import caput.astro.time as ctime
 
 # Datasets in the Acq files whose shape is the same as the visibilities.
 # Variable only used for legacy archive version 1.
@@ -48,7 +49,7 @@ ANDATA_VERSION = "3.1.0"
 class BaseData(tod.TOData):
     """CHIME data in analysis format.
 
-    Inherits from :class:`caput.memh5.BasicCont`.
+    Inherits from :class:`caput.containers.Container`.
 
     This is intended to be the main data class for the post
     acquisition/real-time analysis parts of the pipeline. This class is laid
@@ -58,9 +59,9 @@ class BaseData(tod.TOData):
 
     Parameters
     ----------
-    h5_data : h5py.Group, memh5.MemGroup or hdf5 filename, optional
+    h5_data : h5py.Group, memdata.MemGroup or hdf5 filename, optional
         Underlying h5py like data container where data will be stored. If not
-        provided a new :class:`caput.memh5.MemGroup` instance will be created.
+        provided a new :class:`caput.memdata.MemGroup` instance will be created.
     """
 
     time_axes = CONCATENATION_AXES
@@ -101,15 +102,15 @@ class BaseData(tod.TOData):
         Returns
         -------
         datasets : read only dictionary
-            Entries are :mod:`h5py` or :mod:`caput.memh5` datasets.
+            Entries are :mod:`h5py` or :mod:`caput.memdata` datasets.
 
         """
 
         out = {}
         for name, value in self._data.items():
-            if not memh5.is_group(value):
+            if not memdata.is_group(value):
                 out[name] = value
-        return memh5.ro_dict(out)
+        return memdata.ro_dict(out)
 
     @property
     def flags(self):
@@ -118,20 +119,20 @@ class BaseData(tod.TOData):
         Returns
         -------
         flags : read only dictionary
-            Entries are :mod:`h5py` or :mod:`caput.memh5` datasets.
+            Entries are :mod:`h5py` or :mod:`caput.memdata` datasets.
 
         """
 
         try:
             g = self._data["flags"]
         except KeyError:
-            return memh5.ro_dict({})
+            return memdata.ro_dict({})
 
         out = {}
         for name, value in g.items():
-            if not memh5.is_group(value):
+            if not memdata.is_group(value):
                 out[name] = value
-        return memh5.ro_dict(out)
+        return memdata.ro_dict(out)
 
     @property
     def cal(self):
@@ -153,7 +154,7 @@ class BaseData(tod.TOData):
         out = {}
         for name, value in self._data["cal"].items():
             out[name] = value.attrs
-        return memh5.ro_dict(out)
+        return memdata.ro_dict(out)
 
     # - Methods used by base class to control container structure. - #
 
@@ -262,7 +263,7 @@ class BaseData(tod.TOData):
         datasets : list of strings
             Names of datasets to include from acquisition files. Default is to
             include all datasets found in the acquisition files.
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
 
@@ -356,7 +357,7 @@ class CorrData(BaseData):
     @property
     def dataset_id(self):
         """Access dataset id dataset in unicode format."""
-        dsid = memh5.ensure_unicode(self.flags["dataset_id"][:])
+        dsid = typeutils.ensure_unicode(self.flags["dataset_id"][:])
         dsid.flags.writeable = False
 
         return dsid
@@ -457,7 +458,7 @@ class CorrData(BaseData):
         # Inspect the header of the first file for version information.
         f = acq_files[0]
         try:
-            archive_version = memh5.bytes_to_unicode(f.attrs["archive_version"])
+            archive_version = typeutils.bytes_to_unicode(f.attrs["archive_version"])
         except KeyError:
             archive_version = "1.0.0"
 
@@ -588,7 +589,7 @@ class CorrData(BaseData):
         datasets : list of strings
             Names of datasets to include from acquisition files. Default is to
             include all datasets found in the acquisition files.
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
         apply_gain : boolean, optional
@@ -649,7 +650,7 @@ class CorrData(BaseData):
         The underlying hdf5-like container that holds the *analysis format*
         data can also be specified.
 
-        >>> group = memh5.MemGroup()
+        >>> group = memdata.MemGroup()
         >>> data = CorrData.from_acq_h5('test_acq.h5*', out_group=group)
         >>> print(group['vis'].shape)
         (1024, 36, 31)
@@ -718,7 +719,8 @@ class CorrData(BaseData):
         comm,
     ):
         from mpi4py import MPI
-        from caput import mpiutil, mpiarray, memh5
+        from caput import mpiarray
+        from caput.util import mpitools
 
         # Turn into actual list of files
         files = tod.ensure_file_list(acq_files)
@@ -741,7 +743,7 @@ class CorrData(BaseData):
         nfreq = len(freq_sel)
 
         # Calculate the local frequency selection
-        n_local, f_start, f_end = mpiutil.split_local(nfreq)
+        n_local, f_start, f_end = mpitools.split_local(nfreq)
         local_freq_sel = _ensure_1D_selection(
             _convert_to_slice(freq_sel[f_start:f_end])
         )
@@ -779,7 +781,7 @@ class CorrData(BaseData):
         data = CorrData(distributed=True, comm=comm)
 
         # Copy over the attributes
-        memh5.copyattrs(
+        memdata.copyattrs(
             local_data.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
         )
 
@@ -795,7 +797,7 @@ class CorrData(BaseData):
 
             # Create the new dataset and copy over attributes
             new_dset = data.create_dataset(name, data=array)
-            memh5.copyattrs(
+            memdata.copyattrs(
                 old_dset.attrs,
                 new_dset.attrs,
                 convert_strings=cls.convert_attribute_strings,
@@ -813,7 +815,7 @@ class CorrData(BaseData):
 
             # Create the new dataset and copy over attributes
             new_dset = data.create_flag(name, data=array)
-            memh5.copyattrs(
+            memdata.copyattrs(
                 old_dset.attrs,
                 new_dset.attrs,
                 convert_strings=cls.convert_attribute_strings,
@@ -832,7 +834,7 @@ class CorrData(BaseData):
 
             # Create index map
             data.create_index_map(name, index_map)
-            memh5.copyattrs(local_data.index_attrs[name], data.index_attrs[name])
+            memdata.copyattrs(local_data.index_attrs[name], data.index_attrs[name])
 
         # Copy over reverse maps
         for name, reverse_map in local_data.reverse_map.items():
@@ -871,7 +873,7 @@ class CorrData(BaseData):
             The CorrData container.
         """
         from mpi4py import MPI
-        from caput import misc, mpiarray, memh5
+        from caput import mpiarray
 
         ## Datasets to read, if it's not listed here, it's not read at all
         # Datasets read by andata (should be small)
@@ -908,14 +910,14 @@ class CorrData(BaseData):
             stop=stop,
         )
 
-        archive_version = memh5.bytes_to_unicode(ad.attrs["archive_version"])
+        archive_version = typeutils.bytes_to_unicode(ad.attrs["archive_version"])
         if versiontuple(archive_version) < versiontuple("3.0.0"):
             raise ValueError("Fast read not supported for files with version < 3.0.0")
 
         # Specify the selection to read from the file
         sel = (freq_sel, slice(None), time_sel)
 
-        with misc.open_h5py_mpi(fname, "r", comm=comm) as fh:
+        with memdata._io.open_h5py_mpi(fname, "r", comm=comm) as fh:
             for ds_name, ds_axis in DSETS_DIRECT.items():
                 if ds_name not in fh:
                     continue
@@ -928,7 +930,7 @@ class CorrData(BaseData):
                 dset = ad.create_dataset(ds_name, data=arr, distributed=True)
 
                 # Copy over the attributes
-                memh5.copyattrs(
+                memdata.copyattrs(
                     fh[ds_name].attrs,
                     dset.attrs,
                     convert_strings=cls.convert_attribute_strings,
@@ -1086,11 +1088,11 @@ class HKData(BaseData):
             if match:
                 # Do the transpose.
                 data = np.empty((len(dataset[0]), len(dataset)), dtype=dataset[0].dtype)
-                data = memh5.MemDatasetCommon.from_numpy_array(data)
+                data = memdata.MemDatasetCommon.from_numpy_array(data)
                 for i in range(len(dataset)):
                     for j in range(len(dataset[i])):
                         data[j, i] = dataset[i][j]
-            memh5.copyattrs(
+            memdata.copyattrs(
                 dataset.attrs, data.attrs, convert_strings=cls.convert_attribute_strings
             )
             data.attrs["axis"] = (dataset.attrs["axis"][1], "time")
@@ -1136,7 +1138,7 @@ class HKData(BaseData):
         datasets : list of strings
             Names of datasets to include from acquisition files. Default is to
             include all datasets found in the acquisition files.
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
 
@@ -1153,7 +1155,7 @@ class HKData(BaseData):
         )
 
 
-class HKPData(memh5.MemDiskGroup):
+class HKPData(memdata.MemDiskGroup):
     """Subclass of :class:`BaseData` for housekeeping data."""
 
     # Convert strings to/from unicode on load and save
@@ -1376,7 +1378,7 @@ class HKPData(memh5.MemDiskGroup):
 
             # Populate attrs
             for att, values in full_attrs.items():
-                new_dset.attrs[att] = memh5.bytes_to_unicode(values)
+                new_dset.attrs[att] = typeutils.bytes_to_unicode(values)
 
         return hkp_data
 
@@ -1510,8 +1512,8 @@ class RawADCData(BaseData):
             if len(dataset.shape) == 2 and dataset.shape[1] == 1:
                 data = dataset[:]
                 data.shape = (dataset.shape[0],)
-                data = memh5.MemDatasetCommon.from_numpy_array(data)
-                memh5.copyattrs(
+                data = memdata.MemDatasetCommon.from_numpy_array(data)
+                memdata.copyattrs(
                     dataset.attrs,
                     data.attrs,
                     convert_strings=cls.convert_attribute_strings,
@@ -1633,7 +1635,7 @@ class GainFlagData(BaseData):
 
     @property
     def time(self):
-        """Returns `index_map['update_time']` for `caput.tod` functionality."""
+        """Returns `index_map['update_time']` for `tod` functionality."""
         return self.index_map["update_time"]
 
     @property
@@ -1673,7 +1675,7 @@ class FlagInputData(GainFlagData):
             for kk, key in enumerate(self.index_map["source"]):
                 out[key] = self.datasets["source_flags"][:, kk, :]
 
-            self._source_flags = memh5.ro_dict(out)
+            self._source_flags = memdata.ro_dict(out)
 
         return self._source_flags
 
@@ -1727,7 +1729,7 @@ class CalibrationGainData(GainData):
             for kk, key in enumerate(self.index_map["source"]):
                 out[key] = self.datasets["source_gains"][:, kk, :]
 
-            self._source_gains = memh5.ro_dict(out)
+            self._source_gains = memdata.ro_dict(out)
 
         return self._source_gains
 
@@ -1739,7 +1741,7 @@ class CalibrationGainData(GainData):
             for kk, key in enumerate(self.index_map["source"]):
                 out[key] = self.datasets["source_weights"][:, kk, :]
 
-            self._source_weights = memh5.ro_dict(out)
+            self._source_weights = memdata.ro_dict(out)
 
         return self._source_weights
 
@@ -1774,7 +1776,7 @@ class DigitalGainData(GainData):
         )
 
 
-class BaseReader(tod.Reader):
+class BaseReader(tod.TODReader):
     """Provides high level reading of CHIME data.
 
     You do not want to use this class, but rather one of its inherited classes
@@ -1835,7 +1837,7 @@ class BaseReader(tod.Reader):
 
         Parameters
         ----------
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
 
@@ -2103,7 +2105,7 @@ class CorrReader(BaseReader):
 
         Parameters
         ----------
-        out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+        out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
             Underlying hdf5 like container that will store the data for the
             BaseData instance.
 
@@ -2204,7 +2206,7 @@ def subclass_from_obj(cls, obj):
     ----------
     cls : subclass of :class:`BaseData` (class, not an instance)
           Default class to return.
-    obj : :class:`h5py.Group`, filename, :class:`memh5.Group` or
+    obj : :class:`h5py.Group`, filename, :class:`memdata.Group` or
           :class:`BaseData` object from which to determine the appropriate
           subclass of :class:`AnData`.
 
@@ -2246,7 +2248,7 @@ def _open_files(files, opened):
 
     for ii, this_file in enumerate(list(files)):
         # Sort out how to get an open hdf5 file.
-        open_file, was_opened = memh5.get_h5py_File(this_file, mode="r")
+        open_file, was_opened = memdata.get_file(this_file, mode="r")
         opened[ii] = was_opened
         files[ii] = open_file
 
@@ -2301,20 +2303,20 @@ def _convert_to_slice(selection):
 
 
 def _get_dataset_names(f):
-    f, toclose = memh5.get_h5py_File(f, mode="r")
+    f, toclose = memdata.get_file(f, mode="r")
     try:
         dataset_names = ()
         for name in f.keys():
-            if not memh5.is_group(f[name]):
+            if not memdata.is_group(f[name]):
                 dataset_names += (name,)
-        if "blockhouse" in f and memh5.is_group(f["blockhouse"]):
+        if "blockhouse" in f and memdata.is_group(f["blockhouse"]):
             # chime_weather datasets are inside group "blockhouse"
             for name in f["blockhouse"].keys():
-                if not memh5.is_group(f["blockhouse"][name]):
+                if not memdata.is_group(f["blockhouse"][name]):
                     dataset_names += ("blockhouse/" + name,)
-        if "flags" in f and memh5.is_group(f["flags"]):
+        if "flags" in f and memdata.is_group(f["flags"]):
             for name in f["flags"].keys():
-                if not memh5.is_group(f["flags"][name]):
+                if not memdata.is_group(f["flags"][name]):
                     dataset_names += ("flags/" + name,)
     finally:
         if toclose:
@@ -2683,7 +2685,7 @@ def _check_files_acq1(files):
         this_dtypes = {}
         first_dset = True
         for key in open_file.keys():
-            if not memh5.is_group(open_file[key]):
+            if not memdata.is_group(open_file[key]):
                 this_dtypes[key] = open_file[key].dtype
                 if first_dset:
                     this_dset_shape = open_file[key].shape
@@ -2720,7 +2722,7 @@ def _get_header_info_acq1(h5_file):
     time["ctime"] = time_lower_edges
     time["fpga_count"] = timestamp_data["fpga_count"]
     header_info["time"] = time
-    datasets = [key for key in h5_file.keys() if not memh5.is_group(h5_file[key])]
+    datasets = [key for key in h5_file.keys() if not memdata.is_group(h5_file[key])]
     header_info["datasets"] = tuple(datasets)
     return header_info
 
@@ -2816,7 +2818,7 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
         out_arr = np.empty(out_shape, dtype=dtype)
         out[field] = out_arr
         if "cal" in dataset.attrs:
-            out_cal[field] = memh5.bytes_to_unicode(dataset.attrs["cal"][0][field])
+            out_cal[field] = typeutils.bytes_to_unicode(dataset.attrs["cal"][0][field])
     for jj, ii in enumerate(np.arange(ntime)[time_slice]):
         # Copy data for efficient read.
         record = dataset[ii]  # Copies to memory.
@@ -2905,7 +2907,7 @@ def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_g
     datasets : list of strings
         Names of datasets to include from acquisition files. Default is to
         include all datasets found in the acquisition files.
-    out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+    out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
         Underlying hdf5 like container that will store the data for the
         BaseData instance.
 
@@ -2924,7 +2926,7 @@ def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_g
     # Assume all meta-data are the same as in the first file and copy it
     # over.
     acq = acq_files[0]
-    data.add_history("acq", memh5.attrs2dict(acq.attrs))
+    data.add_history("acq", memdata._memh5.attrs2dict(acq.attrs))
     data.history["acq"]["archive_version"] = "1.0.0"
     # Copy data attribute axis info.
     index_map = _get_index_map_from_acq1(acq_files, (start, stop), prod_sel, freq_sel)
@@ -2940,7 +2942,7 @@ def andata_from_acq1(acq_files, start, stop, prod_sel, freq_sel, datasets, out_g
     data.attrs["acquisition_type"] = "corr"
     # Copy over the cal information if there is any.
     if "cal" in acq:
-        memh5.deep_group_copy(
+        memdata.deep_group_copy(
             acq["cal"],
             data._data["cal"],
             convert_attribute_strings=CorrData.convert_attribute_strings,
@@ -3011,7 +3013,7 @@ def andata_from_archive2(
     datasets : list of strings
         Names of datasets to include from acquisition files. Default is to
         include all datasets found in the acquisition files.
-    out_group : `h5py.Group`, hdf5 filename or `memh5.Group`
+    out_group : `h5py.Group`, hdf5 filename or `memdata.Group`
         Underlying hdf5 like container that will store the data for the
         BaseData instance.
 
@@ -3039,7 +3041,7 @@ def andata_from_archive2(
 
     prod_map = first_imap["prod"][:].view(np.ndarray).copy()
     input_map = first_imap["input"][:].view(np.ndarray).copy()
-    input_map = memh5.ensure_unicode(input_map)  # Convert string entries to unicode
+    input_map = typeutils.ensure_unicode(input_map)  # Convert string entries to unicode
     if "stack" in first_imap:
         stack_map = first_imap["stack"][:].view(np.ndarray).copy()
         stack_rmap = first_rmap["stack"][:].view(np.ndarray).copy()
@@ -3120,7 +3122,7 @@ def andata_from_archive2(
                 dataset = dataset[freq_sel, msel, time_sel]
         else:
             # Dynamically figure out the axis ordering.
-            axis = memh5.bytes_to_unicode(attrs["axis"])
+            axis = typeutils.bytes_to_unicode(attrs["axis"])
             ndim = len(dataset.shape)  # h5py datasets don't have ndim.
             if ("freq" in axis and isinstance(freq_sel, np.ndarray)) + (
                 "stack" in axis and isinstance(stack_sel, np.ndarray)
@@ -3191,7 +3193,7 @@ def andata_from_archive2(
         convert_dataset_strings=cls.convert_dataset_strings,
     )
 
-    # Andata (or memh5) should already do the right thing.
+    # Andata (or memdata) should already do the right thing.
     # Explicitly close up files
     # for ad in andata_objs:
     #     ad.close()
@@ -3240,7 +3242,7 @@ def _get_versiontuple(afile):
     else:
         archive_version = afile.attrs["archive_version"]
 
-    archive_version = memh5.bytes_to_unicode(archive_version)
+    archive_version = typeutils.bytes_to_unicode(archive_version)
 
     return versiontuple(archive_version)
 
@@ -3421,7 +3423,7 @@ def _remap_inputs(afile):
 
     # h5py should return a byte string for the attribute and so we need to decode
     # it
-    inst_name = memh5.bytes_to_unicode(afile.attrs.get("instrument_name", b""))
+    inst_name = typeutils.bytes_to_unicode(afile.attrs.get("instrument_name", b""))
     num_antenna = int(afile.history.get("acq", {}).get("n_antenna", "-1"))
 
     # Test if is abbot or stone
@@ -3453,7 +3455,7 @@ def _insert_gains(data, input_sel):
     # For old versions the gains are stored in the attributes and need to be
     # extracted
     if ("archive_version" not in data.attrs) or versiontuple(
-        memh5.bytes_to_unicode(data.attrs["archive_version"])
+        typeutils.bytes_to_unicode(data.attrs["archive_version"])
     ) < versiontuple("2.2.0"):
         # Hack to find the indices of the frequencies in the file
         fc = data.index_map["freq"]["centre"]

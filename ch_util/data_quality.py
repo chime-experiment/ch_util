@@ -16,7 +16,7 @@ Auxiliary functions are still lacking documentation.
 
 import numpy as np
 
-import caput.time as ctime
+import caput.astro.time as ctime
 
 from ch_util import andata
 from ch_util import tools

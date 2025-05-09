@@ -136,7 +136,7 @@ import peewee as pw
 
 import chimedb.core
 
-import caput.time as ctime
+import caput.astro.time as ctime
 
 # Do this since there is a class "property" in _db_tables.
 from builtins import property as _property

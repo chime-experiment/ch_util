@@ -15,7 +15,8 @@ from scipy.optimize import curve_fit
 from scipy.interpolate import interp1d
 from scipy.linalg import lstsq, inv
 
-from caput import memh5, time as ctime
+from caput import memdata
+from caput.astro import time as ctime
 
 from chimedb import dataset as ds
 from chimedb.dataset.utils import state_id_of_type, unique_unmasked_entry
@@ -2486,7 +2487,7 @@ def _dec_to_el(dec):
 
 def get_reference_times_file(
     times: np.ndarray,
-    cal_file: memh5.MemGroup,
+    cal_file: memdata.MemGroup,
     logger: logging.Logger | None = None,
 ) -> dict[str, np.ndarray]:
     """For a given set of times determine when and how they were calibrated.
@@ -2498,7 +2499,7 @@ def get_reference_times_file(
     times
         Unix times of data points to be calibrated as floats.
     cal_file
-        memh5 container which containes the reference times for calibration source
+        memdata container which containes the reference times for calibration source
         transits.
     logger
         A logging object to use for messages. If not provided, use a module level

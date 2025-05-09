@@ -6,7 +6,8 @@ import warnings
 import datetime
 import scipy.signal as sig
 
-import caput.time as ctime
+import caput.astro.time as ctime
+from caput.astro.skyfield import skyfield_wrapper
 from ch_ephem.observers import chime
 
 from . import andata
@@ -428,7 +429,7 @@ def _full_day_shape(data, tmstp, date, n_bins=8640, axis="solar", ax=None):
             in_range = (tmstp[ii] > start_range[0]) and (tmstp[ii] < end_range[1])
             if in_range:
                 sf_time = ctime.unix_to_skyfield_time(tmstp[ii])
-                sun = ctime.skyfield_wrapper.ephemeris["sun"]
+                sun = skyfield_wrapper.ephemeris["sun"]
                 obs = chime.skyfield_obs().at(sf_time)
                 azim = obs.observe(sun).apparent().altaz()[1].radians
 

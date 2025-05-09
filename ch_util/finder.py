@@ -46,7 +46,7 @@ import socket
 import peewee as pw
 import tabulate
 
-import caput.time as ctime
+import caput.astro.time as ctime
 
 from ch_ephem.observers import chime
 

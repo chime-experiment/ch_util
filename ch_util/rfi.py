@@ -227,13 +227,13 @@ def number_deviations(
         Number of median absolute deviations of the autocorrelations
         from the local median.
     """
-    from caput import memh5, mpiarray
+    from caput import memdata, mpiarray
 
     if fill_value is None:
         fill_value = float("Inf")
 
     # Check if dataset is parallel
-    parallel = isinstance(data.vis, memh5.MemDatasetDistributed)
+    parallel = isinstance(data.vis, memdata.MemDatasetDistributed)
 
     data.redistribute("freq")
 
@@ -862,7 +862,7 @@ def iterative_hpf_masking(
         iteration.
     """
 
-    from caput import weighted_median
+    from caput.algorithms import weighted_median
 
     assert y.ndim == 1
 
