@@ -8,7 +8,7 @@ For instrument-independent stuff, use `caput`.
 
 import warnings
 
-from caput.interferometry import sphdist as sphdist
+from caput.coordinates.spherical import sphdist as sphdist
 from caput.time import (
     unix_to_datetime as unix_to_datetime,
     datetime_to_unix as datetime_to_unix,
