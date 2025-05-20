@@ -7,18 +7,17 @@ from __future__ import annotations
 import numpy as np
 from typing import TYPE_CHECKING
 
-import ch_ephem.catalogs
-
-from .fluxcat import FluxCatalog
+from fluxcat import FluxCatalog
 from .tools import ensure_list
 
 if TYPE_CHECKING:
     import skyfield.starlib.Star
     import caput.time.Observer
 
-# Define the source collection that should be loaded when this module is imported.
-# This is a catalog provided by ch_ephem.
-HFB_COLLECTION = "hfb_target_list"
+# Define the source collection(s) that should be loaded
+# when `HFBCatalog` is first used.
+# This is a catalog provided by `fluxcat`.
+DEFAULT_COLLECTIONS = "hfb_target_list"
 
 
 class HFBCatalog(FluxCatalog):
@@ -38,10 +37,6 @@ class HFBCatalog(FluxCatalog):
         "alternate_names",
         "freq_abs",
     ]
-
-    _entries = {}
-    _collections = {}
-    _alternate_name_lookup = {}
 
     def __init__(
         self,
@@ -175,7 +170,3 @@ def get_doppler_shifted_freq(
     # using relativistic Doppler effect
     beta = range_rate / speed_of_light
     return freq_rest * np.sqrt((1.0 - beta) / (1.0 + beta))
-
-
-# Load the HFB target list
-HFBCatalog.load_dict(ch_ephem.catalogs.load(HFB_COLLECTION), HFB_COLLECTION)
