@@ -18,6 +18,7 @@ dependencies = [
     "chimedb.data_index @ git+https://github.com/chime-experiment/chimedb_di.git",
     "chimedb.dataflag @ git+https://github.com/chime-experiment/chimedb_dataflag.git",
     "chimedb.dataset @ git+https://github.com/chime-experiment/chimedb_dataset.git",
+    "fluxcat @ git+https://github.com/radiocosmology/fluxcat.git",
     "bitshuffle",
     "click",
     "h5py",
