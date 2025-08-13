@@ -491,11 +491,21 @@ class Finder:
         self._file_info = [di.RawadcFileInfo]
         self.filter_acqs(True)
 
-    def only_hfb(self):
-        """Only include HFB acquisitions in this search."""
+    def only_hfb(self, compression=None):
+        """Only include HFB acquisitions in this search.
+
+        Parameters
+        ----------
+        compression : bool, optional
+            If True or False, only select acqs with compressed/uncompressed
+            files.  By default, all acqs are selected.
+        """
         self._acq_info = [di.HFBAcqInfo]
         self._file_info = [di.HFBFileInfo]
-        self.filter_acqs(True)
+        if compression is True or compression is False:
+            self.filter_acqs(di.HFBFileInfo.compressed == compression)
+        else:
+            self.filter_acqs(True)
 
     def only_weather(self):
         """Only include weather acquisitions in this search."""
