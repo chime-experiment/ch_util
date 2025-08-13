@@ -1,0 +1,1712 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.fluxcat &mdash; ch_util 25.3.1.post3+git.aca8858d documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=cc8ea7f7"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.fluxcat</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.fluxcat</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Catalog the measured flux densities of astronomical sources</span>
+
+<span class="sd">This module contains tools for cataloging astronomical sources</span>
+<span class="sd">and predicting their flux density at radio frequencies based on</span>
+<span class="sd">previous measurements.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">abc</span><span class="w"> </span><span class="kn">import</span> <span class="n">ABCMeta</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">fnmatch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">inspect</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">json</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">pickle</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">base64</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">caput</span><span class="w"> </span><span class="kn">import</span> <span class="n">misc</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">caput.time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ctime</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ch_ephem.catalogs</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_list</span>
+
+<span class="c1"># Define nominal frequency. Sources in catalog are ordered according to</span>
+<span class="c1"># their predicted flux density at this frequency. Also acts as default</span>
+<span class="c1"># pivot point in spectral fits.</span>
+<span class="n">FREQ_NOMINAL</span> <span class="o">=</span> <span class="mf">600.0</span>
+
+<span class="c1"># Define the source collections that should be loaded when this module is imported.</span>
+<span class="c1"># These catalogs are provided by ch_ephem.</span>
+<span class="n">DEFAULT_COLLECTIONS</span> <span class="o">=</span> <span class="p">[</span>
+    <span class="s2">&quot;primary_calibrators_perley2016&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;specfind_v2_5Jy_vollmer2009&quot;</span><span class="p">,</span>
+<span class="p">]</span>
+
+
+<span class="c1"># ==================================================================================</span>
+<div class="viewcode-block" id="FitSpectrum">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FitSpectrum">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FitSpectrum</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">ABCMeta</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A base class for modeling and fitting spectra.  Any spectral model</span>
+<span class="sd">    used by FluxCatalog should be derived from this class.</span>
+
+<span class="sd">    The `fit` method should be used to populate the `param`, `param_cov`, and `stats`</span>
+<span class="sd">    attributes.  The `predict` and `uncertainty` methods can then be used to obtain</span>
+<span class="sd">    the flux density and uncertainty at arbitrary frequencies.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    param : np.ndarray[nparam, ]</span>
+<span class="sd">        Best-fit parameters.</span>
+<span class="sd">    param_cov : np.ndarray[nparam, nparam]</span>
+<span class="sd">        Covariance of the fit parameters.</span>
+<span class="sd">    stats : dict</span>
+<span class="sd">        Dictionary that contains statistics related to the fit.</span>
+<span class="sd">        Must include &#39;chisq&#39; and &#39;ndof&#39;.</span>
+
+<span class="sd">    Abstract Methods</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    Any subclass of FitSpectrum must define these methods:</span>
+<span class="sd">        fit</span>
+<span class="sd">        _get_x</span>
+<span class="sd">        _fit_func</span>
+<span class="sd">        _deriv_fit_func</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">param_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">stats</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates a FitSpectrum object.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span> <span class="o">=</span> <span class="n">param_cov</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span>
+
+<div class="viewcode-block" id="FitSpectrum.predict">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FitSpectrum.predict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Predicts the flux density at a particular frequency.&quot;&quot;&quot;</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_x</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FitSpectrum.uncertainty">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FitSpectrum.uncertainty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.32</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Predicts the uncertainty on the flux density at a</span>
+<span class="sd">        particular frequency.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.stats</span><span class="w"> </span><span class="kn">import</span> <span class="n">t</span>
+
+        <span class="n">prob</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">-</span> <span class="n">alpha</span> <span class="o">/</span> <span class="mf">2.0</span>
+        <span class="n">tval</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">ppf</span><span class="p">(</span><span class="n">prob</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;ndof&quot;</span><span class="p">])</span>
+        <span class="n">nparam</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_x</span><span class="p">(</span><span class="n">freq</span><span class="p">)</span>
+
+        <span class="n">dfdp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_deriv_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s2">&quot;__iter__&quot;</span><span class="p">):</span>
+            <span class="n">df2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">df2</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nparam</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nparam</span><span class="p">):</span>
+                <span class="n">df2</span> <span class="o">+=</span> <span class="n">dfdp</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span> <span class="n">dfdp</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="n">jj</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">tval</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">df2</span><span class="p">)</span></div>
+
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">eflux</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="p">):</span>
+        <span class="k">return</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deriv_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="p">):</span>
+        <span class="k">return</span></div>
+
+
+
+<div class="viewcode-block" id="CurvedPowerLaw">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.CurvedPowerLaw">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CurvedPowerLaw</span><span class="p">(</span><span class="n">FitSpectrum</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class to fit a spectrum to a polynomial in log-log space, given by</span>
+
+<span class="sd">    .. math::</span>
+<span class="sd">        \\ln{S} = a_{0} + a_{1} \\ln{\\nu&#39;} + a_{2} \\ln{\\nu&#39;}^2 + a_{3} \\ln{\\nu&#39;}^3 + \\dots</span>
+
+<span class="sd">    where :math:`S` is the flux density, :math:`\\nu&#39;` is the (normalized) frequency,</span>
+<span class="sd">    and :math:`a_{i}` are the fit parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    nparam : int</span>
+<span class="sd">        Number of parameters.  This sets the order of the polynomial.</span>
+<span class="sd">        Default is 2 (powerlaw).</span>
+<span class="sd">    freq_pivot : float</span>
+<span class="sd">        The pivot frequency :math:`\\nu&#39; = \\nu / freq_pivot`.</span>
+<span class="sd">        Default is :py:const:`FREQ_NOMINAL`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq_pivot</span><span class="o">=</span><span class="n">FREQ_NOMINAL</span><span class="p">,</span> <span class="n">nparam</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates a CurvedPowerLaw object&quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># Set the additional model kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_pivot</span> <span class="o">=</span> <span class="n">freq_pivot</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nparam</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nparam</span> <span class="o">=</span> <span class="n">nparam</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">eflux</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">flag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">flag</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">freq</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+
+        <span class="c1"># Make sure we have enough measurements</span>
+        <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">flag</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparam</span><span class="p">:</span>
+            <span class="c1"># Apply flag</span>
+            <span class="n">fit_freq</span> <span class="o">=</span> <span class="n">freq</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+            <span class="n">fit_flux</span> <span class="o">=</span> <span class="n">flux</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+            <span class="n">fit_eflux</span> <span class="o">=</span> <span class="n">eflux</span><span class="p">[</span><span class="n">flag</span><span class="p">]</span>
+
+            <span class="c1"># Convert to log space</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_x</span><span class="p">(</span><span class="n">fit_freq</span><span class="p">)</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">fit_flux</span><span class="p">)</span>
+
+            <span class="c1"># Vandermonde matrix</span>
+            <span class="n">A</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_vandermonde</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparam</span><span class="p">)</span>
+
+            <span class="c1"># Data covariance matrix</span>
+            <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">((</span><span class="n">fit_eflux</span> <span class="o">/</span> <span class="n">fit_flux</span><span class="p">)</span> <span class="o">**</span> <span class="mf">2.0</span><span class="p">)</span>
+
+            <span class="c1"># Parameter estimate and covariance</span>
+            <span class="n">param_cov</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">A</span><span class="p">)))</span>
+
+            <span class="n">param</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">param_cov</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">solve</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">y</span><span class="p">)))</span>
+
+            <span class="c1"># Compute residuals</span>
+            <span class="n">resid</span> <span class="o">=</span> <span class="n">y</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">param</span><span class="p">)</span>
+
+            <span class="c1"># Change the overall normalization to linear units</span>
+            <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nparam</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nparam</span><span class="p">):</span>
+                    <span class="n">param_cov</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="n">jj</span><span class="p">]</span> <span class="o">*=</span> <span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">ii</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+                        <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">jj</span> <span class="o">==</span> <span class="mi">0</span> <span class="k">else</span> <span class="mf">1.0</span>
+                    <span class="p">)</span>
+
+            <span class="c1"># Save parameter estimate and covariance to instance</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span> <span class="o">=</span> <span class="n">param_cov</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span>
+
+            <span class="c1"># Calculate statistics</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;ndof&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">nparam</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;chisq&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">resid</span><span class="o">**</span><span class="mi">2</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">C</span><span class="p">))</span>
+
+        <span class="c1"># Return results</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_get_x</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">freq</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">freq_pivot</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_vandermonde</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">nparam</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">(</span><span class="nb">tuple</span><span class="p">([</span><span class="n">x</span><span class="o">**</span><span class="n">rank</span> <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nparam</span><span class="p">)]))</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">par</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_deriv_fit_func</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">*</span><span class="n">param</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span>
+                <span class="p">[</span><span class="n">par</span> <span class="o">*</span> <span class="n">x</span> <span class="o">**</span> <span class="p">(</span><span class="n">rank</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="n">rank</span><span class="p">,</span> <span class="n">par</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">param</span><span class="p">[</span><span class="mi">1</span><span class="p">:])],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">dfdp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">z</span> <span class="o">*</span> <span class="n">x</span><span class="o">**</span><span class="n">rank</span> <span class="k">for</span> <span class="n">rank</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">param</span><span class="p">))])</span>
+        <span class="n">dfdp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/=</span> <span class="n">param</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">dfdp</span></div>
+
+
+
+<div class="viewcode-block" id="MetaFluxCatalog">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.MetaFluxCatalog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">MetaFluxCatalog</span><span class="p">(</span><span class="nb">type</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Metaclass for FluxCatalog.  Defines magic methods</span>
+<span class="sd">    for the class that can act on and provide access to the</span>
+<span class="sd">    catalog of all astronomical sources.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">string</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__reversed__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">reversed</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">len</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__contains__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">obj</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="FluxCatalog">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">FluxCatalog</span><span class="p">(</span><span class="n">metaclass</span><span class="o">=</span><span class="n">MetaFluxCatalog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for cataloging astronomical sources and predicting</span>
+<span class="sd">    their flux density at radio frequencies based on spectral fits</span>
+<span class="sd">    to previous measurements.</span>
+
+<span class="sd">    Class methods act upon and provide access to the catalog of</span>
+<span class="sd">    all sources.  Instance methods act upon and provide access</span>
+<span class="sd">    to individual sources.  All instances are stored in an</span>
+<span class="sd">    internal class dictionary.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fields : list</span>
+<span class="sd">        List of attributes that are read-from and written-to the</span>
+<span class="sd">        JSON catalog files.</span>
+<span class="sd">    model_lookup : dict</span>
+<span class="sd">        Dictionary that provides access to the various models that</span>
+<span class="sd">        can be fit to the spectrum.  These models should be</span>
+<span class="sd">        subclasses of FitSpectrum.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;ra&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dec&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alternate_names&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;model_kwargs&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;stats&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;param&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;param_cov&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;measurements&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="n">model_lookup</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;CurvedPowerLaw&quot;</span><span class="p">:</span> <span class="n">CurvedPowerLaw</span><span class="p">}</span>
+
+    <span class="n">_entries</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_collections</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">_alternate_name_lookup</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">ra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">alternate_names</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">model</span><span class="o">=</span><span class="s2">&quot;CurvedPowerLaw&quot;</span><span class="p">,</span>
+        <span class="n">model_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">stats</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">param</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">param_cov</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">measurements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiates a FluxCatalog object for an astronomical source.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name of the source.  The convention for the source name is to</span>
+<span class="sd">            use the MAIN_ID in the SIMBAD database in all uppercase letters</span>
+<span class="sd">            with spaces replaced by underscores.</span>
+
+<span class="sd">        ra : float</span>
+<span class="sd">            Right Ascension in degrees.</span>
+
+<span class="sd">        dec : float</span>
+<span class="sd">            Declination in degrees.</span>
+
+<span class="sd">        alternate_names : list of strings</span>
+<span class="sd">            Alternate names for the source.  Ideally should include all alternate names</span>
+<span class="sd">            present in the SIMBAD database using the naming convention specified above.</span>
+
+<span class="sd">        model : string</span>
+<span class="sd">            Name of FitSpectrum subclass.</span>
+
+<span class="sd">        model_kwargs : dict</span>
+<span class="sd">            Dictionary containing keywords required by the model.</span>
+
+<span class="sd">        stats : dict</span>
+<span class="sd">            Dictionary containing statistics from model fit.</span>
+
+<span class="sd">        param : list, length nparam</span>
+<span class="sd">            Best-fit parameters.</span>
+
+<span class="sd">        param_cov : 2D-list, size nparam x nparam</span>
+<span class="sd">            Estimate of covariance of fit parameters.</span>
+
+<span class="sd">        measurements : 2D-list, size nmeas x 7</span>
+<span class="sd">            List of measurements of the form:</span>
+<span class="sd">            [freq, flux, eflux, flag, catalog, epoch, citation].</span>
+<span class="sd">            Should use the add_measurement method to populate this list.</span>
+
+<span class="sd">        overwrite : int between 0 and 2</span>
+<span class="sd">            Action to take in the event that this source is already in the catalog:</span>
+<span class="sd">            - 0 - Return the existing entry.</span>
+<span class="sd">            - 1 - Add the measurements to the existing entry.</span>
+<span class="sd">            - 2 - Overwrite the existing entry.</span>
+<span class="sd">            Default is 0.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># The name argument is a unique identifier into the catalog.</span>
+        <span class="c1"># Check if there is already a source in the catalog with the</span>
+        <span class="c1"># input name.  If there is, then the behavior is set by the</span>
+        <span class="c1"># overwrite argument.</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">overwrite</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">name</span> <span class="ow">in</span> <span class="n">FluxCatalog</span><span class="p">):</span>
+            <span class="c1"># Return existing entry</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> already has an entry in catalog.&quot;</span><span class="p">,</span> <span class="n">end</span><span class="o">=</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">overwrite</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Returning existing entry.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span> <span class="o">=</span> <span class="n">FluxCatalog</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+
+            <span class="c1"># Add any measurements to existing entry</span>
+            <span class="k">elif</span> <span class="n">overwrite</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Adding measurements to existing entry.&quot;</span><span class="p">)</span>
+                <span class="bp">self</span> <span class="o">=</span> <span class="n">FluxCatalog</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">if</span> <span class="n">measurements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">add_measurement</span><span class="p">(</span><span class="o">*</span><span class="n">measurements</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fit_model</span><span class="p">()</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Create new instance for this source.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">format_source_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+            <span class="c1"># Initialize object attributes</span>
+            <span class="c1"># Basic info:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ra</span> <span class="o">=</span> <span class="n">ra</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dec</span> <span class="o">=</span> <span class="n">dec</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">alternate_names</span> <span class="o">=</span> <span class="p">[</span>
+                <span class="n">format_source_name</span><span class="p">(</span><span class="n">aname</span><span class="p">)</span> <span class="k">for</span> <span class="n">aname</span> <span class="ow">in</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">alternate_names</span><span class="p">)</span>
+            <span class="p">]</span>
+
+            <span class="c1"># Measurements:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="o">=</span> <span class="n">measurements</span>
+
+            <span class="c1"># Best-fit model:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param</span> <span class="o">=</span> <span class="n">param</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span> <span class="o">=</span> <span class="n">param_cov</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="n">stats</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span> <span class="o">=</span> <span class="n">model_kwargs</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span> <span class="o">=</span> <span class="p">{}</span>
+
+            <span class="c1"># Create model object</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_lookup</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">](</span>
+                <span class="n">param</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">,</span>
+                <span class="n">param_cov</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span><span class="p">,</span>
+                <span class="n">stats</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">,</span>
+                <span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="c1"># Populate the kwargs that were used</span>
+            <span class="n">arg_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model_lookup</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">]</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">arg_list</span><span class="o">.</span><span class="n">args</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">keys</span> <span class="o">=</span> <span class="n">arg_list</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+                <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">model_kwargs</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># Save to class dictionary</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span>
+
+            <span class="c1"># Add alternate names to class dictionary so they can be searched quickly</span>
+            <span class="k">for</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">alternate_names</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">alt_name</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alternate_name_lookup</span><span class="p">:</span>
+                    <span class="n">alt_source</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_alternate_name_lookup</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;The alternate name </span><span class="si">{</span><span class="n">alt_name</span><span class="si">}</span><span class="s2"> for </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> is already &quot;</span>
+                        <span class="sa">f</span><span class="s2">&quot;held by the source </span><span class="si">{</span><span class="n">alt_source</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_alternate_name_lookup</span><span class="p">[</span><span class="n">alt_name</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span>
+
+<div class="viewcode-block" id="FluxCatalog.add_measurement">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.add_measurement">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">add_measurement</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">flux</span><span class="p">,</span> <span class="n">eflux</span><span class="p">,</span> <span class="n">flag</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">catalog</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">citation</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Add entries to the list of measurements.  Each argument/keyword</span>
+<span class="sd">        can be a list of items with length equal to &#39;len(flux)&#39;, or</span>
+<span class="sd">        alternatively a single item in which case the same value is used</span>
+<span class="sd">        for all measurements.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        freq : float, list of floats</span>
+<span class="sd">            Frequency in MHz.</span>
+
+<span class="sd">        flux : float, list of floats</span>
+<span class="sd">            Flux density in Jansky.</span>
+
+<span class="sd">        eflux : float, list of floats</span>
+<span class="sd">            Uncertainty on flux density in Jansky.</span>
+
+<span class="sd">        flag : bool, list of bool</span>
+<span class="sd">            If True, use this measurement in model fit.</span>
+<span class="sd">            Default is True.</span>
+
+<span class="sd">        catalog : string or None, list of strings or Nones</span>
+<span class="sd">            Name of the catalog from which this measurement originates.</span>
+<span class="sd">            Default is None.</span>
+
+<span class="sd">        epoch : float or None, list of floats or Nones</span>
+<span class="sd">            Year when this measurement was taken.</span>
+<span class="sd">            Default is None.</span>
+
+<span class="sd">        citation : string or None, list of strings or Nones</span>
+<span class="sd">            Citation where this measurement can be found</span>
+<span class="sd">            (e.g., &#39;Baars et al. (1977)&#39;).</span>
+<span class="sd">            Default is None.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Ensure that all of the inputs are lists</span>
+        <span class="c1"># of the same length as flux</span>
+        <span class="n">flux</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+        <span class="n">nmeas</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">flux</span><span class="p">)</span>
+
+        <span class="n">freq</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">freq</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+        <span class="n">eflux</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">eflux</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+        <span class="n">flag</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+        <span class="n">catalog</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">catalog</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+        <span class="n">epoch</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">epoch</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+        <span class="n">citation</span> <span class="o">=</span> <span class="n">ensure_list</span><span class="p">(</span><span class="n">citation</span><span class="p">,</span> <span class="n">nmeas</span><span class="p">)</span>
+
+        <span class="c1"># Store as list</span>
+        <span class="n">meas</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="n">freq</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">flux</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">eflux</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">flag</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">catalog</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">epoch</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+                <span class="n">citation</span><span class="p">[</span><span class="n">mm</span><span class="p">],</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">nmeas</span><span class="p">)</span>
+        <span class="p">]</span>
+
+        <span class="c1"># Add measurements to internal list</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="o">=</span> <span class="n">meas</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="o">+=</span> <span class="n">meas</span>
+
+        <span class="c1"># Sort internal list by frequency</span>
+        <span class="n">isort</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">[</span><span class="n">mm</span><span class="p">]</span> <span class="k">for</span> <span class="n">mm</span> <span class="ow">in</span> <span class="n">isort</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.fit_model">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.fit_model">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">fit_model</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Fit the measurements stored in the &#39;measurements&#39; attribute with the</span>
+<span class="sd">        spectral model specified in the &#39;model&#39; attribute. This populates the</span>
+<span class="sd">        &#39;param&#39;, &#39;param_cov&#39;, and &#39;stats&#39; attributes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">eflux</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">]]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;epoch&quot;</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">):</span>
+            <span class="n">args</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">epoch</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">flag</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">param</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">param_cov</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">stats</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.plot">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.plot">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">plot</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">legend</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">catalog</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">residuals</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Plot the measurements, best-fit model, and confidence interval.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        legend : bool</span>
+<span class="sd">            Show legend.  Default is True.</span>
+
+<span class="sd">        catalog : bool</span>
+<span class="sd">            If True, then label and color code the measurements according to</span>
+<span class="sd">            their catalog.  If False, then label and color code the measurements</span>
+<span class="sd">            according to their citation.  Default is True.</span>
+
+<span class="sd">        residuals : bool</span>
+<span class="sd">            Plot the residuals instead of the measurements and best-fit model.</span>
+<span class="sd">            Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+
+        <span class="c1"># Define plot parameters</span>
+        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;blue&quot;</span><span class="p">,</span> <span class="s2">&quot;darkorchid&quot;</span><span class="p">,</span> <span class="s2">&quot;m&quot;</span><span class="p">,</span> <span class="s2">&quot;plum&quot;</span><span class="p">,</span> <span class="s2">&quot;mediumvioletred&quot;</span><span class="p">,</span> <span class="s2">&quot;palevioletred&quot;</span><span class="p">]</span>
+        <span class="n">markers</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;o&quot;</span><span class="p">,</span> <span class="s2">&quot;*&quot;</span><span class="p">,</span> <span class="s2">&quot;s&quot;</span><span class="p">,</span> <span class="s2">&quot;p&quot;</span><span class="p">,</span> <span class="s2">&quot;^&quot;</span><span class="p">]</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">]</span>
+
+        <span class="n">font</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;family&quot;</span><span class="p">:</span> <span class="s2">&quot;sans-serif&quot;</span><span class="p">,</span> <span class="s2">&quot;weight&quot;</span><span class="p">:</span> <span class="s2">&quot;normal&quot;</span><span class="p">,</span> <span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">16</span><span class="p">}</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">rc</span><span class="p">(</span><span class="s2">&quot;font&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">font</span><span class="p">)</span>
+
+        <span class="n">nplot</span> <span class="o">=</span> <span class="mi">500</span>
+
+        <span class="c1"># Plot the model fit and uncertainty</span>
+        <span class="n">xrng</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">floor</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="o">.</span><span class="n">min</span><span class="p">())),</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log10</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="o">.</span><span class="n">max</span><span class="p">()))]</span>
+        <span class="n">xrng</span> <span class="o">=</span> <span class="p">[</span><span class="nb">min</span><span class="p">(</span><span class="n">xrng</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">2.0</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">xrng</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mf">3.0</span><span class="p">)]</span>
+
+        <span class="n">fplot</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">logspace</span><span class="p">(</span><span class="o">*</span><span class="n">xrng</span><span class="p">,</span> <span class="n">num</span><span class="o">=</span><span class="n">nplot</span><span class="p">)</span>
+
+        <span class="n">xrng</span> <span class="o">=</span> <span class="p">[</span><span class="mf">10.0</span><span class="o">**</span><span class="n">xx</span> <span class="k">for</span> <span class="n">xx</span> <span class="ow">in</span> <span class="n">xrng</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">residuals</span><span class="p">:</span>
+            <span class="n">flux_hat</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_flux</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">)</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flux</span> <span class="o">-</span> <span class="n">flux_hat</span><span class="p">)</span> <span class="o">/</span> <span class="n">flux_hat</span>
+            <span class="n">eflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eflux</span> <span class="o">/</span> <span class="n">flux_hat</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">fplot</span><span class="p">)</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_uncertainty</span><span class="p">(</span><span class="n">fplot</span><span class="p">)</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_flux</span><span class="p">(</span><span class="n">fplot</span><span class="p">)</span>
+            <span class="n">ylbl</span> <span class="o">=</span> <span class="s2">&quot;Residuals: &quot;</span> <span class="o">+</span> <span class="sa">r</span><span class="s2">&quot;$(S - \hat</span><span class="si">{S}</span><span class="s2">) / \hat</span><span class="si">{S}</span><span class="s2">$&quot;</span>
+            <span class="n">yrng</span> <span class="o">=</span> <span class="p">[</span><span class="o">-</span><span class="mf">0.50</span><span class="p">,</span> <span class="mf">0.50</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">flux</span>
+            <span class="n">eflux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">eflux</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_flux</span><span class="p">(</span><span class="n">fplot</span><span class="p">)</span>
+            <span class="n">delta</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_uncertainty</span><span class="p">(</span><span class="n">fplot</span><span class="p">)</span>
+            <span class="n">ylbl</span> <span class="o">=</span> <span class="s2">&quot;Flux Density [Jy]&quot;</span>
+            <span class="n">yrng</span> <span class="o">=</span> <span class="p">[</span><span class="n">model</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="n">model</span><span class="o">.</span><span class="n">max</span><span class="p">()]</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">fill_between</span><span class="p">(</span>
+            <span class="n">fplot</span><span class="p">,</span> <span class="n">model</span> <span class="o">-</span> <span class="n">delta</span><span class="p">,</span> <span class="n">model</span> <span class="o">+</span> <span class="n">delta</span><span class="p">,</span> <span class="n">facecolor</span><span class="o">=</span><span class="s2">&quot;darkgray&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.3</span>
+        <span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">fplot</span><span class="p">,</span>
+            <span class="n">model</span> <span class="o">-</span> <span class="n">delta</span><span class="p">,</span>
+            <span class="n">fplot</span><span class="p">,</span>
+            <span class="n">model</span> <span class="o">+</span> <span class="n">delta</span><span class="p">,</span>
+            <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span>
+            <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span>
+            <span class="n">linewidth</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span>
+            <span class="n">fplot</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;black&quot;</span><span class="p">,</span> <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">linewidth</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Plot the measurements</span>
+        <span class="k">if</span> <span class="n">catalog</span><span class="p">:</span>
+            <span class="n">cat_uniq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">cat_uniq</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">))</span>
+
+        <span class="c1"># Loop over catalogs/citations</span>
+        <span class="k">for</span> <span class="n">ii</span><span class="p">,</span> <span class="n">cat</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cat_uniq</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">catalog</span><span class="p">:</span>
+                <span class="n">pind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cc</span> <span class="o">==</span> <span class="n">cat</span> <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">catalog</span><span class="p">])</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cc</span> <span class="o">==</span> <span class="n">cat</span> <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">citation</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">cat</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pcol</span> <span class="o">=</span> <span class="s2">&quot;black&quot;</span>
+                <span class="n">pmrk</span> <span class="o">=</span> <span class="s2">&quot;o&quot;</span>
+                <span class="n">psz</span> <span class="o">=</span> <span class="mi">10</span>
+                <span class="n">lbl</span> <span class="o">=</span> <span class="s2">&quot;Meas.&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">pcol</span> <span class="o">=</span> <span class="n">colors</span><span class="p">[</span><span class="n">ii</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+                <span class="n">pmrk</span> <span class="o">=</span> <span class="n">markers</span><span class="p">[</span><span class="n">ii</span> <span class="o">//</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+                <span class="n">psz</span> <span class="o">=</span> <span class="n">sizes</span><span class="p">[</span><span class="n">ii</span> <span class="o">//</span> <span class="nb">len</span><span class="p">(</span><span class="n">colors</span><span class="p">)]</span>
+                <span class="n">lbl</span> <span class="o">=</span> <span class="n">cat</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">errorbar</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">freq</span><span class="p">[</span><span class="n">pind</span><span class="p">],</span>
+                <span class="n">flux</span><span class="p">[</span><span class="n">pind</span><span class="p">],</span>
+                <span class="n">yerr</span><span class="o">=</span><span class="n">eflux</span><span class="p">[</span><span class="n">pind</span><span class="p">],</span>
+                <span class="n">color</span><span class="o">=</span><span class="n">pcol</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="n">pmrk</span><span class="p">,</span>
+                <span class="n">markersize</span><span class="o">=</span><span class="n">psz</span><span class="p">,</span>
+                <span class="n">linestyle</span><span class="o">=</span><span class="s2">&quot;None&quot;</span><span class="p">,</span>
+                <span class="n">label</span><span class="o">=</span><span class="n">lbl</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Set log axis</span>
+        <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">set_xscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">residuals</span><span class="p">:</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">set_yscale</span><span class="p">(</span><span class="s2">&quot;log&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">xrng</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">yrng</span><span class="p">)</span>
+
+        <span class="n">plt</span><span class="o">.</span><span class="n">grid</span><span class="p">(</span><span class="n">b</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Plot lines denoting CHIME band</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">axvspan</span><span class="p">(</span><span class="mf">400.0</span><span class="p">,</span> <span class="mf">800.0</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)</span>
+
+        <span class="c1"># Create a legend</span>
+        <span class="k">if</span> <span class="n">legend</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;lower left&quot;</span><span class="p">,</span> <span class="n">numpoints</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="n">font</span><span class="p">)</span>
+
+        <span class="c1"># Set labels</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span><span class="s2">&quot;Frequency [MHz]&quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="n">ylbl</span><span class="p">)</span>
+
+        <span class="c1"># Create block with statistics</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">residuals</span><span class="p">:</span>
+            <span class="n">txt</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="sa">r</span><span class="s2">&quot;$\chi^2&quot;</span> <span class="o">+</span> <span class="sa">f</span><span class="s1">&#39; = </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;chisq&quot;</span><span class="p">]</span><span class="si">:</span><span class="s1">0.2f</span><span class="si">}</span><span class="s1">$ $(</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;ndof&quot;</span><span class="p">]</span><span class="si">}</span><span class="s1">)$&#39;</span>
+            <span class="p">)</span>
+
+            <span class="n">plt</span><span class="o">.</span><span class="n">text</span><span class="p">(</span>
+                <span class="mf">0.95</span><span class="p">,</span>
+                <span class="mf">0.95</span><span class="p">,</span>
+                <span class="n">txt</span><span class="p">,</span>
+                <span class="n">horizontalalignment</span><span class="o">=</span><span class="s2">&quot;right&quot;</span><span class="p">,</span>
+                <span class="n">verticalalignment</span><span class="o">=</span><span class="s2">&quot;top&quot;</span><span class="p">,</span>
+                <span class="n">transform</span><span class="o">=</span><span class="n">ax</span><span class="o">.</span><span class="n">transAxes</span><span class="p">,</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Create title</span>
+        <span class="n">ttl</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="n">ttl</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.predict_flux">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.predict_flux">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_flux</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Predict the flux density of the source at a particular</span>
+<span class="sd">        frequency and epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        freq : float, np.array of floats</span>
+<span class="sd">            Frequency in MHz.</span>
+
+<span class="sd">        epoch : float, np.array of floats</span>
+<span class="sd">            Year.  Defaults to current year.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        flux : float, np.array of floats</span>
+<span class="sd">            Flux density in Jansky.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;epoch&quot;</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq</span><span class="p">,</span> <span class="n">epoch</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.predict_uncertainty">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.predict_uncertainty">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">predict_uncertainty</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">freq</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Calculate the uncertainty in the estimate of the flux density</span>
+<span class="sd">        of the source at a particular frequency and epoch.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        freq : float, np.array of floats</span>
+<span class="sd">            Frequency in MHz.</span>
+
+<span class="sd">        epoch : float, np.array of floats</span>
+<span class="sd">            Year.  Defaults to current year.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        flux_uncertainty : float, np.array of floats</span>
+<span class="sd">            Uncertainty on the flux density in Jansky.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">epoch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="s2">&quot;epoch&quot;</span> <span class="ow">in</span> <span class="n">arg_list</span><span class="p">):</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq</span><span class="p">,</span> <span class="n">epoch</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">[</span><span class="n">freq</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_model</span><span class="o">.</span><span class="n">uncertainty</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.to_dict">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.to_dict">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">to_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns an ordered dictionary containing attributes</span>
+<span class="sd">        for this instance object.  Used to dump the information</span>
+<span class="sd">        stored in the instance object to a file.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        flux_body_dict : dict</span>
+<span class="sd">            Dictionary containing all attributes listed in</span>
+<span class="sd">            the &#39;fields&#39; class attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">flux_body_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+                <span class="n">flux_body_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">flux_body_dict</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns a string containing basic information about the source.</span>
+<span class="sd">        Called by the print statement.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">flux</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_flux</span><span class="p">(</span><span class="n">FREQ_NOMINAL</span><span class="p">)</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="mf">100.0</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_uncertainty</span><span class="p">(</span><span class="n">FREQ_NOMINAL</span><span class="p">)</span> <span class="o">/</span> <span class="n">flux</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="si">:</span><span class="s2">&lt;25.25s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="si">:</span><span class="s2">&gt;6.2f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="si">:</span><span class="s2">&gt;6.2f</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="si">:</span><span class="s2">&gt;6d</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">flux</span><span class="si">:</span><span class="s2">^15.1f</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="n">percent</span><span class="si">:</span><span class="s2">^15.1f</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Returns the number of measurements of the source.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="mi">0</span>
+
+<div class="viewcode-block" id="FluxCatalog.print_measurements">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.print_measurements">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_measurements</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print all measurements.&quot;&quot;&quot;</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Define header</span>
+        <span class="n">hdr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Frequency&#39;</span><span class="si">:</span><span class="s2">&lt;10s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Flux&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Error&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Flag&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Catalog&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Epoch&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="s1">&#39;Citation&#39;</span><span class="si">:</span><span class="s2">&lt;60s</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">units</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;[MHz]&#39;</span><span class="si">:</span><span class="s2">&lt;10s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;[Jy]&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;[%]&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&gt;8s</span><span class="si">}</span><span class="s2">   </span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&lt;60s</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Setup the title</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;=&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;NAME: &quot;</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">,</span> <span class="s2">&quot; &quot;</span><span class="p">))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;RA:   </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="si">:</span><span class="s2">&gt;6.2f</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;DEC:  </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="si">:</span><span class="s2">&gt;6.2f</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">)</span><span class="si">:</span><span class="s2">d</span><span class="si">}</span><span class="s2"> Measurements&quot;</span><span class="p">)</span>
+
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))))</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))))</span>
+
+        <span class="c1"># Add the measurements</span>
+        <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">meas</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">epoch_fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{5:&gt;8s}</span><span class="s2">&quot;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">epoch_fmt</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{5:&gt;8.1f}</span><span class="s2">&quot;</span>
+
+            <span class="n">fmt_string</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;</span><span class="si">{0:&lt;10.1f}</span><span class="s2"> </span><span class="si">{1:&gt;8.1f}</span><span class="s2"> </span><span class="si">{2:&gt;8.1f}</span><span class="s2"> </span><span class="si">{3:&gt;6s}</span><span class="s2"> </span><span class="si">{4:&gt;8s}</span><span class="s2"> &quot;</span>
+                <span class="o">+</span> <span class="n">epoch_fmt</span>
+                <span class="o">+</span> <span class="s2">&quot;   </span><span class="si">{6:&lt;.60s}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">fmt_string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">meas</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="n">meas</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="mf">100.0</span> <span class="o">*</span> <span class="n">meas</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">/</span> <span class="n">meas</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                <span class="s2">&quot;Good&quot;</span> <span class="k">if</span> <span class="n">meas</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">else</span> <span class="s2">&quot;Bad&quot;</span><span class="p">,</span>
+                <span class="n">meas</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="k">if</span> <span class="n">meas</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                <span class="n">meas</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="k">if</span> <span class="n">meas</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span>
+                <span class="n">meas</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="n">meas</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="s2">&quot;--&quot;</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+        <span class="c1"># Print</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">out</span><span class="p">))</span></div>
+
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">skyfield</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Skyfield star representation :class:`skyfield.starlib.Star`</span>
+<span class="sd">        for the source.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">ctime</span><span class="o">.</span><span class="n">skyfield_star_from_ra_dec</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ra</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dec</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">freq</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Frequency of measurements in MHz.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Flux measurements in Jansky.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">eflux</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Error on the flux measurements in Jansky.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">flag</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Boolean flag indicating what measurements are used</span>
+<span class="sd">        in the spectral fit.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">catalog</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Catalog from which each measurement originates.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">epoch</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Year that each measurement occured.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">citation</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Citation where more information on each measurement</span>
+<span class="sd">        can be found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">meas</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span> <span class="k">for</span> <span class="n">meas</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">measurements</span><span class="p">])</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_sort_id</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sources in the catalog are ordered according to this</span>
+<span class="sd">        property.  Currently use the predicted flux at FREQ_NOMINAL</span>
+<span class="sd">        in descending order.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Multipy by -1 so that we will</span>
+        <span class="c1"># sort from higher to lower flux</span>
+        <span class="k">return</span> <span class="o">-</span><span class="bp">self</span><span class="o">.</span><span class="n">predict_flux</span><span class="p">(</span>
+            <span class="n">FREQ_NOMINAL</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="n">get_epoch</span><span class="p">(</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+        <span class="p">)</span>
+
+    <span class="c1"># =============================================================</span>
+    <span class="c1"># Class methods that act on the entire catalog</span>
+    <span class="c1"># =============================================================</span>
+
+<div class="viewcode-block" id="FluxCatalog.string">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.string">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">string</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print basic information about the sources in the catalog.&quot;&quot;&quot;</span>
+
+        <span class="n">catalog_string</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># Print the header</span>
+        <span class="n">hdr</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Name&#39;</span><span class="si">:</span><span class="s2">&lt;25s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;RA&#39;</span><span class="si">:</span><span class="s2">^6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Dec&#39;</span><span class="si">:</span><span class="s2">^6s</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Nmeas&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Flux&#39;</span><span class="si">:</span><span class="s2">^15s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;Error&#39;</span><span class="si">:</span><span class="s2">^15s</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">units</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&lt;25s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;[deg]&#39;</span><span class="si">:</span><span class="s2">^6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;[deg]&#39;</span><span class="si">:</span><span class="s2">^6s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="s1">&#39;&#39;</span><span class="si">:</span><span class="s2">&gt;6s</span><span class="si">}</span><span class="s2"> &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="sa">f</span><span class="s1">&#39;@</span><span class="si">{</span><span class="n">FREQ_NOMINAL</span><span class="si">}</span><span class="s1"> MHz [Jy]&#39;</span><span class="si">:</span><span class="s2">^15s</span><span class="si">}</span><span class="s2"> </span><span class="si">{</span><span class="sa">f</span><span class="s1">&#39;@</span><span class="si">{</span><span class="n">FREQ_NOMINAL</span><span class="si">}</span><span class="s1"> MHz [%]&#39;</span><span class="si">:</span><span class="s2">^15s</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="p">)</span>
+
+        <span class="n">catalog_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))))</span>
+        <span class="n">catalog_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">hdr</span><span class="p">)</span>
+        <span class="n">catalog_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">units</span><span class="p">)</span>
+        <span class="n">catalog_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">max</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">hdr</span><span class="p">),</span> <span class="nb">len</span><span class="p">(</span><span class="n">units</span><span class="p">))))</span>
+
+        <span class="c1"># Loop over sorted entries and print</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">():</span>
+            <span class="n">catalog_string</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="fm">__str__</span><span class="p">())</span>
+
+        <span class="k">return</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">catalog_string</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.from_dict">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_dict</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">flux_body_dict</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Instantiates a FluxCatalog object for an astronomical source</span>
+<span class="sd">        from a dictionary of kwargs.  Used when loading sources from a</span>
+<span class="sd">        JSON catalog file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the astronomical source.</span>
+
+<span class="sd">        flux_body_dict : dict</span>
+<span class="sd">            Dictionary containing some or all of the keyword arguments</span>
+<span class="sd">            listed in the __init__ function for this class.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : FluxCatalog instance</span>
+<span class="sd">            Object that can be used to predict the flux of this source,</span>
+<span class="sd">            plot flux measurements, etc.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">arg_list</span> <span class="o">=</span> <span class="n">misc</span><span class="o">.</span><span class="n">getfullargspec</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span>
+
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="n">field</span><span class="p">:</span> <span class="n">flux_body_dict</span><span class="p">[</span><span class="n">field</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">arg_list</span>
+            <span class="k">if</span> <span class="n">field</span> <span class="ow">in</span> <span class="n">flux_body_dict</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.get">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.get">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Searches the catalog for a source.  First checks against the</span>
+<span class="sd">        &#39;name&#39; of each entry, then checks against the &#39;alternate_names&#39;</span>
+<span class="sd">        of each entry.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        key : str</span>
+<span class="sd">            Name of the astronomical source.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        obj : FluxCatalog instance</span>
+<span class="sd">            Object that can be used to predict the flux of this source,</span>
+<span class="sd">            plot flux measurements, etc.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Check that key is a string</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Provide source name as string.&quot;</span><span class="p">)</span>
+
+        <span class="n">fkey</span> <span class="o">=</span> <span class="n">format_source_name</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+        <span class="c1"># First check names</span>
+        <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fkey</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="c1"># Next check alternate names</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">afkey</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_alternate_name_lookup</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">fkey</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">afkey</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">afkey</span><span class="p">)</span>
+
+        <span class="c1"># Check if the object was found</span>
+        <span class="k">if</span> <span class="n">obj</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">fkey</span><span class="si">}</span><span class="s2"> was not found.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Return the body corresponding to this source</span>
+        <span class="k">return</span> <span class="n">obj</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.delete">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.delete">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">source_name</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Deletes a source from the catalog.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source_name : str</span>
+<span class="sd">            Name of the astronomical source.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">name</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">akey</span> <span class="ow">in</span> <span class="n">obj</span><span class="o">.</span><span class="n">alternate_names</span><span class="p">:</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">_alternate_name_lookup</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">akey</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="k">del</span> <span class="n">obj</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.sort">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.sort">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sort</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Sorts the entries in the catalog by their flux density</span>
+<span class="sd">        at FREQ_NOMINAL in descending order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        names : list of str</span>
+<span class="sd">            List of source names in correct order.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">keys</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">body</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">keys</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">body</span><span class="o">.</span><span class="n">_sort_id</span><span class="p">,</span> <span class="n">name</span><span class="p">))</span>
+
+        <span class="n">keys</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="p">[</span><span class="n">key</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.keys">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.keys">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">keys</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Alias for sort.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        names : list of str</span>
+<span class="sd">            List of source names in correct order.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.iter">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.iter">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iter</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterates through the sources in the catalog.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        it : iterator</span>
+<span class="sd">            Provides the name of each source in the catalog</span>
+<span class="sd">            in the order specified by the &#39;sort&#39; class method.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.reversed">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.reversed">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">reversed</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterates through the sources in the catalog</span>
+<span class="sd">        in reverse order.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        it : iterator</span>
+<span class="sd">            Provides the name of each source in the catalog</span>
+<span class="sd">            in the reverse order as that specified by the</span>
+<span class="sd">            &#39;sort&#39; class method.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">reversed</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.iteritems">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.iteritems">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">iteritems</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Iterates through the sources in the catalog.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        it : iterator</span>
+<span class="sd">            Provides (name, object) for each source in the catalog</span>
+<span class="sd">            in the order specified by the &#39;sort&#39; class method.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">iter</span><span class="p">([(</span><span class="n">key</span><span class="p">,</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="n">key</span><span class="p">])</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">()])</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.len">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.len">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">len</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Number of sources in the catalog.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        N : int</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.available_collections">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.available_collections">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">available_collections</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Search the local directory for potential collections that</span>
+<span class="sd">        can be loaded.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        collections : list of (str, [str, ...])</span>
+<span class="sd">            List containing a tuple for each collection.  The tuple contains</span>
+<span class="sd">            the filename of the collection (str) and the sources it contains</span>
+<span class="sd">            (list of str).</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Determine the directory where this class is located</span>
+        <span class="n">current_file</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">getfile</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span>
+        <span class="n">current_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">current_file</span><span class="p">)))</span>
+
+        <span class="c1"># Search this directory recursively for JSON files.</span>
+        <span class="c1"># Load each one that is found into a dictionary and</span>
+        <span class="c1"># return the number of sources and source names.</span>
+        <span class="n">matches</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">dirnames</span><span class="p">,</span> <span class="n">filenames</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">current_dir</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">filename</span> <span class="ow">in</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">filenames</span><span class="p">,</span> <span class="s2">&quot;*.json&quot;</span><span class="p">)</span> <span class="o">+</span> <span class="n">fnmatch</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">filenames</span><span class="p">,</span> <span class="s2">&quot;*.pickle&quot;</span>
+            <span class="p">):</span>
+                <span class="n">full_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">filename</span><span class="p">)</span>
+
+                <span class="c1"># Read into dictionary</span>
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">full_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                    <span class="n">collection_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">json_numpy_obj_hook</span><span class="p">)</span>
+
+                <span class="c1"># Append (path, number of sources, source names) to list</span>
+                <span class="n">matches</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">full_path</span><span class="p">,</span> <span class="nb">list</span><span class="p">(</span><span class="n">collection_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())))</span>
+
+        <span class="c1"># Return matches</span>
+        <span class="k">return</span> <span class="n">matches</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.print_available_collections">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.print_available_collections">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_available_collections</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print information about the available collections.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            If True, then print all source names in addition to the names</span>
+<span class="sd">            of the files and number of sources.  Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">cc</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">available_collections</span><span class="p">():</span>
+            <span class="n">_print_collection_summary</span><span class="p">(</span><span class="o">*</span><span class="n">cc</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.loaded_collections">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.loaded_collections">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">loaded_collections</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the collections that have been loaded.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        collections : list of (str, [str, ...])</span>
+<span class="sd">            List containing a tuple for each collection.  The tuple contains</span>
+<span class="sd">            the filename of the collection (str) and the sources it contains</span>
+<span class="sd">            (list of str).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_collections</span><span class="o">.</span><span class="n">items</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.print_loaded_collections">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.print_loaded_collections">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">print_loaded_collections</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Print information about the collection that have been loaded.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            If True, then print all source names in addition to the names</span>
+<span class="sd">            of the files and number of sources.  Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">cat</span><span class="p">,</span> <span class="n">sources</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collections</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">_print_collection_summary</span><span class="p">(</span><span class="n">cat</span><span class="p">,</span> <span class="n">sources</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span></div>
+
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">delete_loaded_collection</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">cat</span><span class="p">):</span>
+        <span class="n">sources_to_delete</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_collections</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">cat</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">source_name</span> <span class="ow">in</span> <span class="n">sources_to_delete</span><span class="p">:</span>
+            <span class="bp">cls</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">source_name</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FluxCatalog.dump">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.dump">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">dump</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Dumps the contents of the catalog to a file.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            Valid path name.  Should have .json or .pickle extension.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Parse filename</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">filename</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Do not recognize &#39;</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&#39; extension.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+                <span class="k">raise</span>
+
+        <span class="c1"># Sort based on _sort_id</span>
+        <span class="n">keys</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">sort</span><span class="p">()</span>
+
+        <span class="c1"># Place a dictionary with the information</span>
+        <span class="c1"># stored in each object into an OrderedDict</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+            <span class="n">output</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">_entries</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+        <span class="c1"># Dump this dictionary to file</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">fp</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">NumpyEncoder</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.pickle&quot;</span><span class="p">:</span>
+                <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.load">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.load">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">filename</span><span class="p">,</span> <span class="n">overwrite</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">set_globals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the contents of a file into the catalog.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        filename : str</span>
+<span class="sd">            Valid path name.  Should have .json or .pickle extension.</span>
+<span class="sd">        overwrite : int between 0 and 2</span>
+<span class="sd">            Action to take in the event that this source is already in the catalog:</span>
+<span class="sd">            - 0 - Return the existing entry.</span>
+<span class="sd">            - 1 - Add any measurements to the existing entry.</span>
+<span class="sd">            - 2 - Overwrite the existing entry.</span>
+<span class="sd">            Default is 0.</span>
+<span class="sd">        set_globals : bool</span>
+<span class="sd">            If True, this creates a variable in the global space</span>
+<span class="sd">            for each source in the file.  Default is False.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            If True, print some basic info about the contents of</span>
+<span class="sd">            the file as it is loaded. Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Parse filename</span>
+        <span class="c1"># Define collection name as basename of file without extension</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expandvars</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+        <span class="n">collection_name</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">filename</span><span class="p">))</span>
+
+        <span class="c1"># Check if the file actually exists and has the correct extension</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">filename</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2"> does not exist.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">ext</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;.pickle&quot;</span><span class="p">,</span> <span class="s2">&quot;.json&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Do not recognize &#39;</span><span class="si">{</span><span class="n">ext</span><span class="si">}</span><span class="s2">&#39; extension.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Load contents of file into a dictionary</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.json&quot;</span><span class="p">:</span>
+                <span class="n">collection_dict</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">json_numpy_obj_hook</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">ext</span> <span class="o">==</span> <span class="s2">&quot;.pickle&quot;</span><span class="p">:</span>
+                <span class="n">collection_dict</span> <span class="o">=</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">load_dict</span><span class="p">(</span>
+            <span class="n">collection_dict</span><span class="p">,</span> <span class="n">collection_name</span><span class="p">,</span> <span class="n">overwrite</span><span class="p">,</span> <span class="n">set_globals</span><span class="p">,</span> <span class="n">verbose</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="FluxCatalog.load_dict">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.FluxCatalog.load_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">load_dict</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">collection_dict</span><span class="p">,</span>
+        <span class="n">collection_name</span><span class="p">,</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="n">set_globals</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load the contents of a dict into the catalog.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        collection_dict : dict</span>
+<span class="sd">            keys are source names, values are the sources</span>
+<span class="sd">        collection_name : str</span>
+<span class="sd">            Name of the collection</span>
+<span class="sd">        overwrite : int between 0 and 2</span>
+<span class="sd">            Action to take in the event that this source is already in the catalog:</span>
+<span class="sd">            - 0 - Return the existing entry.</span>
+<span class="sd">            - 1 - Add any measurements to the existing entry.</span>
+<span class="sd">            - 2 - Overwrite the existing entry.</span>
+<span class="sd">            Default is 0.</span>
+<span class="sd">        set_globals : bool</span>
+<span class="sd">            If True, this creates a variable in the global space</span>
+<span class="sd">            for each source in the file.  Default is False.</span>
+<span class="sd">        verbose : bool</span>
+<span class="sd">            If True, print some basic info about the contents of</span>
+<span class="sd">            the file as it is loaded. Default is False.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Add this to the list of files</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">_collections</span><span class="p">[</span><span class="n">collection_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">collection_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+
+        <span class="c1"># If requested, print some basic info about the collection</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">_print_collection_summary</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">_collections</span><span class="p">[</span><span class="n">collection_name</span><span class="p">])</span>
+
+        <span class="c1"># Loop through dictionary and add each source to the catalog</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">collection_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Add overwrite keyword</span>
+            <span class="n">value</span><span class="p">[</span><span class="s2">&quot;overwrite&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">overwrite</span>
+
+            <span class="c1"># Create object for this source</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+
+            <span class="c1"># If requested, create a variable in the global space</span>
+            <span class="c1"># containing the object for this source.</span>
+            <span class="k">if</span> <span class="n">set_globals</span><span class="p">:</span>
+                <span class="n">varkey</span> <span class="o">=</span> <span class="n">varname</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+                <span class="nb">globals</span><span class="p">()[</span><span class="n">varkey</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="get_epoch">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.get_epoch">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_epoch</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return the epoch for a date.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    date : datetime.datetime</span>
+<span class="sd">        Date to calculate epoch</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    epoch : float</span>
+<span class="sd">        The fractional-year epoch</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">sinceEpoch</span><span class="p">(</span><span class="n">date</span><span class="p">):</span>  <span class="c1"># returns seconds since epoch</span>
+        <span class="k">return</span> <span class="n">time</span><span class="o">.</span><span class="n">mktime</span><span class="p">(</span><span class="n">date</span><span class="o">.</span><span class="n">timetuple</span><span class="p">())</span>
+
+    <span class="n">year</span> <span class="o">=</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span>
+    <span class="n">startOfThisYear</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">startOfNextYear</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">(</span><span class="n">year</span><span class="o">=</span><span class="n">year</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">month</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">day</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">yearElapsed</span> <span class="o">=</span> <span class="n">sinceEpoch</span><span class="p">(</span><span class="n">date</span><span class="p">)</span> <span class="o">-</span> <span class="n">sinceEpoch</span><span class="p">(</span><span class="n">startOfThisYear</span><span class="p">)</span>
+    <span class="n">yearDuration</span> <span class="o">=</span> <span class="n">sinceEpoch</span><span class="p">(</span><span class="n">startOfNextYear</span><span class="p">)</span> <span class="o">-</span> <span class="n">sinceEpoch</span><span class="p">(</span><span class="n">startOfThisYear</span><span class="p">)</span>
+    <span class="n">fraction</span> <span class="o">=</span> <span class="n">yearElapsed</span> <span class="o">/</span> <span class="n">yearDuration</span>
+
+    <span class="k">return</span> <span class="n">date</span><span class="o">.</span><span class="n">year</span> <span class="o">+</span> <span class="n">fraction</span></div>
+
+
+
+<div class="viewcode-block" id="varname">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.varname">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">varname</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a python variable name from `name`.</span>
+
+<span class="sd">    The variable name replaces spaces in `name` with</span>
+<span class="sd">    underscores and adds a leading underscore if `name`</span>
+<span class="sd">    starts with a digit.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        The name to create a variable name for</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    varname : str</span>
+<span class="sd">        The python variable name.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">varname</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">,</span> <span class="s2">&quot;_&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">varname</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">isdigit</span><span class="p">():</span>
+        <span class="n">varname</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span> <span class="o">+</span> <span class="n">varname</span>
+
+    <span class="k">return</span> <span class="n">varname</span></div>
+
+
+
+<div class="viewcode-block" id="format_source_name">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.format_source_name">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">format_source_name</span><span class="p">(</span><span class="n">input_name</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Standardise the name of a source.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_name: str</span>
+<span class="sd">        The name to format</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    formatted_name: str</span>
+<span class="sd">        The name after formatting.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Address some common naming conventions.</span>
+    <span class="k">if</span> <span class="n">input_name</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;NAME &quot;</span><span class="p">):</span>
+        <span class="c1"># SIMBAD prefixes common source names with &#39;NAME &#39;.</span>
+        <span class="c1"># Remove this.</span>
+        <span class="n">output_name</span> <span class="o">=</span> <span class="n">input_name</span><span class="p">[</span><span class="mi">5</span><span class="p">:]</span>
+
+    <span class="k">elif</span> <span class="ow">not</span> <span class="nb">any</span><span class="p">(</span><span class="n">char</span><span class="o">.</span><span class="n">isdigit</span><span class="p">()</span> <span class="k">for</span> <span class="n">char</span> <span class="ow">in</span> <span class="n">input_name</span><span class="p">):</span>
+        <span class="c1"># We have been using PascalCase to denote common source names.</span>
+        <span class="c1"># Convert from CygA, HerA, PerB ---&gt; Cyg A, Her A, Per B.</span>
+        <span class="n">output_name</span> <span class="o">=</span> <span class="n">input_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_name</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">input_name</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">islower</span><span class="p">()</span> <span class="ow">and</span> <span class="n">input_name</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span><span class="o">.</span><span class="n">isupper</span><span class="p">():</span>
+                <span class="n">output_name</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">input_name</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">output_name</span> <span class="o">+=</span> <span class="n">input_name</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># No funny business with the input_name in this case.</span>
+        <span class="n">output_name</span> <span class="o">=</span> <span class="n">input_name</span>
+
+    <span class="c1"># Remove multiple spaces.  Replace single spaces with underscores.</span>
+    <span class="n">output_name</span> <span class="o">=</span> <span class="s2">&quot;_&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">output_name</span><span class="o">.</span><span class="n">split</span><span class="p">())</span>
+
+    <span class="c1"># Return the name in all uppercase.</span>
+    <span class="k">return</span> <span class="n">output_name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="NumpyEncoder">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.NumpyEncoder">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">NumpyEncoder</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">):</span>
+<div class="viewcode-block" id="NumpyEncoder.default">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.NumpyEncoder.default">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;If input object is an ndarray it will be converted into a dict</span>
+<span class="sd">        holding dtype, shape and the data, base64 encoded.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">obj</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s2">&quot;C_CONTIGUOUS&quot;</span><span class="p">]:</span>
+                <span class="n">obj_data</span> <span class="o">=</span> <span class="n">obj</span><span class="o">.</span><span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">cont_obj</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ascontiguousarray</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
+                <span class="k">assert</span> <span class="n">cont_obj</span><span class="o">.</span><span class="n">flags</span><span class="p">[</span><span class="s2">&quot;C_CONTIGUOUS&quot;</span><span class="p">]</span>
+                <span class="n">obj_data</span> <span class="o">=</span> <span class="n">cont_obj</span><span class="o">.</span><span class="n">data</span>
+            <span class="n">data_b64</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">obj_data</span><span class="p">)</span>
+            <span class="k">return</span> <span class="p">{</span>
+                <span class="s2">&quot;__ndarray__&quot;</span><span class="p">:</span> <span class="n">data_b64</span><span class="p">,</span>
+                <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">obj</span><span class="o">.</span><span class="n">dtype</span><span class="p">),</span>
+                <span class="s2">&quot;shape&quot;</span><span class="p">:</span> <span class="n">obj</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span>
+            <span class="p">}</span>
+        <span class="c1"># Let the base class default method raise the TypeError</span>
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONEncoder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">)</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="json_numpy_obj_hook">
+<a class="viewcode-back" href="../../_autosummary/ch_util.fluxcat.html#ch_util.fluxcat.json_numpy_obj_hook">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">json_numpy_obj_hook</span><span class="p">(</span><span class="n">dct</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Decodes a previously encoded numpy ndarray with proper shape and dtype.</span>
+
+<span class="sd">    :param dct: (dict) json encoded ndarray</span>
+<span class="sd">    :return: (ndarray) if input was an encoded ndarray</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dct</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="s2">&quot;__ndarray__&quot;</span> <span class="ow">in</span> <span class="n">dct</span><span class="p">:</span>
+        <span class="n">data</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64decode</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s2">&quot;__ndarray__&quot;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">frombuffer</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">dct</span><span class="p">[</span><span class="s2">&quot;dtype&quot;</span><span class="p">])</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">dct</span><span class="p">[</span><span class="s2">&quot;shape&quot;</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">dct</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_print_collection_summary</span><span class="p">(</span><span class="n">collection_name</span><span class="p">,</span> <span class="n">source_names</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This prints out information about a collection of sources</span>
+<span class="sd">    in a standardized way.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    collection_name : str</span>
+<span class="sd">        Name of the collection.</span>
+
+<span class="sd">    source_names : list of str</span>
+<span class="sd">        Names of the sources in the collection.</span>
+
+<span class="sd">    verbose : bool</span>
+<span class="sd">        If true, then print out all of the source names.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ncol</span> <span class="o">=</span> <span class="mi">4</span>
+    <span class="n">nsrc</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">source_names</span><span class="p">)</span>
+
+    <span class="c1"># Create a header containing the collection name and number of sources</span>
+    <span class="n">header</span> <span class="o">=</span> <span class="n">collection_name</span> <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot;  (</span><span class="si">{</span><span class="n">nsrc</span><span class="si">}</span><span class="s2"> Sources)&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">header</span><span class="p">)</span>
+
+    <span class="c1"># Print the sources contained in this collection</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="c1"># Seperator</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;-&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">header</span><span class="p">)))</span>
+
+        <span class="c1"># Source names</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">nsrc</span><span class="p">,</span> <span class="n">ncol</span><span class="p">):</span>
+            <span class="n">jj</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">ii</span> <span class="o">+</span> <span class="n">ncol</span><span class="p">,</span> <span class="n">nsrc</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">((</span><span class="s2">&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="s2">&quot;</span><span class="si">%-25s</span><span class="s2">&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">jj</span> <span class="o">-</span> <span class="n">ii</span><span class="p">)))</span> <span class="o">%</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">source_names</span><span class="p">[</span><span class="n">ii</span><span class="p">:</span><span class="n">jj</span><span class="p">]))</span>
+
+        <span class="c1"># Space</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+
+<span class="c1"># Load the default collections</span>
+<span class="k">for</span> <span class="n">col</span> <span class="ow">in</span> <span class="n">DEFAULT_COLLECTIONS</span><span class="p">:</span>
+    <span class="n">FluxCatalog</span><span class="o">.</span><span class="n">load_dict</span><span class="p">(</span><span class="n">ch_ephem</span><span class="o">.</span><span class="n">catalogs</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">col</span><span class="p">),</span> <span class="n">col</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
