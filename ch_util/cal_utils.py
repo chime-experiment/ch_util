@@ -189,7 +189,7 @@ class FitTransit(metaclass=ABCMeta):
                         absolute_sigma=absolute_sigma,
                         **kwargs,
                     )
-                except (ValueError, KeyError) as error:
+                except (ValueError, KeyError, RuntimeError) as error:
                     logger.debug(f"Index {ind!s} failed with error: {error}")
                     continue
 
