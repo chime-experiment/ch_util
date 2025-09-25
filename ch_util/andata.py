@@ -878,8 +878,13 @@ class CorrData(BaseData):
         # Datasets read by andata (should be small)
         DSET_CORE = ["flags/inputs", "flags/frac_lost", "flags/dataset_id"]
         # Datasets read directly and then inserted after the fact
-        # (should have an input/product/stack axis, as axis=1)
-        DSETS_DIRECT = ["vis", "gain", "flags/vis_weight"]
+        # Dictionary entries are dataset name : axis to distribute over,
+        # and are specified here based on performance tests
+        DSETS_DIRECT = {
+            "vis": 1,
+            "gain": 0 if (freq_sel is None) or (freq_sel == slice(None)) else 1,
+            "flags/vis_weight": 1,
+        }
 
         if comm is None:
             comm = MPI.COMM_WORLD
@@ -912,14 +917,13 @@ class CorrData(BaseData):
         sel = (freq_sel, slice(None), time_sel)
 
         with misc.open_h5py_mpi(fname, "r", comm=comm) as fh:
-            for ds_name in DSETS_DIRECT:
+            for ds_name, ds_axis in DSETS_DIRECT.items():
                 if ds_name not in fh:
                     continue
 
-                # Read dataset directly (distributed over input/product/stack axis) and
-                # add to container
+                # Read dataset directly and add to container
                 arr = mpiarray.MPIArray.from_hdf5(
-                    fh, ds_name, comm=comm, axis=1, sel=sel
+                    fh, ds_name, comm=comm, axis=ds_axis, sel=sel
                 )
                 arr = arr.redistribute(axis=0)
                 dset = ad.create_dataset(ds_name, data=arr, distributed=True)
