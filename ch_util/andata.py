@@ -850,8 +850,7 @@ class CorrData(BaseData):
 
         This reads a single file from disk into a distributed container. In
         contrast to to `CorrData.from_acq_h5` it is more restrictive,
-        allowing only contiguous slices of the frequency and time axes,
-        and no down selection of the input/product/stack axis.
+        allowing only contiguous axis slices.
 
         Parameters
         ----------
@@ -882,7 +881,7 @@ class CorrData(BaseData):
         # and are specified here based on performance tests
         DSETS_DIRECT = {
             "vis": 1,
-            "gain": 0 if (freq_sel is None) or (freq_sel == slice(None)) else 1,
+            "gain": 0,
             "flags/vis_weight": 1,
         }
 
@@ -892,8 +891,8 @@ class CorrData(BaseData):
         # Check the frequency selection
         if freq_sel is None:
             freq_sel = slice(None)
-        if not isinstance(freq_sel, slice):
-            raise ValueError("freq_sel must be a slice object, not " + repr(freq_sel))
+        elif not isinstance(freq_sel, slice):
+            raise ValueError(f"freq_sel must be a slice object, not {freq_sel!r}")
 
         # Create the time selection
         time_sel = slice(start, stop)
