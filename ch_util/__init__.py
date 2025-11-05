@@ -11,9 +11,7 @@ Submodules
     cal_utils
     chan_monitor
     data_quality
-    ephemeris
     finder
-    fluxcat
     hfbcat
     holography
     layout
