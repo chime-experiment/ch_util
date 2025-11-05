@@ -53,7 +53,10 @@ from ch_ephem.observers import chime, tone, kko, gbo, hco
 
 from .hfbcat import get_doppler_shifted_freq as get_doppler_shifted_freq
 
-warnings.warn("The ch_util.ephemeris module is deprecated.", DeprecationWarning)
+warnings.warn(
+    "The ch_util.ephemeris module is deprecated. Use `ch_ephem` instead.",
+    DeprecationWarning,
+)
 
 CHIMELATITUDE = chime.latitude
 CHIMELONGITUDE = chime.longitude
