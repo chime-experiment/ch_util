@@ -1,0 +1,1300 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.finder &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.hfbcat" href="ch_util.hfbcat.html" />
+    <link rel="prev" title="ch_util.data_quality" href="ch_util.data_quality.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.finder</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data-tables">Data tables</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#high-level-index-searcher">High Level Index Searcher</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#routines">Routines</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.BaseDataInterval"><code class="docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.CalibrationGainDataInterval"><code class="docutils literal notranslate"><span class="pre">CalibrationGainDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.CorrDataInterval"><code class="docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.DataFlagged"><code class="docutils literal notranslate"><span class="pre">DataFlagged</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.DataInterval"><code class="docutils literal notranslate"><span class="pre">DataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.DataIntervalList"><code class="docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.DigitalGainDataInterval"><code class="docutils literal notranslate"><span class="pre">DigitalGainDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.Finder"><code class="docutils literal notranslate"><span class="pre">Finder</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.FlagInputDataInterval"><code class="docutils literal notranslate"><span class="pre">FlagInputDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.HKDataInterval"><code class="docutils literal notranslate"><span class="pre">HKDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.TimingDataInterval"><code class="docutils literal notranslate"><span class="pre">TimingDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.WeatherDataInterval"><code class="docutils literal notranslate"><span class="pre">WeatherDataInterval</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.finder.files_in_range"><code class="docutils literal notranslate"><span class="pre">files_in_range()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.finder</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.finder.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.finder">
+<span id="ch-util-finder"></span><h1>ch_util.finder<a class="headerlink" href="#module-ch_util.finder" title="Link to this heading"></a></h1>
+<p>Data Index Searcher for CHIME</p>
+<p>Search routines for locating data withing the CHIME data index.</p>
+<section id="data-tables">
+<h2>Data tables<a class="headerlink" href="#data-tables" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFlag</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFlagType</span></code></p></li>
+</ul>
+<p class="rubric">Exceptions</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.finder.DataFlagged" title="ch_util.finder.DataFlagged"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataFlagged</span></code></a></p></li>
+</ul>
+</section>
+<section id="high-level-index-searcher">
+<h2>High Level Index Searcher<a class="headerlink" href="#high-level-index-searcher" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.finder.Finder" title="ch_util.finder.Finder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finder</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.DataIntervalList" title="ch_util.finder.DataIntervalList"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.CorrDataInterval" title="ch_util.finder.CorrDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.HKDataInterval" title="ch_util.finder.HKDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">HKDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.WeatherDataInterval" title="ch_util.finder.WeatherDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">WeatherDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.FlagInputDataInterval" title="ch_util.finder.FlagInputDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">FlagInputDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.CalibrationGainDataInterval" title="ch_util.finder.CalibrationGainDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">CalibrationGainDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.DigitalGainDataInterval" title="ch_util.finder.DigitalGainDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">DigitalGainDataInterval</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.TimingDataInterval" title="ch_util.finder.TimingDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimingDataInterval</span></code></a></p></li>
+</ul>
+</section>
+<section id="routines">
+<h2>Routines<a class="headerlink" href="#routines" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">connect_database()</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.finder.files_in_range" title="ch_util.finder.files_in_range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">files_in_range()</span></code></a></p></li>
+</ul>
+</section>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.files_in_range" title="ch_util.finder.files_in_range"><code class="xref py py-obj docutils literal notranslate"><span class="pre">files_in_range</span></code></a>(acq, start_time, end_time, ...)</p></td>
+<td><p>Get files for a given acquisition within a time range.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a>([iterable])</p></td>
+<td><p>A single data index search result.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.finder.CalibrationGainDataInterval" title="ch_util.finder.CalibrationGainDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CalibrationGainDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for calibration gain data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.CorrDataInterval" title="ch_util.finder.CorrDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for correlator data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.finder.DataInterval" title="ch_util.finder.DataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataInterval</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="#ch_util.finder.CorrDataInterval" title="ch_util.finder.CorrDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.DataIntervalList" title="ch_util.finder.DataIntervalList"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a>([iterable])</p></td>
+<td><p>A list of data index search results.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.finder.DigitalGainDataInterval" title="ch_util.finder.DigitalGainDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DigitalGainDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for digital gain data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.Finder" title="ch_util.finder.Finder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Finder</span></code></a>([acqs, node_spoof])</p></td>
+<td><p>High level searching of the CHIME data index.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.finder.FlagInputDataInterval" title="ch_util.finder.FlagInputDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FlagInputDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for flag input data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.HKDataInterval" title="ch_util.finder.HKDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HKDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for housekeeping data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.finder.TimingDataInterval" title="ch_util.finder.TimingDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimingDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for timing data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.WeatherDataInterval" title="ch_util.finder.WeatherDataInterval"><code class="xref py py-obj docutils literal notranslate"><span class="pre">WeatherDataInterval</span></code></a>([iterable])</p></td>
+<td><p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for weather data.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Exceptions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.finder.DataFlagged" title="ch_util.finder.DataFlagged"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataFlagged</span></code></a></p></td>
+<td><p>Raised when data is affected by a global flag.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.BaseDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">BaseDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#BaseDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.BaseDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></p>
+<p>A single data index search result.</p>
+<p>Just a normal python tuple with some helper methods. Instances are created
+by calls to <a class="reference internal" href="#ch_util.finder.Finder.get_results" title="ch_util.finder.Finder.get_results"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.get_results()</span></code></a>.</p>
+<p>A data interval as two elements: a list of filenames and a time range within
+those files.</p>
+<p>You should generally only use the classes derived from this one (i.e.,
+<a class="reference internal" href="#ch_util.finder.CorrDataInterval" title="ch_util.finder.CorrDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a>, etc.)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.BaseDataInterval.as_loaded_data">
+<span class="sig-name descname"><span class="pre">as_loaded_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#BaseDataInterval.as_loaded_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.BaseDataInterval.as_loaded_data" title="Link to this definition"></a></dt>
+<dd><p>Load data interval to memory as an <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.AnData</span></code> instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>datasets</strong> (<em>list</em><em> of </em><em>strings</em>) – Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">andata.AnData.from_acq_h5()</span></code></p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong> – Data interval loaded into memory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">andata.AnData</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.BaseDataInterval.as_reader">
+<span class="sig-name descname"><span class="pre">as_reader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#BaseDataInterval.as_reader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.BaseDataInterval.as_reader" title="Link to this definition"></a></dt>
+<dd><p>Get data interval as an <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.Reader</span></code> instance.</p>
+<p>The <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.Reader</span></code> is initialized with the filename list part
+of the data interval then the time range part of the data interval is
+used as an arguments to <code class="xref py py-meth docutils literal notranslate"><span class="pre">andata.Reader.select_time_range()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>reader</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">andata.Reader</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.CalibrationGainDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">CalibrationGainDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#CalibrationGainDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.CalibrationGainDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for calibration gain data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.CorrDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">CorrDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#CorrDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.CorrDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for correlator data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.CorrDataInterval.as_loaded_data">
+<span class="sig-name descname"><span class="pre">as_loaded_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prod_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">datasets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#CorrDataInterval.as_loaded_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.CorrDataInterval.as_loaded_data" title="Link to this definition"></a></dt>
+<dd><p>Load data interval to memory as an <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code> instance</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prod_sel</strong> (<em>valid numpy index</em>) – Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">andata.CorrData.from_acq_h5()</span></code></p></li>
+<li><p><strong>freq_sel</strong> (<em>valid numpy index</em>) – Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">andata.CorrData.from_acq_h5()</span></code></p></li>
+<li><p><strong>datasets</strong> (<em>list</em><em> of </em><em>strings</em>) – Passed on to <code class="xref py py-meth docutils literal notranslate"><span class="pre">andata.CorrData.from_acq_h5()</span></code></p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong> – Data interval loaded into memory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py exception">
+<dt class="sig sig-object py" id="ch_util.finder.DataFlagged">
+<em class="property"><span class="k"><span class="pre">exception</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">DataFlagged</span></span><a class="reference internal" href="../_modules/ch_util/finder.html#DataFlagged"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.DataFlagged" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">CHIMEdbError</span></code></p>
+<p>Raised when data is affected by a global flag.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.finder.DataInterval">
+<span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">DataInterval</span></span><a class="headerlink" href="#ch_util.finder.DataInterval" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#ch_util.finder.CorrDataInterval" title="ch_util.finder.CorrDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrDataInterval</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.DataIntervalList">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">DataIntervalList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#DataIntervalList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.DataIntervalList" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></p>
+<p>A list of data index search results.</p>
+<p>Just a normal python list of <a class="reference internal" href="#ch_util.finder.DataInterval" title="ch_util.finder.DataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataInterval</span></code></a>-derived objects with
+some helper methods. Instances are created by calls to
+<a class="reference internal" href="#ch_util.finder.Finder.get_results" title="ch_util.finder.Finder.get_results"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.get_results()</span></code></a>.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.DataIntervalList.iter_loaded_data">
+<span class="sig-name descname"><span class="pre">iter_loaded_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#DataIntervalList.iter_loaded_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.DataIntervalList.iter_loaded_data" title="Link to this definition"></a></dt>
+<dd><p>Iterate over data intervals loading as <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.AnData</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>**kwargs</strong> (<em>argument list</em>) – Pass any parameters accepted by the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInverval</span></code>-derived class that you are using.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Iterator over data intervals loaded into memory as
+<code class="xref py py-class docutils literal notranslate"><span class="pre">andata.BaseData</span></code>-derived instances.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>loaded_data_iterator</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Use this method to loop over data loaded into memory.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">interval_list</span><span class="o">.</span><span class="n">iter_loaded_data</span><span class="p">():</span>
+<span class="gp">... </span>    <span class="k">pass</span>
+</pre></div>
+</div>
+<p>Data is loaded into memory on each iteration. To immediately load all
+data into memory, initialize a list using the iterator:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">loaded_data_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">interval_list</span><span class="o">.</span><span class="n">iter_loaded_data</span><span class="p">())</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.DataIntervalList.iter_reader">
+<span class="sig-name descname"><span class="pre">iter_reader</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#DataIntervalList.iter_reader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.DataIntervalList.iter_reader" title="Link to this definition"></a></dt>
+<dd><p>Iterate over data intervals converting to <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.Reader</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Iterator over data intervals as <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.Reader</span></code> instances.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>reader_iterator</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.DigitalGainDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">DigitalGainDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#DigitalGainDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.DigitalGainDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for digital gain data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.Finder">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">Finder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_spoof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>High level searching of the CHIME data index.</p>
+<p>This class gives a convenient way to search and filter data acquisitions
+as well as time ranges of data within acquisitions. Search results
+constitute a list of files within an acquisition as well as a time range for
+the data within these files. Convenient methods are provided for loading
+the precise time range of constituting a search result.</p>
+<p>This is intended to make the most common types of searches of CHIME data as
+convenient as possible.  However for very complex searches, it may be
+necessary to resort to the lower level interface.</p>
+<p class="rubric">Searching the index</p>
+<p>There are four ways that a search can be modified which may be combined in
+any way.</p>
+<ol class="arabic simple">
+<li><p>You can restrict the types of acquisition that are under
+consideration, using methods whose names begin with <code class="docutils literal notranslate"><span class="pre">only_</span></code>.
+In this way, one can consider only, say, housekeeping acquisitions.</p></li>
+<li><p>The second is to adjust the total time range under consideration.
+This is achieved by assigning to <a class="reference internal" href="#ch_util.finder.Finder.time_range" title="ch_util.finder.Finder.time_range"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_range</span></code></a> or calling
+methods beginning with <code class="docutils literal notranslate"><span class="pre">set_time_range_</span></code>. The total time range affects
+acquisitions under consideration as well as the data time ranges within
+the acquisitions. Subsequent changes to the total time range under
+consideration may only become more restrictive.</p></li>
+<li><p>The data index may also be filtered by acquisition using methods whose
+names begin with <code class="docutils literal notranslate"><span class="pre">filter_acqs</span></code>. Again subsequent filtering are always
+combined to become more restrictive.  The attribute <a class="reference internal" href="#ch_util.finder.Finder.acqs" title="ch_util.finder.Finder.acqs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">acqs</span></code></a>
+lists the acquisitions currently included in the search for convenience
+when searching interactively.</p></li>
+<li><p>Time intervals within acquisitions are added using methods with names
+beginning with <code class="docutils literal notranslate"><span class="pre">include_</span></code>.  Time intervals are defined in the
+<a class="reference internal" href="#ch_util.finder.Finder.time_intervals" title="ch_util.finder.Finder.time_intervals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_intervals</span></code></a> attribute, and are inclusive (you can
+add as many as you want).</p></li>
+<li><p>Finally, upon calling :meth:<code class="docutils literal notranslate"><span class="pre">get_results</span></code> or :meth:<code class="docutils literal notranslate"><span class="pre">get_results_acq</span></code>,
+one can pass an arbitrary condition on individual files, thereby
+returning only a subset of files from each acquisition.</p></li>
+</ol>
+<p class="rubric">Getting results</p>
+<p>Results of the search can be retrieved using methods whose names begin with
+<code class="docutils literal notranslate"><span class="pre">get_results</span></code> An individual search result is constituted of a list of file
+names and a time interval within these files. These can easily loaded into
+memory using helper functions (see <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> and
+<a class="reference internal" href="#ch_util.finder.DataIntervalList" title="ch_util.finder.DataIntervalList"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a>).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acqs</strong> (list of <code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveAcq</span></code> objects) – Acquisitions to initially include in data search.  Default is to search
+all acquisitions.</p></li>
+<li><p><strong>node_spoof</strong> (<em>dictionary</em>) – Normally, the DB will be queried to find which nodes are mounted on your
+host. If you are on a machine that is cross-mounted, though, you can
+enter a dictionary of “node_name”: “mnt_root” pairs, specifying the
+nodes to search and where they are mounted on your host.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>To find all the correlator data between two times.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">only_corr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">24</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">25</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">  #  acquisition                    start (s)    len (s)    files       MB</span>
+<span class="go">---  ---------------------------  -----------  ---------  -------  -------</span>
+<span class="go">  0  20140219T145849Z_abbot_corr       378053    86400         25  3166.08</span>
+<span class="go">  1  20140224T051212Z_stone_corr            0    67653.9       19  2406.78</span>
+<span class="go">Total 154054 seconds,   5573 MB of data.</span>
+</pre></div>
+</div>
+<p>Search for transits of a given source.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ch_ephem.sources</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">include_transits</span><span class="p">(</span><span class="n">ch_ephem</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">CasA</span><span class="p">,</span> <span class="n">time_delta</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">  #  acquisition                    start (s)    len (s)    files       MB</span>
+<span class="go">---  ---------------------------  -----------  ---------  -------  -------</span>
+<span class="go">  0  20140219T145849Z_abbot_corr     452092         3600        2  253.286</span>
+<span class="go">  1  20140224T051212Z_stone_corr      55292.9       3600        2  253.346</span>
+<span class="go">Total   7200 seconds,    507 MB of data.</span>
+</pre></div>
+</div>
+<p>To read the data,</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">andata</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">results_list</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Pick result number 1</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">result</span> <span class="o">=</span> <span class="n">results_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Pick product number 0 (autocorrelation)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">as_loaded_data</span><span class="p">(</span><span class="n">prod_sel</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="o">.</span><span class="n">shape</span>
+<span class="go">(1024, 1, 360)</span>
+</pre></div>
+</div>
+<p>More intricate filters on the acquisitions are possible.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">chimedb.data_index</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">di</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Find ALL 10ms cadence data correlated by &#39;stone&#39; with 8 channels.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_acqs</span><span class="p">((</span><span class="n">di</span><span class="o">.</span><span class="n">CorrAcqInfo</span><span class="o">.</span><span class="n">integration</span> <span class="o">&lt;</span> <span class="mf">0.011</span><span class="p">)</span>
+<span class="gp">... </span>              <span class="o">&amp;</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">CorrAcqInfo</span><span class="o">.</span><span class="n">integration</span> <span class="o">&gt;</span> <span class="mf">0.009</span><span class="p">)</span>
+<span class="gp">... </span>              <span class="o">&amp;</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">CorrAcqInfo</span><span class="o">.</span><span class="n">nfreq</span> <span class="o">==</span> <span class="mi">1024</span><span class="p">)</span>
+<span class="gp">... </span>              <span class="o">&amp;</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">CorrAcqInfo</span><span class="o">.</span><span class="n">nprod</span> <span class="o">==</span> <span class="mi">36</span><span class="p">)</span>
+<span class="gp">... </span>              <span class="o">&amp;</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">ArchiveInst</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;stone&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">  #  acquisition                    start (s)    len (s)    files        MB</span>
+<span class="go">---  ---------------------------  -----------  ---------  -------  --------</span>
+<span class="go">  0  20140211T020307Z_stone_corr            0    391.764      108   13594.1</span>
+<span class="go">  1  20140128T135105Z_stone_corr            0   4165.22       104  131711</span>
+<span class="go">  2  20131208T070336Z_stone_corr            0   1429.78       377   47676.4</span>
+<span class="go">  3  20140212T014603Z_stone_corr            0   2424.43       660   83604.1</span>
+<span class="go">  4  20131210T060233Z_stone_corr            0   1875.32       511   64704.8</span>
+<span class="go">  5  20140210T021023Z_stone_corr            0    874.144      240   30286.4</span>
+<span class="go">Total  11161 seconds, 371577 MB of data.</span>
+</pre></div>
+</div>
+<p>Here is an example that uses node spoofing and also filters files within
+acquisitions to include only LNA housekeeping files:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">(</span><span class="n">node_spoof</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;scinet_hpss&quot;</span><span class="p">:</span> <span class="s2">&quot;/dev/null&quot;</span><span class="p">})</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">only_hk</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">  #  acquisition                start (s)           len (s)    files            MB</span>
+<span class="go">---  -----------------------  -----------  ----------------  -------  ------------</span>
+<span class="go">  0  20140830T005410Z_ben_hk       169549  419873                 47  2093</span>
+<span class="go">  1  20140905T203905Z_ben_hk            0   16969.1                2     0.0832596</span>
+<span class="go">  2  20140908T153116Z_ben_hk            0       1.11626e+06       56     4.45599</span>
+<span class="go">  3  20141009T222415Z_ben_hk            0    5744.8                2     0.191574</span>
+<span class="go">Total 1558847 seconds,   2098 MB of data.</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_results</span><span class="p">(</span><span class="n">file_condition</span> <span class="o">=</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">HKFileInfo</span><span class="o">.</span><span class="n">atmel_name</span> <span class="o">==</span> <span class="s2">&quot;LNA&quot;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">res</span><span class="p">:</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;No. files: </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="go">No. files: 8</span>
+<span class="go">No. files: 1</span>
+<span class="go">No. files: 19</span>
+<span class="go">No. files: 1</span>
+</pre></div>
+</div>
+<p>In the above example, the restriction to LNA housekeeping could also have
+been accomplished with the convenience method <a class="reference internal" href="#ch_util.finder.Finder.set_hk_input" title="ch_util.finder.Finder.set_hk_input"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.set_hk_input()</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_hk_input</span><span class="p">(</span><span class="s2">&quot;LNA&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">res</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">get_results</span><span class="p">()</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.accept_all_global_flags">
+<span class="sig-name descname"><span class="pre">accept_all_global_flags</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.accept_all_global_flags"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.accept_all_global_flags" title="Link to this definition"></a></dt>
+<dd><p>Set global flag behaviour to accept all data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.acqs">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">acqs</span></span><a class="headerlink" href="#ch_util.finder.Finder.acqs" title="Link to this definition"></a></dt>
+<dd><p>Acquisitions remaining in this search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>acqs</strong></p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of <code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveAcq</span></code> objects</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.data_flag_types">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">data_flag_types</span></span><a class="headerlink" href="#ch_util.finder.Finder.data_flag_types" title="Link to this definition"></a></dt>
+<dd><p>Types of DataFlag to exclude from results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_RA_interval">
+<span class="sig-name descname"><span class="pre">exclude_RA_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_RA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_RA</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_RA_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_RA_interval" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to exclude passings of given right RA
+intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_RA</strong> (<em>float</em>) – Starting right ascension in degrees.</p></li>
+<li><p><strong>end_RA</strong> (<em>float</em>) – Ending right ascension in degrees.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Look under include_RA_interval for very similar example.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_data_flag_type">
+<span class="sig-name descname"><span class="pre">exclude_data_flag_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag_type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_data_flag_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_data_flag_type" title="Link to this definition"></a></dt>
+<dd><p>Exclude times that overlap with DataFlags of this type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flag_type</strong> (<em>string</em><em> or </em><em>list</em><em> of </em><em>string</em>) – Name of DataFlagType(s) to exclude from results, e.g. “rain”.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_daytime">
+<span class="sig-name descname"><span class="pre">exclude_daytime</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_daytime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_daytime" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to exclude all day time data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_global_flag">
+<span class="sig-name descname"><span class="pre">exclude_global_flag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_global_flag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_global_flag" title="Link to this definition"></a></dt>
+<dd><p>Update <a class="reference internal" href="#ch_util.finder.Finder.time_intervals" title="ch_util.finder.Finder.time_intervals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_intervals</span></code></a> to exclude a global flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flag</strong> (<em>integer</em><em> or </em><em>string</em>) – Global flag ID or name, e.g. “run_pass1_a”, or 65.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Look</span></code></p>
+</div>
+<p class="rubric">Notes</p>
+<p>Global flag ID numbers, names, and descriptions are listed at
+<a class="reference external" href="http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7">http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_nighttime">
+<span class="sig-name descname"><span class="pre">exclude_nighttime</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_nighttime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_nighttime" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to exclude all night time data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_sun">
+<span class="sig-name descname"><span class="pre">exclude_sun</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4000.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_delta_rise_set</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">4000.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_sun"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_sun" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to exclude sunrise, sunset, and sun transit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time_delta</strong> (<em>float</em>) – Total amount of time to exclude surrounding the sun transit in
+seconds. Default is to use 4000.0 seconds.</p></li>
+<li><p><strong>time_delta_rise_set</strong> (<em>float</em>) – Total amount of time to exclude after sunrise and before sunset
+in seconds.  Default is to use 4000.0 seconds.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_time_interval">
+<span class="sig-name descname"><span class="pre">exclude_time_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_time_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_time_interval" title="Link to this definition"></a></dt>
+<dd><p>Exclude a time interval.</p>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">04</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># f.print_results_summary() will show all the files in this time range</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Now want to exclude all data from 04, 10 to 04, 11</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">exclude_time_interval</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">11</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140330T102505Z_abbot_corr  |   394484.2  |   231900.8  |  65</span>
+<span class="go">   2  |  20140403T152314Z_blanchard_corr  |    30988.4  |   309649.3  |  86</span>
+<span class="go">   3  |  20140408T222844Z_abbot_corr  |        0.0  |    75589.3  |  21</span>
+<span class="go">   4  |  20140409T184530Z_blanchard_corr  |        0.0  |     3795.0  |  2</span>
+<span class="go">   5  |  20140409T165603Z_blanchard_corr  |        0.0  |     4952.7  |  2</span>
+<span class="go">   6  |  20140411T003404Z_blanchard_corr  |        0.0  |   161606.5  |  45</span>
+<span class="go">   7  |  20140411T000920Z_blanchard_corr  |        0.0  |     1080.4  |  36</span>
+<span class="go">   8  |  20140413T002319Z_blanchard_corr  |        0.0  |    84981.7  |  24</span>
+<span class="go">Total 873555.739000 seconds of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.exclude_transits">
+<span class="sig-name descname"><span class="pre">exclude_transits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_delta</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.exclude_transits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.exclude_transits" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to exclude transits for given celestial body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ephem.Body</span></code> or float) – Transiting celestial body.  If a float, interpret as a right
+ascension in degrees.</p></li>
+<li><p><strong>time_delta</strong> (<em>float</em>) – Total amount of time to include surrounding the transit in
+seconds. Default is to use twice the value of
+<a class="reference internal" href="#ch_util.finder.Finder.min_interval" title="ch_util.finder.Finder.min_interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_interval</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">02</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">02</span><span class="p">,</span><span class="mi">22</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ephem</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">exclude_transits</span><span class="p">(</span><span class="n">ephem</span><span class="o">.</span><span class="n">Sun</span><span class="p">(),</span> <span class="n">time_delta</span><span class="o">=</span><span class="mi">43200</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140219T145849Z_abbot_corr  |    32453.1  |    51128.4  |  15</span>
+<span class="go">   2  |  20140219T145849Z_abbot_corr  |   126781.5  |    43193.0  |  13</span>
+<span class="go">   3  |  20140219T145523Z_stone_corr  |    32662.5  |    18126.9  |  6</span>
+<span class="go">   4  |  20140220T213252Z_stone_corr  |    16740.8  |    43193.0  |  13</span>
+<span class="go">Total 155641.231275 seconds of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.filter_acqs">
+<span class="sig-name descname"><span class="pre">filter_acqs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.filter_acqs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.filter_acqs" title="Link to this definition"></a></dt>
+<dd><p>Filter the acquisitions included in this search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>condition</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Condition on any on <code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveAcq</span></code> or any
+class joined to <code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveAcq</span></code>: using the
+syntax from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> module <a class="footnote-reference brackets" href="#id2" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a>.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">chimedb.data_index</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">di</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_acqs</span><span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">ArchiveInst</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;stone&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_acqs</span><span class="p">((</span><span class="n">di</span><span class="o">.</span><span class="n">AcqType</span> <span class="o">==</span> <span class="s1">&#39;corr&#39;</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">di</span><span class="o">.</span><span class="n">CorrAcqInfo</span><span class="o">.</span><span class="n">nprod</span> <span class="o">==</span> <span class="mi">36</span><span class="p">))</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.finder.Finder.filter_acqs_by_files" title="ch_util.finder.Finder.filter_acqs_by_files"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.filter_acqs_by_files()</span></code></a></p>
+</div>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id2" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="http://peewee.readthedocs.org/en/latest/peewee/querying.html">http://peewee.readthedocs.org/en/latest/peewee/querying.html</a></p>
+</aside>
+</aside>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.filter_acqs_by_files">
+<span class="sig-name descname"><span class="pre">filter_acqs_by_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">condition</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.filter_acqs_by_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.filter_acqs_by_files" title="Link to this definition"></a></dt>
+<dd><p>Filter the acquisitions by the properties of its files.</p>
+<p>Because each acquisition has many files, this filter should be
+significantly slower than <a class="reference internal" href="#ch_util.finder.Finder.filter_acqs" title="ch_util.finder.Finder.filter_acqs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.filter_acqs()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>condition</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Condition on any on <code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveAcq</span></code>,
+<code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveFile</span></code> or any class joined to
+<code class="xref py py-class docutils literal notranslate"><span class="pre">chimedb.data_index.ArchiveFile</span></code> using the syntax from the
+<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> module <a class="footnote-reference brackets" href="#id4" id="id3" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>.</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.finder.Finder.filter_acqs" title="ch_util.finder.Finder.filter_acqs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.filter_acqs()</span></code></a></p>
+</div>
+<p class="rubric">Examples</p>
+<p class="rubric">References</p>
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id4" role="doc-footnote">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">2</a><span class="fn-bracket">]</span></span>
+<p><a class="reference external" href="http://peewee.readthedocs.org/en/latest/peewee/querying.html">http://peewee.readthedocs.org/en/latest/peewee/querying.html</a></p>
+</aside>
+</aside>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.get_results">
+<span class="sig-name descname"><span class="pre">get_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.get_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.get_results" title="Link to this definition"></a></dt>
+<dd><p>Get all search results.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_condition</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Any additional condition for filtering the files within the
+acquisition. In general, this should be a filter on one of the file
+information tables, e.g., chimedb.data_index.CorrFileInfo.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>interval_list</strong> (<a class="reference internal" href="#ch_util.finder.DataIntervalList" title="ch_util.finder.DataIntervalList"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a>) – Search results.</p></li>
+<li><p><strong>cond</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Any extra filters, particularly filters on individual files.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.get_results_acq">
+<span class="sig-name descname"><span class="pre">get_results_acq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acq_ind</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_condition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.get_results_acq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.get_results_acq" title="Link to this definition"></a></dt>
+<dd><p>Get search results restricted to a given acquisition.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acq_ind</strong> (<em>int</em>) – Index of <a class="reference internal" href="#ch_util.finder.Finder.acqs" title="ch_util.finder.Finder.acqs"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Finder.acqs</span></code></a> for the desired acquisition.</p></li>
+<li><p><strong>file_condition</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Any additional condition for filtering the files within the
+acquisition. In general, this should be a filter on one of the file
+information tables, e.g., <code class="xref py py-class docutils literal notranslate"><span class="pre">CorrFileInfo</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>interval_list</strong> – Search results.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.finder.DataIntervalList" title="ch_util.finder.DataIntervalList"><code class="xref py py-class docutils literal notranslate"><span class="pre">DataIntervalList</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.global_flag_mode">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">global_flag_mode</span></span><a class="headerlink" href="#ch_util.finder.Finder.global_flag_mode" title="Link to this definition"></a></dt>
+<dd><p>Global flag behaviour mode.</p>
+<p>Defines how global flags are treated when finding data. There are three
+severities of global flag: comment, warning, and severe.  There are
+four possible behaviours when a search result overlaps a global flag,
+represented by module constants:</p>
+<dl class="field-list simple">
+<dt class="field-odd">GF_REJECT<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Reject any data overlapping flag silently.</p>
+</dd>
+<dt class="field-even">GF_RAISE<span class="colon">:</span></dt>
+<dd class="field-even"><p>Raise an exception when retrieving data intervals.</p>
+</dd>
+<dt class="field-odd">GF_WARN<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Send a warning when retrieving data intervals but proceed.</p>
+</dd>
+<dt class="field-even">GF_ACCEPT<span class="colon">:</span></dt>
+<dd class="field-even"><p>Accept the data silently, ignoring the flag.</p>
+</dd>
+</dl>
+<p>The behaviour for all three severities is represented by a dictionary.
+If no mode is set, then the default behaviour is
+<cite>{‘comment’ : GF_ACCEPT, ‘warning’ : GF_WARN, ‘severe’ : GF_REJECT}</cite>.</p>
+<p>This is modified using <a class="reference internal" href="#ch_util.finder.Finder.update_global_flag_mode" title="ch_util.finder.Finder.update_global_flag_mode"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.update_global_flag_mode()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>global_flag_mode</strong> – Specifies finder behaviour.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dictionary with keys ‘comment’, ‘warning’, ‘severe’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.include_26m_obs">
+<span class="sig-name descname"><span class="pre">include_26m_obs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.include_26m_obs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.include_26m_obs" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to include 26m observations of a source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<em>string</em>) – Source observed. Has to match name on database exactly.</p></li>
+<li><p><strong>require_quality</strong> (<em>bool</em><em> (</em><em>default: True</em><em>)</em>) – Require the quality flag to be zero (ie that the 26 m
+pointing is trustworthy) or None</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">only_corr</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2017</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">10</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2017</span><span class="p">,</span><span class="mi">8</span><span class="p">,</span><span class="mi">2</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">filter_acqs</span><span class="p">((</span><span class="n">di</span><span class="o">.</span><span class="n">ArchiveInst</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;pathfinder&#39;</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">include_26m_obs</span><span class="p">(</span><span class="s1">&#39;CasA&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">   # | acquisition                          |start (s)| len (s) |files |     MB</span>
+<span class="go">   0 | 20170801T063349Z_pathfinder_corr     |   12337 |   11350 |    2 | 153499</span>
+<span class="go">   1 | 20170801T131035Z_pathfinder_corr     |       0 |    6922 |    1 |  75911</span>
+<span class="go">Total  18271 seconds, 229410 MB of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.include_RA_interval">
+<span class="sig-name descname"><span class="pre">include_RA_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_RA</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_RA</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.include_RA_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.include_RA_interval" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to include passings of given right RA intervals</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_RA</strong> (<em>float</em>) – Starting right ascension in degrees.</p></li>
+<li><p><strong>end_RA</strong> (<em>float</em>) – Ending right ascension in degrees.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">04</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">14</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">include_RA_interval</span><span class="p">(</span><span class="mf">90.</span><span class="p">,</span> <span class="mf">180.</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140330T102505Z_abbot_corr  |   398689.9  |    21541.0  |  7</span>
+<span class="go">   2  |  20140330T102505Z_abbot_corr  |   484854.0  |    21541.0  |  7</span>
+<span class="go">   3  |  20140330T102505Z_abbot_corr  |   571018.1  |    21541.0  |  7</span>
+<span class="go">   4  |  20140403T152314Z_blanchard_corr  |    35194.1  |    21541.0  |  7</span>
+<span class="go">   5  |  20140403T152314Z_blanchard_corr  |   121358.2  |    21541.0  |  7</span>
+<span class="go">   6  |  20140403T152314Z_blanchard_corr  |   207522.3  |    21541.0  |  7</span>
+<span class="go">   7  |  20140403T152314Z_blanchard_corr  |   293686.4  |    21541.0  |  6</span>
+<span class="go">   8  |  20140408T222844Z_abbot_corr  |     8491.2  |    21541.0  |  7</span>
+<span class="go">   9  |  20140410T003326Z_blanchard_corr  |      754.5  |     1419.2  |  48</span>
+<span class="go">  10  |  20140410T031023Z_blanchard_corr  |        0.0  |     1376.5  |  46</span>
+<span class="go">  11  |  20140410T014136Z_blanchard_corr  |        0.0  |     2347.4  |  78</span>
+<span class="go">  12  |  20140411T003404Z_blanchard_corr  |      397.4  |    21541.0  |  7</span>
+<span class="go">  13  |  20140411T003404Z_blanchard_corr  |    86561.5  |    21541.0  |  7</span>
+<span class="go">  14  |  20140413T002319Z_blanchard_corr  |      664.1  |    21541.0  |  7</span>
+<span class="go">Total 242094.394565 seconds of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.include_global_flag">
+<span class="sig-name descname"><span class="pre">include_global_flag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.include_global_flag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.include_global_flag" title="Link to this definition"></a></dt>
+<dd><p>Update <a class="reference internal" href="#ch_util.finder.Finder.time_intervals" title="ch_util.finder.Finder.time_intervals"><code class="xref py py-attr docutils literal notranslate"><span class="pre">time_intervals</span></code></a> to include a global flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flag</strong> (<em>integer</em><em> or </em><em>string</em>) – Global flag ID or name, e.g. “run_pass1_a”, or 11292.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Global flag ID numbers, names, and descriptions are listed at
+<a class="reference external" href="http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7">http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.include_time_interval">
+<span class="sig-name descname"><span class="pre">include_time_interval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.include_time_interval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.include_time_interval" title="Link to this definition"></a></dt>
+<dd><p>Include a time interval.</p>
+<p class="rubric">Examples</p>
+<p>First a certain layout is chosen</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range_layout</span><span class="p">(</span><span class="mi">26</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140311T192616Z_abbot_corr  |    16412.8  |      667.1  |  1</span>
+<span class="go">   2  |  20140312T001123Z_abbot_corr  |        0.0  |     1150.5  |  314</span>
+<span class="go">   3  |  20140312T003054Z_abbot_corr  |        0.0  |    79889.4  |  23</span>
+<span class="go">   4  |  20140312T224940Z_abbot_corr  |        0.0  |      591.0  |  4</span>
+<span class="go">   5  |  20140312T230108Z_abbot_corr  |        0.0  |   171909.0  |  48</span>
+<span class="go">   6  |  20140315T014330Z_abbot_corr  |        0.0  |    35119.7  |  10</span>
+<span class="go">   7  |  20140318T154959Z_abbot_corr  |        0.0  |    51739.6  |  15</span>
+<span class="go">   8  |  20140320T120437Z_abbot_corr  |        0.0  |   186688.6  |  52</span>
+<span class="go">   9  |  20140325T174231Z_abbot_corr  |        0.0  |    86019.3  |  24</span>
+<span class="go">  10  |  20140326T175440Z_abbot_corr  |        0.0  |   286487.7  |  80</span>
+<span class="go">  11  |  20140330T064125Z_abbot_corr  |        0.0  |     2998.6  |  1590</span>
+<span class="go">  12  |  20140330T102505Z_abbot_corr  |        0.0  |   626385.0  |  174</span>
+<span class="go">  13  |  20140403T000057Z_blanchard_corr  |        0.0  |    54912.3  |  16</span>
+<span class="go">  14  |  20140403T152314Z_blanchard_corr  |        0.0  |   340637.8  |  94</span>
+<span class="go">  15  |  20140408T222844Z_abbot_corr  |        0.0  |    75589.3  |  21</span>
+<span class="go">  16  |  20140409T184530Z_blanchard_corr  |        0.0  |     3795.0  |  2</span>
+<span class="go">  17  |  20140410T003326Z_blanchard_corr  |        0.0  |     2173.7  |  72</span>
+<span class="go">  18  |  20140409T165603Z_blanchard_corr  |        0.0  |     4952.7  |  2</span>
+<span class="go">Total 2011706.304970 seconds of data.</span>
+</pre></div>
+</div>
+<p>To find a specific day in that layout choose the functionality
+include_time_interval</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">include_time_interval</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">8</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">04</span><span class="p">,</span><span class="mi">9</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140408T222844Z_abbot_corr  |        0.0  |     5465.1  |  2</span>
+<span class="go">Total 5465.059670 seconds of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.include_transits">
+<span class="sig-name descname"><span class="pre">include_transits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">body</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time_delta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.include_transits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.include_transits" title="Link to this definition"></a></dt>
+<dd><p>Add time intervals to include transits for given celestial body.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>body</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">ephem.Body</span></code> or float) – Transiting celestial body.  If a float, interpret as a right
+ascension in degrees.</p></li>
+<li><p><strong>time_delta</strong> (<em>float</em>) – Total amount of time to include surrounding the transit in
+seconds. Default is to use twice the value of
+<a class="reference internal" href="#ch_util.finder.Finder.min_interval" title="ch_util.finder.Finder.min_interval"><code class="xref py py-attr docutils literal notranslate"><span class="pre">min_interval</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">finder</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">ch_ephem.sources</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span> <span class="o">=</span> <span class="n">finder</span><span class="o">.</span><span class="n">Finder</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">set_time_range</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">02</span><span class="p">,</span><span class="mi">20</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span><span class="mi">02</span><span class="p">,</span><span class="mi">22</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">include_transits</span><span class="p">(</span><span class="n">ch_ephem</span><span class="o">.</span><span class="n">sources</span><span class="o">.</span><span class="n">CasA</span><span class="p">,</span> <span class="n">time_delta</span><span class="o">=</span><span class="mi">3600</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">f</span><span class="o">.</span><span class="n">print_results_summary</span><span class="p">()</span>
+<span class="go">interval | acquisition | offset from start (s) | length (s) | N files</span>
+<span class="go">   1  |  20140219T145849Z_abbot_corr  |   107430.9  |     3600.0  |  2</span>
+<span class="go">   2  |  20140219T145849Z_abbot_corr  |   193595.0  |     3600.0  |  2</span>
+<span class="go">   3  |  20140220T213252Z_stone_corr  |        0.0  |      990.2  |  1</span>
+<span class="go">   4  |  20140220T213252Z_stone_corr  |    83554.3  |     3600.0  |  2</span>
+<span class="go">Total 11790.181012 seconds of data.</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.min_interval">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">min_interval</span></span><a class="headerlink" href="#ch_util.finder.Finder.min_interval" title="Link to this definition"></a></dt>
+<dd><p>Minimum length of a block of data to be considered.</p>
+<p>This can be set to any number.  The default is 240 seconds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>min_interval</strong> – Length of time in seconds.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.offline">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">offline</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.offline"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.offline" title="Link to this definition"></a></dt>
+<dd><p>Initialize <a class="reference internal" href="#ch_util.finder.Finder" title="ch_util.finder.Finder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finder</span></code></a> when not working on a storage node.</p>
+<p>Normally only data that is available on the present host is searched,
+and as such <a class="reference internal" href="#ch_util.finder.Finder" title="ch_util.finder.Finder"><code class="xref py py-class docutils literal notranslate"><span class="pre">Finder</span></code></a> can’t be used to browse the index when you
+don’t have access to the acctual data. Initializing using this method
+spoofs the ‘gong’ and ‘niedermayer’ storage nodes (which should have a
+full copy of the archive) such that the data index can be search the
+full archive.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_chime_weather">
+<span class="sig-name descname"><span class="pre">only_chime_weather</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_chime_weather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_chime_weather" title="Link to this definition"></a></dt>
+<dd><p>Only include chime weather acquisitions in this search.
+This excludes the old format mingun-weather.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_corr">
+<span class="sig-name descname"><span class="pre">only_corr</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_corr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_corr" title="Link to this definition"></a></dt>
+<dd><p>Only include correlator acquisitions in this search.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_digitalgain">
+<span class="sig-name descname"><span class="pre">only_digitalgain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_digitalgain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_digitalgain" title="Link to this definition"></a></dt>
+<dd><p>Only include digital gain data in this search</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_flaginput">
+<span class="sig-name descname"><span class="pre">only_flaginput</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_flaginput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_flaginput" title="Link to this definition"></a></dt>
+<dd><p>Only include input flag data in this search</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_gain">
+<span class="sig-name descname"><span class="pre">only_gain</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_gain" title="Link to this definition"></a></dt>
+<dd><p>Only include calibration gain data in this search</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_hfb">
+<span class="sig-name descname"><span class="pre">only_hfb</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">compression</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_hfb"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_hfb" title="Link to this definition"></a></dt>
+<dd><p>Only include HFB acquisitions in this search.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>compression</strong> (<em>bool</em><em>, </em><em>optional</em>) – If True or False, only select acqs with compressed/uncompressed
+files.  By default, this is None, and all acqs are selected.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_hk">
+<span class="sig-name descname"><span class="pre">only_hk</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_hk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_hk" title="Link to this definition"></a></dt>
+<dd><p>Only include housekeeping acquisitions in this search.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_hkp">
+<span class="sig-name descname"><span class="pre">only_hkp</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_hkp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_hkp" title="Link to this definition"></a></dt>
+<dd><p>Only include Prometheus housekeeping data in this search</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_rawadc">
+<span class="sig-name descname"><span class="pre">only_rawadc</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_rawadc"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_rawadc" title="Link to this definition"></a></dt>
+<dd><p>Only include raw ADC acquisitions in this search.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_timing">
+<span class="sig-name descname"><span class="pre">only_timing</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_timing"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_timing" title="Link to this definition"></a></dt>
+<dd><p>Only include timing data in this search.</p>
+<p><strong>NB:</strong> These are <cite>chime_timing</cite> files generated by the
+calibration broker, <em>not</em> <cite>chimetiming_corr</cite> files from
+the receiver.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.only_weather">
+<span class="sig-name descname"><span class="pre">only_weather</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.only_weather"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.only_weather" title="Link to this definition"></a></dt>
+<dd><p>Only include weather acquisitions in this search.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.print_acq_info">
+<span class="sig-name descname"><span class="pre">print_acq_info</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.print_acq_info"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.print_acq_info" title="Link to this definition"></a></dt>
+<dd><p>Print the acquisitions included in this search and thier properties.</p>
+<p>This method is convenient when searching the data index interactively
+and you want to see what acquisitions remain after applying filters or
+restricting the time range.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.finder.Finder.print_results_summary" title="ch_util.finder.Finder.print_results_summary"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Finder.print_results_summary()</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.print_results_summary">
+<span class="sig-name descname"><span class="pre">print_results_summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.print_results_summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.print_results_summary" title="Link to this definition"></a></dt>
+<dd><p>Print a summary of the search results.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.set_hk_input">
+<span class="sig-name descname"><span class="pre">set_hk_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.set_hk_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.set_hk_input" title="Link to this definition"></a></dt>
+<dd><p>Restrict files to only one HK input type.</p>
+<p>This is a shortcut for specifying
+<code class="docutils literal notranslate"><span class="pre">file_condition</span> <span class="pre">=</span> <span class="pre">(chimedb.data_index.HKFileInfo.atmel_name</span> <span class="pre">==</span> <span class="pre">name)</span></code>
+in <a class="reference internal" href="#ch_util.finder.Finder.get_results_acq" title="ch_util.finder.Finder.get_results_acq"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_results_acq()</span></code></a>. Instead, one can simply call this function
+with <strong>name</strong> as, e.g., “LNA”, “FLA”, and calls to
+<a class="reference internal" href="#ch_util.finder.Finder.get_results_acq" title="ch_util.finder.Finder.get_results_acq"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_results_acq()</span></code></a> will be appropriately restricted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the housekeeping input.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.set_time_range">
+<span class="sig-name descname"><span class="pre">set_time_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.set_time_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.set_time_range" title="Link to this definition"></a></dt>
+<dd><p>Restrict the time range of the search.</p>
+<p>This method updates the <code class="xref py py-attr docutils literal notranslate"><span class="pre">time_range</span></code> property and also
+excludes any acquisitions that do not overlap with the new range. This
+method always narrows the time range under consideration, never expands
+it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong> (float or <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – Unix/POSIX time or UTC start of desired time range. Optional.</p></li>
+<li><p><strong>end_time</strong> (float or <code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – Unix/POSIX time or UTC end of desired time range. Optional.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.set_time_range_global_flag">
+<span class="sig-name descname"><span class="pre">set_time_range_global_flag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.set_time_range_global_flag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.set_time_range_global_flag" title="Link to this definition"></a></dt>
+<dd><p>Set time range to correspond to a global flag.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flag</strong> (<em>integer</em><em> or </em><em>string</em>) – Global flag ID or name, e.g. “run_pass1_a”, or 11292.</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Global flag ID numbers, names, and descriptions are listed at
+<a class="reference external" href="http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7">http://bao.phas.ubc.ca/layout/event.php?filt_event_type_id=7</a></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.set_time_range_season">
+<span class="sig-name descname"><span class="pre">set_time_range_season</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">year</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">season</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.set_time_range_season"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.set_time_range_season" title="Link to this definition"></a></dt>
+<dd><p>Set the time range by as specific part of a given year.</p>
+<p>NOT YET IMPLEMENTED</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>year</strong> (<em>integer</em>) – Calender year</p></li>
+<li><p><strong>season</strong> (<em>string</em>) – Month name (3 letter abbreviations are acceptable) or one of
+‘winter’, ‘spring’, ‘summer’, or ‘fall’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.time_exclusions">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_exclusions</span></span><a class="headerlink" href="#ch_util.finder.Finder.time_exclusions" title="Link to this definition"></a></dt>
+<dd><p>Periods in time to be excluded.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_exclusions</strong> – Each entry is the Unix/POSIX beginning and end of the time interval
+to be excluded.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of pairs of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.time_intervals">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_intervals</span></span><a class="headerlink" href="#ch_util.finder.Finder.time_intervals" title="Link to this definition"></a></dt>
+<dd><p>Periods in time to be included.</p>
+<p>Periods are combined with <cite>OR</cite> unless list is empty, in which case no
+filtering is performed.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_intervals</strong> – Each entry is the Unix/POSIX beginning and end of the time interval
+to be included.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of pairs of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.time_range">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time_range</span></span><a class="headerlink" href="#ch_util.finder.Finder.time_range" title="Link to this definition"></a></dt>
+<dd><p>Time range to be included in search.</p>
+<p>Data files and acquisitions that do not overlap with this range are
+excluded. Assigning to this is equivalent to calling
+<a class="reference internal" href="#ch_util.finder.Finder.set_time_range" title="ch_util.finder.Finder.set_time_range"><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_time_range()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time_range</strong> – Unix/POSIX beginning and end of the time range.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of 2 floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.finder.Finder.update_global_flag_mode">
+<span class="sig-name descname"><span class="pre">update_global_flag_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comment</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">warning</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severe</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#Finder.update_global_flag_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.Finder.update_global_flag_mode" title="Link to this definition"></a></dt>
+<dd><p>Update <a class="reference internal" href="#ch_util.finder.Finder.global_flag_mode" title="ch_util.finder.Finder.global_flag_mode"><code class="xref py py-attr docutils literal notranslate"><span class="pre">Finder.global_flag_mode</span></code></a>, the global flag mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comment</strong> (One of <em>GF_REJECT</em>, <em>GF_RAISE</em>, <em>GF_WARN</em>, or <em>GF_ACCEPT</em>.)</p></li>
+<li><p><strong>warning</strong> (One of <em>GF_REJECT</em>, <em>GF_RAISE</em>, <em>GF_WARN</em>, or <em>GF_ACCEPT</em>.)</p></li>
+<li><p><strong>severe</strong> (One of <em>GF_REJECT</em>, <em>GF_RAISE</em>, <em>GF_WARN</em>, or <em>GF_ACCEPT</em>.)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.FlagInputDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">FlagInputDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#FlagInputDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.FlagInputDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for flag input data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.HKDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">HKDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#HKDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.HKDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for housekeeping data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.TimingDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">TimingDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#TimingDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.TimingDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for timing data.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.finder.WeatherDataInterval">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">WeatherDataInterval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">()</span></span></em>, <em class="sig-param"><span class="positional-only-separator o"><abbr title="Positional-only parameter separator (PEP 570)"><span class="pre">/</span></abbr></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#WeatherDataInterval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.WeatherDataInterval" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a></p>
+<p>Derived class from <a class="reference internal" href="#ch_util.finder.BaseDataInterval" title="ch_util.finder.BaseDataInterval"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseDataInterval</span></code></a> for weather data.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.finder.files_in_range">
+<span class="sig-prename descclassname"><span class="pre">ch_util.finder.</span></span><span class="sig-name descname"><span class="pre">files_in_range</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extra_cond</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node_spoof</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/finder.html#files_in_range"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.finder.files_in_range" title="Link to this definition"></a></dt>
+<dd><p>Get files for a given acquisition within a time range.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acq</strong> (<em>string</em><em> or </em><em>int</em>) – Which acquisition, by its name or id key.</p></li>
+<li><p><strong>start_time</strong> (<em>float</em>) – POSIX/Unix time for the start or time range.</p></li>
+<li><p><strong>end_time</strong> (<em>float</em>) – POSIX/Unix time for the end or time range.</p></li>
+<li><p><strong>node_list</strong> (list of <cite>chimedb.data_index.StorageNode</cite> objects) – Only return files residing on the given nodes.</p></li>
+<li><p><strong>extra_cond</strong> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> comparison) – Any additional expression for filtering files.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>file_names</strong> – List of filenames, including the full path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.data_quality.html" class="btn btn-neutral float-left" title="ch_util.data_quality" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.hfbcat.html" class="btn btn-neutral float-right" title="ch_util.hfbcat" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

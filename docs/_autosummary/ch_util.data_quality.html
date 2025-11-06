@@ -1,0 +1,234 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.data_quality &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.finder" href="ch_util.finder.html" />
+    <link rel="prev" title="ch_util.chan_monitor" href="ch_util.chan_monitor.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.data_quality</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#data-quality-functions">Data quality functions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#issues">Issues</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.data_quality.good_channels"><code class="docutils literal notranslate"><span class="pre">good_channels()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.data_quality</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.data_quality.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.data_quality">
+<span id="ch-util-data-quality"></span><h1>ch_util.data_quality<a class="headerlink" href="#module-ch_util.data_quality" title="Link to this heading"></a></h1>
+<p>Data quality routines</p>
+<section id="data-quality-functions">
+<h2>Data quality functions<a class="headerlink" href="#data-quality-functions" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.data_quality.good_channels" title="ch_util.data_quality.good_channels"><code class="xref py py-meth docutils literal notranslate"><span class="pre">good_channels()</span></code></a></p></li>
+</ul>
+</section>
+<section id="issues">
+<h2>Issues<a class="headerlink" href="#issues" title="Link to this heading"></a></h2>
+<p>Auxiliary functions are still lacking documentation.</p>
+</section>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.data_quality.good_channels" title="ch_util.data_quality.good_channels"><code class="xref py py-obj docutils literal notranslate"><span class="pre">good_channels</span></code></a>(data[, gain_tol, noise_tol, ...])</p></td>
+<td><p>Test data for misbehaving channels.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.data_quality.good_channels">
+<span class="sig-prename descclassname"><span class="pre">ch_util.data_quality.</span></span><span class="sig-name descname"><span class="pre">good_channels</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fit_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.02</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_synced</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">res_plot</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/data_quality.html#good_channels"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.data_quality.good_channels" title="Link to this definition"></a></dt>
+<dd><p>Test data for misbehaving channels.</p>
+<p>Three tests are performed:</p>
+<ol class="arabic simple">
+<li><p>Excessively high digital gains,</p></li>
+<li><p>Compliance of noise to the radiometer equation and</p></li>
+<li><p>Goodness of fit to a template Tsky.</p></li>
+</ol>
+<p>See <a class="reference external" href="https://bao.phas.ubc.ca/doc/cgi-bin/general/documents/display?Id=235">Doclib:235</a>
+file ‘data_quality.pdf’ for details on how the filters and  tolerances work.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>ch_util.andata.CorrData object</em>) – Data to run test on.
+If andata object contains cross-correlations,
+test is performed on auto-correlations only.</p></li>
+<li><p><strong>gain_tol</strong> (<em>float</em>) – Tolerance for digital gains filter. Flag channels whose
+digital gain fractional absolute deviation
+is above ‘gain_tol’ (default is 10.)</p></li>
+<li><p><strong>noise_tol</strong> (<em>float</em>) – Tolerance for radiometer noise filter. Flag channels whose
+noise rms is higher then ‘noise_tol’ times the expected
+from the radiometer equation. (default = 2.)</p></li>
+<li><p><strong>fit_tol</strong> (<em>float</em>) – Tolerance for the fit-to-Tsky filter. Flag channels whose
+fractional rms for the ‘gain’ fit parameter is above
+‘fit_tol’ (default = 0.02)</p></li>
+<li><p><strong>test_freq</strong> (<em>integer</em>) – Index of frequency to test. Default is 0.</p></li>
+<li><p><strong>noise_synced</strong> (<em>boolean</em>) – Use this to force the code to call (or not call)
+ni_utils.process_synced_data(). If not given,
+the code will determine if syncronized noise injection was on.
+For acquisitions newer then 20150626T200540Z_pathfinder_corr,
+noise injection info is written in the attributes. For older
+acquisitions the function _check_ni() is called to determine
+if noise injection is On.</p></li>
+<li><p><strong>inputs</strong> (<em>list</em><em> of </em><em>CorrInputs</em><em>, </em><em>optional</em>) – List of CorrInput objects describing the channels in this
+dataset. This is optional, if not set (default), then it will
+look the data up in the database. This option just allows
+control of the database accesses.</p></li>
+<li><p><strong>res_plot</strong> (<em>boolean</em><em>, </em><em>optional</em>) – If True, a plot with all the tested channels and the
+Tsky fits is generated. File naming is
+<cite>plot_fit_{timestamp}.pdf</cite></p></li>
+<li><p><strong>verbose</strong> (<em>boolean</em><em>, </em><em>optional</em>) – Print out useful output as the tests are run.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>good_gains</strong> (<em>list of int</em>) –</p>
+<ol class="arabic simple">
+<li><p>for channels that pass the gains filter, 0. otherwise.</p></li>
+</ol>
+</li>
+<li><p><strong>good_noise</strong> (<em>list of int</em>) –</p>
+<ol class="arabic simple">
+<li><p>for channels that pass the noise filter, 0. otherwise.</p></li>
+</ol>
+</li>
+<li><p><strong>good_fit</strong> (<em>list of int</em>) –</p>
+<p>1. for channels that pass the fit-to-Tsky filter,
+0. otherwise.</p>
+</li>
+<li><p><strong>test_chans</strong> (<em>list of int</em>) – A list of the channels tested in the same order as they
+appear in all the other lists returned</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Run test on frequency index 3. data is an andata object:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">good_gains</span><span class="p">,</span> <span class="n">good_noise</span><span class="p">,</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">test_chans</span> <span class="o">=</span> <span class="n">good_channels</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">test_freq</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>And to create a plot of the results:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">good_gains</span><span class="p">,</span> <span class="n">good_noise</span><span class="p">,</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">test_chans</span> <span class="o">=</span>     <span class="o">...</span> <span class="n">good_channels</span><span class="p">(</span><span class="n">data</span><span class="p">,</span><span class="n">test_freq</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span><span class="n">res_plot</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.chan_monitor.html" class="btn btn-neutral float-left" title="ch_util.chan_monitor" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.finder.html" class="btn btn-neutral float-right" title="ch_util.finder" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

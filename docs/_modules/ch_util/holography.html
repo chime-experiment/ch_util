@@ -1,0 +1,970 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.holography &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.holography</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.holography</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Holography observation tables.</span>
+
+<span class="sd">This module defines the tables:</span>
+
+<span class="sd">- :py:class:`HolographyObservation`</span>
+<span class="sd">- :py:class:`HolographySource`</span>
+
+<span class="sd">and the constants:</span>
+
+<span class="sd">- :py:const:`QUALITY_GOOD`</span>
+<span class="sd">- :py:const:`QUALITY_OFFSOURCE`</span>
+<span class="sd">- :py:const:`ONSOURCE_DIST_TO_FLAG`</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zipfile</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">peewee</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pw</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">caput.time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ctime</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">ch_ephem</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ch_ephem.observers</span><span class="w"> </span><span class="kn">import</span> <span class="n">chime</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">chimedb.core.orm</span><span class="w"> </span><span class="kn">import</span> <span class="n">base_model</span>
+
+<span class="c1"># Global variables and constants.</span>
+<span class="c1"># ================================</span>
+
+<span class="n">QUALITY_GOOD</span> <span class="o">=</span> <span class="mi">0</span>
+<span class="n">QUALITY_OFFSOURCE</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="n">QUALITY_BADGATING</span> <span class="o">=</span> <span class="mi">2</span>
+<span class="n">QUALITY_NOISEOFF</span> <span class="o">=</span> <span class="mi">4</span>
+<span class="n">ONSOURCE_DIST_TO_FLAG</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+<span class="c1"># Tables in the for tracking Holography observations</span>
+<span class="c1"># ==================================================</span>
+
+
+<div class="viewcode-block" id="HolographySource">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographySource">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HolographySource</span><span class="p">(</span><span class="n">base_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A peewee model for the Holography sources.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    name : str</span>
+<span class="sd">        Unique name for the source. Be careful to avoid duplicates.</span>
+<span class="sd">    ra, dec : float</span>
+<span class="sd">        ICRS co-ordinates of the source.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">CharField</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ra</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span>
+    <span class="n">dec</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">FloatField</span><span class="p">()</span></div>
+
+
+
+<div class="viewcode-block" id="HolographyObservation">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HolographyObservation</span><span class="p">(</span><span class="n">base_model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A peewee model for the holographic observations.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source : foreign key</span>
+<span class="sd">        The source that we were observing.</span>
+<span class="sd">    start_time, finish_time : float</span>
+<span class="sd">        Start and end times of the source observation (as UNIX times).</span>
+<span class="sd">    notes : str</span>
+<span class="sd">        Any free form notes about the observation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">source</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">ForeignKeyField</span><span class="p">(</span><span class="n">HolographySource</span><span class="p">,</span> <span class="n">backref</span><span class="o">=</span><span class="s2">&quot;observations&quot;</span><span class="p">)</span>
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoubleField</span><span class="p">()</span>
+    <span class="n">finish_time</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoubleField</span><span class="p">()</span>
+
+    <span class="n">quality_flag</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">pw</span><span class="o">.</span><span class="n">BitField</span><span class="p">()</span>
+    <span class="p">)</span>  <span class="c1"># maximum of 64 fields. If we need more, use BigBitField</span>
+    <span class="n">off_source</span> <span class="o">=</span> <span class="n">quality_flag</span><span class="o">.</span><span class="n">flag</span><span class="p">(</span><span class="n">QUALITY_OFFSOURCE</span><span class="p">)</span>
+    <span class="n">bad_gating</span> <span class="o">=</span> <span class="n">quality_flag</span><span class="o">.</span><span class="n">flag</span><span class="p">(</span><span class="n">QUALITY_BADGATING</span><span class="p">)</span>
+    <span class="n">noise_off</span> <span class="o">=</span> <span class="n">quality_flag</span><span class="o">.</span><span class="n">flag</span><span class="p">(</span><span class="n">QUALITY_NOISEOFF</span><span class="p">)</span>
+
+    <span class="n">notes</span> <span class="o">=</span> <span class="n">pw</span><span class="o">.</span><span class="n">TextField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<div class="viewcode-block" id="HolographyObservation.from_lst">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.from_lst">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_lst</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">,</span>
+        <span class="n">start_day</span><span class="p">,</span>
+        <span class="n">start_lst</span><span class="p">,</span>
+        <span class="n">duration_lst</span><span class="p">,</span>
+        <span class="n">quality_flag</span><span class="o">=</span><span class="n">QUALITY_GOOD</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Method to initialize a HolographyObservation from a start day,</span>
+<span class="sd">        start LST, and a stop day, stop LST.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        source : HolographySource</span>
+<span class="sd">            An instance of HolographySource.</span>
+<span class="sd">        start_day: string</span>
+<span class="sd">            Of format YYYMMDD-ABT, ABT can be one of (UTC, PST, PDT)</span>
+<span class="sd">        start_lst, duration: float</span>
+<span class="sd">            Hours and fraction of hours on a scale from 0-24.</span>
+<span class="sd">        quality_flag : int, default : 0</span>
+<span class="sd">            Flag for poor quality data. Good data is zero.</span>
+<span class="sd">            Sets a bitmask in the HolographyObservation instance.</span>
+<span class="sd">        notes : string, optional</span>
+<span class="sd">            Any notes on this observation.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">start_time</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">lsa_to_unix</span><span class="p">(</span>
+            <span class="n">start_lst</span> <span class="o">*</span> <span class="mi">360</span> <span class="o">/</span> <span class="mi">24</span><span class="p">,</span>
+            <span class="n">ctime</span><span class="o">.</span><span class="n">datetime_to_unix</span><span class="p">(</span><span class="n">ch_ephem</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">parse_date</span><span class="p">(</span><span class="n">start_day</span><span class="p">)),</span>
+        <span class="p">)</span>
+        <span class="n">duration_unix</span> <span class="o">=</span> <span class="n">duration_lst</span> <span class="o">*</span> <span class="p">(</span><span class="mf">3600.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">ctime</span><span class="o">.</span><span class="n">SIDEREAL_S</span>
+
+        <span class="n">finish_time</span> <span class="o">=</span> <span class="n">start_time</span> <span class="o">+</span> <span class="n">duration_unix</span>
+
+        <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+            <span class="n">source</span><span class="o">=</span><span class="n">source</span><span class="p">,</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="n">finish_time</span><span class="o">=</span><span class="n">finish_time</span><span class="p">,</span>
+            <span class="n">quality_flag</span><span class="o">=</span><span class="n">quality_flag</span><span class="p">,</span>
+            <span class="n">notes</span><span class="o">=</span><span class="n">notes</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+    <span class="c1"># Aliases of source names in the spreadsheet to ones we use in the database</span>
+    <span class="c1"># (hard-coded at initialization, but user should be able to edit)</span>
+    <span class="n">source_alias</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;B0329******&quot;</span><span class="p">:</span> <span class="s2">&quot;B0329+54&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B0950*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B0950+08&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B1133+16*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B1133+16&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B1929+10*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B1929+10&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B0355+56&quot;</span><span class="p">:</span> <span class="s2">&quot;B0355+54&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C218&quot;</span><span class="p">:</span> <span class="s2">&quot;HydraA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;C48&quot;</span><span class="p">:</span> <span class="s2">&quot;3C48&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C_58&quot;</span><span class="p">:</span> <span class="s2">&quot;3C58&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C348&quot;</span><span class="p">:</span> <span class="s2">&quot;HerA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C144&quot;</span><span class="p">:</span> <span class="s2">&quot;TauA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;PerB&quot;</span><span class="p">:</span> <span class="s2">&quot;3C123&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B0531+21*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B0531+21&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B2016+28*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B2016+28&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B1133*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B1133+16&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B1937+21*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B1937+21&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B2016*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B2016+28&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B0950+08*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B0950+08&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;FAN&quot;</span><span class="p">:</span> <span class="s2">&quot;FanRegion1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fan Region 1&quot;</span><span class="p">:</span> <span class="s2">&quot;FanRegion1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;FAN1&quot;</span><span class="p">:</span> <span class="s2">&quot;FanRegion1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;Fan Region 2&quot;</span><span class="p">:</span> <span class="s2">&quot;FanRegion2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;FAN2&quot;</span><span class="p">:</span> <span class="s2">&quot;FanRegion2&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;B0905*****&quot;</span><span class="p">:</span> <span class="s2">&quot;B0905*****&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;VIRA&quot;</span><span class="p">:</span> <span class="s2">&quot;VirA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C274&quot;</span><span class="p">:</span> <span class="s2">&quot;VirA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C405&quot;</span><span class="p">:</span> <span class="s2">&quot;CygA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;3C461&quot;</span><span class="p">:</span> <span class="s2">&quot;CasA&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NCP_20H&quot;</span><span class="p">:</span> <span class="s2">&quot;NCP 20H&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;NCP_4H&quot;</span><span class="p">:</span> <span class="s2">&quot;NCP 4H&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="c1"># read the .POST_REPORT file and pull out source name, time, and observation</span>
+    <span class="c1"># duration</span>
+<div class="viewcode-block" id="HolographyObservation.parse_post_report">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.parse_post_report">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_post_report</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">post_report_file</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        read a .POST_REPORT file from the nsched program which controls the</span>
+<span class="sd">        John Galt Telescope and extract the source name, estimated start time,</span>
+<span class="sd">        DRAO sidereal day, commanded duration, and estimated finish time</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        post_report_file : str</span>
+<span class="sd">            path to the .POST_REPORT file to read</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        output_params : dictionary</span>
+<span class="sd">            output_params[&#39;src&#39;] : HolographySource object or string</span>
+<span class="sd">                If the source is a known source in the holography database,</span>
+<span class="sd">                return the HolographySource object. If not, return the name</span>
+<span class="sd">                of the source as a string</span>
+<span class="sd">            output_params[&#39;SID&#39;] : int</span>
+<span class="sd">                DRAO sidereal day at the beginning of the observation</span>
+<span class="sd">            output_params[&#39;start_time&#39;] : skyfield time object</span>
+<span class="sd">                UTC time at the beginning of the observation</span>
+<span class="sd">            output_params[&#39;DURATION&#39;] : float</span>
+<span class="sd">                Commanded duration of the observation in sidereal hours</span>
+<span class="sd">            output_params[&#39;finish_time&#39;] : skyfield time object</span>
+<span class="sd">                Calculated UTC time at the end of the observation</span>
+<span class="sd">                Calculated as start_time + duration * caput.time.SIDEREAL_S</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="kn">import</span><span class="w"> </span><span class="nn">re</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">timescale</span>
+
+        <span class="n">output_params</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">post_report_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;Source&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">srcnm</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;Source:\s+(.*?)\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">srcnm</span> <span class="ow">in</span> <span class="bp">cls</span><span class="o">.</span><span class="n">source_alias</span><span class="p">:</span>
+                        <span class="n">srcnm</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">source_alias</span><span class="p">[</span><span class="n">srcnm</span><span class="p">]</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;DURATION&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;DURATION&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span>
+                        <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;DURATION:\s+(.*?)\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="p">)</span>
+
+                <span class="c1"># convert Julian Date to Skyfield time object</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;JULIAN DATE&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">ut1</span><span class="p">(</span>
+                        <span class="n">jd</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;JULIAN DATE:\s+(.*?)\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">))</span>
+                    <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;SID:&quot;</span><span class="p">)</span> <span class="o">!=</span> <span class="o">-</span><span class="mi">1</span><span class="p">:</span>
+                    <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;SID&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                        <span class="n">re</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="s2">&quot;SID:\s(.*?)\s+&quot;</span><span class="p">,</span> <span class="n">line</span><span class="p">)</span><span class="o">.</span><span class="n">group</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">HolographySource</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">srcnm</span><span class="p">)</span>
+            <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Missing&quot;</span><span class="p">,</span> <span class="n">srcnm</span><span class="p">)</span>
+                <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">srcnm</span>
+
+            <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;finish_time&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_skyfield_time</span><span class="p">(</span>
+                <span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">])</span>
+                <span class="o">+</span> <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;DURATION&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="mf">3600.0</span> <span class="o">*</span> <span class="n">ctime</span><span class="o">.</span><span class="n">SIDEREAL_S</span>
+            <span class="p">)</span>
+
+            <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;quality_flag&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">QUALITY_GOOD</span>
+
+            <span class="k">return</span> <span class="n">output_params</span></div>
+
+
+<div class="viewcode-block" id="HolographyObservation.create_from_ant_logs">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.create_from_ant_logs">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_from_ant_logs</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">logs</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">onsource_dist</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">quality_flag</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+        <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read John Galt Telescope log files and create an entry in the</span>
+<span class="sd">        holography database corresponding to the exact times on source</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logs : list of strings</span>
+<span class="sd">            log file archives (.zip files) to pass to parse_ant_logs()</span>
+<span class="sd">        onsource_dist : float (default: 0.1)</span>
+<span class="sd">            maximum angular distance at which to consider the Galt Telescope</span>
+<span class="sd">            on source (in degrees)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        none</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">caput.interferometry</span><span class="w"> </span><span class="kn">import</span> <span class="n">sphdist</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">skyfield.positionlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Angle</span>
+
+        <span class="n">ts</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">timescale</span>
+        <span class="n">DATE_FMT_STR</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S %z&quot;</span>
+
+        <span class="n">pr_list</span><span class="p">,</span> <span class="n">al_list</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parse_ant_logs</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">return_post_report_params</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">post_report_params</span><span class="p">,</span> <span class="n">ant_log</span><span class="p">,</span> <span class="n">curlog</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">pr_list</span><span class="p">,</span> <span class="n">al_list</span><span class="p">,</span> <span class="n">logs</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span> <span class="n">HolographySource</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="s2">&quot;Processing </span><span class="si">{}</span><span class="s2"> from </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="n">curlog</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+                <span class="n">dist</span> <span class="o">=</span> <span class="n">sphdist</span><span class="p">(</span>
+                    <span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">ra</span><span class="p">),</span>
+                    <span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">dec</span><span class="p">),</span>
+                    <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">],</span>
+                    <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;dec&quot;</span><span class="p">],</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;onsource_dist = </span><span class="si">{</span><span class="n">onsource_dist</span><span class="si">:</span><span class="s2">.2f</span><span class="si">}</span><span class="s2"> deg&quot;</span><span class="p">)</span>
+                <span class="n">onsource</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">degrees</span> <span class="o">&lt;</span> <span class="n">onsource_dist</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">onsource</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">stdoffset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">std</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">degrees</span><span class="p">[</span><span class="n">onsource</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">onsource</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                    <span class="n">meanoffset</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">degrees</span><span class="p">[</span><span class="n">onsource</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">onsource</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+                    <span class="n">obs</span> <span class="o">=</span> <span class="p">{</span>
+                        <span class="s2">&quot;src&quot;</span><span class="p">:</span> <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span>
+                        <span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">][</span><span class="n">onsource</span><span class="p">[</span><span class="mi">0</span><span class="p">]],</span>
+                        <span class="s2">&quot;finish_time&quot;</span><span class="p">:</span> <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">][</span><span class="n">onsource</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]],</span>
+                        <span class="s2">&quot;quality_flag&quot;</span><span class="p">:</span> <span class="n">QUALITY_GOOD</span><span class="p">,</span>
+                    <span class="p">}</span>
+                    <span class="n">noteout</span> <span class="o">=</span> <span class="s2">&quot;from .ANT log &quot;</span> <span class="o">+</span> <span class="n">ts</span><span class="o">.</span><span class="n">now</span><span class="p">()</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">notes</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                        <span class="n">noteout</span> <span class="o">=</span> <span class="n">notes</span> <span class="o">+</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">noteout</span>
+                    <span class="k">if</span> <span class="n">stdoffset</span> <span class="o">&gt;</span> <span class="mf">0.05</span> <span class="ow">or</span> <span class="n">meanoffset</span> <span class="o">&gt;</span> <span class="n">ONSOURCE_DIST_TO_FLAG</span><span class="p">:</span>
+                        <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;quality_flag&quot;</span><span class="p">]</span> <span class="o">+=</span> <span class="n">QUALITY_OFFSOURCE</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Mean offset: </span><span class="si">{</span><span class="n">meanoffset</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Std offset: </span><span class="si">{</span><span class="n">stdoffset</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Setting quality flag to </span><span class="si">{</span><span class="n">QUALITY_OFFSOURCE</span><span class="si">}</span><span class="s2">.&quot;</span>
+                        <span class="p">)</span>
+                        <span class="n">noteout</span> <span class="o">=</span> <span class="p">(</span>
+                            <span class="s2">&quot;Questionable on source. Mean, STD(offset) : &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">meanoffset</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">, </span><span class="si">{</span><span class="n">stdoffset</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">. </span><span class="si">{</span><span class="n">noteout</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                    <span class="n">obs</span><span class="p">[</span><span class="s2">&quot;quality_flag&quot;</span><span class="p">]</span> <span class="o">|=</span> <span class="n">quality_flag</span>
+                    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="s2">&quot;Times in .ANT log    : </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">][</span><span class="n">onsource</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">),</span>
+                                <span class="n">ant_log</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">][</span><span class="n">onsource</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]]</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="s2">&quot;Times in .POST_REPORT: </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                                <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span>
+                                    <span class="n">DATE_FMT_STR</span>
+                                <span class="p">),</span>
+                                <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;finish_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span>
+                                    <span class="n">DATE_FMT_STR</span>
+                                <span class="p">),</span>
+                            <span class="p">)</span>
+                        <span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Mean offset: </span><span class="si">{</span><span class="n">meanoffset</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">. &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;Std offset: </span><span class="si">{</span><span class="n">stdoffset</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">.&quot;</span>
+                        <span class="p">)</span>
+
+                    <span class="bp">cls</span><span class="o">.</span><span class="n">create_from_dict</span><span class="p">(</span><span class="n">obs</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span> <span class="n">notes</span><span class="o">=</span><span class="n">noteout</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="p">(</span>
+                            <span class="s2">&quot;No on source time found for </span><span class="si">{}</span><span class="se">\n</span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="se">\n</span><span class="s2">&quot;</span>
+                            <span class="s2">&quot;Min distance from source </span><span class="si">{:.1f}</span><span class="s2"> degrees&quot;</span>
+                        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">curlog</span><span class="p">,</span>
+                            <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">utc_strftime</span><span class="p">(</span>
+                                <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M&quot;</span>
+                            <span class="p">),</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">dist</span><span class="o">.</span><span class="n">degrees</span><span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;</span><span class="si">{}</span><span class="s2"> is not a HolographySource; need to add to database?&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                        <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Doing nothing&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HolographyObservation.create_from_dict">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.create_from_dict">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_from_dict</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="nb">dict</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">start_tol</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+        <span class="n">dryrun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">replace_dup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Create a holography database entry from a dictionary</span>
+
+<span class="sd">        This routine checks for duplicates and overwrites duplicates if and</span>
+<span class="sd">        only if `replace_dup = True`</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        dict : dict</span>
+<span class="sd">            src : :py:class:`HolographySource`</span>
+<span class="sd">                A HolographySource object for the source</span>
+<span class="sd">            start_time</span>
+<span class="sd">                Start time as a Skyfield Time object</span>
+<span class="sd">            finish_time</span>
+<span class="sd">                Finish time as a Skyfield Time object</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">DATE_FMT_STR</span> <span class="o">=</span> <span class="s2">&quot;%Y-%m-</span><span class="si">%d</span><span class="s2"> %H:%M:%S %Z&quot;</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">check_for_duplicates</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">src</span><span class="p">,</span> <span class="n">start_tol</span><span class="p">,</span> <span class="n">ignore_src_mismatch</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Check for duplicate holography observations, comparing the given</span>
+<span class="sd">            observation to the existing database</span>
+
+<span class="sd">            Inputs</span>
+<span class="sd">            ------</span>
+<span class="sd">            t: Skyfield Time object</span>
+<span class="sd">                beginning time of observation</span>
+<span class="sd">            src: HolographySource</span>
+<span class="sd">                target source</span>
+<span class="sd">            start_tol: float</span>
+<span class="sd">                Tolerance in seconds within which to search for duplicates</span>
+<span class="sd">            ignore_src_mismatch: bool (default: False)</span>
+<span class="sd">                If True, consider observations a match if the time matches</span>
+<span class="sd">                but the source does not</span>
+
+<span class="sd">            Outputs</span>
+<span class="sd">            -------</span>
+<span class="sd">            If a duplicate is found: :py:class:`HolographyObservation` object for the</span>
+<span class="sd">            existing entry in the database</span>
+
+<span class="sd">            If no duplicate is found: None</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">ts</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">skyfield_wrapper</span><span class="o">.</span><span class="n">timescale</span>
+
+            <span class="n">unixt</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="n">t</span><span class="p">)</span>
+
+            <span class="n">dup_found</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="n">existing_db_entry</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">start_time</span><span class="o">.</span><span class="n">between</span><span class="p">(</span><span class="n">unixt</span> <span class="o">-</span> <span class="n">start_tol</span><span class="p">,</span> <span class="n">unixt</span> <span class="o">+</span> <span class="n">start_tol</span><span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_db_entry</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">existing_db_entry</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Multiple entries found.&quot;</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">existing_db_entry</span><span class="p">:</span>
+                    <span class="n">tt</span> <span class="o">=</span> <span class="n">ts</span><span class="o">.</span><span class="n">utc</span><span class="p">(</span><span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">start_time</span><span class="p">))</span>
+                    <span class="c1"># LST = GST + east longitude</span>
+                    <span class="n">ttlst</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mod</span><span class="p">(</span><span class="n">tt</span><span class="o">.</span><span class="n">gmst</span> <span class="o">+</span> <span class="n">DRAO_lon</span><span class="p">,</span> <span class="mf">24.0</span><span class="p">)</span>
+
+                    <span class="c1"># Check if source name matches. If not, print a warning</span>
+                    <span class="c1"># but proceed anyway.</span>
+                    <span class="k">if</span> <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">==</span> <span class="n">entry</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="o">.</span><span class="n">upper</span><span class="p">():</span>
+                        <span class="n">dup_found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Observation is already in database.&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">ignore_src_mismatch</span><span class="p">:</span>
+                            <span class="n">dup_found</span> <span class="o">=</span> <span class="kc">True</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="s2">&quot;** Observation at same time but with different &quot;</span>
+                            <span class="o">+</span> <span class="s2">&quot;sources in database: &quot;</span><span class="p">,</span>
+                            <span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">entry</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">tt</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()</span><span class="o">.</span><span class="n">isoformat</span><span class="p">(),</span>
+                        <span class="p">)</span>
+                        <span class="c1"># if the observations match in start time and source,</span>
+                        <span class="c1"># call them the same observation. Not the most strict</span>
+                        <span class="c1"># check possible.</span>
+
+                    <span class="k">if</span> <span class="n">dup_found</span><span class="p">:</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Tried to add  :  </span><span class="si">{</span><span class="n">src</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">t</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">)</span><span class="si">}</span><span class="s2">; &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;LST=</span><span class="si">{</span><span class="n">ttlst</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+                        <span class="nb">print</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Existing entry:  </span><span class="si">{</span><span class="n">entry</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2"> &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tt</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">)</span><span class="si">}</span><span class="s2">; &quot;</span>
+                            <span class="sa">f</span><span class="s2">&quot;LST=</span><span class="si">{</span><span class="n">ttlst</span><span class="si">:</span><span class="s2">.3f</span><span class="si">}</span><span class="s2">&quot;</span>
+                        <span class="p">)</span>
+            <span class="k">if</span> <span class="n">dup_found</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">existing_db_entry</span>
+
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="c1"># DRAO longitude in hours</span>
+        <span class="n">DRAO_lon</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">longitude</span> <span class="o">*</span> <span class="mf">24.0</span> <span class="o">/</span> <span class="mf">360.0</span>
+
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot; &quot;</span><span class="p">)</span>
+        <span class="n">addtodb</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">dup_entries</span> <span class="o">=</span> <span class="n">check_for_duplicates</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span> <span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span> <span class="n">start_tol</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">dup_entries</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">replace_dup</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">dryrun</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">dup_entries</span><span class="p">:</span>
+                        <span class="bp">cls</span><span class="o">.</span><span class="n">delete_instance</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Deleted observation from database and replacing.&quot;</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">verbose</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Would have deleted observation and replaced (dry run).&quot;</span><span class="p">)</span>
+                <span class="n">addtodb</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">addtodb</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">dup_entries</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="s2">&quot;Not replacing duplicate </span><span class="si">{}</span><span class="s2"> observation </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                            <span class="n">entry</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                            <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">entry</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span>
+                                <span class="n">DATE_FMT_STR</span>
+                            <span class="p">),</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+        <span class="c1"># we&#39;ve appended this observation to obslist.</span>
+        <span class="c1"># Now add to the database, if we&#39;re supposed to.</span>
+        <span class="k">if</span> <span class="n">addtodb</span><span class="p">:</span>
+            <span class="n">string</span> <span class="o">=</span> <span class="s2">&quot;Adding to database: </span><span class="si">{}</span><span class="s2"> </span><span class="si">{}</span><span class="s2"> to </span><span class="si">{}</span><span class="s2">&quot;</span>
+            <span class="nb">print</span><span class="p">(</span>
+                <span class="n">string</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">),</span>
+                    <span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;finish_time&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="n">DATE_FMT_STR</span><span class="p">),</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="n">dryrun</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Dry run; doing nothing&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">cls</span><span class="o">.</span><span class="n">create</span><span class="p">(</span>
+                    <span class="n">source</span><span class="o">=</span><span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">],</span>
+                    <span class="n">start_time</span><span class="o">=</span><span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]),</span>
+                    <span class="n">finish_time</span><span class="o">=</span><span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;finish_time&quot;</span><span class="p">]),</span>
+                    <span class="n">quality_flag</span><span class="o">=</span><span class="nb">dict</span><span class="p">[</span><span class="s2">&quot;quality_flag&quot;</span><span class="p">],</span>
+                    <span class="n">notes</span><span class="o">=</span><span class="n">notes</span><span class="p">,</span>
+                <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HolographyObservation.parse_ant_logs">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.parse_ant_logs">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">parse_ant_logs</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">logs</span><span class="p">,</span> <span class="n">return_post_report_params</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unzip and parse .ANT log file output by nsched for John Galt Telescope</span>
+<span class="sd">        observations</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logs : list of strings</span>
+<span class="sd">            .ZIP filenames. Each .ZIP archive should include a .ANT file and</span>
+<span class="sd">            a .POST_REPORT file. This method unzips the archive, uses</span>
+<span class="sd">            `parse_post_report` to read the .POST_REPORT file and extract</span>
+<span class="sd">            the CHIME sidereal day corresponding to the DRAO sidereal day,</span>
+<span class="sd">            and then reads the lines in the .ANT file to obtain the pointing</span>
+<span class="sd">            history of the Galt Telescope during this observation.</span>
+
+<span class="sd">            (The DRAO sidereal day is days since the clock in Ev Sheehan&#39;s</span>
+<span class="sd">            office at DRAO was reset. This clock is typically only reset every</span>
+<span class="sd">            few years, but it does not correspond to any defined date, so the</span>
+<span class="sd">            date must be figured out from the .POST_REPORT file, which reports</span>
+<span class="sd">            both the DRAO sidereal day and the UTC date and time.</span>
+
+<span class="sd">            Known reset dates: 2017-11-21, 2019-3-10)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        if output_params == False:</span>
+<span class="sd">            ant_data: A dictionary consisting of lists containing the LST,</span>
+<span class="sd">                hour angle, RA, and dec (all as Skyfield Angle objects),</span>
+<span class="sd">                CHIME sidereal day, and DRAO sidereal day.</span>
+
+<span class="sd">        if output_params == True</span>
+<span class="sd">            output_params: dictionary returned by `parse_post_report`</span>
+<span class="sd">            and</span>
+<span class="sd">            ant_data: described above</span>
+
+<span class="sd">        Files</span>
+<span class="sd">        -----</span>
+<span class="sd">        the .ANT and .POST_REPORT files in the input .zip archive are</span>
+<span class="sd">        extracted into /tmp/26mlog/&lt;loginname&gt;/</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="kn">from</span><span class="w"> </span><span class="nn">skyfield.positionlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Angle</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">sidlst_to_csd</span><span class="p">(</span><span class="n">sid</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">sid_ref</span><span class="p">,</span> <span class="n">t_ref</span><span class="p">):</span>
+<span class="w">            </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">            Convert an integer DRAO sidereal day and LST to a float</span>
+<span class="sd">            CHIME sidereal day</span>
+
+<span class="sd">            Parameters</span>
+<span class="sd">            ----------</span>
+<span class="sd">            sid : int</span>
+<span class="sd">                DRAO sidereal day</span>
+<span class="sd">            lst : float, in hours</span>
+<span class="sd">                local sidereal time</span>
+<span class="sd">            sid_ref : int</span>
+<span class="sd">                DRAO sidereal day at the reference time t_ref</span>
+<span class="sd">            t_ref : skyfield time object, Julian days</span>
+<span class="sd">                Reference time</span>
+
+<span class="sd">            Returns</span>
+<span class="sd">            -------</span>
+<span class="sd">            output : float</span>
+<span class="sd">                CHIME sidereal day</span>
+<span class="sd">            &quot;&quot;&quot;</span>
+            <span class="n">csd_ref</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span>
+                <span class="n">chime</span><span class="o">.</span><span class="n">lsd_to_unix</span><span class="p">(</span><span class="n">ctime</span><span class="o">.</span><span class="n">datetime_to_unix</span><span class="p">(</span><span class="n">t_ref</span><span class="o">.</span><span class="n">utc_datetime</span><span class="p">()))</span>
+            <span class="p">)</span>
+            <span class="n">csd</span> <span class="o">=</span> <span class="n">sid</span> <span class="o">-</span> <span class="n">sid_ref</span> <span class="o">+</span> <span class="n">csd_ref</span>
+            <span class="k">return</span> <span class="n">csd</span> <span class="o">+</span> <span class="n">lst</span> <span class="o">/</span> <span class="n">ctime</span><span class="o">.</span><span class="n">SIDEREAL_S</span> <span class="o">/</span> <span class="mf">24.0</span>
+
+        <span class="n">ant_data_list</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">post_report_list</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">for</span> <span class="n">log</span> <span class="ow">in</span> <span class="n">logs</span><span class="p">:</span>
+            <span class="n">doobs</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">basedir</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;/tmp/26mlog/</span><span class="si">{</span><span class="n">os</span><span class="o">.</span><span class="n">getlogin</span><span class="p">()</span><span class="si">}</span><span class="s2">/&quot;</span>
+            <span class="n">basename</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+            <span class="n">post_report_file</span> <span class="o">=</span> <span class="n">basename</span> <span class="o">+</span> <span class="s2">&quot;.POST_REPORT&quot;</span>
+            <span class="n">ant_file</span> <span class="o">=</span> <span class="n">basename</span> <span class="o">+</span> <span class="s2">&quot;.ANT&quot;</span>
+
+            <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">&quot;zip&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">post_report_file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">basedir</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to extract </span><span class="si">{</span><span class="n">post_report_file</span><span class="si">}</span><span class="s2"> into </span><span class="si">{</span><span class="n">basedir</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="s2">&quot;Moving right along...&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">doobs</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">ant_file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">basedir</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Failed to extract </span><span class="si">{</span><span class="n">ant_file</span><span class="si">}</span><span class="s2"> into </span><span class="si">{</span><span class="n">basedir</span><span class="si">}</span><span class="s2">. &quot;</span>
+                        <span class="s2">&quot;Moving right along...&quot;</span>
+                    <span class="p">)</span>
+                    <span class="n">doobs</span> <span class="o">=</span> <span class="kc">False</span>
+
+            <span class="k">if</span> <span class="n">doobs</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">post_report_params</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parse_post_report</span><span class="p">(</span>
+                        <span class="n">basedir</span> <span class="o">+</span> <span class="n">post_report_file</span>
+                    <span class="p">)</span>
+
+                    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">basedir</span><span class="p">,</span> <span class="n">ant_file</span><span class="p">))</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                        <span class="n">ant_data</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;sid&quot;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])}</span>
+                        <span class="n">lsth</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">lstm</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">lsts</span> <span class="o">=</span> <span class="p">[]</span>
+
+                        <span class="n">hah</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">ham</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">has</span> <span class="o">=</span> <span class="p">[]</span>
+
+                        <span class="n">decd</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">decm</span> <span class="o">=</span> <span class="p">[]</span>
+                        <span class="n">decs</span> <span class="o">=</span> <span class="p">[]</span>
+
+                        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">f</span><span class="p">:</span>
+                            <span class="n">arr</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()</span>
+
+                            <span class="k">try</span><span class="p">:</span>
+                                <span class="n">lst_hms</span> <span class="o">=</span> <span class="p">[</span><span class="nb">float</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">arr</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)]</span>
+
+                                <span class="c1"># do last element first: if this is going to</span>
+                                <span class="c1"># crash because a line in the log is incomplete,</span>
+                                <span class="c1"># we don&#39;t want it to append to any of the lists</span>
+
+                                <span class="n">decs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">&#39;&quot;&#39;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                                <span class="n">decm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">7</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;&#39;&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                                <span class="n">decd</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">6</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;D&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+
+                                <span class="n">has</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;S&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                                <span class="n">ham</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;M&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+                                <span class="n">hah</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;H&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)))</span>
+
+                                <span class="n">lsts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lst_hms</span><span class="p">[</span><span class="mi">2</span><span class="p">]))</span>
+                                <span class="n">lstm</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lst_hms</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+                                <span class="n">lsth</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">lst_hms</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+
+                                <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;sid&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                                    <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;sid&quot;</span><span class="p">],</span> <span class="nb">int</span><span class="p">(</span><span class="n">arr</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+                                <span class="p">)</span>
+                            <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+                                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Failed in file </span><span class="si">{</span><span class="n">ant_file</span><span class="si">}</span><span class="s2"> for line </span><span class="se">\n</span><span class="si">{</span><span class="n">line</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;sid&quot;</span><span class="p">])</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">decs</span><span class="p">):</span>
+                                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;WARNING: mismatch in list lengths.&quot;</span><span class="p">)</span>
+
+                        <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;lst&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="p">(</span><span class="n">lsth</span><span class="p">,</span> <span class="n">lstm</span><span class="p">,</span> <span class="n">lsts</span><span class="p">))</span>
+
+                        <span class="n">ha</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="n">hours</span><span class="o">=</span><span class="p">(</span><span class="n">hah</span><span class="p">,</span> <span class="n">ham</span><span class="p">,</span> <span class="n">has</span><span class="p">))</span>
+                        <span class="n">dec</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">(</span><span class="n">decd</span><span class="p">,</span> <span class="n">decm</span><span class="p">,</span> <span class="n">decs</span><span class="p">))</span>
+
+                        <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;ha&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span>
+                            <span class="n">radians</span><span class="o">=</span><span class="n">ha</span><span class="o">.</span><span class="n">radians</span>
+                            <span class="o">-</span> <span class="n">ch_ephem</span><span class="o">.</span><span class="n">pointing</span><span class="o">.</span><span class="n">galt_pointing_model_ha</span><span class="p">(</span><span class="n">ha</span><span class="p">,</span> <span class="n">dec</span><span class="p">)</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span>
+                            <span class="n">preference</span><span class="o">=</span><span class="s2">&quot;hours&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;dec_cirs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span>
+                            <span class="n">radians</span><span class="o">=</span><span class="n">dec</span><span class="o">.</span><span class="n">radians</span>
+                            <span class="o">-</span> <span class="n">ch_ephem</span><span class="o">.</span><span class="n">pointing</span><span class="o">.</span><span class="n">galt_pointing_model_dec</span><span class="p">(</span>
+                                <span class="n">ha</span><span class="p">,</span> <span class="n">dec</span>
+                            <span class="p">)</span><span class="o">.</span><span class="n">radians</span><span class="p">,</span>
+                            <span class="n">preference</span><span class="o">=</span><span class="s2">&quot;degrees&quot;</span><span class="p">,</span>
+                        <span class="p">)</span>
+
+                        <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;csd&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">sidlst_to_csd</span><span class="p">(</span>
+                            <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;sid&quot;</span><span class="p">]),</span>
+                            <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;lst&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">hours</span><span class="p">,</span>
+                            <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;SID&quot;</span><span class="p">],</span>
+                            <span class="n">post_report_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">],</span>
+                        <span class="p">)</span>
+
+                    <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_skyfield_time</span><span class="p">(</span>
+                        <span class="n">chime</span><span class="o">.</span><span class="n">lsd_to_unix</span><span class="p">(</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;csd&quot;</span><span class="p">])</span>
+                    <span class="p">)</span>
+
+                    <span class="c1"># Correct RA from equinox to CIRS coords (both in radians)</span>
+                    <span class="n">era</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">radians</span><span class="p">(</span>
+                        <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_era</span><span class="p">(</span><span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]))</span>
+                    <span class="p">)</span>
+                    <span class="n">gast</span> <span class="o">=</span> <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">gast</span> <span class="o">*</span> <span class="mi">2</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">pi</span> <span class="o">/</span> <span class="mf">24.0</span>
+
+                    <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;ra_cirs&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">Angle</span><span class="p">(</span>
+                        <span class="n">radians</span><span class="o">=</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;lst&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">radians</span>
+                        <span class="o">-</span> <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;ha&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">radians</span>
+                        <span class="o">+</span> <span class="p">(</span><span class="n">era</span> <span class="o">-</span> <span class="n">gast</span><span class="p">),</span>
+                        <span class="n">preference</span><span class="o">=</span><span class="s2">&quot;hours&quot;</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+                    <span class="n">obs</span> <span class="o">=</span> <span class="n">ch_ephem</span><span class="o">.</span><span class="n">coord</span><span class="o">.</span><span class="n">star_cirs</span><span class="p">(</span>
+                        <span class="n">ra</span><span class="o">=</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;ra_cirs&quot;</span><span class="p">],</span>
+                        <span class="n">dec</span><span class="o">=</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;dec_cirs&quot;</span><span class="p">],</span>
+                        <span class="n">epoch</span><span class="o">=</span><span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;t&quot;</span><span class="p">],</span>
+                    <span class="p">)</span>
+
+                    <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;ra&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">ra</span>
+                    <span class="n">ant_data</span><span class="p">[</span><span class="s2">&quot;dec&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">obs</span><span class="o">.</span><span class="n">dec</span>
+
+                    <span class="n">ant_data_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ant_data</span><span class="p">)</span>
+                    <span class="n">post_report_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">post_report_params</span><span class="p">)</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">ValueError</span><span class="p">,</span> <span class="ne">KeyError</span><span class="p">):</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Parsing </span><span class="si">{</span><span class="n">post_report_file</span><span class="si">}</span><span class="s2"> failed&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">return_post_report_params</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">post_report_list</span><span class="p">,</span> <span class="n">ant_data_list</span>
+        <span class="k">return</span> <span class="n">ant_data</span></div>
+
+
+<div class="viewcode-block" id="HolographyObservation.create_from_post_reports">
+<a class="viewcode-back" href="../../_autosummary/ch_util.holography.html#ch_util.holography.HolographyObservation.create_from_post_reports">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">create_from_post_reports</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">logs</span><span class="p">,</span>
+        <span class="n">start_tol</span><span class="o">=</span><span class="mf">60.0</span><span class="p">,</span>
+        <span class="n">dryrun</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">replace_dup</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create holography database entry from .POST_REPORT log files</span>
+<span class="sd">        generated by the nsched controller for the Galt Telescope.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        logs : string</span>
+<span class="sd">            list of paths to archives. Filenames should be, eg,</span>
+<span class="sd">            01DEC17_1814.zip.  Must be only one period in the filename,</span>
+<span class="sd">            separating the extension.</span>
+
+<span class="sd">        start_tol : float (optional; default: 60.)</span>
+<span class="sd">            Tolerance (in seconds) around which to search for duplicate</span>
+<span class="sd">            operations.</span>
+
+<span class="sd">        dryrun : boolean (optional; default: True)</span>
+<span class="sd">            Dry run only; do not add entries to database</span>
+
+<span class="sd">        replace_dup : boolean (optional; default: False)</span>
+<span class="sd">            Delete existing duplicate entries and replace. Only has effect if</span>
+<span class="sd">            dry_run == False</span>
+
+<span class="sd">        notes : string or list of strings (optional; default: None)</span>
+<span class="sd">            notes to be added. If a string, the same note will be added to all</span>
+<span class="sd">            observations. If a list of strings (must be same length as logs),</span>
+<span class="sd">            each element of the list will be added to the corresponding</span>
+<span class="sd">            database entry.</span>
+<span class="sd">            Nota bene: the text &quot;Added by create_from_post_reports&quot; with the</span>
+<span class="sd">            current date and time will also be included in the notes database</span>
+<span class="sd">            entry.</span>
+
+<span class="sd">        Example</span>
+<span class="sd">        -------</span>
+
+<span class="sd">        &gt;&gt;&gt; from ch_util import holography as hl</span>
+<span class="sd">        &gt;&gt;&gt; import glob</span>
+<span class="sd">        &gt;&gt;&gt; obs = hl.HolographyObservation</span>
+<span class="sd">        &gt;&gt;&gt; logs = glob.glob(&#39;/path/to/logs/*JUN18*.zip&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; obs_list, dup_obs_list, missing = \</span>
+<span class="sd">        ... obs.create_from_post_reports(logs, dryrun=False)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check notes. Can be a string (in which case duplicate it), None (in</span>
+        <span class="c1"># which case do nothing) or a list (in which case use it if same length</span>
+        <span class="c1"># as logs, otherwise crash)</span>
+        <span class="k">if</span> <span class="n">notes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Notes is None&quot;</span><span class="p">)</span>
+            <span class="n">notesarr</span> <span class="o">=</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">notes</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">notesarr</span> <span class="o">=</span> <span class="p">[</span><span class="n">notes</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">logs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">notes</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span>
+                <span class="n">logs</span>
+            <span class="p">),</span> <span class="s2">&quot;notes must be a string or a list the same length as logs&quot;</span>
+            <span class="n">notesarr</span> <span class="o">=</span> <span class="n">notes</span>
+
+        <span class="k">for</span> <span class="n">log</span><span class="p">,</span> <span class="n">note</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">notesarr</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Working on </span><span class="si">{</span><span class="n">log</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">log</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="c1"># basedir = &#39;/&#39;.join(log.split(&#39;/&#39;)[:-1]) + &#39;/&#39;</span>
+            <span class="n">basedir</span> <span class="o">=</span> <span class="s2">&quot;/tmp/&quot;</span>
+
+            <span class="n">basename</span><span class="p">,</span> <span class="n">extension</span> <span class="o">=</span> <span class="n">filename</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span>
+
+            <span class="n">post_report_file</span> <span class="o">=</span> <span class="n">basename</span> <span class="o">+</span> <span class="s2">&quot;.POST_REPORT&quot;</span>
+
+            <span class="n">doobs</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">if</span> <span class="n">extension</span> <span class="o">==</span> <span class="s2">&quot;zip&quot;</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">zipfile</span><span class="o">.</span><span class="n">ZipFile</span><span class="p">(</span><span class="n">log</span><span class="p">)</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="n">post_report_file</span><span class="p">,</span> <span class="n">path</span><span class="o">=</span><span class="n">basedir</span><span class="p">)</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;failed to find </span><span class="si">{</span><span class="n">post_report_file</span><span class="si">}</span><span class="s2">. Moving right along...&quot;</span><span class="p">)</span>
+                    <span class="n">doobs</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">elif</span> <span class="n">extension</span> <span class="o">!=</span> <span class="s2">&quot;POST_REPORT&quot;</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span>
+                    <span class="s2">&quot;WARNING: extension should be .zip or .POST_REPORT; is &quot;</span><span class="p">,</span> <span class="n">extension</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">doobs</span><span class="p">:</span>
+                <span class="c1"># Read the post report file and pull out the HolographySource</span>
+                <span class="c1"># object, start time (LST), and duration (in LST hours) of the</span>
+                <span class="c1"># observation</span>
+                <span class="n">output_params</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">parse_post_report</span><span class="p">(</span><span class="n">basedir</span> <span class="o">+</span> <span class="n">post_report_file</span><span class="p">)</span>
+                <span class="n">t</span> <span class="o">=</span> <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;start_time&quot;</span><span class="p">]</span>
+                <span class="n">src</span> <span class="o">=</span> <span class="n">output_params</span><span class="p">[</span><span class="s2">&quot;src&quot;</span><span class="p">]</span>
+
+                <span class="c1"># if the source was found, src would be a HolographySource</span>
+                <span class="c1"># object otherwise (ie the source is missing), it&#39;s a string</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Source </span><span class="si">{</span><span class="n">src</span><span class="si">}</span><span class="s2"> was not found for observation at time </span><span class="si">{</span><span class="n">t</span><span class="si">}</span><span class="s2">.&quot;</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">cls</span><span class="o">.</span><span class="n">create_from_dict</span><span class="p">(</span>
+                        <span class="n">output_params</span><span class="p">,</span>
+                        <span class="n">notes</span><span class="o">=</span><span class="n">notes</span><span class="p">,</span>
+                        <span class="n">start_tol</span><span class="o">=</span><span class="n">start_tol</span><span class="p">,</span>
+                        <span class="n">dryrun</span><span class="o">=</span><span class="n">dryrun</span><span class="p">,</span>
+                        <span class="n">replace_dup</span><span class="o">=</span><span class="n">replace_dup</span><span class="p">,</span>
+                        <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">,</span>
+                    <span class="p">)</span></div>
+</div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

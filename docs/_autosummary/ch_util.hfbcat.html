@@ -1,0 +1,232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.hfbcat &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.holography" href="ch_util.holography.html" />
+    <link rel="prev" title="ch_util.finder" href="ch_util.finder.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.hfbcat</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.hfbcat.HFBCatalog"><code class="docutils literal notranslate"><span class="pre">HFBCatalog</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.hfbcat.get_doppler_shifted_freq"><code class="docutils literal notranslate"><span class="pre">get_doppler_shifted_freq()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.hfbcat</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.hfbcat.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.hfbcat">
+<span id="ch-util-hfbcat"></span><h1>ch_util.hfbcat<a class="headerlink" href="#module-ch_util.hfbcat" title="Link to this heading"></a></h1>
+<p>Catalog of HFB test targets</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.hfbcat.get_doppler_shifted_freq" title="ch_util.hfbcat.get_doppler_shifted_freq"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_doppler_shifted_freq</span></code></a>(source, date[, ...])</p></td>
+<td><p>Calculate Doppler shifted frequency of spectral feature with rest frequency <cite>freq_rest</cite>, seen towards source <cite>source</cite> at time <cite>date</cite>, due to Earth's motion and rotation, following the relativistic Doppler effect.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.hfbcat.HFBCatalog" title="ch_util.hfbcat.HFBCatalog"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HFBCatalog</span></code></a>(name[, ra, dec, alternate_names, ...])</p></td>
+<td><p>Class for cataloguing HFB targets.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.hfbcat.HFBCatalog">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.hfbcat.</span></span><span class="sig-name descname"><span class="pre">HFBCatalog</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alternate_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">[]</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">overwrite</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/hfbcat.html#HFBCatalog"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.hfbcat.HFBCatalog" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">FluxCatalog</span></code></p>
+<p>Class for cataloguing HFB targets.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.hfbcat.HFBCatalog.fields">
+<span class="sig-name descname"><span class="pre">fields</span></span><a class="headerlink" href="#ch_util.hfbcat.HFBCatalog.fields" title="Link to this definition"></a></dt>
+<dd><p>List of attributes that are read-from and written-to the
+JSON catalog files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<p>Instantiate an HFBCatalog object for an HFB target.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>string</em>) – Name of the source.</p></li>
+<li><p><strong>ra</strong> (<em>float</em>) – Right Ascension in degrees.</p></li>
+<li><p><strong>dec</strong> (<em>float</em>) – Declination in degrees.</p></li>
+<li><p><strong>alternate_names</strong> (<em>list</em><em> of </em><em>strings</em>) – Alternate names for the source.</p></li>
+<li><p><strong>freq_abs</strong> (<em>list</em><em> of </em><em>floats</em>) – Frequencies at which (the peaks of) absorption features are found.</p></li>
+<li><p><strong>overwrite</strong> (<em>int between 0 and 2</em>) – Action to take in the event that this source is already in the catalog:
+- 0 - Return the existing entry.
+- 1 - Add the measurements to the existing entry.
+- 2 - Overwrite the existing entry.
+Default is 0.
+BUG: Currently, <cite>freq_abs</cite> is always overwritten.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.hfbcat.get_doppler_shifted_freq">
+<span class="sig-prename descclassname"><span class="pre">ch_util.hfbcat.</span></span><span class="sig-name descname"><span class="pre">get_doppler_shifted_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">skyfield.starlib.Star</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">str</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">date</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_rest</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">list</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">caput.time.Observer</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">np.array</span></span></span><a class="reference internal" href="../_modules/ch_util/hfbcat.html#get_doppler_shifted_freq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.hfbcat.get_doppler_shifted_freq" title="Link to this definition"></a></dt>
+<dd><p>Calculate Doppler shifted frequency of spectral feature with rest
+frequency <cite>freq_rest</cite>, seen towards source <cite>source</cite> at time <cite>date</cite>, due to
+Earth’s motion and rotation, following the relativistic Doppler effect.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> – Position(s) on the sky. If the input is a <cite>str</cite>, attempt to resolve this
+from <cite>ch_util.hfbcat.HFBCatalog</cite>.</p></li>
+<li><p><strong>date</strong> – Unix time(s) for which to calculate Doppler shift.</p></li>
+<li><p><strong>freq_rest</strong> – Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency
+of absorption feature from <cite>ch_util.hfbcat.HFBCatalog.freq_abs</cite>.</p></li>
+<li><p><strong>obs</strong> – An Observer instance to use. If not supplied use <cite>chime</cite>. For many
+calculations changing from this default will make little difference.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Doppler shifted frequencies in MHz. Array where rows correspond to the
+different input rest frequencies and columns correspond either to input
+times or to input sky positions (whichever contains multiple entries).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>freq_obs</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Only one of <cite>source</cite> and <cite>date</cite> can contain multiple entries.</p>
+<p class="rubric">Example</p>
+<p>To get the Doppler shifted frequencies of a feature with a rest frequency
+of 600 MHz for two positions on the sky at a single point in time (Unix
+time 1717809534 = 2024-06-07T21:18:54+00:00), run:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skyfield.starlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Star</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">skyfield.units</span><span class="w"> </span><span class="kn">import</span> <span class="n">Angle</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util.hfbcat</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_doppler_shifted_freq</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">coord</span> <span class="o">=</span> <span class="n">Star</span><span class="p">(</span><span class="n">ra</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">110</span><span class="p">]),</span> <span class="n">dec</span><span class="o">=</span><span class="n">Angle</span><span class="p">(</span><span class="n">degrees</span><span class="o">=</span><span class="p">[</span><span class="mi">45</span><span class="p">,</span> <span class="mi">50</span><span class="p">]))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_doppler_shifted_freq</span><span class="p">(</span><span class="n">coord</span><span class="p">,</span> <span class="mi">1717809534</span><span class="p">,</span> <span class="mi">600</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.finder.html" class="btn btn-neutral float-left" title="ch_util.finder" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.holography.html" class="btn btn-neutral float-right" title="ch_util.holography" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

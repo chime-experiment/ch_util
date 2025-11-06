@@ -1,0 +1,283 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.hfbcat &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.hfbcat</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.hfbcat</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Catalog of HFB test targets</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">__future__</span><span class="w"> </span><span class="kn">import</span> <span class="n">annotations</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">TYPE_CHECKING</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">fluxcat</span><span class="w"> </span><span class="kn">import</span> <span class="n">FluxCatalog</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">ensure_list</span>
+
+<span class="k">if</span> <span class="n">TYPE_CHECKING</span><span class="p">:</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">skyfield.starlib.Star</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">caput.time.Observer</span>
+
+<span class="c1"># Define the source collection(s) that should be loaded</span>
+<span class="c1"># when `HFBCatalog` is first used.</span>
+<span class="c1"># This is a catalog provided by `fluxcat`.</span>
+<span class="n">DEFAULT_COLLECTIONS</span> <span class="o">=</span> <span class="s2">&quot;hfb_target_list&quot;</span>
+
+
+<div class="viewcode-block" id="HFBCatalog">
+<a class="viewcode-back" href="../../_autosummary/ch_util.hfbcat.html#ch_util.hfbcat.HFBCatalog">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">HFBCatalog</span><span class="p">(</span><span class="n">FluxCatalog</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Class for cataloguing HFB targets.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    fields : list</span>
+<span class="sd">        List of attributes that are read-from and written-to the</span>
+<span class="sd">        JSON catalog files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">fields</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="s2">&quot;ra&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;dec&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;alternate_names&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;freq_abs&quot;</span><span class="p">,</span>
+    <span class="p">]</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">,</span>
+        <span class="n">ra</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">dec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">alternate_names</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">freq_abs</span><span class="o">=</span><span class="p">[],</span>
+        <span class="n">overwrite</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Instantiate an HFBCatalog object for an HFB target.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : string</span>
+<span class="sd">            Name of the source.</span>
+
+<span class="sd">        ra : float</span>
+<span class="sd">            Right Ascension in degrees.</span>
+
+<span class="sd">        dec : float</span>
+<span class="sd">            Declination in degrees.</span>
+
+<span class="sd">        alternate_names : list of strings</span>
+<span class="sd">            Alternate names for the source.</span>
+
+<span class="sd">        freq_abs : list of floats</span>
+<span class="sd">            Frequencies at which (the peaks of) absorption features are found.</span>
+
+<span class="sd">        overwrite : int between 0 and 2</span>
+<span class="sd">            Action to take in the event that this source is already in the catalog:</span>
+<span class="sd">            - 0 - Return the existing entry.</span>
+<span class="sd">            - 1 - Add the measurements to the existing entry.</span>
+<span class="sd">            - 2 - Overwrite the existing entry.</span>
+<span class="sd">            Default is 0.</span>
+<span class="sd">            BUG: Currently, `freq_abs` is always overwritten.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span>
+            <span class="n">ra</span><span class="o">=</span><span class="n">ra</span><span class="p">,</span>
+            <span class="n">dec</span><span class="o">=</span><span class="n">dec</span><span class="p">,</span>
+            <span class="n">alternate_names</span><span class="o">=</span><span class="n">alternate_names</span><span class="p">,</span>
+            <span class="n">overwrite</span><span class="o">=</span><span class="n">overwrite</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">freq_abs</span> <span class="o">=</span> <span class="n">freq_abs</span></div>
+
+
+
+<div class="viewcode-block" id="get_doppler_shifted_freq">
+<a class="viewcode-back" href="../../_autosummary/ch_util.hfbcat.html#ch_util.hfbcat.get_doppler_shifted_freq">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_doppler_shifted_freq</span><span class="p">(</span>
+    <span class="n">source</span><span class="p">:</span> <span class="n">skyfield</span><span class="o">.</span><span class="n">starlib</span><span class="o">.</span><span class="n">Star</span> <span class="o">|</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">date</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">list</span><span class="p">,</span>
+    <span class="n">freq_rest</span><span class="p">:</span> <span class="nb">float</span> <span class="o">|</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">obs</span><span class="p">:</span> <span class="n">caput</span><span class="o">.</span><span class="n">time</span><span class="o">.</span><span class="n">Observer</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calculate Doppler shifted frequency of spectral feature with rest</span>
+<span class="sd">    frequency `freq_rest`, seen towards source `source` at time `date`, due to</span>
+<span class="sd">    Earth&#39;s motion and rotation, following the relativistic Doppler effect.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    source</span>
+<span class="sd">        Position(s) on the sky. If the input is a `str`, attempt to resolve this</span>
+<span class="sd">        from `ch_util.hfbcat.HFBCatalog`.</span>
+<span class="sd">    date</span>
+<span class="sd">        Unix time(s) for which to calculate Doppler shift.</span>
+<span class="sd">    freq_rest</span>
+<span class="sd">        Rest frequency(ies) in MHz. If None, attempt to obtain rest frequency</span>
+<span class="sd">        of absorption feature from `ch_util.hfbcat.HFBCatalog.freq_abs`.</span>
+<span class="sd">    obs</span>
+<span class="sd">        An Observer instance to use. If not supplied use `chime`. For many</span>
+<span class="sd">        calculations changing from this default will make little difference.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    freq_obs</span>
+<span class="sd">        Doppler shifted frequencies in MHz. Array where rows correspond to the</span>
+<span class="sd">        different input rest frequencies and columns correspond either to input</span>
+<span class="sd">        times or to input sky positions (whichever contains multiple entries).</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Only one of `source` and `date` can contain multiple entries.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    To get the Doppler shifted frequencies of a feature with a rest frequency</span>
+<span class="sd">    of 600 MHz for two positions on the sky at a single point in time (Unix</span>
+<span class="sd">    time 1717809534 = 2024-06-07T21:18:54+00:00), run:</span>
+
+<span class="sd">    &gt;&gt;&gt; from skyfield.starlib import Star</span>
+<span class="sd">    &gt;&gt;&gt; from skyfield.units import Angle</span>
+<span class="sd">    &gt;&gt;&gt; from ch_util.hfbcat import get_doppler_shifted_freq</span>
+<span class="sd">    &gt;&gt;&gt; coord = Star(ra=Angle(degrees=[100, 110]), dec=Angle(degrees=[45, 50]))</span>
+<span class="sd">    &gt;&gt;&gt; get_doppler_shifted_freq(coord, 1717809534, 600)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.constants</span><span class="w"> </span><span class="kn">import</span> <span class="n">c</span> <span class="k">as</span> <span class="n">speed_of_light</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ch_ephem.coord</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_range_rate</span>
+
+    <span class="k">if</span> <span class="n">obs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="kn">from</span><span class="w"> </span><span class="nn">ch_ephem.observers</span><span class="w"> </span><span class="kn">import</span> <span class="n">chime</span> <span class="k">as</span> <span class="n">obs</span>
+
+    <span class="c1"># For source string inputs, get skyfield Star object from HFB catalog</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">source</span> <span class="o">=</span> <span class="n">HFBCatalog</span><span class="p">[</span><span class="n">source</span><span class="p">]</span><span class="o">.</span><span class="n">skyfield</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Could not find source </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> in HFB catalog.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get rest frequency from HFB catalog</span>
+    <span class="k">if</span> <span class="n">freq_rest</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">source</span><span class="o">.</span><span class="n">names</span> <span class="ow">or</span> <span class="n">source</span><span class="o">.</span><span class="n">names</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">HFBCatalog</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Rest frequencies must be supplied unless source can be found &quot;</span>
+                <span class="s2">&quot;in ch_util.hfbcat.HFBCatalog. &quot;</span>
+                <span class="sa">f</span><span class="s2">&quot;Got source </span><span class="si">{</span><span class="n">source</span><span class="si">}</span><span class="s2"> with names </span><span class="si">{</span><span class="n">source</span><span class="o">.</span><span class="n">names</span><span class="si">}</span><span class="s2">&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">freq_rest</span> <span class="o">=</span> <span class="n">HFBCatalog</span><span class="p">[</span><span class="n">source</span><span class="o">.</span><span class="n">names</span><span class="p">]</span><span class="o">.</span><span class="n">freq_abs</span>
+
+    <span class="c1"># Prepare rest frequencies for broadcasting</span>
+    <span class="n">freq_rest</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">ensure_list</span><span class="p">(</span><span class="n">freq_rest</span><span class="p">))[:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+
+    <span class="c1"># Get rate at which the distance between the observer and source changes</span>
+    <span class="c1"># (positive for observer and source moving appart)</span>
+    <span class="n">range_rate</span> <span class="o">=</span> <span class="n">get_range_rate</span><span class="p">(</span><span class="n">source</span><span class="p">,</span> <span class="n">date</span><span class="p">,</span> <span class="n">obs</span><span class="p">)</span>
+
+    <span class="c1"># Compute observed frequencies from rest frequencies</span>
+    <span class="c1"># using relativistic Doppler effect</span>
+    <span class="n">beta</span> <span class="o">=</span> <span class="n">range_rate</span> <span class="o">/</span> <span class="n">speed_of_light</span>
+    <span class="k">return</span> <span class="n">freq_rest</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="mf">1.0</span> <span class="o">-</span> <span class="n">beta</span><span class="p">)</span> <span class="o">/</span> <span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">beta</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

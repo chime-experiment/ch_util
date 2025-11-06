@@ -1,0 +1,1643 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.layout &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.layout</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.layout</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Interface to the CHIME components and graphs</span>
+
+<span class="sd">This module interfaces to the layout tables in the CHIME database.</span>
+
+<span class="sd">The :mod:`peewee` module is used for the ORM to the MySQL database. Because the</span>
+<span class="sd">layouts are event-driven, you should never attempt to enter events by raw</span>
+<span class="sd">inserts to the :class:`event` or :class:`timestamp` tables, as you could create</span>
+<span class="sd">inconsistencies. Rather, use the methods which are described in this document to</span>
+<span class="sd">do such alterations robustly.</span>
+
+<span class="sd">For most uses, you probably want to import the following:</span>
+
+<span class="sd">&gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">&gt;&gt;&gt; import logging</span>
+<span class="sd">&gt;&gt;&gt; logging.basicConfig(level = logging.INFO)</span>
+<span class="sd">&gt;&gt;&gt; import peewee</span>
+<span class="sd">&gt;&gt;&gt; import layout</span>
+<span class="sd">&gt;&gt;&gt; layout.connect_database()</span>
+
+<span class="sd">.. note::</span>
+<span class="sd">   The database must now be explicitly connected. This should not be done within</span>
+<span class="sd">   an import statement.</span>
+
+<span class="sd">.. note::</span>
+<span class="sd">   The :mod:`logging` module can be set to the level of your preference, or not</span>
+<span class="sd">   imported altogether if you don&#39;t want log messages from the :mod:`layout`</span>
+<span class="sd">   module. Note that the :mod:`peewee` module sends a lot of messages to the</span>
+<span class="sd">   DEBUG stream.</span>
+
+<span class="sd">If you will be altering the layouts, you will need to register as a user:</span>
+
+<span class="sd">&gt;&gt;&gt; layout.set_user(&quot;Ahincks&quot;)</span>
+
+<span class="sd">Use your CHIME wiki username here.  Make sure it starts with a capital letter.</span>
+<span class="sd">Note that different users have different permissions, stored in the</span>
+<span class="sd">:class:`user_permission` table. If you are simply reading from the layout,</span>
+<span class="sd">there is no need to register as a user.</span>
+
+<span class="sd">Choose Your Own Adventure</span>
+<span class="sd">=========================</span>
+
+<span class="sd">============================================= ==================================</span>
+<span class="sd">If you want to ...                            ... then see</span>
+<span class="sd">============================================= ==================================</span>
+<span class="sd">retrieve and examine layout graphs            :class:`graph`</span>
+<span class="sd">add components                                :meth:`component.add&lt;ch_util._db_tables.component.add&gt;`,</span>
+<span class="sd">                                              :func:`add_component&lt;ch_util._db_tables.add_component&gt;`</span>
+<span class="sd">remove components                             :meth:`component.remove&lt;ch_util._db_tables.component.remove&gt;`,</span>
+<span class="sd">                                              :func:`remove_component&lt;ch_util._db_tables.remove_component&gt;`</span>
+<span class="sd">make connexions                               :func:`make_connexion&lt;ch_util._db_tables.make_connexion&gt;`</span>
+<span class="sd">sever connexions                              :func:`sever_connexion&lt;ch_util._db_tables.sever_connexion&gt;`</span>
+<span class="sd">set component properties                      :meth:`component.set_property&lt;ch_util._db_tables.component.set_property&gt;`</span>
+<span class="sd">                                              :func:`set_property&lt;ch_util._db_tables.set_property&gt;`</span>
+<span class="sd">get component properties                      :meth:`component.get_property&lt;ch_util._db_tables.component.get_property&gt;`</span>
+<span class="sd">perform bulk updates                          :func:`enter_ltf`</span>
+<span class="sd">add component history notes                   :meth:`component.add_history&lt;ch_util._db_tables.component.add_history&gt;`</span>
+<span class="sd">add link to component documentation           :meth:`component.add_doc&lt;ch_util._db_tables.component.add_doc&gt;`</span>
+<span class="sd">create a global flag                          :meth:`global_flag.start&lt;ch_util._db_tables.global_flag.start&gt;`</span>
+<span class="sd">============================================= ==================================</span>
+
+<span class="sd">Functions</span>
+<span class="sd">=========</span>
+
+<span class="sd">- :py:meth:`add_component&lt;ch_util._db_tables.add_component&gt;`</span>
+<span class="sd">- :py:meth:`compare_connexion&lt;ch_util._db_tables.compare_connexion&gt;`</span>
+<span class="sd">- :py:meth:`connect_database&lt;ch_util._db_tables.connect_peewee_tables&gt;`</span>
+<span class="sd">- :py:meth:`enter_ltf`</span>
+<span class="sd">- :py:meth:`make_connexion&lt;ch_util._db_tables.make_connexion&gt;`</span>
+<span class="sd">- :py:meth:`remove_component&lt;ch_util._db_tables.remove_component&gt;`</span>
+<span class="sd">- :py:meth:`set_user&lt;ch_util._db_tables.set_user&gt;`</span>
+<span class="sd">- :py:meth:`sever_connexion&lt;ch_util._db_tables.sever_connexion&gt;`</span>
+<span class="sd">- :py:meth:`global_flags_between`</span>
+<span class="sd">- :py:meth:`get_global_flag_times`</span>
+
+<span class="sd">Classes</span>
+<span class="sd">=======</span>
+
+<span class="sd">- :py:class:`subgraph_spec`</span>
+<span class="sd">- :py:class:`graph`</span>
+
+<span class="sd">Database Models</span>
+<span class="sd">===============</span>
+
+<span class="sd">- :py:class:`component&lt;ch_util._db_tables.component&gt;`</span>
+<span class="sd">- :py:class:`component_history&lt;ch_util._db_tables.component_history&gt;`</span>
+<span class="sd">- :py:class:`component_type&lt;ch_util._db_tables.component_type&gt;`</span>
+<span class="sd">- :py:class:`component_type_rev&lt;ch_util._db_tables.component_type_rev&gt;`</span>
+<span class="sd">- :py:class:`component_doc&lt;ch_util._db_tables.component_doc&gt;`</span>
+<span class="sd">- :py:class:`connexion&lt;ch_util._db_tables.connexion&gt;`</span>
+<span class="sd">- :py:class:`external_repo&lt;ch_util._db_tables.external_repo&gt;`</span>
+<span class="sd">- :py:class:`event&lt;ch_util._db_tables.event&gt;`</span>
+<span class="sd">- :py:class:`event_type&lt;ch_util._db_tables.event_type&gt;`</span>
+<span class="sd">- :py:class:`graph_obj&lt;ch_util._db_tables.graph_obj&gt;`</span>
+<span class="sd">- :py:class:`global_flag&lt;ch_util._db_tables.global_flag&gt;`</span>
+<span class="sd">- :py:class:`predef_subgraph_spec&lt;ch_util._db_tables.predef_subgraph_spec&gt;`</span>
+<span class="sd">- :py:class:`predef_subgraph_spec_param&lt;ch_util._db_tables.predef_subgraph_spec_param&gt;`</span>
+<span class="sd">- :py:class:`property&lt;ch_util._db_tables.property&gt;`</span>
+<span class="sd">- :py:class:`property_component&lt;ch_util._db_tables.property_component&gt;`</span>
+<span class="sd">- :py:class:`property_type&lt;ch_util._db_tables.property_type&gt;`</span>
+<span class="sd">- :py:class:`timestamp&lt;ch_util._db_tables.timestamp&gt;`</span>
+<span class="sd">- :py:class:`user_permission&lt;ch_util._db_tables.user_permission&gt;`</span>
+<span class="sd">- :py:class:`user_permission_type&lt;ch_util._db_tables.user_permission_type&gt;`</span>
+
+<span class="sd">Exceptions</span>
+<span class="sd">==========</span>
+
+<span class="sd">- :py:class:`NoSubgraph&lt;ch_util._db_tables.NoSubgraph&gt;`</span>
+<span class="sd">- :py:class:`BadSubgraph&lt;ch_util._db_tables.BadSubgraph&gt;`</span>
+<span class="sd">- :py:class:`DoesNotExist&lt;ch_util._db_tables.DoesNotExist&gt;`</span>
+<span class="sd">- :py:class:`UnknownUser&lt;ch_util._db_tables.UnknownUser&gt;`</span>
+<span class="sd">- :py:class:`NoPermission&lt;ch_util._db_tables.NoPermission&gt;`</span>
+<span class="sd">- :py:class:`LayoutIntegrity&lt;ch_util._db_tables.LayoutIntegrity&gt;`</span>
+<span class="sd">- :py:class:`PropertyType&lt;ch_util._db_tables.PropertyType&gt;`</span>
+<span class="sd">- :py:class:`PropertyUnchanged&lt;ch_util._db_tables.PropertyUnchanged&gt;`</span>
+<span class="sd">- :py:class:`ClosestDraw&lt;ch_util._db_tables.ClosestDraw&gt;`</span>
+<span class="sd">- :py:class:`NotFound&lt;chimedb.core.NotFoundError&gt;`</span>
+
+<span class="sd">Constants</span>
+<span class="sd">=========</span>
+
+<span class="sd">- :py:const:`EVENT_AT`</span>
+<span class="sd">- :py:const:`EVENT_BEFORE`</span>
+<span class="sd">- :py:const:`EVENT_AFTER`</span>
+<span class="sd">- :py:const:`EVENT_ALL`</span>
+<span class="sd">- :py:const:`ORDER_ASC`</span>
+<span class="sd">- :py:const:`ORDER_DESC`</span>
+<span class="sd">&quot;&quot;&quot;</span>  <span class="c1"># noqa: E501</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">logging</span><span class="w"> </span><span class="kn">import</span> <span class="n">NullHandler</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">networkx</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nx</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">peewee</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pw</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">chimedb.core</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">caput.time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ctime</span>
+
+<span class="c1"># Do this since there is a class &quot;property&quot; in _db_tables.</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">builtins</span><span class="w"> </span><span class="kn">import</span> <span class="nb">property</span> <span class="k">as</span> <span class="n">_property</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._db_tables</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">EVENT_AT</span> <span class="k">as</span> <span class="n">EVENT_AT</span><span class="p">,</span>
+    <span class="n">EVENT_BEFORE</span> <span class="k">as</span> <span class="n">EVENT_BEFORE</span><span class="p">,</span>
+    <span class="n">EVENT_AFTER</span> <span class="k">as</span> <span class="n">EVENT_AFTER</span><span class="p">,</span>
+    <span class="n">EVENT_ALL</span> <span class="k">as</span> <span class="n">EVENT_ALL</span><span class="p">,</span>
+    <span class="n">ORDER_ASC</span> <span class="k">as</span> <span class="n">ORDER_ASC</span><span class="p">,</span>
+    <span class="n">ORDER_DESC</span> <span class="k">as</span> <span class="n">ORDER_DESC</span><span class="p">,</span>
+    <span class="n">_check_fail</span> <span class="k">as</span> <span class="n">_check_fail</span><span class="p">,</span>
+    <span class="n">_plural</span> <span class="k">as</span> <span class="n">_plural</span><span class="p">,</span>
+    <span class="n">_are</span> <span class="k">as</span> <span class="n">_are</span><span class="p">,</span>
+    <span class="n">AlreadyExists</span> <span class="k">as</span> <span class="n">AlreadyExists</span><span class="p">,</span>
+    <span class="n">NoSubgraph</span> <span class="k">as</span> <span class="n">NoSubgraph</span><span class="p">,</span>
+    <span class="n">BadSubgraph</span> <span class="k">as</span> <span class="n">BadSubgraph</span><span class="p">,</span>
+    <span class="n">DoesNotExist</span> <span class="k">as</span> <span class="n">DoesNotExist</span><span class="p">,</span>
+    <span class="n">UnknownUser</span> <span class="k">as</span> <span class="n">UnknownUser</span><span class="p">,</span>
+    <span class="n">NoPermission</span> <span class="k">as</span> <span class="n">NoPermission</span><span class="p">,</span>
+    <span class="n">LayoutIntegrity</span> <span class="k">as</span> <span class="n">LayoutIntegrity</span><span class="p">,</span>
+    <span class="n">PropertyType</span> <span class="k">as</span> <span class="n">PropertyType</span><span class="p">,</span>
+    <span class="n">PropertyUnchanged</span> <span class="k">as</span> <span class="n">PropertyUnchanged</span><span class="p">,</span>
+    <span class="n">ClosestDraw</span> <span class="k">as</span> <span class="n">ClosestDraw</span><span class="p">,</span>
+    <span class="n">set_user</span> <span class="k">as</span> <span class="n">set_user</span><span class="p">,</span>
+    <span class="n">graph_obj</span> <span class="k">as</span> <span class="n">graph_obj</span><span class="p">,</span>
+    <span class="n">global_flag_category</span> <span class="k">as</span> <span class="n">global_flag_category</span><span class="p">,</span>
+    <span class="n">global_flag</span> <span class="k">as</span> <span class="n">global_flag</span><span class="p">,</span>
+    <span class="n">component_type</span> <span class="k">as</span> <span class="n">component_type</span><span class="p">,</span>
+    <span class="n">component_type_rev</span> <span class="k">as</span> <span class="n">component_type_rev</span><span class="p">,</span>
+    <span class="n">external_repo</span> <span class="k">as</span> <span class="n">external_repo</span><span class="p">,</span>
+    <span class="n">component</span> <span class="k">as</span> <span class="n">component</span><span class="p">,</span>
+    <span class="n">component_history</span> <span class="k">as</span> <span class="n">component_history</span><span class="p">,</span>
+    <span class="n">component_doc</span> <span class="k">as</span> <span class="n">component_doc</span><span class="p">,</span>
+    <span class="n">connexion</span> <span class="k">as</span> <span class="n">connexion</span><span class="p">,</span>
+    <span class="n">property_type</span> <span class="k">as</span> <span class="n">property_type</span><span class="p">,</span>
+    <span class="n">property_component</span> <span class="k">as</span> <span class="n">property_component</span><span class="p">,</span>
+    <span class="nb">property</span> <span class="k">as</span> <span class="nb">property</span><span class="p">,</span>
+    <span class="n">event_type</span> <span class="k">as</span> <span class="n">event_type</span><span class="p">,</span>
+    <span class="n">timestamp</span> <span class="k">as</span> <span class="n">timestamp</span><span class="p">,</span>
+    <span class="n">event</span> <span class="k">as</span> <span class="n">event</span><span class="p">,</span>
+    <span class="n">predef_subgraph_spec</span> <span class="k">as</span> <span class="n">predef_subgraph_spec</span><span class="p">,</span>
+    <span class="n">predef_subgraph_spec_param</span> <span class="k">as</span> <span class="n">predef_subgraph_spec_param</span><span class="p">,</span>
+    <span class="n">user_permission_type</span> <span class="k">as</span> <span class="n">user_permission_type</span><span class="p">,</span>
+    <span class="n">user_permission</span> <span class="k">as</span> <span class="n">user_permission</span><span class="p">,</span>
+    <span class="n">compare_connexion</span> <span class="k">as</span> <span class="n">compare_connexion</span><span class="p">,</span>
+    <span class="n">add_component</span> <span class="k">as</span> <span class="n">add_component</span><span class="p">,</span>
+    <span class="n">remove_component</span> <span class="k">as</span> <span class="n">remove_component</span><span class="p">,</span>
+    <span class="n">set_property</span> <span class="k">as</span> <span class="n">set_property</span><span class="p">,</span>
+    <span class="n">make_connexion</span> <span class="k">as</span> <span class="n">make_connexion</span><span class="p">,</span>
+    <span class="n">sever_connexion</span> <span class="k">as</span> <span class="n">sever_connexion</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">._db_tables</span><span class="w"> </span><span class="kn">import</span> <span class="n">connect_peewee_tables</span> <span class="k">as</span> <span class="n">connect_database</span>
+
+<span class="c1"># Legacy name</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">chimedb.core</span><span class="w"> </span><span class="kn">import</span> <span class="n">NotFoundError</span> <span class="k">as</span> <span class="n">NotFound</span>
+
+<span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="p">[</span><span class="s2">&quot;TZ&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;UTC&quot;</span>
+
+<span class="c1"># Logging</span>
+<span class="c1"># =======</span>
+
+<span class="c1"># All peewee-generated logs are logged to this namespace.</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="s2">&quot;layout&quot;</span><span class="p">)</span>
+<span class="c1"># Set default logging handler to avoid &quot;No handlers could be found for logger</span>
+<span class="c1"># &#39;layout&#39;&quot; warnings.</span>
+<span class="n">logger</span><span class="o">.</span><span class="n">addHandler</span><span class="p">(</span><span class="n">NullHandler</span><span class="p">())</span>
+
+
+<span class="c1"># Layout!</span>
+<span class="c1"># =======</span>
+
+
+<div class="viewcode-block" id="subgraph_spec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.subgraph_spec">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">subgraph_spec</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Specifications for extracting a subgraph from a full graph.</span>
+
+<span class="sd">    The subgraph specification can be created from scratch by passing the</span>
+<span class="sd">    appropriate parameters. They can also be pulled from the database using the</span>
+<span class="sd">    class method :meth:`FROM_PREDef`.</span>
+
+<span class="sd">    The parameters can be passed as ID&#39;s, names of compoenet types or</span>
+<span class="sd">    :obj:`component_type` instances.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start : integer, :obj:`component_type` or string</span>
+<span class="sd">      The component type for the start of the subgraph.</span>
+<span class="sd">    terminate : list of integers, of :obj:`component_type` or of strings</span>
+<span class="sd">      Component type id&#39;s for terminating the subgraph.</span>
+<span class="sd">    oneway : list of list of integer pairs, of :obj:`component_type` or of strings</span>
+<span class="sd">      Pairs of component types for defining connexions that should only be</span>
+<span class="sd">      traced one way when moving from the starting to terminating components.</span>
+<span class="sd">    hide : list of integers, of :obj:`component_type` or of strings</span>
+<span class="sd">      Component types for components that should be hidden and skipped over in</span>
+<span class="sd">      the subgraph.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    To look at subgraphs of components between the outer bulkhead and the</span>
+<span class="sd">    correlator inputs, one could create the following specification:</span>
+
+<span class="sd">    &gt;&gt;&gt; import layout</span>
+<span class="sd">    &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">    &gt;&gt;&gt; sg_spec = layout.subgraph_spec(start = &quot;c-can thru&quot;,</span>
+<span class="sd">                                       terminate = [&quot;correlator input&quot;, &quot;60m coax&quot;],</span>
+<span class="sd">                                       oneway = [],</span>
+<span class="sd">                                       hide = [&quot;60m coax&quot;, &quot;SMA coax&quot;])</span>
+
+<span class="sd">    What did we do? We specified that the subgraph starts at the C-Can bulkhead.</span>
+<span class="sd">    It terminates at the correlator input; in the other direction, it must also</span>
+<span class="sd">    terminate at a 60 m coaxial cable plugged into the bulkhead. We hide the 60 m</span>
+<span class="sd">    coaxial cable so that it doesn&#39;t show up in the subgraph. We also hide the SMA</span>
+<span class="sd">    cables so that they will be skipped over.</span>
+
+<span class="sd">    We can load all such subgraphs from the database now and see how many nodes</span>
+<span class="sd">    they contain:</span>
+
+<span class="sd">    &gt;&gt;&gt; sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec)</span>
+<span class="sd">    print [s.order() for s in sg]</span>
+<span class="sd">    [903, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 903,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 903, 3, 3, 3, 903, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 903, 3, 1, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    903, 3, 903, 3, 3, 3, 3, 3, 3, 3, 903, 903, 5, 5]</span>
+
+<span class="sd">    Most of them are as short as we would expect, but there are some</span>
+<span class="sd">    complications. Let&#39;s look at that first one by printing out its LTF:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(sg[0].ltf)</span>
+<span class="sd">    # C-can thru to RFT thru.</span>
+<span class="sd">    CANAD0B</span>
+<span class="sd">    RFTA15B attenuation=10 therm_avail=ch7</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    # RFT thru to HK preamp.</span>
+<span class="sd">    RFTA15B attenuation=10 therm_avail=ch7</span>
+<span class="sd">    CHB036C7</span>
+<span class="sd">    HPA0002A</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    # HK preamp to HK readout.</span>
+<span class="sd">    HPA0002A</span>
+<span class="sd">    ATMEGA49704949575721220150</span>
+<span class="sd">    HKR00</span>
+<span class="sd">    &lt;BLANKLINE&gt;</span>
+<span class="sd">    # HK readout to HK ATMega.</span>
+<span class="sd">    HKR00</span>
+<span class="sd">    ATMEGA50874956504915100100</span>
+<span class="sd">    etc...</span>
+<span class="sd">    etc...</span>
+<span class="sd">    # RFT thru to FLA.</span>
+<span class="sd">    RFTA15B attenuation=10 therm_avail=ch7</span>
+<span class="sd">    FLA0159B</span>
+
+<span class="sd">    Some FLA&#39;s are connected to HK hydra cables and we need to terminate on these</span>
+<span class="sd">    as well. It turns out that some outer bulkheads are connected to 200 m</span>
+<span class="sd">    coaxial cables, and some FLA&#39;s are connected to 50 m delay cables, adding to</span>
+<span class="sd">    the list of terminations. Let&#39;s exclude these as well:</span>
+
+<span class="sd">    &gt;&gt;&gt; sg_spec.terminate += [&quot;200m coax&quot;, &quot;HK hydra&quot;, &quot;50m coax&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; sg_spec.hide += [&quot;200m coax&quot;, &quot;HK hydra&quot;, &quot;50m coax&quot;]</span>
+<span class="sd">    &gt;&gt;&gt; sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec)</span>
+<span class="sd">    &gt;&gt;&gt; print([s.order() for s in sg])</span>
+<span class="sd">    [3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="sd">    3, 3, 3, 3, 3, 10, 10, 5, 5]</span>
+
+<span class="sd">    The remaining subgraphs with more than three components actually turn out to</span>
+<span class="sd">    be errors in the layout! Let&#39;s investigate the last one by removing any hidden</span>
+<span class="sd">    components and printing its LTF.</span>
+
+<span class="sd">    &gt;&gt;&gt; sn = sg[-1].component(type = &quot;C-can thru&quot;)[0].sn</span>
+<span class="sd">    CANBL1B</span>
+<span class="sd">    &gt;&gt;&gt; sg_spec.hide = []</span>
+<span class="sd">    &gt;&gt;&gt; bad_sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec, sn)</span>
+<span class="sd">    &gt;&gt;&gt; print(bad_sg.ltf())</span>
+<span class="sd">    # C-can thru to c-can thru.</span>
+<span class="sd">    CANBL1B</span>
+<span class="sd">    CXS0017</span>
+<span class="sd">    RFTQ00B</span>
+<span class="sd">    CXS0016</span>
+<span class="sd">    FLA0073B</span>
+<span class="sd">    RFTQ01B attenuation=9</span>
+<span class="sd">    CXS0015</span>
+<span class="sd">    CANBL0B</span>
+
+<span class="sd">    It appears that :code:`CXS0016` mistakenly connects :code:`RFTQ00B` to</span>
+<span class="sd">    :code:`FLA0073B`. This is an error that should be investigated and fixed. But</span>
+<span class="sd">    by way of illustration, let&#39;s cut this subgraph short by specifying a one-way</span>
+<span class="sd">    connection, and not allowing the subgrapher to trace backwards from the inner</span>
+<span class="sd">    bulkhead to an SMA cable:</span>
+
+<span class="sd">    &gt;&gt;&gt; sg_spec.oneway = [[&quot;SMA coax&quot;, &quot;RFT thru&quot;]]</span>
+<span class="sd">    &gt;&gt;&gt; bad_sg = layout.graph.from_db(datetime(2014, 10, 5, 12, 0), sg_spec, sn)</span>
+<span class="sd">    &gt;&gt;&gt; print(bad_sg.ltf())</span>
+<span class="sd">    # C-can thru to RFT thru.</span>
+<span class="sd">    CANBL1B</span>
+<span class="sd">    CXS0017</span>
+<span class="sd">    RFTQ00B</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">start</span><span class="p">,</span> <span class="n">terminate</span><span class="p">,</span> <span class="n">oneway</span><span class="p">,</span> <span class="n">hide</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start</span> <span class="o">=</span> <span class="n">start</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">terminate</span> <span class="o">=</span> <span class="n">terminate</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">oneway</span> <span class="o">=</span> <span class="n">oneway</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hide</span> <span class="o">=</span> <span class="n">hide</span>
+
+<div class="viewcode-block" id="subgraph_spec.from_predef">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.subgraph_spec.from_predef">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_predef</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">predef</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a subgraph specification from a predefined version in the DB.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        predef : :class:`predef_subgraph_spec`</span>
+<span class="sd">          A predefined subgraph specification in the DB.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">predef</span><span class="o">.</span><span class="n">start_type</span><span class="o">.</span><span class="n">id</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">o</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">predef_subgraph_spec_param</span><span class="o">.</span><span class="n">select</span><span class="p">(</span>
+            <span class="n">predef_subgraph_spec_param</span><span class="o">.</span><span class="n">action</span><span class="p">,</span>
+            <span class="n">predef_subgraph_spec_param</span><span class="o">.</span><span class="n">type1</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;type1_id&quot;</span><span class="p">),</span>
+            <span class="n">predef_subgraph_spec_param</span><span class="o">.</span><span class="n">type2</span><span class="o">.</span><span class="n">alias</span><span class="p">(</span><span class="s2">&quot;type2_id&quot;</span><span class="p">),</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">predef_subgraph_spec_param</span><span class="o">.</span><span class="n">predef_subgraph_spec</span> <span class="o">==</span> <span class="n">predef</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;T&quot;</span><span class="p">:</span>
+                <span class="n">t</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">type1_id</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">param</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;O&quot;</span><span class="p">:</span>
+                <span class="n">o</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">param</span><span class="o">.</span><span class="n">type1_id</span><span class="p">,</span> <span class="n">param</span><span class="o">.</span><span class="n">type2_id</span><span class="p">])</span>
+            <span class="k">elif</span> <span class="n">param</span><span class="o">.</span><span class="n">action</span> <span class="o">==</span> <span class="s2">&quot;H&quot;</span><span class="p">:</span>
+                <span class="n">h</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">type1_id</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Unknown subgraph action type &quot;</span><span class="si">{</span><span class="n">param</span><span class="o">.</span><span class="n">action</span><span class="si">}</span><span class="s1">&quot;.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">o</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span></div>
+
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The component type ID starting the subgraph.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_start</span>
+
+    <span class="nd">@start</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">start</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_start</span> <span class="o">=</span> <span class="n">_id_from_multi</span><span class="p">(</span><span class="n">component_type</span><span class="p">,</span> <span class="n">val</span><span class="p">)</span>
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The component type ID(s) terminating the subgraph.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_terminate</span>
+
+    <span class="nd">@terminate</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_terminate</span> <span class="o">=</span> <span class="p">[</span><span class="n">_id_from_multi</span><span class="p">(</span><span class="n">component_type</span><span class="p">,</span> <span class="n">tt</span><span class="p">)</span> <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="n">val</span><span class="p">]</span>
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">oneway</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Pairs of component type ID(s) for one-way tracing of the subgraph.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_oneway</span>
+
+    <span class="nd">@oneway</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">oneway</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_oneway</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="p">[</span>
+                <span class="n">_id_from_multi</span><span class="p">(</span><span class="n">component_type</span><span class="p">,</span> <span class="n">oo</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span>
+                <span class="n">_id_from_multi</span><span class="p">(</span><span class="n">component_type</span><span class="p">,</span> <span class="n">oo</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span>
+            <span class="p">]</span>
+            <span class="k">for</span> <span class="n">oo</span> <span class="ow">in</span> <span class="n">val</span>
+        <span class="p">]</span>
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hide</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The component type ID(s) that are skipped over in the subgraph.&quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hide</span>
+
+    <span class="nd">@hide</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">hide</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hide</span> <span class="o">=</span> <span class="p">[</span><span class="n">_id_from_multi</span><span class="p">(</span><span class="n">component_type</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span> <span class="k">for</span> <span class="n">h</span> <span class="ow">in</span> <span class="n">val</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="graph">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">graph</span><span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;A graph of connexions.</span>
+
+<span class="sd">    This class inherits the</span>
+<span class="sd">    `networkx.Graph &lt;http://networkx.github.io/documentation/networkx-1.9.1/&gt;`_</span>
+<span class="sd">    class and adds CHIME-specific functionality.</span>
+
+<span class="sd">    Use the :meth:`from_db` class method to construct a graph from the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    time : datetime.datetime</span>
+<span class="sd">      The time at which the graph is valid. Default is now().</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    To load a graph from the database, use the :meth:`from_db` class method:</span>
+
+<span class="sd">    &gt;&gt;&gt; from ch_util import graph</span>
+<span class="sd">    &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">    &gt;&gt;&gt; g = layout.graph.from_db(datetime(2014, 10, 5, 12, 0))</span>
+
+<span class="sd">    You can now use any of the</span>
+<span class="sd">    `networkx.Graph &lt;http://networkx.github.io/documentation/networkx-1.9.1/&gt;`_</span>
+<span class="sd">    methods:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(g.order(), g.size())</span>
+<span class="sd">    2483 2660</span>
+
+<span class="sd">    There are some convenience methods for our implementation. For example, you</span>
+<span class="sd">    can easily find components by component type:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(g.component(type = &quot;reflector&quot;))</span>
+<span class="sd">    [&lt;layout.component object at 0x7fd1b2cda710&gt;,</span>
+<span class="sd">    &lt;layout.component object at 0x7fd1b2cda810&gt;,</span>
+<span class="sd">    &lt;layout.component object at 0x7fd1b2cfb7d0&gt;]</span>
+
+<span class="sd">    Note that the graph nodes are :obj:`component` objects. You can also use the</span>
+<span class="sd">    :meth:`component` method to search for components by serial number:</span>
+
+<span class="sd">    &gt;&gt;&gt; ant = g.component(comp = &quot;ANT0044B&quot;)</span>
+
+<span class="sd">    Node properties are stored as per usual for :class:`networkx.Graph` objects:</span>
+
+<span class="sd">    &gt;&gt;&gt; print(g.nodes[ant])</span>
+<span class="sd">    {&#39;_rev_id&#39;: 11L, &#39;_type_id&#39;: 2L, &#39;_type_name&#39;: &#39;antenna&#39;, &#39;_id&#39;: 32L,</span>
+<span class="sd">    &#39;pol1_orient&#39;: &lt;layout.property object at 0x7f31ed323fd0&gt;,</span>
+<span class="sd">    &#39;pol2_orient&#39;: &lt;layout.property object at 0x7f31ed2c8790&gt;, &#39;_rev_name&#39;: &#39;B&#39;}</span>
+
+<span class="sd">    Note, however, that there are some internally-used properties (starting with</span>
+<span class="sd">    an underscore). The :meth:`node_property` returns a dictionary of properties</span>
+<span class="sd">    without these private memebers:</span>
+
+<span class="sd">    &gt;&gt;&gt; for p in g.node_property(ant).values():</span>
+<span class="sd">    ...   print(p.type.name, &quot;=&quot;, p.value, p.type.units if p.type.units else &quot;&quot;)</span>
+<span class="sd">    pol1_orient = S</span>
+<span class="sd">    pol2_orient = E</span>
+
+<span class="sd">    To search the graph for the closest component of a given type to a single</span>
+<span class="sd">    component, using :meth:`closest_of_type`:</span>
+
+<span class="sd">    &gt;&gt;&gt; slt_type = layout.component_type.get(name = &quot;cassette slot&quot;)</span>
+<span class="sd">    &gt;&gt;&gt; print(g.closest_of_type(ant, slt_type).sn)</span>
+<span class="sd">    CSS004C0</span>
+
+<span class="sd">    Use of :meth:`closest_of_type` can be subtle for components separated by long</span>
+<span class="sd">    paths. See its documentation for more examples.</span>
+
+<span class="sd">    Subgraphs can be created using a subgraph specification, encoded in a</span>
+<span class="sd">    :class:`subgraph_spec` object. See the documentation for that class for</span>
+<span class="sd">    details, but briefly, this allows one to create a smaller, more manageable</span>
+<span class="sd">    graph containing only components and connexions you are interested in. Given a</span>
+<span class="sd">    subgraph, the :meth:`ltf` method can be useful.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()):</span>
+        <span class="c1"># Initialise the graph.</span>
+        <span class="n">nx</span><span class="o">.</span><span class="n">Graph</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_time</span> <span class="o">=</span> <span class="n">time</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec_start</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sn_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ctype_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># We will cache all the component types, revisions and properties now,</span>
+        <span class="c1"># since these will be used constantly by the graph.</span>
+        <span class="n">component_type</span><span class="o">.</span><span class="n">fill_cache</span><span class="p">()</span>
+        <span class="n">component_type_rev</span><span class="o">.</span><span class="n">fill_cache</span><span class="p">()</span>
+        <span class="n">property_type</span><span class="o">.</span><span class="n">fill_cache</span><span class="p">()</span>
+
+        <span class="c1"># Aliases.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbours</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">neighbor_of_type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbour_of_type</span>
+
+<div class="viewcode-block" id="graph.from_db">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.from_db">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_db</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">sg_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sg_start_sn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Create a new graph by reading the database.</span>
+
+<span class="sd">        This method is designed to be efficient. It has customised SQL calls so that</span>
+<span class="sd">        only a couple of queries are required. Doing this with the standard peewee</span>
+<span class="sd">        functionality requires many more calls.</span>
+
+<span class="sd">        This method will establish a connection to the database if it doesn&#39;t</span>
+<span class="sd">        already exist.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        time : datetime.datetime</span>
+<span class="sd">          The time at which the graph is valid. Default is now().</span>
+<span class="sd">        sg_spec : :obj:`subgraph_spec`</span>
+<span class="sd">          The subgraph specificationto use; can be set to :obj:`None`.</span>
+<span class="sd">        sg_start_sn : string</span>
+<span class="sd">          If a serial number is specified, then only the subgraph starting with that</span>
+<span class="sd">          component will be returned. This parameter is ignored if sg_spec is</span>
+<span class="sd">          :obj:`None`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :obj:`graph`</span>
+<span class="sd">          If *sg_spec* is not :obj:`None`, and *sg_start_sn* is not specified, then</span>
+<span class="sd">          a list of :obj:`graph` objects is returned instead.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        If no graph is found, :exc:`NotFound` is raised.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Initalise the database connections</span>
+        <span class="n">connect_database</span><span class="p">()</span>
+
+        <span class="n">g</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">time</span><span class="p">)</span>
+
+        <span class="c1"># Add the connexions.</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;SELECT c1.*, c2.*, pt.id &quot;</span>
+            <span class="s2">&quot;FROM connexion c &quot;</span>
+            <span class="s2">&quot;JOIN component c1 ON c1.sn = c.comp_sn1 &quot;</span>
+            <span class="s2">&quot;JOIN event e1 ON e1.graph_obj_id = c1.id &quot;</span>
+            <span class="s2">&quot;JOIN timestamp e1t1 ON e1.start_id = e1t1.id &quot;</span>
+            <span class="s2">&quot;LEFT JOIN timestamp e1t2 ON e1.end_id = e1t2.id &quot;</span>
+            <span class="s2">&quot;JOIN component c2 ON c2.sn = c.comp_sn2 &quot;</span>
+            <span class="s2">&quot;JOIN event e2 ON e2.graph_obj_id = c2.id &quot;</span>
+            <span class="s2">&quot;JOIN timestamp e2t1 ON e2.start_id = e2t1.id &quot;</span>
+            <span class="s2">&quot;LEFT JOIN timestamp e2t2 ON e2.end_id = e2t2.id &quot;</span>
+            <span class="s2">&quot;JOIN event e ON e.graph_obj_id = c.id &quot;</span>
+            <span class="s2">&quot;JOIN event_type pt ON e.type_id = pt.id &quot;</span>
+            <span class="s2">&quot;JOIN timestamp t1 ON e.start_id = t1.id &quot;</span>
+            <span class="s2">&quot;LEFT JOIN timestamp t2 ON e.end_id = t2.id &quot;</span>
+            <span class="s2">&quot;WHERE e.active = 1 AND e1.type_id = 1 AND e2.type_id = 1 AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;e1t1.time &lt;= &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39; AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(e1.end_id IS NULL OR e1t2.time &gt; &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39;) AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;e2t1.time &lt;= &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39; AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(e2.end_id IS NULL OR e2t2.time &gt; &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39;) AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;t1.time &lt;= &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39; AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(e.end_id IS NULL OR t2.time &gt; &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39;);&quot;</span>
+        <span class="p">)</span>
+        <span class="c1"># print sql</span>
+        <span class="n">conn_list</span> <span class="o">=</span> <span class="n">chimedb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">execute_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">conn_list</span><span class="p">:</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">_ensure_add</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">c2</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">_ensure_add</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">r</span><span class="p">[</span><span class="mi">8</span><span class="p">]</span> <span class="o">==</span> <span class="n">event_type</span><span class="o">.</span><span class="n">perm_connexion</span><span class="p">()</span><span class="o">.</span><span class="n">id</span><span class="p">:</span>
+                <span class="n">perm</span> <span class="o">=</span> <span class="kc">True</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">perm</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">permanent</span><span class="o">=</span><span class="n">perm</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="c1"># Add the properties.</span>
+        <span class="n">sql</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;SELECT p.*, c.*, pt.name &quot;</span>
+            <span class="s2">&quot;FROM property p &quot;</span>
+            <span class="s2">&quot;JOIN property_type pt ON p.type_id = pt.id &quot;</span>
+            <span class="s2">&quot;JOIN component c ON p.comp_sn = c.sn &quot;</span>
+            <span class="s2">&quot;JOIN event ce ON ce.graph_obj_id = c.id &quot;</span>
+            <span class="s2">&quot;JOIN timestamp ct1 ON ce.start_id = ct1.id &quot;</span>
+            <span class="s2">&quot;LEFT JOIN timestamp ct2 ON ce.end_id = ct2.id &quot;</span>
+            <span class="s2">&quot;JOIN event e ON e.graph_obj_id = p.id &quot;</span>
+            <span class="s2">&quot;JOIN timestamp t1 ON e.start_id = t1.id &quot;</span>
+            <span class="s2">&quot;LEFT JOIN timestamp t2 ON e.end_id = t2.id &quot;</span>
+            <span class="s2">&quot;WHERE e.active = 1 AND ce.type_id = 1 AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;ct1.time &lt;= &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39; AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(ce.end_id IS NULL OR ct2.time &gt; &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39;) AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;t1.time &lt;= &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39; AND &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;(e.end_id IS NULL OR t2.time &gt; &#39;</span><span class="si">{</span><span class="n">time</span><span class="si">}</span><span class="s2">&#39;);&quot;</span>
+        <span class="p">)</span>
+        <span class="n">prop_list</span> <span class="o">=</span> <span class="n">chimedb</span><span class="o">.</span><span class="n">core</span><span class="o">.</span><span class="n">proxy</span><span class="o">.</span><span class="n">execute_sql</span><span class="p">(</span><span class="n">sql</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">prop_list</span><span class="p">:</span>
+            <span class="n">p</span> <span class="o">=</span> <span class="nb">property</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">comp</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="nb">type</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">value</span><span class="o">=</span><span class="n">r</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+            <span class="n">p</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">property_type</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">_ensure_add</span><span class="p">(</span><span class="n">r</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">r</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">c</span><span class="p">][</span><span class="n">r</span><span class="p">[</span><span class="mi">8</span><span class="p">]]</span> <span class="o">=</span> <span class="n">p</span>
+
+        <span class="k">if</span> <span class="n">sg_spec</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">graph</span><span class="o">.</span><span class="n">from_graph</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">sg_spec</span><span class="p">,</span> <span class="n">sg_start_sn</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">g</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ensure_add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">id</span><span class="p">,</span> <span class="n">sn</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">rev</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Robustly add a component, avoiding duplication.&quot;&quot;&quot;</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">comp</span><span class="o">=</span><span class="n">sn</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NotFound</span><span class="p">:</span>
+            <span class="c1"># Component ID is a foreign key to graph_obj, so we need to make an</span>
+            <span class="c1"># instance of this for that.</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">graph_obj</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="nb">id</span><span class="p">)</span>
+            <span class="n">c</span> <span class="o">=</span> <span class="n">component</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="n">g</span><span class="p">,</span> <span class="n">sn</span><span class="o">=</span><span class="n">sn</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">,</span> <span class="n">type_rev</span><span class="o">=</span><span class="n">rev</span><span class="p">)</span>
+
+            <span class="c1"># We hydrate the component type and revision so that no further queries</span>
+            <span class="c1"># need to be made. When the graph was initialised, all of the types and</span>
+            <span class="c1"># revisions were cached, so the following requires no further queries.</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">type</span> <span class="o">=</span> <span class="n">component_type</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+            <span class="n">c</span><span class="o">.</span><span class="n">rev</span> <span class="o">=</span> <span class="n">component_type_rev</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="n">rev</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_sn_dict</span><span class="p">[</span><span class="n">sn</span><span class="p">]</span> <span class="o">=</span> <span class="n">c</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ctype_dict</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_ctype_dict</span><span class="p">[</span><span class="nb">type</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">c</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">c</span>
+
+<div class="viewcode-block" id="graph.node_property">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.node_property">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">node_property</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return the properties of a node excluding internally used properties.</span>
+
+<span class="sd">        If you iterate over a nodes properties, you will also get the</span>
+<span class="sd">        internally-used properties (starting with an underscore). This method gets</span>
+<span class="sd">        the dictionary of properties without these &quot;private&quot; properties.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        node : node object</span>
+<span class="sd">          The node for which to get the properties.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A dictionary of properties.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from ch_util import graph</span>
+<span class="sd">        &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">        &gt;&gt;&gt; g = layout.graph.from_db(datetime(2014, 10, 5, 12, 0))</span>
+<span class="sd">        &gt;&gt;&gt; rft = g.component(comp = &quot;RFTK07B&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; for p in g.node_property(rft).values():</span>
+<span class="sd">        ...   print(p.type.name, &quot;=&quot;, p.value, p.type.units if p.type.units else &quot;&quot;)</span>
+<span class="sd">        attenuation = 10 dB</span>
+<span class="sd">        therm_avail = ch1</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">n</span><span class="p">]</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">key</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;_&quot;</span><span class="p">:</span>
+                <span class="n">ret</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="graph.component">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.component">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">component</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sort_sn</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return a component or list of components from the graph.</span>
+
+<span class="sd">        The components exist as graph nodes. This method provides searchable access</span>
+<span class="sd">        to them.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp : string or :obj:`component`</span>
+<span class="sd">          If not :obj:`None`, then return the component with this serial number, or</span>
+<span class="sd">          :obj:`None` if it does not exist in the graph. If this parameter is set,</span>
+<span class="sd">          then **type** is ignored. You can also pass a component object; the</span>
+<span class="sd">          instance of that component with the same serial number will be returned if</span>
+<span class="sd">          it exists in this graph.</span>
+<span class="sd">        type : string or :class:`component_type`</span>
+<span class="sd">          If not :obj:`None`, then only return components of this type. You may pass</span>
+<span class="sd">          either the name of the component type or an object.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        :class:`component` or list of such</span>
+<span class="sd">          If the **sn** parameter is passed, a single :class:`component` object is</span>
+<span class="sd">          returned. If the **type** parameter is passed, a list of</span>
+<span class="sd">          :class:`component` objects is returned.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :exc:`NotFound`</span>
+<span class="sd">          Raised if no component is found.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; from ch_util import graph</span>
+<span class="sd">        &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">        &gt;&gt;&gt; g = layout.graph.from_db(datetime(2014, 10, 5, 12, 0))</span>
+<span class="sd">        &gt;&gt;&gt; print(g.component(&quot;CXA0005A&quot;).type_rev.name)</span>
+<span class="sd">        B</span>
+<span class="sd">        &gt;&gt;&gt; for r in g.component(type = &quot;reflector&quot;):</span>
+<span class="sd">        ...   print r.sn</span>
+<span class="sd">        E_cylinder</span>
+<span class="sd">        W_cylinder</span>
+<span class="sd">        26m_dish</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">comp</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">sn</span> <span class="o">=</span> <span class="n">comp</span><span class="o">.</span><span class="n">sn</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">sn</span> <span class="o">=</span> <span class="n">comp</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sn_dict</span><span class="p">[</span><span class="n">sn</span><span class="p">]</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NotFound</span><span class="p">(</span><span class="s1">&#39;Serial number &quot;</span><span class="si">{sn}</span><span class="s1">&quot; is not in the graph.&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">type</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">type_id</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">id</span>
+                <span class="n">type_name</span> <span class="o">=</span> <span class="nb">type</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+                <span class="n">type_id</span> <span class="o">=</span> <span class="n">component_type</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span><span class="o">.</span><span class="n">id</span>
+                <span class="n">type_name</span> <span class="o">=</span> <span class="nb">type</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_ctype_dict</span><span class="p">[</span><span class="n">type_id</span><span class="p">])</span>
+                <span class="k">if</span> <span class="n">sort_sn</span><span class="p">:</span>
+                    <span class="n">ret</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="k">lambda</span> <span class="n">x</span><span class="p">:</span> <span class="n">x</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">NotFound</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;No components of type &quot;</span><span class="si">{</span><span class="n">type_name</span><span class="si">}</span><span class="s1">&quot; are in the graph.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_subgraph_recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">gr</span><span class="p">,</span> <span class="n">comp1</span><span class="p">,</span> <span class="n">sg</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">last_no_hide</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">comp1</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="n">sg</span><span class="o">.</span><span class="n">hide</span><span class="p">:</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">last_no_hide</span>
+            <span class="n">hidden</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">c1</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">_ensure_add</span><span class="p">(</span>
+                <span class="n">comp1</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">comp1</span><span class="o">.</span><span class="n">sn</span><span class="p">,</span> <span class="n">comp1</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">comp1</span><span class="o">.</span><span class="n">rev</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">comp1</span><span class="o">.</span><span class="n">rev</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">last_no_hide</span><span class="p">:</span>
+                <span class="n">last_no_hide</span> <span class="o">=</span> <span class="n">c1</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_property</span><span class="p">(</span><span class="n">comp1</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">gr</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">c1</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+            <span class="n">hidden</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">last_no_hide</span><span class="p">:</span>
+                <span class="n">last_no_hide</span> <span class="o">=</span> <span class="n">c1</span>
+
+        <span class="n">done</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp1</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">comp2</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">comp1</span><span class="p">):</span>
+            <span class="c1"># Watch for connexions in the wrong order.</span>
+            <span class="n">check</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp2</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">comp1</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">check</span> <span class="ow">in</span> <span class="n">sg</span><span class="o">.</span><span class="n">oneway</span><span class="p">:</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="n">comp2</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sg</span><span class="o">.</span><span class="n">hide</span><span class="p">:</span>
+                <span class="n">c2</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">_ensure_add</span><span class="p">(</span>
+                    <span class="n">comp2</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">comp2</span><span class="o">.</span><span class="n">sn</span><span class="p">,</span>
+                    <span class="n">comp2</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+                    <span class="n">comp2</span><span class="o">.</span><span class="n">rev</span><span class="o">.</span><span class="n">id</span> <span class="k">if</span> <span class="n">comp2</span><span class="o">.</span><span class="n">rev</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                <span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_property</span><span class="p">(</span><span class="n">comp2</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">gr</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">c2</span><span class="p">][</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span>
+
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">gr</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">]</span>
+                <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">c1</span><span class="o">.</span><span class="n">sn</span> <span class="o">!=</span> <span class="n">c2</span><span class="o">.</span><span class="n">sn</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">hidden</span><span class="p">:</span>
+                            <span class="n">perm</span> <span class="o">=</span> <span class="kc">False</span>
+                        <span class="k">else</span><span class="p">:</span>
+                            <span class="n">perm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">edges</span><span class="p">[</span><span class="n">comp1</span><span class="p">,</span> <span class="n">comp2</span><span class="p">][</span><span class="s2">&quot;permanent&quot;</span><span class="p">]</span>
+                        <span class="n">gr</span><span class="o">.</span><span class="n">add_edge</span><span class="p">(</span><span class="n">c1</span><span class="p">,</span> <span class="n">c2</span><span class="p">,</span> <span class="n">permanent</span><span class="o">=</span><span class="n">perm</span><span class="p">,</span> <span class="n">hidden</span><span class="o">=</span><span class="n">hidden</span><span class="p">,</span> <span class="n">_head</span><span class="o">=</span><span class="n">c1</span><span class="p">)</span>
+                        <span class="n">last_no_hide</span> <span class="o">=</span> <span class="n">c2</span>
+
+            <span class="k">if</span> <span class="n">comp2</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sg</span><span class="o">.</span><span class="n">terminate</span> <span class="ow">and</span> <span class="n">comp2</span><span class="o">.</span><span class="n">sn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">done</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_subgraph_recurse</span><span class="p">(</span><span class="n">gr</span><span class="p">,</span> <span class="n">comp2</span><span class="p">,</span> <span class="n">sg</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">last_no_hide</span><span class="p">)</span>
+        <span class="k">return</span>
+
+<div class="viewcode-block" id="graph.from_graph">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.from_graph">[docs]</a>
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">from_graph</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">sg_spec</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sg_start_sn</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Find subgraphs within this graph.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        g : :obj:`graph`</span>
+<span class="sd">          The graph from which to get the new graph.</span>
+<span class="sd">        sg_spect : :obj:`subgraph_spec`</span>
+<span class="sd">          The subgraph specification to use; can be set to :obj:`None`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        A list of :obj:`graph` objects, one for each subgraph found. If, however,</span>
+<span class="sd">        *g* is set to :obj:`None`, a reference to the input graph is returned.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">sg_spec</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">g</span>
+        <span class="k">if</span> <span class="n">sg_spec</span><span class="o">.</span><span class="n">start</span> <span class="ow">in</span> <span class="n">sg_spec</span><span class="o">.</span><span class="n">terminate</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BadSubgraph</span><span class="p">(</span>
+                <span class="s2">&quot;You cannot terminate on the component type of the &quot;</span>
+                <span class="s2">&quot;starting component of your subgraph.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">if</span> <span class="n">sg_spec</span><span class="o">.</span><span class="n">start</span> <span class="ow">in</span> <span class="n">sg_spec</span><span class="o">.</span><span class="n">hide</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">BadSubgraph</span><span class="p">(</span>
+                <span class="s2">&quot;You cannot hide the component type of the &quot;</span>
+                <span class="s2">&quot;starting component of a subgraph.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">start_comp</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">component_type</span><span class="o">.</span><span class="n">from_id</span><span class="p">(</span><span class="n">sg_spec</span><span class="o">.</span><span class="n">start</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">sg_start_sn</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">start_comp</span><span class="o">.</span><span class="n">sn</span> <span class="o">!=</span> <span class="n">sg_start_sn</span><span class="p">:</span>
+                    <span class="k">continue</span>
+            <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">cls</span><span class="p">(</span><span class="n">time</span><span class="o">=</span><span class="n">g</span><span class="o">.</span><span class="n">time</span><span class="p">))</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">_subgraph_recurse</span><span class="p">(</span><span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">start_comp</span><span class="p">,</span> <span class="n">sg_spec</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">_sg_spec</span> <span class="o">=</span> <span class="n">sg_spec</span>
+            <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">_sg_spec_start</span> <span class="o">=</span> <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">comp</span><span class="o">=</span><span class="n">start_comp</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ret</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NotFound</span><span class="p">(</span><span class="s2">&quot;No subgraph was found.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sg_start_sn</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_print_chain</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">chain</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s2">&quot;&quot;</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="n">ctype1</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">ctype2</span> <span class="o">=</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;# &quot;</span> <span class="o">+</span> <span class="p">(</span><span class="n">ctype1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">upper</span><span class="p">()</span> <span class="o">+</span> <span class="n">ctype1</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span> <span class="o">+</span> <span class="s2">&quot; to &quot;</span> <span class="o">+</span> <span class="n">ctype2</span> <span class="o">+</span> <span class="s2">&quot;.</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="n">c</span><span class="o">.</span><span class="n">sn</span>
+            <span class="k">for</span> <span class="n">prop</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">node_property</span><span class="p">(</span><span class="n">c</span><span class="p">)</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot; &quot;</span> <span class="o">+</span> <span class="n">prop</span> <span class="o">+</span> <span class="s2">&quot;=&quot;</span> <span class="o">+</span> <span class="n">value</span><span class="o">.</span><span class="n">value</span>
+            <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+        <span class="n">ret</span> <span class="o">+=</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">_ltf_recurse</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">last</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">last</span><span class="p">:</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="p">[</span><span class="n">last</span><span class="p">,</span> <span class="n">comp</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">chain</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="p">]</span>
+        <span class="n">done</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+        <span class="k">while</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">next_comp</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">neighbors</span><span class="p">(</span><span class="n">comp</span><span class="p">))</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">done</span><span class="p">))</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_comp</span><span class="p">)</span> <span class="ow">or</span> <span class="n">comp</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">id</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">sg_spec</span><span class="o">.</span><span class="n">terminate</span><span class="p">:</span>
+                <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+                <span class="k">break</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_comp</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_comp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">done</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">next_comp</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="n">comp</span> <span class="o">=</span> <span class="n">next_comp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">next_comp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">done_print</span> <span class="o">=</span> <span class="kc">False</span>
+                <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">next_comp</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="n">done_print</span><span class="p">:</span>
+                        <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_print_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span>
+                        <span class="n">done_print</span> <span class="o">=</span> <span class="kc">True</span>
+                    <span class="n">done</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+                    <span class="n">ret</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ltf_recurse</span><span class="p">(</span><span class="n">c</span><span class="p">,</span> <span class="n">done</span><span class="p">,</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+                <span class="k">break</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">break</span>
+
+        <span class="k">return</span> <span class="n">ret</span>
+
+<div class="viewcode-block" id="graph.ltf">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.ltf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">ltf</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get an LTF representation of the graph. The graph must be a subgraph,</span>
+<span class="sd">        i.e., generated with a :obj:`predef_subgraph_spec`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        ltf : string</span>
+<span class="sd">          The LTF representation of the graph.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :exc:`NoSubgraph`</span>
+<span class="sd">        Raised if no subgraph specification is associate with this layout.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Get the LTF for a subgraph of antenna to HK.</span>
+
+<span class="sd">        &gt;&gt;&gt; import layout</span>
+<span class="sd">        &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">        &gt;&gt;&gt; start = layout.component_type.get(name = &quot;antenna&quot;).id</span>
+<span class="sd">        &gt;&gt;&gt; terminate = [layout.component_type.get(name = &quot;reflector&quot;).id,</span>
+<span class="sd">                         layout.component_type.get(name = &quot;cassette slot&quot;).id,</span>
+<span class="sd">                         layout.component_type.get(name = &quot;correlator input&quot;).id,</span>
+<span class="sd">                         layout.component_type.get(name = &quot;HK preamp&quot;).id,</span>
+<span class="sd">                         layout.component_type.get(name = &quot;HK hydra&quot;).id]</span>
+<span class="sd">        &gt;&gt;&gt; hide = [layout.component_type.get(name = &quot;reflector&quot;).id,</span>
+<span class="sd">                    layout.component_type.get(name = &quot;cassette slot&quot;).id,</span>
+<span class="sd">                    layout.component_type.get(name = &quot;HK preamp&quot;).id,</span>
+<span class="sd">                    layout.component_type.get(name = &quot;HK hydra&quot;).id]</span>
+<span class="sd">        &gt;&gt;&gt; sg_spec = layout.subgraph_spec(start, terminate, [], hide)</span>
+<span class="sd">        &gt;&gt;&gt; sg = layout.graph.from_db(datetime(2014, 11, 20, 12, 0), sg_spec,&quot;ANT0108B&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; print(sg.ltf())</span>
+<span class="sd">        # Antenna to correlator input.</span>
+<span class="sd">        ANT0108B pol1_orient=S pol2_orient=E</span>
+<span class="sd">        PL0108B1</span>
+<span class="sd">        LNA0249B</span>
+<span class="sd">        CXA0239C</span>
+<span class="sd">        CANBJ6B</span>
+<span class="sd">        CXS0042</span>
+<span class="sd">        RFTG00B attenuation=10</span>
+<span class="sd">        FLA0196B</span>
+<span class="sd">        CXS0058</span>
+<span class="sd">        K7BP16-00041606</span>
+<span class="sd">        &lt;BLANKLINE&gt;</span>
+<span class="sd">        # Antenna to correlator input.</span>
+<span class="sd">        ANT0108B pol1_orient=S pol2_orient=E</span>
+<span class="sd">        PL0108B2</span>
+<span class="sd">        LNA0296B</span>
+<span class="sd">        CXA0067B</span>
+<span class="sd">        CANBG6B</span>
+<span class="sd">        CXS0090</span>
+<span class="sd">        RFTG01B attenuation=10</span>
+<span class="sd">        FLA0269B</span>
+<span class="sd">        CXS0266</span>
+<span class="sd">        K7BP16-00041506</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">NoSubgraph</span><span class="p">(</span>
+                <span class="s2">&quot;This layout is not a subgraph. You can only create &quot;</span>
+                <span class="s2">&quot;LTF representations of subgraphs generated from &quot;</span>
+                <span class="s2">&quot;predef_subgraph_spec objects.&quot;</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ltf_recurse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec_start</span><span class="p">,</span> <span class="p">[],</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="graph.shortest_path_to_type">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.shortest_path_to_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">shortest_path_to_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">type_exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_draws</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Searches for the shortest path to a component of a given type.</span>
+
+<span class="sd">        Sometimes the closest component is through a long, convoluted path that you</span>
+<span class="sd">        do not wish to explore. You can cut out these cases by including a list of</span>
+<span class="sd">        component types that will block the search along a path.</span>
+
+<span class="sd">        The component may be passed by object or by serial number; similarly for</span>
+<span class="sd">        component types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp : :obj:`component` or string or list of one of these</span>
+<span class="sd">          The component(s) to search from.</span>
+<span class="sd">        type : :obj:`component_type` or string</span>
+<span class="sd">          The component type to find.</span>
+<span class="sd">        type_exclude : list of :obj:`component_type` or strings</span>
+<span class="sd">          Any components of this type will prematurely cut off a line of</span>
+<span class="sd">          investigation.</span>
+<span class="sd">        ignore_draws : boolean</span>
+<span class="sd">          It is possible that there be more than one component of a given type the</span>
+<span class="sd">          same distance from the starting component. If this parameter is set to</span>
+<span class="sd">          :obj:`True`, then just return the first one that is found. If set to</span>
+<span class="sd">          :obj:`False`, then raise an exception.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        comp: :obj:`component` or list of such</span>
+<span class="sd">          The closest component of the given type to **start**. If no path to a</span>
+<span class="sd">          component of the specified type exists, return :obj:`None`.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :exc:`ClosestDraw`</span>
+<span class="sd">          Raised if there is no unique closest component and **ignore_draws** is set</span>
+<span class="sd">          to :obj:`False`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        See the examples for :meth:`closest_of_type`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Get the start node and the list of candidate end nodes.</span>
+        <span class="n">one</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="n">component</span><span class="p">):</span>
+            <span class="n">comp</span> <span class="o">=</span> <span class="p">[</span><span class="n">comp</span><span class="p">]</span>
+            <span class="n">one</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">start_list</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">comp</span><span class="o">=</span><span class="n">c</span><span class="p">)</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">comp</span><span class="p">]</span>
+
+        <span class="c1"># Find end_candidates. If there are none in this graph, return None.</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">end_candidate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="nb">type</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">NotFound</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">one</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">end_candidate</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">one</span> <span class="k">else</span> <span class="p">[</span><span class="kc">None</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp</span><span class="p">)</span>
+
+        <span class="c1"># Get the list of components to exclude, based on the types in the</span>
+        <span class="c1"># **type_exclude** parameter.</span>
+        <span class="n">exclude</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">type_exclude</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">type_exclude</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">type_exclude</span> <span class="o">=</span> <span class="p">[</span><span class="n">type_exclude</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">type_exclude</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">exclude</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="n">t</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">NotFound</span><span class="p">:</span>
+                    <span class="k">pass</span>
+
+        <span class="c1"># Construct a subgraph without the excluded nodes</span>
+        <span class="n">graph</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">subgraph</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nodes</span><span class="p">())</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">exclude</span><span class="p">))</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="c1"># Add a type marking node into the graph connected to all components of</span>
+        <span class="c1"># the type we are looking for</span>
+        <span class="n">tn</span> <span class="o">=</span> <span class="s2">&quot;Type node marker&quot;</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_node</span><span class="p">(</span><span class="n">tn</span><span class="p">)</span>
+        <span class="n">edges</span> <span class="o">=</span> <span class="p">[(</span><span class="n">tn</span><span class="p">,</span> <span class="n">end</span><span class="p">)</span> <span class="k">for</span> <span class="n">end</span> <span class="ow">in</span> <span class="n">end_candidate</span><span class="p">]</span>
+        <span class="n">graph</span><span class="o">.</span><span class="n">add_edges_from</span><span class="p">(</span><span class="n">edges</span><span class="p">)</span>
+
+        <span class="c1"># Get the shortest path to type by searching for the shortest path from</span>
+        <span class="c1"># the start to the type marker, the actual path is the same after</span>
+        <span class="c1"># removing the type marker</span>
+        <span class="n">shortest</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">start</span> <span class="ow">in</span> <span class="n">start_list</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">nx</span><span class="o">.</span><span class="n">shortest_path</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">source</span><span class="o">=</span><span class="n">start</span><span class="p">,</span> <span class="n">target</span><span class="o">=</span><span class="n">tn</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">nx</span><span class="o">.</span><span class="n">NetworkXError</span><span class="p">,</span> <span class="n">nx</span><span class="o">.</span><span class="n">NetworkXNoPath</span><span class="p">):</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="n">shortest</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="c1"># Return the shortest path (or None if not found)</span>
+        <span class="k">if</span> <span class="n">one</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">shortest</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">shortest</span></div>
+
+
+<div class="viewcode-block" id="graph.closest_of_type">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.closest_of_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">closest_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">comp</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">type_exclude</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_draws</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Searches for the closest connected component of a given type.</span>
+
+<span class="sd">        Sometimes the closest component is through a long, convoluted path that you</span>
+<span class="sd">        do not wish to explore. You can cut out these cases by including a list of</span>
+<span class="sd">        component types that will block the search along a path.</span>
+
+<span class="sd">        The component may be passed by object or by serial number; similarly for</span>
+<span class="sd">        component types.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp : :obj:`component` or string or list of such</span>
+<span class="sd">          The component to search from.</span>
+<span class="sd">        type : :obj:`component_type` or string</span>
+<span class="sd">          The component type to find.</span>
+<span class="sd">        type_exclude : list of :obj:`component_type` or strings</span>
+<span class="sd">          Any components of this type will prematurely cut off a line of</span>
+<span class="sd">          investigation.</span>
+<span class="sd">        ignore_draws : boolean</span>
+<span class="sd">          It is possible that there be more than one component of a given type the</span>
+<span class="sd">          same distance from the starting component. If this parameter is set to</span>
+<span class="sd">          :obj:`True`, then just return the first one that is found. If set to</span>
+<span class="sd">          :obj:`False`, then raise an exception.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        comp: :obj:`component` or list of such</span>
+<span class="sd">          The closest component of the given type to **start**. If no component of</span>
+<span class="sd">          type is found :obj:`None` is returned.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :exc:`ClosestDraw`</span>
+<span class="sd">          Raised if there is no unique closest component and **ignore_draws** is set</span>
+<span class="sd">          to :obj:`False`.</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        Find the cassette slot an antenna is plugged into:</span>
+
+<span class="sd">        &gt;&gt;&gt; import layout</span>
+<span class="sd">        &gt;&gt;&gt; from datetime import datetime</span>
+<span class="sd">        &gt;&gt;&gt; g = layout.graph.from_db(datetime(2014, 11, 5, 12, 0))</span>
+<span class="sd">        &gt;&gt;&gt; print(g.closest_of_type(&quot;ANT0044B&quot;, &quot;cassette slot&quot;).sn)</span>
+<span class="sd">        CSS004C0</span>
+
+<span class="sd">        The example above is simple as the two components are adjacent:</span>
+
+<span class="sd">        &gt;&gt;&gt; print([c.sn for c in g.shortest_path_to_type(&quot;ANT0044B&quot;, &quot;cassette slot&quot;)])</span>
+<span class="sd">        [&#39;ANT0044B&#39;, &#39;CSS004C0&#39;]</span>
+
+<span class="sd">        In general, though, you need to take care when</span>
+<span class="sd">        using this method and make judicious use of the **type_exclude** parameter.</span>
+<span class="sd">        For example, consider the following example:</span>
+
+<span class="sd">        &gt;&gt;&gt; print(g.closest_of_type(&quot;K7BP16-00040112&quot;, &quot;RFT thru&quot;).sn)</span>
+<span class="sd">        RFTB15B</span>
+
+<span class="sd">        It seems OK on the surface, but the path it has used is probably not what</span>
+<span class="sd">        you want:</span>
+
+<span class="sd">        &gt;&gt;&gt; print([c.sn for c in g.shortest_path_to_type(&quot;K7BP16-00040112&quot;,&quot;RFT thru&quot;)])</span>
+<span class="sd">        [&#39;K7BP16-00040112&#39;, &#39;K7BP16-000401&#39;, &#39;K7BP16-00040101&#39;, &#39;FLA0280B&#39;, &#39;RFTB15B&#39;]</span>
+
+<span class="sd">        We need to block the searcher from going into the correlator card slot and</span>
+<span class="sd">        then back out another input, which we can do like so:</span>
+
+<span class="sd">        &gt;&gt;&gt; print(g.closest_of_type(&quot;K7BP16-00040112&quot;, &quot;RFT thru&quot;,</span>
+<span class="sd">        ... type_exclude = &quot;correlator card slot&quot;).sn)</span>
+<span class="sd">        RFTQ15B</span>
+
+<span class="sd">        The reason the first search went through the correlator card slot is because</span>
+<span class="sd">        there are delay cables and splitters involved.</span>
+
+<span class="sd">        &gt;&gt;&gt; print([c.sn for c in g.shortest_path_to_type(&quot;K7BP16-00040112&quot;,</span>
+<span class="sd">        ... &quot;RFT thru&quot;, type_exclude = &quot;correlator card slot&quot;)])</span>
+<span class="sd">        [&#39;K7BP16-00040112&#39;, &#39;CXS0279&#39;, &#39;CXA0018A&#39;, &#39;CXA0139B&#39;, &#39;SPL001AP2&#39;,</span>
+<span class="sd">        &#39;SPL001A&#39;, &#39;SPL001AP3&#39;, &#39;CXS0281&#39;, &#39;RFTQ15B&#39;]</span>
+
+<span class="sd">        The shortest path really was through the correlator card slot, until we</span>
+<span class="sd">        explicitly rejected such paths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shortest_path_to_type</span><span class="p">(</span><span class="n">comp</span><span class="p">,</span> <span class="nb">type</span><span class="p">,</span> <span class="n">type_exclude</span><span class="p">,</span> <span class="n">ignore_draws</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">closest</span> <span class="o">=</span> <span class="p">[</span><span class="n">p</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">path</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+            <span class="n">closest</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">if</span> <span class="n">path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">closest</span></div>
+
+
+<div class="viewcode-block" id="graph.neighbour_of_type">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.graph.neighbour_of_type">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">neighbour_of_type</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get a list of neighbours of a given type.</span>
+
+<span class="sd">        This is like the :meth:`networkx.Graph.neighbors` method, but selects only</span>
+<span class="sd">        the neighbours of the specified type.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        comp : :obj:`component`</span>
+<span class="sd">          A node in the graph.</span>
+<span class="sd">        type : :obj:`component_type` or string</span>
+<span class="sd">          The component type to find.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        nlist : A list of nodes of type **type** adjacent to **n**.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        :exc:`networkx.NetworkXError`</span>
+<span class="sd">          Raised if **n** is not in the graph.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="nb">type</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="nb">type</span> <span class="o">=</span> <span class="n">component_type</span><span class="o">.</span><span class="n">from_name</span><span class="p">(</span><span class="nb">type</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">neighbours</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">nn</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="nb">type</span><span class="p">:</span>
+                <span class="n">ret</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nn</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The time of the graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        time : datetime.datetime</span>
+<span class="sd">          The time at which this graph existed.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_time</span>
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sg_spec</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The :obj:`subgraph_spec` (subgraph specification) used to get this graph.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The :obj:`subgraph_spec` used to get this graph, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec</span>
+
+    <span class="nd">@_property</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">sg_spec_start</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;The subgraph starting component.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        The :obj:`component` that was used to begin the subgraph, if any.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sg_spec_start</span></div>
+
+
+
+<span class="c1"># Private Functions</span>
+<span class="c1"># ==================</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_to_sever</span><span class="p">(</span><span class="n">sn1</span><span class="p">,</span> <span class="n">sn2</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">):</span>
+    <span class="n">ok</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="p">(</span><span class="n">sn1</span><span class="p">,</span> <span class="n">sn2</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">component</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sn</span><span class="o">=</span><span class="n">sn</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+            <span class="n">fail_comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sn</span><span class="p">)</span>
+            <span class="n">ok</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">if</span> <span class="n">ok</span><span class="p">:</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">connexion</span><span class="o">.</span><span class="n">from_pair</span><span class="p">(</span><span class="n">sn1</span><span class="p">,</span> <span class="n">sn2</span><span class="p">)</span>
+        <span class="n">sever</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">,</span> <span class="n">sn</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">sn</span> <span class="o">==</span> <span class="s2">&quot;//&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;Stray sever mark (//) in LTF.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;//&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="s2">&quot;Consecutive sever marks (//) in LTF.&quot;</span><span class="p">)</span>
+        <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;//&quot;</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;//&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">chain</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s1">&#39;Confused about chain ending in &quot;</span><span class="si">{</span><span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;. &#39;</span>
+                    <span class="s2">&quot;Is the first serial number valid?&quot;</span>
+                <span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">_add_to_sever</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">][</span><span class="s2">&quot;comp&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">sn</span><span class="p">,</span> <span class="n">sn</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+                <span class="k">pass</span>
+            <span class="k">del</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="s2">&quot;comp&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">component</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">sn</span><span class="o">=</span><span class="n">sn</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prop</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">prop</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">))</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">SyntaxError</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Confused by the property command &quot;</span><span class="si">{</span><span class="n">prop</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="si">}</span><span class="s1">&quot;.&#39;</span><span class="p">)</span>
+            <span class="n">chain</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">][</span><span class="n">prop</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">prop</span><span class="p">[</span><span class="n">k</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;=&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">sn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">fail_comp</span><span class="p">:</span>
+            <span class="n">fail_comp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">sn</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_id_from_multi</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">o</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">o</span><span class="p">,</span> <span class="bp">cls</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">o</span><span class="o">.</span><span class="n">id</span>
+
+    <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">o</span><span class="p">)</span><span class="o">.</span><span class="n">id</span>
+
+
+<span class="c1"># Public Functions</span>
+<span class="c1"># ================</span>
+
+
+<div class="viewcode-block" id="enter_ltf">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.enter_ltf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">enter_ltf</span><span class="p">(</span><span class="n">ltf</span><span class="p">,</span> <span class="n">time</span><span class="o">=</span><span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">notes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">force</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Enter an LTF into the database.</span>
+
+<span class="sd">    This is a special mark-up language for quickly entering events. See the &quot;help&quot;</span>
+<span class="sd">    box on the LTF page of the web interface for instructions.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ltf : string</span>
+<span class="sd">      Pass either the path to a file containing the LTF, or a string containing</span>
+<span class="sd">      the LTF.</span>
+<span class="sd">    time : datetime.datetime</span>
+<span class="sd">      The time at which to apply the LTF.</span>
+<span class="sd">    notes : string</span>
+<span class="sd">      Notes for the timestamp.</span>
+<span class="sd">    force : bool</span>
+<span class="sd">      If :obj:`True`, then do nothing when events that would damage database</span>
+<span class="sd">      integrity are encountered; skip over them. If :obj:`False`, then a bad</span>
+<span class="sd">      propsed event will raise the appropriate exception.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">ltf</span><span class="p">)</span> <span class="k">as</span> <span class="n">myfile</span><span class="p">:</span>
+            <span class="n">ltf</span> <span class="o">=</span> <span class="n">myfile</span><span class="o">.</span><span class="n">readlines</span><span class="p">()</span>
+    <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ltf</span> <span class="o">=</span> <span class="n">ltf</span><span class="o">.</span><span class="n">splitlines</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>
+    <span class="n">chain</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fail_comp</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">multi_sn</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">multi_prop</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+    <span class="n">sever</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">ltf</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">and</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;#&quot;</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">severed</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;//&quot;</span><span class="p">:</span>
+                <span class="n">severed</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">except</span> <span class="ne">IndexError</span><span class="p">:</span>
+            <span class="k">pass</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span> <span class="ow">or</span> <span class="n">line</span><span class="o">.</span><span class="n">isspace</span><span class="p">()</span> <span class="ow">or</span> <span class="n">severed</span> <span class="ow">or</span> <span class="n">line</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;$$&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">severed</span><span class="p">:</span>
+                <span class="n">_add_to_sever</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">],</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">2</span><span class="p">],</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">multi_sn</span><span class="p">:</span>
+                <span class="n">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">multi_sn</span><span class="p">,</span> <span class="n">multi_prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+                <span class="n">multi_sn</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="n">chain</span><span class="o">.</span><span class="n">append</span><span class="p">([])</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">continue</span>
+
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+
+        <span class="n">sn</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">split</span><span class="p">()[</span><span class="mi">1</span><span class="p">:]</span>
+
+        <span class="c1"># Check to see if this is a multiple-line SN.</span>
+        <span class="k">if</span> <span class="n">multi_sn</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sn</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
+                <span class="n">off</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">multi_sn</span><span class="p">)</span> <span class="o">-</span> <span class="nb">len</span><span class="p">(</span><span class="n">sn</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">off</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">match</span> <span class="o">=</span> <span class="kc">False</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">multi_sn</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sn</span><span class="p">)</span> <span class="o">+</span> <span class="n">off</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sn</span><span class="p">)):</span>
+                    <span class="k">if</span> <span class="n">sn</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;.&quot;</span> <span class="ow">and</span> <span class="n">sn</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;-&quot;</span> <span class="ow">and</span> <span class="n">sn</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">!=</span> <span class="s2">&quot;+&quot;</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">multi_sn</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">off</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;.&quot;</span> <span class="ow">or</span> <span class="n">multi_sn</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">off</span><span class="p">]</span> <span class="o">==</span> <span class="s2">&quot;-&quot;</span><span class="p">:</span>
+                            <span class="n">match</span> <span class="o">=</span> <span class="kc">True</span>
+                            <span class="n">multi_sn</span> <span class="o">=</span> <span class="p">(</span>
+                                <span class="n">multi_sn</span><span class="p">[:</span> <span class="n">j</span> <span class="o">+</span> <span class="n">off</span><span class="p">]</span> <span class="o">+</span> <span class="n">sn</span><span class="p">[</span><span class="n">j</span><span class="p">]</span> <span class="o">+</span> <span class="n">multi_sn</span><span class="p">[</span><span class="n">j</span> <span class="o">+</span> <span class="n">off</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:]</span>
+                            <span class="p">)</span>
+                            <span class="n">multi_prop</span> <span class="o">=</span> <span class="n">prop</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">match</span><span class="p">:</span>
+                <span class="n">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">multi_sn</span><span class="p">,</span> <span class="n">multi_prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+                <span class="n">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sn</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+                <span class="n">multi_sn</span> <span class="o">=</span> <span class="kc">None</span>
+                <span class="n">multi_prop</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">sn</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;+&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">sn</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;-&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="ow">or</span> <span class="n">sn</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="s2">&quot;.&quot;</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">multi_sn</span> <span class="o">=</span> <span class="n">sn</span>
+                <span class="n">multi_prop</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">sn</span><span class="p">,</span> <span class="n">prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">multi_sn</span><span class="p">:</span>
+        <span class="n">_add_to_chain</span><span class="p">(</span><span class="n">chain</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">multi_sn</span><span class="p">,</span> <span class="n">multi_prop</span><span class="p">,</span> <span class="n">sever</span><span class="p">,</span> <span class="n">fail_comp</span><span class="p">)</span>
+
+    <span class="n">_check_fail</span><span class="p">(</span>
+        <span class="n">fail_comp</span><span class="p">,</span>
+        <span class="kc">False</span><span class="p">,</span>
+        <span class="n">DoesNotExist</span><span class="p">,</span>
+        <span class="sa">f</span><span class="s2">&quot;The following component</span><span class="si">{</span><span class="n">_plural</span><span class="p">(</span><span class="n">fail_comp</span><span class="p">)</span><span class="si">}</span><span class="s2"> &quot;</span>
+        <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">_are</span><span class="p">(</span><span class="n">fail_comp</span><span class="p">)</span><span class="si">}</span><span class="s2"> not in the DB and must be added first&quot;</span><span class="p">,</span>
+    <span class="p">)</span>
+
+    <span class="n">conn_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">prop_list</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">chain</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
+            <span class="n">comp1</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span> <span class="o">-</span> <span class="mi">1</span><span class="p">][</span><span class="s2">&quot;comp&quot;</span><span class="p">]</span>
+            <span class="n">comp2</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;comp&quot;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">comp1</span><span class="o">.</span><span class="n">sn</span> <span class="o">==</span> <span class="n">comp2</span><span class="o">.</span><span class="n">sn</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Skipping auto connexion: </span><span class="si">{</span><span class="n">comp1</span><span class="o">.</span><span class="n">sn</span><span class="si">}</span><span class="s2"> &lt;=&gt; </span><span class="si">{</span><span class="n">comp2</span><span class="o">.</span><span class="n">sn</span><span class="si">}</span><span class="s2">.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">conn</span> <span class="o">=</span> <span class="n">connexion</span><span class="o">.</span><span class="n">from_pair</span><span class="p">(</span><span class="n">comp1</span><span class="p">,</span> <span class="n">comp2</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">conn</span><span class="o">.</span><span class="n">is_permanent</span><span class="p">(</span><span class="n">time</span><span class="p">):</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+                            <span class="sa">f</span><span class="s2">&quot;Skipping permanent connexion: </span><span class="si">{</span><span class="n">comp1</span><span class="o">.</span><span class="n">sn</span><span class="si">}</span><span class="s2"> &lt;=&gt; </span><span class="si">{</span><span class="n">comp2</span><span class="o">.</span><span class="n">sn</span><span class="si">}</span><span class="s2">.&quot;</span>
+                        <span class="p">)</span>
+                    <span class="k">elif</span> <span class="n">conn</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">conn_list</span><span class="p">:</span>
+                        <span class="n">conn_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+                    <span class="n">conn_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">conn</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">c</span><span class="p">)):</span>
+            <span class="n">comp</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="s2">&quot;comp&quot;</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="s2">&quot;comp&quot;</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">prop_list</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">comp</span><span class="p">,</span> <span class="n">property_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="n">p</span><span class="p">),</span> <span class="n">c</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">p</span><span class="p">]])</span>
+                <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="n">DoesNotExist</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Property type &quot;</span><span class="si">{</span><span class="n">p</span><span class="si">}</span><span class="s1">&quot; does not exist.&#39;</span><span class="p">)</span>
+    <span class="n">make_connexion</span><span class="p">(</span><span class="n">conn_list</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="n">notes</span><span class="p">,</span> <span class="n">force</span><span class="p">)</span>
+    <span class="n">sever_connexion</span><span class="p">(</span><span class="n">sever</span><span class="p">,</span> <span class="n">time</span><span class="p">,</span> <span class="n">notes</span><span class="p">,</span> <span class="n">force</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">prop_list</span><span class="p">:</span>
+        <span class="n">p</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">set_property</span><span class="p">(</span><span class="n">p</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">time</span><span class="p">,</span> <span class="n">notes</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="get_global_flag_times">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.get_global_flag_times">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_global_flag_times</span><span class="p">(</span><span class="n">flag</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Convenience function to get global flag times by id or name.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    flag : integer or string</span>
+<span class="sd">      If an integer, this is a global flag id, e.g. `64`. If a string this is the</span>
+<span class="sd">      global flag&#39;s name e.g. &#39;run_pass0_e&#39;.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    start : :class:`datetime.datetime`</span>
+<span class="sd">      Global flag start time (UTC).</span>
+<span class="sd">    end : :class:`datetime.datetime` or `None`</span>
+<span class="sd">      Global flag end time (UTC) or `None` if the flag hasn&#39;t ended.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">flag</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">query_</span> <span class="o">=</span> <span class="n">global_flag</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">global_flag</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">flag</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">query_</span> <span class="o">=</span> <span class="n">global_flag</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">global_flag</span><span class="o">.</span><span class="n">id</span> <span class="o">==</span> <span class="n">flag</span><span class="p">)</span>
+
+    <span class="n">flag_</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">query_</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">graph_obj</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># noqa: E712</span>
+        <span class="o">.</span><span class="n">get</span><span class="p">()</span>
+    <span class="p">)</span>
+
+    <span class="n">event_</span> <span class="o">=</span> <span class="n">event</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">graph_obj</span><span class="o">=</span><span class="n">flag_</span><span class="o">.</span><span class="n">id</span><span class="p">,</span> <span class="n">active</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">start</span> <span class="o">=</span> <span class="n">event_</span><span class="o">.</span><span class="n">start</span><span class="o">.</span><span class="n">time</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="n">event_</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">time</span>
+    <span class="k">except</span> <span class="n">pw</span><span class="o">.</span><span class="n">DoesNotExist</span><span class="p">:</span>
+        <span class="n">end</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">return</span> <span class="n">start</span><span class="p">,</span> <span class="n">end</span></div>
+
+
+
+<div class="viewcode-block" id="global_flags_between">
+<a class="viewcode-back" href="../../_autosummary/ch_util.layout.html#ch_util.layout.global_flags_between">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">global_flags_between</span><span class="p">(</span><span class="n">start_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">,</span> <span class="n">severity</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Find global flags that overlap a time interval.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    start_time</span>
+<span class="sd">    end_time</span>
+<span class="sd">    severity : str</span>
+<span class="sd">        One of &#39;comment&#39;, &#39;warning&#39;, &#39;severe&#39;, or None.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    flags : list</span>
+<span class="sd">        List of global_flag objects matching criteria.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">start_time</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">ensure_unix</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
+
+    <span class="n">query</span> <span class="o">=</span> <span class="n">global_flag</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">severity</span><span class="p">:</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">global_flag</span><span class="o">.</span><span class="n">severity</span> <span class="o">==</span> <span class="n">severity</span><span class="p">)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">graph_obj</span><span class="p">)</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">event</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">active</span> <span class="o">==</span> <span class="kc">True</span><span class="p">)</span>  <span class="c1"># noqa: E712</span>
+
+    <span class="c1"># Set aliases for the join</span>
+    <span class="n">ststamp</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">alias</span><span class="p">()</span>
+    <span class="n">etstamp</span> <span class="o">=</span> <span class="n">timestamp</span><span class="o">.</span><span class="n">alias</span><span class="p">()</span>
+
+    <span class="c1"># Add constraint for the start time</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="n">query</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ststamp</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">start</span><span class="p">)</span><span class="o">.</span><span class="n">where</span><span class="p">(</span>
+        <span class="n">ststamp</span><span class="o">.</span><span class="n">time</span> <span class="o">&lt;</span> <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">end_time</span><span class="p">)</span>
+    <span class="p">)</span>
+    <span class="c1"># Constrain the end time (being careful to deal with open events properly)</span>
+    <span class="n">query</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">query</span><span class="o">.</span><span class="n">switch</span><span class="p">(</span><span class="n">event</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">etstamp</span><span class="p">,</span> <span class="n">on</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">end</span><span class="p">,</span> <span class="n">join_type</span><span class="o">=</span><span class="n">pw</span><span class="o">.</span><span class="n">JOIN</span><span class="o">.</span><span class="n">LEFT_OUTER</span><span class="p">)</span>
+        <span class="o">.</span><span class="n">where</span><span class="p">(</span>
+            <span class="p">(</span><span class="n">etstamp</span><span class="o">.</span><span class="n">time</span> <span class="o">&gt;</span> <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">start_time</span><span class="p">))</span> <span class="o">|</span> <span class="n">event</span><span class="o">.</span><span class="n">end</span><span class="o">.</span><span class="n">is_null</span><span class="p">()</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">query</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

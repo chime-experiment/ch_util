@@ -1,0 +1,1471 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.ni_utils &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.ni_utils</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.ni_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;Tools for noise injection data&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">datetime</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">LA</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">scipy</span><span class="w"> </span><span class="kn">import</span> <span class="n">linalg</span> <span class="k">as</span> <span class="n">sciLA</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">caput</span><span class="w"> </span><span class="kn">import</span> <span class="n">memh5</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">caput</span><span class="w"> </span><span class="kn">import</span> <span class="n">mpiarray</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.</span><span class="w"> </span><span class="kn">import</span> <span class="n">andata</span>
+
+
+<div class="viewcode-block" id="process_synced_data">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.process_synced_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_synced_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">ni_params</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">only_off</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Turn a synced noise source observation into gated form.</span>
+
+<span class="sd">    This will decimate the visibility to only the noise source off bins, and</span>
+<span class="sd">    will add 1 or more gated on-off dataset according to the specification in</span>
+<span class="sd">    doclib:5.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : andata.CorrData</span>
+<span class="sd">        Correlator data with noise source switched synchronously with the</span>
+<span class="sd">        integration.</span>
+<span class="sd">    ni_params : dict</span>
+<span class="sd">        Dictionary with the noise injection parameters. Optional</span>
+<span class="sd">        for data after ctime=1435349183. ni_params has the following keys</span>
+<span class="sd">        - ni_period: Noise injection period in GPU integrations.</span>
+<span class="sd">        It is assummed to be the same for all the enabled noise sources</span>
+<span class="sd">        - ni_on_bins: A list of lists, one per enabled noise source,</span>
+<span class="sd">        with the corresponding ON gates (within a period). For each</span>
+<span class="sd">        noise source, the list contains the indices of the time frames</span>
+<span class="sd">        for which the source is ON.</span>
+<span class="sd">        Example: For 3 GPU integration period (3 gates: 0, 1, 2), two enabled</span>
+<span class="sd">        noise sources, one ON during gate 0, the other ON during gate 1,</span>
+<span class="sd">        and both OFF during gate 2, then</span>
+<span class="sd">        ```</span>
+<span class="sd">        ni_params = {&#39;ni_period&#39;:3, &#39;ni_on_bins&#39;:[[0], [1]]}</span>
+<span class="sd">        ```</span>
+<span class="sd">    only_off : boolean</span>
+<span class="sd">        Only return the off dataset.  Do not return gated datasets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    newdata : andata.CorrData</span>
+<span class="sd">        Correlator data folded on the noise source.</span>
+
+<span class="sd">    Comments</span>
+<span class="sd">    --------</span>
+<span class="sd">    - The function assumes that the fpga frame counter, which is used to</span>
+<span class="sd">    determine the noise injection gating parameters, is unwrapped.</span>
+<span class="sd">    - For noise injection data before ctime=1435349183 (i.e. for noise</span>
+<span class="sd">    injection data before 20150626T200540Z_pathfinder_corr) the noise</span>
+<span class="sd">    injection information is not in the headers so this function cannot be</span>
+<span class="sd">    used to determine the noise injection parameters. A different method is</span>
+<span class="sd">    required. Although it is recommended to check the data directly in this</span>
+<span class="sd">    case, the previous version of this function assumed that</span>
+<span class="sd">    ni_params = {&#39;ni_period&#39;:2, &#39;ni_on_bins&#39;:[[0],]}</span>
+<span class="sd">    for noise injection data before ctime=1435349183. Although this is not</span>
+<span class="sd">    always true, it is true for big old datasets like pass1g.</span>
+<span class="sd">    Use the value of ni_params recommended above to reproduce the</span>
+<span class="sd">    results of the old function with the main old datasets.</span>
+<span class="sd">    - Data (visibility, gain and weight datasets) are averaged for all the</span>
+<span class="sd">    off gates within the noise source period, and also for all the on</span>
+<span class="sd">    gates of each noise source.</span>
+<span class="sd">    - For the time index map, only one timestamp per noise period is kept</span>
+<span class="sd">    (no averaging)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">ni_params</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># ctime before which the noise injection information is not in the</span>
+        <span class="c1"># headers so this function cannot be used to determine the noise</span>
+        <span class="c1"># injection parameters.</span>
+        <span class="n">ctime_no_noise_inj_data</span> <span class="o">=</span> <span class="mi">1435349183</span>
+        <span class="k">if</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">ctime_no_noise_inj_data</span><span class="p">:</span>
+            <span class="c1"># All the data required to figure out the noise inj gating is in</span>
+            <span class="c1"># the data header</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ni_params</span> <span class="o">=</span> <span class="n">_find_ni_params</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                <span class="n">warn_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s2">&quot;There are no enabled noise sources for these data. &quot;</span>
+                    <span class="s2">&quot;Returning input&quot;</span>
+                <span class="p">)</span>
+                <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">warn_str</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># This is data before ctime = 1435349183. Noise injection</span>
+            <span class="c1"># parameters are not in the data header. Raise error</span>
+            <span class="n">t</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcfromtimestamp</span><span class="p">(</span><span class="n">ctime_no_noise_inj_data</span><span class="p">)</span>
+            <span class="n">t_str</span> <span class="o">=</span> <span class="n">t</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s2">&quot;%Y %b </span><span class="si">%d</span><span class="s2"> %H:%M:%S UTC&quot;</span><span class="p">)</span>
+            <span class="n">err_str</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;ni_params parameter is required for data before &quot;</span>
+                <span class="o">+</span> <span class="n">t_str</span>
+                <span class="o">+</span> <span class="sa">f</span><span class="s2">&quot; (ctime=</span><span class="si">{</span><span class="n">ctime_no_noise_inj_data</span><span class="si">}</span><span class="s2">).&quot;</span>
+            <span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">([</span><span class="n">s</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="s2">&quot;gated_vis&quot;</span> <span class="ow">in</span> <span class="n">s</span><span class="p">]):</span>
+        <span class="c1"># If there are datasets with gated_vis in their names then assume</span>
+        <span class="c1"># this is fast gating data, where the vis dataset has on+off and</span>
+        <span class="c1"># the vis_gatedxx has onxx-off. Process separatedly since in</span>
+        <span class="c1"># this case the noise injection parameters are not in gpu</span>
+        <span class="c1"># integration frames but in fpga frames and the gates are already</span>
+        <span class="c1"># separated</span>
+        <span class="n">newdata</span> <span class="o">=</span> <span class="n">process_gated_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">only_off</span><span class="o">=</span><span class="n">only_off</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># time bins with noise ON for each source (within a noise period)</span>
+        <span class="c1"># This is a list of lists, each list corresponding to the ON time bins</span>
+        <span class="c1"># for each noise source.</span>
+        <span class="n">ni_on_bins</span> <span class="o">=</span> <span class="n">ni_params</span><span class="p">[</span><span class="s2">&quot;ni_on_bins&quot;</span><span class="p">]</span>
+
+        <span class="c1"># Number of enabled noise sources</span>
+        <span class="n">N_ni_sources</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_on_bins</span><span class="p">)</span>
+
+        <span class="c1"># Noise injection period (assume all sources have same period)</span>
+        <span class="n">ni_period</span> <span class="o">=</span> <span class="n">ni_params</span><span class="p">[</span><span class="s2">&quot;ni_period&quot;</span><span class="p">]</span>
+
+        <span class="c1"># time bins with all noise sources off (within a noise period)</span>
+        <span class="n">ni_off_bins</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">ni_period</span><span class="p">)),</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">(</span><span class="n">ni_on_bins</span><span class="p">))</span>
+
+        <span class="c1"># Find largest number of exact noise injection periods</span>
+        <span class="n">nt</span> <span class="o">=</span> <span class="n">ni_period</span> <span class="o">*</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">ntime</span> <span class="o">//</span> <span class="n">ni_period</span><span class="p">)</span>
+
+        <span class="c1"># Make sure we&#39;re distributed over something other than time</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">redistribute</span><span class="p">(</span><span class="s2">&quot;freq&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Get distribution parameters</span>
+        <span class="n">dist</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">,</span> <span class="n">memh5</span><span class="o">.</span><span class="n">MemDatasetDistributed</span><span class="p">)</span>
+        <span class="n">comm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="o">.</span><span class="n">comm</span>
+
+        <span class="c1"># Construct new CorrData object for gated dataset</span>
+        <span class="n">newdata</span> <span class="o">=</span> <span class="n">andata</span><span class="o">.</span><span class="n">CorrData</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">andata</span><span class="o">.</span><span class="n">CorrData</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">memh5</span><span class="o">.</span><span class="n">BasicCont</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">newdata</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">memh5</span><span class="o">.</span><span class="n">BasicCont</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">newdata</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">newdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="c1"># Add index maps to newdata</span>
+        <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;freq&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">])</span>
+        <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;prod&quot;</span><span class="p">])</span>
+        <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+        <span class="c1"># Extract timestamps for OFF bins. Only one timestamp per noise period is</span>
+        <span class="c1"># kept. These will be the timestamps for both the noise on ON and OFF data</span>
+        <span class="n">time</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="n">ni_off_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">nt</span> <span class="p">:</span> <span class="n">ni_period</span><span class="p">]</span>
+        <span class="n">folding_period</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time</span><span class="p">[</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">folding_start</span> <span class="o">=</span> <span class="n">time</span><span class="p">[</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Add index map for noise OFF timestamps.</span>
+        <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">time</span><span class="p">)</span>
+
+        <span class="c1"># Add datasets (for noise OFF) to newdata</span>
+        <span class="c1"># Extract the noise source off data</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_off_bins</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="c1"># Average all time bins with noise OFF within a period</span>
+            <span class="n">vis_sky</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">gate</span><span class="p">:</span><span class="n">nt</span><span class="p">:</span><span class="n">ni_period</span><span class="p">]</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">ni_off_bins</span><span class="p">]</span>
+            <span class="n">vis_sky</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vis_sky</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">vis_sky</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ni_off_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">nt</span> <span class="p">:</span> <span class="n">ni_period</span><span class="p">]</span>
+
+        <span class="c1"># Turn vis_sky into MPIArray if we are distributed</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">vis_sky</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">vis_sky</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+        <span class="c1"># Add new visibility dataset</span>
+        <span class="n">vis_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;vis&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vis_sky</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">vis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="c1"># Add gain dataset (if exists) for noise OFF data.</span>
+        <span class="c1"># Gain dataset also averaged (within a period)</span>
+        <span class="c1"># These will be the gains for both the noise on ON and OFF data</span>
+        <span class="k">if</span> <span class="s2">&quot;gain&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_off_bins</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">gain</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">gate</span><span class="p">:</span><span class="n">nt</span><span class="p">:</span><span class="n">ni_period</span><span class="p">]</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">ni_off_bins</span><span class="p">]</span>
+                <span class="n">gain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">gain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">gain</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ni_off_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">nt</span> <span class="p">:</span> <span class="n">ni_period</span><span class="p">]</span>
+
+            <span class="c1"># Turn gain into MPIArray if we are distributed</span>
+            <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+                <span class="n">gain</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">gain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+            <span class="c1"># Add new gain dataset</span>
+            <span class="n">gain_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;gain&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+            <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">gain_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="c1"># Pull out weight dataset if it exists.</span>
+        <span class="c1"># vis_weight dataset also averaged (within a period)</span>
+        <span class="c1"># These will be the weights for both the noise on ON and OFF data</span>
+        <span class="k">if</span> <span class="s2">&quot;vis_weight&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_off_bins</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">vis_weight</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">weight</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">gate</span><span class="p">:</span><span class="n">nt</span><span class="p">:</span><span class="n">ni_period</span><span class="p">]</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">ni_off_bins</span>
+                <span class="p">]</span>
+                <span class="n">vis_weight</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vis_weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">vis_weight</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">weight</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">ni_off_bins</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="p">:</span> <span class="n">nt</span> <span class="p">:</span> <span class="n">ni_period</span><span class="p">]</span>
+
+            <span class="c1"># Turn vis_weight into MPIArray if we are distributed</span>
+            <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+                <span class="n">vis_weight</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">vis_weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+            <span class="c1"># Add new vis_weight dataset</span>
+            <span class="n">vis_weight_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_flag</span><span class="p">(</span>
+                <span class="s2">&quot;vis_weight&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vis_weight</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span>
+            <span class="p">)</span>
+            <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">vis_weight_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+        <span class="c1"># Add gated datasets for each noise source:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">only_off</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_ni_sources</span><span class="p">):</span>
+                <span class="c1"># Construct the noise source only data</span>
+                <span class="n">vis_noise</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">gate</span><span class="p">:</span><span class="n">nt</span><span class="p">:</span><span class="n">ni_period</span><span class="p">]</span> <span class="k">for</span> <span class="n">gate</span> <span class="ow">in</span> <span class="n">ni_on_bins</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+                <span class="n">vis_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">vis_noise</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Averaging</span>
+                <span class="n">vis_noise</span> <span class="o">-=</span> <span class="n">vis_sky</span>  <span class="c1"># Subtracting sky contribution</span>
+
+                <span class="c1"># Turn vis_noise into MPIArray if we are distributed</span>
+                <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+                    <span class="n">vis_noise</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">vis_noise</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+                <span class="c1"># Add noise source dataset</span>
+                <span class="n">gate_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;gated_vis</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vis_noise</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span>
+                <span class="p">)</span>
+                <span class="n">gate_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;axis&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+                    <span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">,</span> <span class="s2">&quot;prod&quot;</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;gated_time</span><span class="si">{</span><span class="n">i</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">1</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">]</span>
+                <span class="p">)</span>
+                <span class="n">gate_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;folding_period&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">folding_period</span>
+                <span class="n">gate_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;folding_start&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">folding_start</span>
+
+                <span class="c1"># Construct array of gate weights (sum = 0)</span>
+                <span class="n">gw</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">ni_period</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+                <span class="n">gw</span><span class="p">[</span><span class="n">ni_off_bins</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_off_bins</span><span class="p">)</span>
+                <span class="n">gw</span><span class="p">[</span><span class="n">ni_on_bins</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span> <span class="o">=</span> <span class="mf">1.0</span> <span class="o">/</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_on_bins</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+                <span class="n">gate_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;gate_weight&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">gw</span>
+
+    <span class="k">return</span> <span class="n">newdata</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_find_ni_params</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Finds the noise injection gating parameters.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : andata.CorrData</span>
+<span class="sd">        Correlator data with noise source switched synchronously with the</span>
+<span class="sd">        integration.</span>
+<span class="sd">    verbose: bool</span>
+<span class="sd">        If True, print messages.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ni_params : dict</span>
+<span class="sd">        Dictionary with the noise injection parameters. ni_params has the</span>
+<span class="sd">        following keys</span>
+<span class="sd">            ni_period: Noise injection period in GPU integrations. It is</span>
+<span class="sd">                assummed to be the same for all the enabled noise sources</span>
+<span class="sd">            ni_on_bins: A list of lists, one per enabled noise source,</span>
+<span class="sd">                with the corresponding ON gates (within a period). For each</span>
+<span class="sd">                noise source, the list contains the indices of the time frames</span>
+<span class="sd">                for which the source is ON.</span>
+
+<span class="sd">        Example: For 3 GPU integration period (3 gates: 0, 1, 2), two enabled</span>
+<span class="sd">            noise sources, one ON during gate 0, the other ON during gate 1,</span>
+<span class="sd">            and both OFF during gate 2, then</span>
+<span class="sd">            ni_params = {&#39;ni_period&#39;:3, &#39;ni_on_bins&#39;:[[0], [1]]}</span>
+
+<span class="sd">    Comments</span>
+<span class="sd">    --------</span>
+<span class="sd">    - The function assumes that the fpga frame counter, which is used to</span>
+<span class="sd">    determine the noise injection gating parameters, is unwrapped.</span>
+<span class="sd">    - For noise injection data before ctime=1435349183 (i.e. for noise</span>
+<span class="sd">    injection data before 20150626T200540Z_pathfinder_corr) the noise</span>
+<span class="sd">    injection information is not in the headers so this function cannot be</span>
+<span class="sd">    used to determine the noise injection parameters. A different method is</span>
+<span class="sd">    required (e.g. check the data directly). The previous version of this</span>
+<span class="sd">    function assumed that</span>
+<span class="sd">    ni_params = {&#39;ni_period&#39;:2, &#39;ni_on_bins&#39;:[[0],]}</span>
+<span class="sd">    for noise injection data before ctime=1435349183. Although this is not</span>
+<span class="sd">    always true, it is true for big old datasets like pass1g.</span>
+<span class="sd">    Use the value of ni_params recommended above to reproduce the</span>
+<span class="sd">    results of the old function with the main old datasets.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># ctime before which the noise injection information is not in the headers</span>
+    <span class="c1"># so this function cannot be used to determine the noise injection</span>
+    <span class="c1"># parameters.</span>
+    <span class="n">ctime_no_noise_inj_data</span> <span class="o">=</span> <span class="mi">1435349183</span>
+
+    <span class="c1"># ctime of first data frame</span>
+    <span class="n">ctime0</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">ctime0</span> <span class="o">&lt;</span> <span class="n">ctime_no_noise_inj_data</span><span class="p">:</span>
+        <span class="c1"># This is data before ctime = 1435349183. Noise injection parameters</span>
+        <span class="c1"># are not in the data header. Raise error</span>
+        <span class="n">err_str</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="s2">&quot;Noise injection parameters are not in the header for &quot;</span>
+            <span class="s2">&quot;these data. See help for details.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="n">err_str</span><span class="p">)</span>
+
+    <span class="n">ni_period</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Noise source period in GPU integrations</span>
+    <span class="n">ni_high_time</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Noise source high time in GPU integrations</span>
+    <span class="n">ni_offset</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Noise source offset in GPU integrations</span>
+    <span class="n">ni_board</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Noise source PWM board</span>
+
+    <span class="c1"># Noise inj information is in the headers. Assume the fpga frame</span>
+    <span class="c1"># counter is unwrapped</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Reading noise injection data from header&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Read noise injection parameters from header. Currently the system</span>
+    <span class="c1"># Can handle up to two noise sources. Only the enabled sources are</span>
+    <span class="c1"># analyzed</span>
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;fpga.ni_enable&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_enable&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># It seems some old data.attrs may have &#39;fpga.ni_enable&#39; but not</span>
+        <span class="c1"># &#39;fpga.ni_high_time&#39; (this has to be checked!!)</span>
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_period&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_period</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_period&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_period</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_period&quot; not in data header. &#39;</span>
+                    <span class="s2">&quot;Assuming noise source period = 2&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_high_time&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_high_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_high_time&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_high_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_high_time&quot; not in data header. &#39;</span>
+                    <span class="s2">&quot;Assuming noise source high time = 1&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_offset&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_offset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_offset&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_offset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_offset&quot; not in data header. &#39;</span>
+                    <span class="s2">&quot;Assuming noise source offset = 0&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_board&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_board</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_board&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_board</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="s1">&#39;&quot;fpga.ni_board&quot; not in data header.&#39;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;fpga.ni_enable_26m&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_enable_26m&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># It seems some old data.attrs may have &#39;fpga.ni_enable_26m&#39; but</span>
+        <span class="c1"># not &#39;fpga.ni_high_time_26m&#39; (this has to be checked!!)</span>
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_period_26m&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_period</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_period_26m&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_period</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_period_26m&quot; not in data header. &#39;</span>
+                    <span class="s2">&quot;Assuming noise source period = 2&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_high_time_26m&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_high_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_high_time_26m&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_high_time</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_high_time_26m&quot; not in data header.&#39;</span>
+                    <span class="s2">&quot; Assuming noise source high time = 1&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_offset_26m&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_offset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_offset_26m&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_offset</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="s1">&#39;&quot;fpga.ni_offset_26m&quot; not in data header. &#39;</span>
+                    <span class="s2">&quot;Assuming noise source offset = 0&quot;</span>
+                <span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="s2">&quot;fpga.ni_board_26m&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+            <span class="n">ni_board</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_board_26m&quot;</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ni_board</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+                <span class="n">debug_str</span> <span class="o">=</span> <span class="s1">&#39;&quot;fpga.ni_board_26m&quot; not in data header.&#39;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">debug_str</span><span class="p">)</span>
+
+    <span class="c1"># Number of enabled noise sources</span>
+    <span class="n">N_ni_sources</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">ni_period</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">N_ni_sources</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="c1"># There are not enabled noise sources. Raise error</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;There are no enabled noise sources for these data&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">ni_period</span> <span class="o">-</span> <span class="n">ni_period</span><span class="p">[</span><span class="mi">0</span><span class="p">])):</span>
+        <span class="c1"># Enabled sources do not have same period. Raise error</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s2">&quot;Enabled sources do not have same period&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Period of first noise source (assume all have same period)</span>
+    <span class="n">ni_period</span> <span class="o">=</span> <span class="n">ni_period</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_ni_sources</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;PWM signal from board </span><span class="si">{</span><span class="n">ni_board</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> is enabled&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Period: </span><span class="si">{</span><span class="n">ni_period</span><span class="si">}</span><span class="s2"> GPU integrations&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;High time: </span><span class="si">{</span><span class="n">ni_high_time</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> GPU integrations&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;FPGA offset: </span><span class="si">{</span><span class="n">ni_offset</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="si">}</span><span class="s2"> GPU integrations&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Number of fpga frames within a GPU integration</span>
+    <span class="n">int_period</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;gpu.gpu_intergration_period&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># fpga counts for first period</span>
+    <span class="n">fpga_counts</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;fpga_count&quot;</span><span class="p">][:</span><span class="n">ni_period</span><span class="p">]</span>
+
+    <span class="c1"># Start of high time for each noise source (within a noise period)</span>
+    <span class="n">ni_on_start_bin</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">remainder</span><span class="p">((</span><span class="n">fpga_counts</span> <span class="o">//</span> <span class="n">int_period</span> <span class="o">-</span> <span class="n">ni_offset</span><span class="p">[</span><span class="n">i</span><span class="p">]),</span> <span class="n">ni_period</span><span class="p">))</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_ni_sources</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="c1"># time bins with noise ON for each source (within a noise period)</span>
+    <span class="n">ni_on_bins</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ni_on_start_bin</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">ni_on_start_bin</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="n">ni_high_time</span><span class="p">[</span><span class="n">i</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">N_ni_sources</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s2">&quot;ni_period&quot;</span><span class="p">:</span> <span class="n">ni_period</span><span class="p">,</span> <span class="s2">&quot;ni_on_bins&quot;</span><span class="p">:</span> <span class="n">ni_on_bins</span><span class="p">}</span>
+
+
+<div class="viewcode-block" id="process_gated_data">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.process_gated_data">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">process_gated_data</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">only_off</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Processes fast gating data and turns it into gated form.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : andata.CorrData</span>
+<span class="sd">        Correlator data with noise source switched synchronously with the</span>
+<span class="sd">        integration.</span>
+<span class="sd">    only_off : boolean</span>
+<span class="sd">        Only return the off dataset.  Do not return gated datasets.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    newdata : andata.CorrData</span>
+<span class="sd">        Correlator data folded on the noise source.</span>
+
+<span class="sd">    Comments</span>
+<span class="sd">    --------</span>
+<span class="sd">    For now the correlator only supports fast gating with one gate</span>
+<span class="sd">    (gated_vis1) and 50% duty cycle. The vis dataset contains on+off</span>
+<span class="sd">    and the gated_vis1 contains on-off. This function returns a new</span>
+<span class="sd">    andata object with vis containing the off data only and gated_vis1</span>
+<span class="sd">    as in the original andata object. The attribute</span>
+<span class="sd">    &#39;gpu.gpu_intergration_period&#39; is divided by 2 since during an</span>
+<span class="sd">    integration half of the frames have on data.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Make sure we&#39;re distributed over something other than time</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">redistribute</span><span class="p">(</span><span class="s2">&quot;freq&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Get distribution parameters</span>
+    <span class="n">dist</span> <span class="o">=</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">,</span> <span class="n">memh5</span><span class="o">.</span><span class="n">MemDatasetDistributed</span><span class="p">)</span>
+    <span class="n">comm</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="o">.</span><span class="n">comm</span>
+
+    <span class="c1"># Construct new CorrData object for gated dataset</span>
+    <span class="n">newdata</span> <span class="o">=</span> <span class="n">andata</span><span class="o">.</span><span class="n">CorrData</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span><span class="n">andata</span><span class="o">.</span><span class="n">CorrData</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">BasicCont</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">newdata</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">BasicCont</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">newdata</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+    <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">newdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="c1"># Add index maps to newdata</span>
+    <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;freq&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">])</span>
+    <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;prod&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;prod&quot;</span><span class="p">])</span>
+    <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;input&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
+    <span class="n">newdata</span><span class="o">.</span><span class="n">create_index_map</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">])</span>
+
+    <span class="c1"># Add datasets (for noise OFF) to newdata</span>
+    <span class="c1"># Extract the noise source off data</span>
+    <span class="n">vis_off</span> <span class="o">=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="o">-</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gated_vis1&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="c1"># Turn vis_off into MPIArray if we are distributed</span>
+    <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+        <span class="n">vis_off</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">vis_off</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+    <span class="c1"># Add new visibility dataset</span>
+    <span class="n">vis_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;vis&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vis_off</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+    <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">vis_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="c1"># Add gain dataset (if exists) for vis_off.</span>
+    <span class="c1"># These will be the gains for both the noise on ON and OFF data</span>
+    <span class="k">if</span> <span class="s2">&quot;gain&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="n">gain</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="p">[:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="c1"># Turn gain into MPIArray if we are distributed</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">gain</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">gain</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+        <span class="n">gain_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s2">&quot;gain&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">gain</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span><span class="p">)</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">gain_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="c1"># Pull out weight dataset if it exists.</span>
+    <span class="c1"># These will be the weights for both the noise on ON and OFF data</span>
+    <span class="k">if</span> <span class="s2">&quot;vis_weight&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">flags</span><span class="p">:</span>
+        <span class="n">vis_weight</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">weight</span><span class="p">[:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="c1"># Turn vis_weight into MPIArray if we are distributed</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">vis_weight</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">vis_weight</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+        <span class="n">vis_weight_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_flag</span><span class="p">(</span>
+            <span class="s2">&quot;vis_weight&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">vis_weight</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span>
+        <span class="p">)</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">weight</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">vis_weight_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="c1"># Add gated dataset (only gated_vis1 currently supported by correlator</span>
+    <span class="c1"># with 50% duty cycle)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">only_off</span><span class="p">:</span>
+        <span class="n">gated_vis1</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s2">&quot;gated_vis1&quot;</span><span class="p">][:]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
+        <span class="c1"># Turn gated_vis1 into MPIArray if we are distributed</span>
+        <span class="k">if</span> <span class="n">dist</span><span class="p">:</span>
+            <span class="n">gated_vis1</span> <span class="o">=</span> <span class="n">mpiarray</span><span class="o">.</span><span class="n">MPIArray</span><span class="o">.</span><span class="n">wrap</span><span class="p">(</span><span class="n">gated_vis1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">comm</span><span class="o">=</span><span class="n">comm</span><span class="p">)</span>
+
+        <span class="n">gate_dset</span> <span class="o">=</span> <span class="n">newdata</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span>
+            <span class="s2">&quot;gated_vis1&quot;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="n">gated_vis1</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="n">dist</span>
+        <span class="p">)</span>
+        <span class="n">memh5</span><span class="o">.</span><span class="n">copyattrs</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s2">&quot;gated_vis1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">attrs</span><span class="p">,</span> <span class="n">gate_dset</span><span class="o">.</span><span class="n">attrs</span><span class="p">)</span>
+
+    <span class="c1"># The CHIME pipeline uses gpu.gpu_intergration_period to estimate the</span>
+    <span class="c1"># integration period for both the on and off gates. That number has to be</span>
+    <span class="c1"># changed (divided by 2) since with fast gating one integration period has</span>
+    <span class="c1"># 1/2 of data for the on gate and 1/2 for the off gate</span>
+    <span class="n">newdata</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;gpu.gpu_intergration_period&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;gpu.gpu_intergration_period&quot;</span><span class="p">]</span> <span class="o">//</span> <span class="mi">2</span>
+    <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">newdata</span></div>
+
+
+
+<div class="viewcode-block" id="ni_data">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_data">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ni_data</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Provides analysis utilities for CHIME noise injection data.</span>
+
+<span class="sd">    This is just a wrapper for all the utilities created in this module.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    -----------</span>
+<span class="sd">    Reader_read_obj : andata.Reader.read() like object</span>
+<span class="sd">        Contains noise injection data. Must have &#39;vis&#39; and &#39;timestamp&#39; property.</span>
+<span class="sd">        Assumed to contain all the Nadc_channels*(Nadc_channels+1)/2 correlation</span>
+<span class="sd">        products, in chime&#39;s canonical vector, for an</span>
+<span class="sd">        Nadc_channels x Nadc_channels correlation matrix</span>
+<span class="sd">    Nadc_channels : int</span>
+<span class="sd">        Number of channels read in Reader_read_obj</span>
+<span class="sd">    adc_ch_ref : int in the range 0 &lt;= adc_ch_ref &lt;= Nadc_channels-1</span>
+<span class="sd">        Reference channel (used to find on/off points).</span>
+<span class="sd">    fbin_ref : int in the range</span>
+<span class="sd">        0 &lt;= fbin_ref &lt;= np.size(Reader_read_obj.vis, 0)-1</span>
+<span class="sd">        Reference frequency bin (used to find on/off points).</span>
+
+<span class="sd">    Methods</span>
+<span class="sd">    -------</span>
+<span class="sd">    subtract_sky_noise : Removes sky and system noise contributions from noise</span>
+<span class="sd">        injection visibility data.</span>
+<span class="sd">    get_ni_gains : Solve for gains from decimated sky-and-noise-subtracted</span>
+<span class="sd">        visibilities</span>
+<span class="sd">    get_als_gains : Compute gains, sky and system noise covariance matrices from</span>
+<span class="sd">        a combination of noise injection gains and point source gains</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">Reader_read_obj</span><span class="p">,</span> <span class="n">Nadc_channels</span><span class="p">,</span> <span class="n">adc_ch_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fbin_ref</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Processes raw noise injection data so it is ready to compute gains.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">adc_channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">Nadc_channels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Nadc_channels</span> <span class="o">=</span> <span class="n">Nadc_channels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">raw_vis</span> <span class="o">=</span> <span class="n">Reader_read_obj</span><span class="o">.</span><span class="n">vis</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">Nfreqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">raw_vis</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Number of frequencies</span>
+        <span class="k">if</span> <span class="n">adc_ch_ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adc_ch_ref</span> <span class="o">=</span> <span class="n">adc_ch_ref</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adc_ch_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adc_channels</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Default reference channel</span>
+
+        <span class="k">if</span> <span class="n">fbin_ref</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fbin_ref</span> <span class="o">=</span> <span class="n">fbin_ref</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># Default reference frequency bin (rather arbitrary)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fbin_ref</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nfreqs</span> <span class="o">//</span> <span class="mi">3</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">Reader_read_obj</span><span class="o">.</span><span class="n">timestamp</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">f_MHz</span> <span class="o">=</span> <span class="n">Reader_read_obj</span><span class="o">.</span><span class="n">freq</span>
+        <span class="k">except</span> <span class="ne">AttributeError</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># May happen if TimeStream type does not have this property</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">subtract_sky_noise</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ni_data.subtract_sky_noise">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_data.subtract_sky_noise">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">subtract_sky_noise</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Removes sky and system noise contributions from noise injection</span>
+<span class="sd">        visibility data.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        subtract_sky_noise function</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">ni_dict</span> <span class="o">=</span> <span class="n">subtract_sky_noise</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">raw_vis</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">Nadc_channels</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">adc_ch_ref</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">fbin_ref</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_index_on</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;time_index_on&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">time_index_off</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;time_index_off&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vis_on_dec</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;vis_on_dec&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vis_off_dec</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;vis_off_dec&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vis_dec_sub</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;vis_dec_sub&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_on_dec</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;timestamp_on_dec&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_off_dec</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;timestamp_off_dec&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp_dec</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;timestamp_dec&quot;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cor_prod_ref</span> <span class="o">=</span> <span class="n">ni_dict</span><span class="p">[</span><span class="s2">&quot;cor_prod_ref&quot;</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="ni_data.get_ni_gains">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_data.get_ni_gains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_ni_gains</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">normalize_vis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">masked_channels</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Computes gains and evalues from noise injection visibility data.</span>
+
+<span class="sd">        See also</span>
+<span class="sd">        --------</span>
+<span class="sd">        ni_gains_evalues_tf</span>
+
+<span class="sd">        Additional parameters</span>
+<span class="sd">        ---------------------</span>
+<span class="sd">        masked_channels : list of integers</span>
+<span class="sd">            channels which are not considered in the calculation of the gains.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">Nadc_channels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">masked_channels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">channels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span> <span class="n">masked_channels</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">Nchannels</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">)</span>
+        <span class="c1"># Correlation product indices for selected channels</span>
+        <span class="n">cor_prod</span> <span class="o">=</span> <span class="n">gen_prod_sel</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">channels</span><span class="p">,</span> <span class="n">total_N_channels</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Nadc_channels</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ni_gains</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ni_evals</span> <span class="o">=</span> <span class="n">ni_gains_evalues_tf</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">vis_dec_sub</span><span class="p">[:,</span> <span class="n">cor_prod</span><span class="p">,</span> <span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">normalize_vis</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ni_data.get_als_gains">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_data.get_als_gains">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_als_gains</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Compute gains, sky and system noise covariance matrices from a</span>
+<span class="sd">        combination of noise injection gains and point source gains</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="ni_data.save">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_data.save">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;Save gain solutions&quot;&quot;&quot;</span>
+
+        <span class="k">pass</span></div>
+</div>
+
+
+
+<div class="viewcode-block" id="gen_prod_sel">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.gen_prod_sel">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gen_prod_sel</span><span class="p">(</span><span class="n">channels_to_select</span><span class="p">,</span> <span class="n">total_N_channels</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates correlation product indices for selected channels.</span>
+
+<span class="sd">    For a correlation matrix with total_N_channels total number of channels,</span>
+<span class="sd">    generates indices for correlation products corresponding to channels in</span>
+<span class="sd">    the list channels_to_select.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    channels_to_select : list of integers</span>
+<span class="sd">        Indices of channels to select</span>
+<span class="sd">    total_N_channels : int</span>
+<span class="sd">        Total number of channels</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    prod_sel : array</span>
+<span class="sd">        indices of correlation products for channels in channels_to_select</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">prod_sel</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">k</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">total_N_channels</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="n">total_N_channels</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="ow">in</span> <span class="n">channels_to_select</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">j</span> <span class="ow">in</span> <span class="n">channels_to_select</span><span class="p">):</span>
+                <span class="n">prod_sel</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+
+            <span class="n">k</span> <span class="o">=</span> <span class="n">k</span> <span class="o">+</span> <span class="mi">1</span>
+
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">prod_sel</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="mat2utvec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.mat2utvec">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">mat2utvec</span><span class="p">(</span><span class="n">A</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Vectorizes its upper triangle of the (hermitian) matrix A.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : 2d array</span>
+<span class="sd">        Hermitian matrix</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    1d array with vectorized form of upper triangle of A</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    if A is a 3x3 matrix then the output vector is</span>
+<span class="sd">    outvector = [A00, A01, A02, A11, A12, A22]</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    utvec2mat</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">iu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># Indices for upper triangle of A</span>
+
+    <span class="k">return</span> <span class="n">A</span><span class="p">[</span><span class="n">iu</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="utvec2mat">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.utvec2mat">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">utvec2mat</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">utvec</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Recovers a hermitian matrix a from its upper triangle vectorized version.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    n : int</span>
+<span class="sd">        order of the output hermitian matrix</span>
+<span class="sd">    utvec : 1d array</span>
+<span class="sd">        vectorized form of upper triangle of output matrix</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A : 2d array</span>
+<span class="sd">        hermitian matrix</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">iu</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">triu_indices</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="n">A</span><span class="p">[</span><span class="n">iu</span><span class="p">]</span> <span class="o">=</span> <span class="n">utvec</span>  <span class="c1"># Filling uppper triangle of A</span>
+    <span class="k">return</span> <span class="n">A</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">triu</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span>  <span class="c1"># Filling lower triangle of A</span></div>
+
+
+
+<div class="viewcode-block" id="ktrprod">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ktrprod">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ktrprod</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Khatri-Rao or column-wise Kronecker product of two matrices.</span>
+
+<span class="sd">    A and B have the same number of columns</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    A : 2d array</span>
+<span class="sd">    B : 2d array</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    C : 2d array</span>
+<span class="sd">        Khatri-Rao product of A and B</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">nrowsA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">nrowsB</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">B</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">ncols</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">nrowsA</span> <span class="o">*</span> <span class="n">nrowsB</span><span class="p">,</span> <span class="n">ncols</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">ncols</span><span class="p">):</span>
+        <span class="n">C</span><span class="p">[:,</span> <span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">A</span><span class="p">[:,</span> <span class="n">i</span><span class="p">],</span> <span class="n">B</span><span class="p">[:,</span> <span class="n">i</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">C</span></div>
+
+
+
+<div class="viewcode-block" id="ni_als">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_als">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ni_als</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="n">g0</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">,</span> <span class="n">Upsilon</span><span class="p">,</span> <span class="n">maxsteps</span><span class="p">,</span> <span class="n">abs_tol</span><span class="p">,</span> <span class="n">rel_tol</span><span class="p">,</span> <span class="n">weighted_als</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Implementation of the Alternating Least Squares algorithm for noise</span>
+<span class="sd">    injection.</span>
+
+<span class="sd">    Implements the Alternating Least Squares algorithm to recover the system</span>
+<span class="sd">    gains, sky covariance matrix and system output noise covariance matrix</span>
+<span class="sd">    from the data covariance matrix R. All the variables and definitions are as</span>
+<span class="sd">    in http://bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    R : 2d array</span>
+<span class="sd">        Data covariance matrix</span>
+<span class="sd">    g0 : 1d array</span>
+<span class="sd">        First estimate of system gains</span>
+<span class="sd">    Gamma : 2d array</span>
+<span class="sd">        Matrix that characterizes parametrization of sky covariance matrix</span>
+<span class="sd">    Upsilon : 2d array</span>
+<span class="sd">        Matrix characterizing parametrization of system noise covariance matrix</span>
+<span class="sd">    maxsteps : int</span>
+<span class="sd">        Maximum number of iterations</span>
+<span class="sd">    abs_tol : float</span>
+<span class="sd">        Absolute tolerance on error function</span>
+<span class="sd">    rel_tol : float</span>
+<span class="sd">        Relative tolerance on error function</span>
+<span class="sd">    weighted_als : bool</span>
+<span class="sd">        If True, perform weighted ALS</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    g : 1d array</span>
+<span class="sd">        System gains</span>
+<span class="sd">    C : 2d array</span>
+<span class="sd">        Sky covariance matrix</span>
+<span class="sd">    N : 2d array</span>
+<span class="sd">        System output noise covariance matrix</span>
+<span class="sd">    err : 1d array</span>
+<span class="sd">        Error function for every step</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    http://bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">g</span> <span class="o">=</span> <span class="n">g0</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">Nchannels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">R</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Number of receiver channels</span>
+    <span class="n">rank_Gamma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">Gamma</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>  <span class="c1"># Number of sky covariance matrix parameters</span>
+    <span class="c1"># Calculate initial weight matrix</span>
+    <span class="k">if</span> <span class="n">weighted_als</span><span class="p">:</span>
+        <span class="n">inv_W</span> <span class="o">=</span> <span class="n">sciLA</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">R</span><span class="p">)</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">inv_W</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)</span>
+        <span class="n">inv_W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">W_kron_W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">W</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">W</span><span class="p">)</span>
+    <span class="n">G_kron_G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">G</span><span class="p">)</span>
+    <span class="n">Psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G_kron_G</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">),</span> <span class="n">Upsilon</span><span class="p">))</span>
+    <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W_kron_W</span><span class="p">,</span> <span class="n">Psi</span><span class="p">)),</span> <span class="n">W_kron_W</span><span class="p">),</span> <span class="n">R</span><span class="p">)</span>
+    <span class="n">gamma</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[:</span><span class="n">rank_Gamma</span><span class="p">]</span>
+    <span class="n">upsilon</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[</span><span class="n">rank_Gamma</span><span class="p">:]</span>
+    <span class="c1"># Estimate of sky covariance matrix</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Gamma</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+    <span class="c1"># Estimate of output noise covariance matrix</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Upsilon</span><span class="p">,</span> <span class="n">upsilon</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+    <span class="c1"># Make sure C and N are positive (semi-)definite</span>
+    <span class="n">evals</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>  <span class="c1"># Get eigens of C</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>  <span class="c1"># Replace negative eigenvalues by zeros</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>  <span class="c1"># Positive (semi-)definite version of C</span>
+    <span class="n">evals</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+    <span class="c1"># Calculate error</span>
+    <span class="n">err</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">LA</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span> <span class="o">-</span> <span class="n">N</span><span class="p">,</span> <span class="n">W</span><span class="p">)),</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span><span class="p">)</span>
+    <span class="p">]</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">maxsteps</span><span class="p">):</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">err</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;=</span> <span class="n">abs_tol</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span>
+            <span class="p">(</span><span class="n">i</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">err</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">err</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span> <span class="o">&lt;=</span> <span class="n">rel_tol</span> <span class="o">*</span> <span class="n">err</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">])</span>
+        <span class="p">):</span>
+            <span class="k">break</span>
+
+        <span class="k">if</span> <span class="n">weighted_als</span><span class="p">:</span>
+            <span class="n">inv_W</span> <span class="o">=</span> <span class="n">sciLA</span><span class="o">.</span><span class="n">sqrtm</span><span class="p">(</span><span class="n">R</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span> <span class="o">+</span> <span class="n">N</span><span class="p">)</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">inv_W</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)</span>
+            <span class="n">inv_W</span> <span class="o">=</span> <span class="n">W</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+        <span class="n">W_pow2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">W</span><span class="p">)</span>
+        <span class="n">W_pow2GC</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W_pow2</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">C</span><span class="p">))</span>
+        <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+            <span class="n">LA</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span> <span class="n">W_pow2GC</span><span class="p">))</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span> <span class="o">*</span> <span class="n">W_pow2</span><span class="p">),</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span>
+                <span class="n">ktrprod</span><span class="p">(</span><span class="n">W_pow2GC</span><span class="p">,</span> <span class="n">W_pow2</span><span class="p">)</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">,</span>
+                <span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="n">N</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">Nchannels</span><span class="o">**</span><span class="mi">2</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">),</span>
+            <span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+        <span class="n">G_kron_G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">kron</span><span class="p">(</span><span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">(),</span> <span class="n">G</span><span class="p">)</span>
+        <span class="n">Psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G_kron_G</span><span class="p">,</span> <span class="n">Gamma</span><span class="p">),</span> <span class="n">Upsilon</span><span class="p">))</span>
+        <span class="n">psi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">pinv</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W_kron_W</span><span class="p">,</span> <span class="n">Psi</span><span class="p">)),</span> <span class="n">W_kron_W</span><span class="p">),</span> <span class="n">R</span><span class="p">)</span>
+        <span class="n">gamma</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[:</span><span class="n">rank_Gamma</span><span class="p">]</span>
+        <span class="n">upsilon</span> <span class="o">=</span> <span class="n">psi</span><span class="p">[</span><span class="n">rank_Gamma</span><span class="p">:]</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Gamma</span><span class="p">,</span> <span class="n">gamma</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Upsilon</span><span class="p">,</span> <span class="n">upsilon</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">),</span> <span class="n">order</span><span class="o">=</span><span class="s2">&quot;F&quot;</span><span class="p">)</span>
+        <span class="n">evals</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+        <span class="n">C</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">evals</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>
+        <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="n">evals</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+        <span class="n">N</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">V</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">D</span><span class="p">,</span> <span class="n">V</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">T</span><span class="p">))</span>
+        <span class="n">err</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">LA</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span>
+                <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">R</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">G</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">G</span><span class="o">.</span><span class="n">conj</span><span class="p">()))</span> <span class="o">-</span> <span class="n">N</span><span class="p">,</span> <span class="n">W</span><span class="p">)),</span> <span class="nb">ord</span><span class="o">=</span><span class="s2">&quot;fro&quot;</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">N</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">err</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="sort_evalues_mag">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.sort_evalues_mag">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">sort_evalues_mag</span><span class="p">(</span><span class="n">evalues</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Sorts eigenvalue array by magnitude for all frequencies and time frames</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    evalues : 3d array</span>
+<span class="sd">        Array of evalues. Its shape is [Nfreqs, Nevalues, Ntimeframes]</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ev : 3d array</span>
+<span class="sd">        Array of same shape as evalues</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ev</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">evalues</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="mi">0</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">ev</span><span class="p">,</span> <span class="mi">2</span><span class="p">)):</span>
+            <span class="n">ev</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">evalues</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">evalues</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">])),</span> <span class="n">t</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">ev</span></div>
+
+
+
+<div class="viewcode-block" id="ni_gains_evalues">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_gains_evalues">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ni_gains_evalues</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="n">normalize_vis</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Basic algorithm to compute gains and evalues from noise injection data.</span>
+
+<span class="sd">    C is a correlation matrix from which the gains are calculated.</span>
+<span class="sd">    If normalize_vis = True, the visibility matrix is weighted by the diagonal</span>
+<span class="sd">    matrix that turns it into a crosscorrelation coefficient matrix before the</span>
+<span class="sd">    gain calculation. The eigenvalues are not sorted. The returned gain solution</span>
+<span class="sd">    vector is normalized (LA.norm(g) = 1.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    C : 2d array</span>
+<span class="sd">        Data covariance matrix from which the gains are calculated. It is</span>
+<span class="sd">        assumed that both the sky and system noise contributions have already</span>
+<span class="sd">        been subtracted using noise injection</span>
+<span class="sd">    normalize_vis : bool</span>
+<span class="sd">        If True, the visibility matrix is weighted by the diagonal matrix that</span>
+<span class="sd">        turns it into a crosscorrelation coefficient matrix before the</span>
+<span class="sd">        gain calculation.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    g : 1d array</span>
+<span class="sd">        Noise injection gains</span>
+<span class="sd">    ev : 1d array</span>
+<span class="sd">        Noise injection eigenvalues</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ni_gains_evalues_tf, subtract_sky_noise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Nchannels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">C</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Number of receiver channels</span>
+    <span class="k">if</span> <span class="n">normalize_vis</span><span class="p">:</span>  <span class="c1"># Convert to correlation coefficient matrix</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="mi">1</span> <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+        <span class="n">Winv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">C</span><span class="p">)</span><span class="o">.</span><span class="n">real</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">W</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)</span>
+        <span class="n">Winv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">identity</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)</span>
+
+    <span class="n">ev</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">LA</span><span class="o">.</span><span class="n">eigh</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">W</span><span class="p">,</span> <span class="n">C</span><span class="p">),</span> <span class="n">W</span><span class="p">),</span> <span class="s2">&quot;U&quot;</span><span class="p">)</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">ev</span><span class="o">.</span><span class="n">max</span><span class="p">())</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">Winv</span><span class="p">,</span> <span class="n">V</span><span class="p">[:,</span> <span class="n">ev</span><span class="o">.</span><span class="n">argmax</span><span class="p">()])</span>
+
+    <span class="k">return</span> <span class="n">g</span><span class="p">,</span> <span class="n">ev</span></div>
+
+
+
+<div class="viewcode-block" id="ni_gains_evalues_tf">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.ni_gains_evalues_tf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">ni_gains_evalues_tf</span><span class="p">(</span>
+    <span class="n">vis_gated</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">,</span> <span class="n">normalize_vis</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">vis_on</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vis_off</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="mi">0</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Computes gains and evalues from noise injection visibility data.</span>
+
+<span class="sd">    Gains and eigenvalues are calculated for all frames and</span>
+<span class="sd">    frequencies in vis_gated.  The returned gain solution</span>
+<span class="sd">    vector is normalized (LA.norm(gains[f, :, t]) = 1.)</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vis_gated : 3d array</span>
+<span class="sd">        Visibility array in chime&#39;s canonical format. vis_gated has dimensions</span>
+<span class="sd">        [frequency, corr. number, time]. It is assumed that both the sky and</span>
+<span class="sd">        system noise contributions have already been subtracted using noise</span>
+<span class="sd">        injection.</span>
+<span class="sd">    Nchannels : int</span>
+<span class="sd">        Order of the visibility matrix (number of channels)</span>
+<span class="sd">    normalize_vis : bool</span>
+<span class="sd">        If True, then the visibility matrix is weighted by the diagonal matrix that</span>
+<span class="sd">        turns it into a crosscorrelation coefficient matrix before the</span>
+<span class="sd">        gain calculation.</span>
+<span class="sd">    vis_on : 3d array</span>
+<span class="sd">        If input and normalize_vis is True, then vis_gated is weighted</span>
+<span class="sd">        by the diagonal elements of the matrix vis_on.</span>
+<span class="sd">        vis_on must be the same shape as vis_gated.</span>
+<span class="sd">    vis_off : 3d array</span>
+<span class="sd">        If input and normalize_vis is True, then vis_gated is weighted</span>
+<span class="sd">        by the diagonal elements of the matrix: vis_on = vis_gated + vis_off.</span>
+<span class="sd">        vis_off must be the same shape as vis_gated.  Keyword vis_on</span>
+<span class="sd">        supersedes keyword vis_off.</span>
+<span class="sd">    niter : 0</span>
+<span class="sd">        Number of iterations to perform.  At each iteration, the diagonal</span>
+<span class="sd">        elements of vis_gated are replaced with their rank 1 approximation.</span>
+<span class="sd">        If niter == 0 (default), then no iterations are peformed and the</span>
+<span class="sd">        autocorrelations are used instead.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    gains : 3d array</span>
+<span class="sd">            Noise injection gains</span>
+<span class="sd">    evals : 3d array</span>
+<span class="sd">            Noise injection eigenvalues</span>
+
+<span class="sd">    Dependencies</span>
+<span class="sd">    ------------</span>
+<span class="sd">    tools.normalise_correlations, tools.eigh_no_diagonal</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    ni_gains_evalues, subtract_sky_noise</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">normalise_correlations</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.tools</span><span class="w"> </span><span class="kn">import</span> <span class="n">eigh_no_diagonal</span>
+
+    <span class="c1"># Determine the number of frequencies and time frames</span>
+    <span class="n">Nfreqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">vis_gated</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">Ntimeframes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">vis_gated</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Create NaN matrices to hold the gains and eigenvalues</span>
+    <span class="n">gains</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Nfreqs</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">,</span> <span class="n">Ntimeframes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span> <span class="o">*</span> <span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">nan</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+    <span class="p">)</span>
+    <span class="n">evals</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Nfreqs</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">,</span> <span class="n">Ntimeframes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span>
+
+    <span class="c1"># Determine if we will weight by the square root of the autos</span>
+    <span class="c1"># of the matrix vis_on = vis_gated + vis_off</span>
+    <span class="n">vis_on_is_input</span> <span class="o">=</span> <span class="p">(</span><span class="n">vis_on</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vis_on</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">vis_gated</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">vis_off_is_input</span> <span class="o">=</span> <span class="p">(</span><span class="n">vis_off</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vis_off</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="n">vis_gated</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">weight_by_autos_on</span> <span class="o">=</span> <span class="n">normalize_vis</span> <span class="ow">and</span> <span class="p">(</span><span class="n">vis_on_is_input</span> <span class="ow">or</span> <span class="n">vis_off_is_input</span><span class="p">)</span>
+
+    <span class="n">sqrt_autos</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)</span>
+
+    <span class="c1"># Loop through the input frequencies and time frames</span>
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nfreqs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ntimeframes</span><span class="p">):</span>
+            <span class="c1"># Create Nchannel x Nchannel matrix of noise-injection-on visibilities</span>
+            <span class="k">if</span> <span class="n">weight_by_autos_on</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">vis_on_is_input</span><span class="p">:</span>
+                    <span class="n">mat_slice_vis_on</span> <span class="o">=</span> <span class="n">utvec2mat</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">vis_on</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">])</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">mat_slice_vis_on</span> <span class="o">=</span> <span class="n">utvec2mat</span><span class="p">(</span>
+                        <span class="n">Nchannels</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">vis_gated</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">],</span> <span class="n">vis_off</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">])</span>
+                    <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">mat_slice_vis_on</span> <span class="o">=</span> <span class="kc">None</span>
+
+            <span class="c1"># Create Nchannel x Nchannel matrix of gated visibilities</span>
+            <span class="n">mat_slice_vis_gated</span> <span class="o">=</span> <span class="n">utvec2mat</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">,</span> <span class="n">vis_gated</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">])</span>
+
+            <span class="c1"># If requested, then normalize the gated visibilities</span>
+            <span class="c1"># by the square root of the autocorrelations</span>
+            <span class="k">if</span> <span class="n">normalize_vis</span><span class="p">:</span>
+                <span class="n">mat_slice_vis_gated</span><span class="p">,</span> <span class="n">sqrt_autos</span> <span class="o">=</span> <span class="n">normalise_correlations</span><span class="p">(</span>
+                    <span class="n">mat_slice_vis_gated</span><span class="p">,</span> <span class="n">norm</span><span class="o">=</span><span class="n">mat_slice_vis_on</span>
+                <span class="p">)</span>
+
+            <span class="c1"># Solve for eigenvalues and eigenvectors.</span>
+            <span class="c1"># The gain solutions for the zero&#39;th feed</span>
+            <span class="c1"># are forced to be real and positive.</span>
+            <span class="c1"># This means that the phases of the gain</span>
+            <span class="c1"># solutions are relative phases with respect</span>
+            <span class="c1"># to the zero&#39;th feed.</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">eigenvals</span><span class="p">,</span> <span class="n">eigenvecs</span> <span class="o">=</span> <span class="n">eigh_no_diagonal</span><span class="p">(</span>
+                    <span class="n">mat_slice_vis_gated</span><span class="p">,</span> <span class="n">niter</span><span class="o">=</span><span class="n">niter</span>
+                <span class="p">)</span>
+
+                <span class="k">if</span> <span class="n">eigenvecs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">eigenvals</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">sign0</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">sign0</span> <span class="o">=</span> <span class="mi">1</span>
+
+                <span class="n">gains</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span>
+                    <span class="n">sign0</span>
+                    <span class="o">*</span> <span class="n">sqrt_autos</span>
+                    <span class="o">*</span> <span class="n">eigenvecs</span><span class="p">[:,</span> <span class="n">eigenvals</span><span class="o">.</span><span class="n">argmax</span><span class="p">()]</span>
+                    <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">eigenvals</span><span class="o">.</span><span class="n">max</span><span class="p">()))</span>
+                <span class="p">)</span>
+                <span class="n">evals</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigenvals</span>
+
+            <span class="k">except</span> <span class="n">LA</span><span class="o">.</span><span class="n">LinAlgError</span><span class="p">:</span>
+                <span class="k">pass</span>
+
+    <span class="k">return</span> <span class="n">gains</span><span class="p">,</span> <span class="n">evals</span></div>
+
+
+
+<div class="viewcode-block" id="subtract_sky_noise">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.subtract_sky_noise">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">subtract_sky_noise</span><span class="p">(</span><span class="n">vis</span><span class="p">,</span> <span class="n">Nchannels</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">,</span> <span class="n">adc_ch_ref</span><span class="p">,</span> <span class="n">fbin_ref</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Removes sky and system noise contributions from noise injection visibility</span>
+<span class="sd">    data.</span>
+
+<span class="sd">    By looking at the autocorrelation of the reference channel adc_ch_ref</span>
+<span class="sd">    for frequency bin fbin_ref, finds timestamps indices for which the signal is</span>
+<span class="sd">    on and off. For every noise signal period, the subcycles with the noise</span>
+<span class="sd">    signal on and off are averaged separatedly and then subtracted.</span>
+
+<span class="sd">    It is assumed that there are at least 5 noise signal cycles in the data.</span>
+<span class="sd">    The first and last noise on subcycles are discarded since those cycles may</span>
+<span class="sd">    be truncated.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    vis: 3d array</span>
+<span class="sd">        Noise injection visibility array in chime&#39;s canonical format. vis has</span>
+<span class="sd">        dimensions [frequency, corr. number, time].</span>
+<span class="sd">    Nchannels : int</span>
+<span class="sd">        Order of the visibility matrix (number of channels)</span>
+<span class="sd">    timestamp : 1d array</span>
+<span class="sd">        Timestamps for the visibility array vis</span>
+<span class="sd">    adc_ch_ref : int in the range 0 &lt;= adc_ch_ref &lt;= N_channels-1</span>
+<span class="sd">        Reference channel (typically, but not necessaritly the channel</span>
+<span class="sd">        corresponding to the directly injected noise signal) used to find</span>
+<span class="sd">        timestamps indices for which the signal is on and off.</span>
+<span class="sd">        on and off.</span>
+<span class="sd">    fbin_ref : int in the range 0 &lt;= fbin_ref &lt;= np.size(vis, 0)-1</span>
+<span class="sd">        frequency bin used to find timestamps indices for which the signal is</span>
+<span class="sd">        on and off</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    A dictionary with keys</span>
+<span class="sd">    time_index_on : 1d array</span>
+<span class="sd">        timestamp indices for noise signal on.</span>
+<span class="sd">    time_index_off : 1d array</span>
+<span class="sd">        timestamp indices for noise signal off.</span>
+<span class="sd">    timestamp_on_dec : 1d array</span>
+<span class="sd">        timestamps for noise signal on after averaging.</span>
+<span class="sd">    timestamp_off_dec : 1d array</span>
+<span class="sd">        timestamps for noise signal off after averaging.</span>
+<span class="sd">    timestamp_dec : 1d array</span>
+<span class="sd">        timestamps for visibility data after averaging and subtracting on and</span>
+<span class="sd">        off subcycles. These timestaps represent the time for every noise cycle</span>
+<span class="sd">        and thus, these are the timestaps for the gain solutions.</span>
+<span class="sd">    vis_on_dec : 3d array</span>
+<span class="sd">        visibilities for noise signal on after averaging.</span>
+<span class="sd">    vis_off_dec : 3d array</span>
+<span class="sd">        visibilities for noise signal off after averaging.</span>
+<span class="sd">    vis_dec_sub : 3d array</span>
+<span class="sd">        visibilities data after averaging and subtracting on and</span>
+<span class="sd">        off subcycles.</span>
+<span class="sd">    cor_prod_ref : int</span>
+<span class="sd">        correlation index corresponding to the autocorrelation of the reference</span>
+<span class="sd">        channel</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Find correlation product of autocorrelation of ref channel in read data</span>
+    <span class="c1"># Indices of autocorrelations for selected channels</span>
+    <span class="n">cor_prod_auto</span> <span class="o">=</span> <span class="p">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">Nchannels</span> <span class="o">-</span> <span class="p">(</span><span class="n">k</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span> <span class="o">//</span> <span class="mi">2</span> <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchannels</span><span class="p">)]</span>
+    <span class="n">cor_prod_ref</span> <span class="o">=</span> <span class="n">cor_prod_auto</span><span class="p">[</span><span class="n">adc_ch_ref</span><span class="p">]</span>
+    <span class="n">auto_ref</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">real</span><span class="p">(</span><span class="n">vis</span><span class="p">[</span><span class="n">fbin_ref</span><span class="p">,</span> <span class="n">cor_prod_ref</span><span class="p">,</span> <span class="p">:])</span>
+
+    <span class="c1"># Find timestamp indices for noise signal on and off</span>
+    <span class="c1"># auto_ref points above/below auto_ref_mean are considered to be on/off</span>
+    <span class="n">auto_ref_mean</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">auto_ref</span><span class="p">)</span>
+    <span class="n">time_index_on</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">auto_ref</span> <span class="o">&gt;=</span> <span class="n">auto_ref_mean</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">time_index_off</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">auto_ref</span> <span class="o">&lt;</span> <span class="n">auto_ref_mean</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">diff_index_on</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">time_index_on</span><span class="p">)</span>
+    <span class="c1"># Indices indicating ends of noise-on subsets</span>
+    <span class="n">index_end_on_cycle</span> <span class="o">=</span> <span class="n">time_index_on</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff_index_on</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]]</span>
+    <span class="c1"># Indices indicating starts of noise-on subsets</span>
+    <span class="n">index_start_on_cycle</span> <span class="o">=</span> <span class="n">time_index_on</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">diff_index_on</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">vis_on_dec</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Decimated visibility on points</span>
+    <span class="n">vis_off_dec</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">timestamp_on_dec</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Timestamps of visibility on points</span>
+    <span class="n">timestamp_off_dec</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">timestamp_dec</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># Timestamp of decimated visibility (on minus off)</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">index_end_on_cycle</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="c1"># Visibilities with noise on for cycle i</span>
+        <span class="n">vis_on_cycle_i</span> <span class="o">=</span> <span class="n">vis</span><span class="p">[</span>
+            <span class="p">:,</span> <span class="p">:,</span> <span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">]</span>
+        <span class="c1"># Visibilities with noise off for cycle i</span>
+        <span class="n">vis_off_cycle_i</span> <span class="o">=</span> <span class="n">vis</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span>
+
+        <span class="c1"># New lines to find indices of maximum and minimum point of each cycle</span>
+        <span class="c1"># based on the reference channel</span>
+        <span class="n">index_max_i</span> <span class="o">=</span> <span class="n">auto_ref</span><span class="p">[</span>
+            <span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">argmax</span><span class="p">()</span>
+        <span class="n">index_min_i</span> <span class="o">=</span> <span class="n">auto_ref</span><span class="p">[</span>
+            <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="p">]</span><span class="o">.</span><span class="n">argmin</span><span class="p">()</span>
+        <span class="n">vis_on_dec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vis_on_cycle_i</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index_max_i</span><span class="p">])</span>
+        <span class="n">vis_off_dec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vis_off_cycle_i</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">index_min_i</span><span class="p">])</span>
+
+        <span class="c1"># Instead of averaging all the data with noise on of a cycle, we take the median</span>
+        <span class="c1"># vis_on_dec.append(np.median(vis_on_cycle_i.real, axis=2)+1j</span>
+        <span class="c1">#    * np.median(vis_on_cycle_i.imag, axis=2))</span>
+        <span class="c1"># vis_off_dec.append(np.median(vis_off_cycle_i.real, axis=2)+1jr</span>
+        <span class="c1">#    * np.median(vis_off_cycle_i.imag, axis=2))</span>
+        <span class="n">timestamp_on_dec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">timestamp</span><span class="p">[</span><span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">:</span> <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="n">timestamp_off_dec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">timestamp</span><span class="p">[</span><span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">index_start_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]])</span>
+        <span class="p">)</span>
+        <span class="n">timestamp_dec</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span>
+                <span class="n">timestamp</span><span class="p">[</span><span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">:</span> <span class="n">index_end_on_cycle</span><span class="p">[</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="n">vis_on_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">vis_on_dec</span><span class="p">)</span>
+    <span class="n">vis_off_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">vis_off_dec</span><span class="p">)</span>
+    <span class="n">vis_dec_sub</span> <span class="o">=</span> <span class="n">vis_on_dec</span> <span class="o">-</span> <span class="n">vis_off_dec</span>
+    <span class="n">timestamp_on_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">timestamp_on_dec</span><span class="p">)</span>
+    <span class="n">timestamp_off_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">timestamp_off_dec</span><span class="p">)</span>
+    <span class="n">timestamp_dec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">timestamp_dec</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="p">{</span>
+        <span class="s2">&quot;time_index_on&quot;</span><span class="p">:</span> <span class="n">time_index_on</span><span class="p">,</span>
+        <span class="s2">&quot;time_index_off&quot;</span><span class="p">:</span> <span class="n">time_index_off</span><span class="p">,</span>
+        <span class="s2">&quot;vis_on_dec&quot;</span><span class="p">:</span> <span class="n">vis_on_dec</span><span class="p">,</span>
+        <span class="s2">&quot;vis_off_dec&quot;</span><span class="p">:</span> <span class="n">vis_off_dec</span><span class="p">,</span>
+        <span class="s2">&quot;vis_dec_sub&quot;</span><span class="p">:</span> <span class="n">vis_dec_sub</span><span class="p">,</span>
+        <span class="s2">&quot;timestamp_on_dec&quot;</span><span class="p">:</span> <span class="n">timestamp_on_dec</span><span class="p">,</span>
+        <span class="s2">&quot;timestamp_off_dec&quot;</span><span class="p">:</span> <span class="n">timestamp_off_dec</span><span class="p">,</span>
+        <span class="s2">&quot;timestamp_dec&quot;</span><span class="p">:</span> <span class="n">timestamp_dec</span><span class="p">,</span>
+        <span class="s2">&quot;cor_prod_ref&quot;</span><span class="p">:</span> <span class="n">cor_prod_ref</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+
+<div class="viewcode-block" id="gains2utvec_tf">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.gains2utvec_tf">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gains2utvec_tf</span><span class="p">(</span><span class="n">gains</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts gain array to CHIME visibility format for all frequencies and</span>
+<span class="sd">    time frames.</span>
+
+<span class="sd">    For every frequency and time frame, converts a gain vector into an outer</span>
+<span class="sd">    product matrix and then vectorizes its upper triangle to obtain a vector in</span>
+<span class="sd">    the same format as the CHIME visibility matrix.</span>
+
+<span class="sd">    Converting the gain arrays to CHIME visibility format makes easier to</span>
+<span class="sd">    apply the gain corrections to the visibility data. See example below.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    gains : 3d array</span>
+<span class="sd">        Input array with the gains for all frequencies, channels and time frames</span>
+<span class="sd">        in the fromat of ni_gains_evalues_tf. g has dimensions</span>
+<span class="sd">        [frequency, channels, time].</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    G_ut : 3d array</span>
+<span class="sd">        Output array with dimmensions [frequency, corr. number, time]. For</span>
+<span class="sd">        every frequency and time frame, contains the vectorized form of upper</span>
+<span class="sd">        triangle for the outer product of the respective gain vector.</span>
+
+<span class="sd">    Example</span>
+<span class="sd">    -------</span>
+<span class="sd">    To compute the gains from a set of noise injection pass0 data and apply the</span>
+<span class="sd">    gains to the visibilities run:</span>
+
+<span class="sd">    &gt;&gt;&gt; from ch_util import andata</span>
+<span class="sd">    &gt;&gt;&gt; from ch_util import import ni_utils as ni</span>
+<span class="sd">    &gt;&gt;&gt; data = andata.Reader(&#39;/data/20140916T173334Z_blanchard_corr/000[0-3]*.h5&#39;)</span>
+<span class="sd">    &gt;&gt;&gt; readdata = data.read()</span>
+<span class="sd">    &gt;&gt;&gt; nidata = ni.ni_data(readdata, 16)</span>
+<span class="sd">    &gt;&gt;&gt; nidata.get_ni_gains()</span>
+<span class="sd">    &gt;&gt;&gt; G_ut = ni.gains2utvec(nidata.ni_gains)</span>
+<span class="sd">    &gt;&gt;&gt; corrected_vis = nidata.vis_off_dec/G_ut</span>
+
+<span class="sd">    See also</span>
+<span class="sd">    --------</span>
+<span class="sd">    gains2utvec, ni_gains_evalues_tf</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">Nfreqs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># Number of frequencies</span>
+    <span class="n">Ntimeframes</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>  <span class="c1"># Number of time frames</span>
+    <span class="n">Nchannels</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">size</span><span class="p">(</span><span class="n">gains</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">Ncorrprods</span> <span class="o">=</span> <span class="n">Nchannels</span> <span class="o">*</span> <span class="p">(</span><span class="n">Nchannels</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span>  <span class="c1"># Number of correlation products</span>
+    <span class="n">G_ut</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">Nfreqs</span><span class="p">,</span> <span class="n">Ncorrprods</span><span class="p">,</span> <span class="n">Ntimeframes</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">complex</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nfreqs</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ntimeframes</span><span class="p">):</span>
+            <span class="n">G_ut</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">]</span> <span class="o">=</span> <span class="n">gains2utvec</span><span class="p">(</span><span class="n">gains</span><span class="p">[</span><span class="n">f</span><span class="p">,</span> <span class="p">:,</span> <span class="n">t</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">G_ut</span></div>
+
+
+
+<div class="viewcode-block" id="gains2utvec">
+<a class="viewcode-back" href="../../_autosummary/ch_util.ni_utils.html#ch_util.ni_utils.gains2utvec">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">gains2utvec</span><span class="p">(</span><span class="n">g</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Converts a vector into an outer product matrix and vectorizes its upper</span>
+<span class="sd">    triangle to obtain a vector in same format as the CHIME visibility matrix.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    g : 1d array</span>
+<span class="sd">        gain vector</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    1d array with vectorized form of upper triangle for the outer product of g</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">g</span><span class="p">)</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">g</span><span class="o">.</span><span class="n">conj</span><span class="p">()</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">mat2utvec</span><span class="p">(</span><span class="n">G</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

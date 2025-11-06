@@ -1,0 +1,985 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.layout &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.ni_utils" href="ch_util.ni_utils.html" />
+    <link rel="prev" title="ch_util.holography" href="ch_util.holography.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.layout</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#choose-your-own-adventure">Choose Your Own Adventure</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#database-models">Database Models</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.layout.enter_ltf"><code class="docutils literal notranslate"><span class="pre">enter_ltf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.layout.get_global_flag_times"><code class="docutils literal notranslate"><span class="pre">get_global_flag_times()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.layout.global_flags_between"><code class="docutils literal notranslate"><span class="pre">global_flags_between()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.layout.graph"><code class="docutils literal notranslate"><span class="pre">graph</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.layout.subgraph_spec"><code class="docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.layout</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.layout.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.layout">
+<span id="ch-util-layout"></span><h1>ch_util.layout<a class="headerlink" href="#module-ch_util.layout" title="Link to this heading"></a></h1>
+<p>Interface to the CHIME components and graphs</p>
+<p>This module interfaces to the layout tables in the CHIME database.</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> module is used for the ORM to the MySQL database. Because the
+layouts are event-driven, you should never attempt to enter events by raw
+inserts to the <code class="xref py py-class docutils literal notranslate"><span class="pre">event</span></code> or <code class="xref py py-class docutils literal notranslate"><span class="pre">timestamp</span></code> tables, as you could create
+inconsistencies. Rather, use the methods which are described in this document to
+do such alterations robustly.</p>
+<p>For most uses, you probably want to import the following:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">peewee</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">layout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">layout</span><span class="o">.</span><span class="n">connect_database</span><span class="p">()</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The database must now be explicitly connected. This should not be done within
+an import statement.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="xref py py-mod docutils literal notranslate"><span class="pre">logging</span></code> module can be set to the level of your preference, or not
+imported altogether if you don’t want log messages from the <code class="xref py py-mod docutils literal notranslate"><span class="pre">layout</span></code>
+module. Note that the <code class="xref py py-mod docutils literal notranslate"><span class="pre">peewee</span></code> module sends a lot of messages to the
+DEBUG stream.</p>
+</div>
+<p>If you will be altering the layouts, you will need to register as a user:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">layout</span><span class="o">.</span><span class="n">set_user</span><span class="p">(</span><span class="s2">&quot;Ahincks&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Use your CHIME wiki username here.  Make sure it starts with a capital letter.
+Note that different users have different permissions, stored in the
+<code class="xref py py-class docutils literal notranslate"><span class="pre">user_permission</span></code> table. If you are simply reading from the layout,
+there is no need to register as a user.</p>
+<section id="choose-your-own-adventure">
+<h2>Choose Your Own Adventure<a class="headerlink" href="#choose-your-own-adventure" title="Link to this heading"></a></h2>
+<table class="docutils align-default">
+<thead>
+<tr class="row-odd"><th class="head"><p>If you want to …</p></th>
+<th class="head"><p>… then see</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>retrieve and examine layout graphs</p></td>
+<td><p><a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">graph</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p>add components</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.add</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">add_component</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>remove components</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.remove</span></code>,
+<code class="xref py py-func docutils literal notranslate"><span class="pre">remove_component</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>make connexions</p></td>
+<td><p><code class="xref py py-func docutils literal notranslate"><span class="pre">make_connexion</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>sever connexions</p></td>
+<td><p><code class="xref py py-func docutils literal notranslate"><span class="pre">sever_connexion</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>set component properties</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.set_property</span></code>
+<code class="xref py py-func docutils literal notranslate"><span class="pre">set_property</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>get component properties</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.get_property</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>perform bulk updates</p></td>
+<td><p><a class="reference internal" href="#ch_util.layout.enter_ltf" title="ch_util.layout.enter_ltf"><code class="xref py py-func docutils literal notranslate"><span class="pre">enter_ltf()</span></code></a></p></td>
+</tr>
+<tr class="row-even"><td><p>add component history notes</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.add_history</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>add link to component documentation</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">component.add_doc</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>create a global flag</p></td>
+<td><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">global_flag.start</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Functions</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">add_component</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">compare_connexion</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">connect_database</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.layout.enter_ltf" title="ch_util.layout.enter_ltf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">enter_ltf()</span></code></a></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">make_connexion</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">remove_component</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">set_user</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">sever_connexion</span></code></p></li>
+<li><p><a class="reference internal" href="#ch_util.layout.global_flags_between" title="ch_util.layout.global_flags_between"><code class="xref py py-meth docutils literal notranslate"><span class="pre">global_flags_between()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.layout.get_global_flag_times" title="ch_util.layout.get_global_flag_times"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_global_flag_times()</span></code></a></p></li>
+</ul>
+<p class="rubric">Classes</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">graph</span></code></a></p></li>
+</ul>
+</section>
+<section id="database-models">
+<h2>Database Models<a class="headerlink" href="#database-models" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">component</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">component_history</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">component_type</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">component_type_rev</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">component_doc</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">connexion</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">external_repo</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">event</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">event_type</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">graph_obj</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">global_flag</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">predef_subgraph_spec</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">predef_subgraph_spec_param</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">property</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">property_component</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">property_type</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">timestamp</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">user_permission</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">user_permission_type</span></code></p></li>
+</ul>
+<p class="rubric">Exceptions</p>
+<ul class="simple">
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">NoSubgraph</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">BadSubgraph</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">DoesNotExist</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">UnknownUser</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">NoPermission</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">LayoutIntegrity</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyType</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">PropertyUnchanged</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">ClosestDraw</span></code></p></li>
+<li><p><code class="xref py py-class docutils literal notranslate"><span class="pre">NotFound</span></code></p></li>
+</ul>
+<p class="rubric">Constants</p>
+<ul class="simple">
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">EVENT_AT</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">EVENT_BEFORE</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">EVENT_AFTER</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">EVENT_ALL</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">ORDER_ASC</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">ORDER_DESC</span></code></p></li>
+</ul>
+</section>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.layout.enter_ltf" title="ch_util.layout.enter_ltf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">enter_ltf</span></code></a>(ltf[, time, notes, force])</p></td>
+<td><p>Enter an LTF into the database.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.layout.get_global_flag_times" title="ch_util.layout.get_global_flag_times"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_global_flag_times</span></code></a>(flag)</p></td>
+<td><p>Convenience function to get global flag times by id or name.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.layout.global_flags_between" title="ch_util.layout.global_flags_between"><code class="xref py py-obj docutils literal notranslate"><span class="pre">global_flags_between</span></code></a>(start_time, end_time[, ...])</p></td>
+<td><p>Find global flags that overlap a time interval.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a>(*args, **kwargs)</p></td>
+<td><p>A graph of connexions.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a>(start, terminate, oneway, hide)</p></td>
+<td><p>Specifications for extracting a subgraph from a full graph.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.layout.enter_ltf">
+<span class="sig-prename descclassname"><span class="pre">ch_util.layout.</span></span><span class="sig-name descname"><span class="pre">enter_ltf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ltf</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2025,</span> <span class="pre">11,</span> <span class="pre">6,</span> <span class="pre">0,</span> <span class="pre">20,</span> <span class="pre">44,</span> <span class="pre">591204)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">force</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#enter_ltf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.enter_ltf" title="Link to this definition"></a></dt>
+<dd><p>Enter an LTF into the database.</p>
+<p>This is a special mark-up language for quickly entering events. See the “help”
+box on the LTF page of the web interface for instructions.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ltf</strong> (<em>string</em>) – Pass either the path to a file containing the LTF, or a string containing
+the LTF.</p></li>
+<li><p><strong>time</strong> (<em>datetime.datetime</em>) – The time at which to apply the LTF.</p></li>
+<li><p><strong>notes</strong> (<em>string</em>) – Notes for the timestamp.</p></li>
+<li><p><strong>force</strong> (<em>bool</em>) – If <code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, then do nothing when events that would damage database
+integrity are encountered; skip over them. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, then a bad
+propsed event will raise the appropriate exception.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.layout.get_global_flag_times">
+<span class="sig-prename descclassname"><span class="pre">ch_util.layout.</span></span><span class="sig-name descname"><span class="pre">get_global_flag_times</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#get_global_flag_times"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.get_global_flag_times" title="Link to this definition"></a></dt>
+<dd><p>Convenience function to get global flag times by id or name.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>flag</strong> (<em>integer</em><em> or </em><em>string</em>) – If an integer, this is a global flag id, e.g. <cite>64</cite>. If a string this is the
+global flag’s name e.g. ‘run_pass0_e’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>start</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – Global flag start time (UTC).</p></li>
+<li><p><strong>end</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">datetime.datetime</span></code> or <cite>None</cite>) – Global flag end time (UTC) or <cite>None</cite> if the flag hasn’t ended.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.layout.global_flags_between">
+<span class="sig-prename descclassname"><span class="pre">ch_util.layout.</span></span><span class="sig-name descname"><span class="pre">global_flags_between</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">end_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">severity</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#global_flags_between"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.global_flags_between" title="Link to this definition"></a></dt>
+<dd><p>Find global flags that overlap a time interval.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start_time</strong></p></li>
+<li><p><strong>end_time</strong></p></li>
+<li><p><strong>severity</strong> (<em>str</em>) – One of ‘comment’, ‘warning’, ‘severe’, or None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>flags</strong> – List of global_flag objects matching criteria.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.layout.graph">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.layout.</span></span><span class="sig-name descname"><span class="pre">graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference external" href="https://networkx.org/documentation/latest/reference/classes/graph.html#networkx.Graph" title="(in NetworkX v3.6rc0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Graph</span></code></a></p>
+<p>A graph of connexions.</p>
+<p>This class inherits the
+<a class="reference external" href="http://networkx.github.io/documentation/networkx-1.9.1/">networkx.Graph</a>
+class and adds CHIME-specific functionality.</p>
+<p>Use the <a class="reference internal" href="#ch_util.layout.graph.from_db" title="ch_util.layout.graph.from_db"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_db()</span></code></a> class method to construct a graph from the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> (<em>datetime.datetime</em>) – The time at which the graph is valid. Default is now().</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>To load a graph from the database, use the <a class="reference internal" href="#ch_util.layout.graph.from_db" title="ch_util.layout.graph.from_db"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_db()</span></code></a> class method:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>You can now use any of the
+<a class="reference external" href="http://networkx.github.io/documentation/networkx-1.9.1/">networkx.Graph</a>
+methods:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">order</span><span class="p">(),</span> <span class="n">g</span><span class="o">.</span><span class="n">size</span><span class="p">())</span>
+<span class="go">2483 2660</span>
+</pre></div>
+</div>
+<p>There are some convenience methods for our implementation. For example, you
+can easily find components by component type:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;reflector&quot;</span><span class="p">))</span>
+<span class="go">[&lt;layout.component object at 0x7fd1b2cda710&gt;,</span>
+<span class="go">&lt;layout.component object at 0x7fd1b2cda810&gt;,</span>
+<span class="go">&lt;layout.component object at 0x7fd1b2cfb7d0&gt;]</span>
+</pre></div>
+</div>
+<p>Note that the graph nodes are <a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> objects. You can also use the
+<a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-meth docutils literal notranslate"><span class="pre">component()</span></code></a> method to search for components by serial number:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">ant</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">comp</span> <span class="o">=</span> <span class="s2">&quot;ANT0044B&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Node properties are stored as per usual for <a class="reference external" href="https://networkx.org/documentation/latest/reference/classes/graph.html#networkx.Graph" title="(in NetworkX v3.6rc0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">networkx.Graph</span></code></a> objects:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">nodes</span><span class="p">[</span><span class="n">ant</span><span class="p">])</span>
+<span class="go">{&#39;_rev_id&#39;: 11L, &#39;_type_id&#39;: 2L, &#39;_type_name&#39;: &#39;antenna&#39;, &#39;_id&#39;: 32L,</span>
+<span class="go">&#39;pol1_orient&#39;: &lt;layout.property object at 0x7f31ed323fd0&gt;,</span>
+<span class="go">&#39;pol2_orient&#39;: &lt;layout.property object at 0x7f31ed2c8790&gt;, &#39;_rev_name&#39;: &#39;B&#39;}</span>
+</pre></div>
+</div>
+<p>Note, however, that there are some internally-used properties (starting with
+an underscore). The <a class="reference internal" href="#ch_util.layout.graph.node_property" title="ch_util.layout.graph.node_property"><code class="xref py py-meth docutils literal notranslate"><span class="pre">node_property()</span></code></a> returns a dictionary of properties
+without these private memebers:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">node_property</span><span class="p">(</span><span class="n">ant</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">units</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">units</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="go">pol1_orient = S</span>
+<span class="go">pol2_orient = E</span>
+</pre></div>
+</div>
+<p>To search the graph for the closest component of a given type to a single
+component, using <a class="reference internal" href="#ch_util.layout.graph.closest_of_type" title="ch_util.layout.graph.closest_of_type"><code class="xref py py-meth docutils literal notranslate"><span class="pre">closest_of_type()</span></code></a>:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">slt_type</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">component_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;cassette slot&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">closest_of_type</span><span class="p">(</span><span class="n">ant</span><span class="p">,</span> <span class="n">slt_type</span><span class="p">)</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+<span class="go">CSS004C0</span>
+</pre></div>
+</div>
+<p>Use of <a class="reference internal" href="#ch_util.layout.graph.closest_of_type" title="ch_util.layout.graph.closest_of_type"><code class="xref py py-meth docutils literal notranslate"><span class="pre">closest_of_type()</span></code></a> can be subtle for components separated by long
+paths. See its documentation for more examples.</p>
+<p>Subgraphs can be created using a subgraph specification, encoded in a
+<a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-class docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a> object. See the documentation for that class for
+details, but briefly, this allows one to create a smaller, more manageable
+graph containing only components and connexions you are interested in. Given a
+subgraph, the <a class="reference internal" href="#ch_util.layout.graph.ltf" title="ch_util.layout.graph.ltf"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ltf()</span></code></a> method can be useful.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.closest_of_type">
+<span class="sig-name descname"><span class="pre">closest_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.closest_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.closest_of_type" title="Link to this definition"></a></dt>
+<dd><p>Searches for the closest connected component of a given type.</p>
+<p>Sometimes the closest component is through a long, convoluted path that you
+do not wish to explore. You can cut out these cases by including a list of
+component types that will block the search along a path.</p>
+<p>The component may be passed by object or by serial number; similarly for
+component types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comp</strong> (<a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> or string or list of such) – The component to search from.</p></li>
+<li><p><strong>type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or string) – The component type to find.</p></li>
+<li><p><strong>type_exclude</strong> (list of <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or strings) – Any components of this type will prematurely cut off a line of
+investigation.</p></li>
+<li><p><strong>ignore_draws</strong> (<em>boolean</em>) – It is possible that there be more than one component of a given type the
+same distance from the starting component. If this parameter is set to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, then just return the first one that is found. If set to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, then raise an exception.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>comp</strong> – The closest component of the given type to <strong>start</strong>. If no component of
+type is found <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> or list of such</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ClosestDraw</strong> – Raised if there is no unique closest component and <strong>ignore_draws</strong> is set
+    to <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Find the cassette slot an antenna is plugged into:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">layout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">closest_of_type</span><span class="p">(</span><span class="s2">&quot;ANT0044B&quot;</span><span class="p">,</span> <span class="s2">&quot;cassette slot&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+<span class="go">CSS004C0</span>
+</pre></div>
+</div>
+<p>The example above is simple as the two components are adjacent:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">sn</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">shortest_path_to_type</span><span class="p">(</span><span class="s2">&quot;ANT0044B&quot;</span><span class="p">,</span> <span class="s2">&quot;cassette slot&quot;</span><span class="p">)])</span>
+<span class="go">[&#39;ANT0044B&#39;, &#39;CSS004C0&#39;]</span>
+</pre></div>
+</div>
+<p>In general, though, you need to take care when
+using this method and make judicious use of the <strong>type_exclude</strong> parameter.
+For example, consider the following example:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">closest_of_type</span><span class="p">(</span><span class="s2">&quot;K7BP16-00040112&quot;</span><span class="p">,</span> <span class="s2">&quot;RFT thru&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+<span class="go">RFTB15B</span>
+</pre></div>
+</div>
+<p>It seems OK on the surface, but the path it has used is probably not what
+you want:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">sn</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">shortest_path_to_type</span><span class="p">(</span><span class="s2">&quot;K7BP16-00040112&quot;</span><span class="p">,</span><span class="s2">&quot;RFT thru&quot;</span><span class="p">)])</span>
+<span class="go">[&#39;K7BP16-00040112&#39;, &#39;K7BP16-000401&#39;, &#39;K7BP16-00040101&#39;, &#39;FLA0280B&#39;, &#39;RFTB15B&#39;]</span>
+</pre></div>
+</div>
+<p>We need to block the searcher from going into the correlator card slot and
+then back out another input, which we can do like so:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">closest_of_type</span><span class="p">(</span><span class="s2">&quot;K7BP16-00040112&quot;</span><span class="p">,</span> <span class="s2">&quot;RFT thru&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="n">type_exclude</span> <span class="o">=</span> <span class="s2">&quot;correlator card slot&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">sn</span><span class="p">)</span>
+<span class="go">RFTQ15B</span>
+</pre></div>
+</div>
+<p>The reason the first search went through the correlator card slot is because
+there are delay cables and splitters involved.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">sn</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">shortest_path_to_type</span><span class="p">(</span><span class="s2">&quot;K7BP16-00040112&quot;</span><span class="p">,</span>
+<span class="gp">... </span><span class="s2">&quot;RFT thru&quot;</span><span class="p">,</span> <span class="n">type_exclude</span> <span class="o">=</span> <span class="s2">&quot;correlator card slot&quot;</span><span class="p">)])</span>
+<span class="go">[&#39;K7BP16-00040112&#39;, &#39;CXS0279&#39;, &#39;CXA0018A&#39;, &#39;CXA0139B&#39;, &#39;SPL001AP2&#39;,</span>
+<span class="go">&#39;SPL001A&#39;, &#39;SPL001AP3&#39;, &#39;CXS0281&#39;, &#39;RFTQ15B&#39;]</span>
+</pre></div>
+</div>
+<p>The shortest path really was through the correlator card slot, until we
+explicitly rejected such paths.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.component">
+<span class="sig-name descname"><span class="pre">component</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sort_sn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.component"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.component" title="Link to this definition"></a></dt>
+<dd><p>Return a component or list of components from the graph.</p>
+<p>The components exist as graph nodes. This method provides searchable access
+to them.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comp</strong> (string or <a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a>) – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, then return the component with this serial number, or
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> if it does not exist in the graph. If this parameter is set,
+then <strong>type</strong> is ignored. You can also pass a component object; the
+instance of that component with the same serial number will be returned if
+it exists in this graph.</p></li>
+<li><p><strong>type</strong> (string or <code class="xref py py-class docutils literal notranslate"><span class="pre">component_type</span></code>) – If not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, then only return components of this type. You may pass
+either the name of the component type or an object.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If the <strong>sn</strong> parameter is passed, a single <a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-class docutils literal notranslate"><span class="pre">component</span></code></a> object is
+returned. If the <strong>type</strong> parameter is passed, a list of
+<a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-class docutils literal notranslate"><span class="pre">component</span></code></a> objects is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-class docutils literal notranslate"><span class="pre">component</span></code></a> or list of such</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>NotFound</strong> – Raised if no component is found.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="s2">&quot;CXA0005A&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">type_rev</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+<span class="go">B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;reflector&quot;</span><span class="p">):</span>
+<span class="gp">... </span>  <span class="nb">print</span> <span class="n">r</span><span class="o">.</span><span class="n">sn</span>
+<span class="go">E_cylinder</span>
+<span class="go">W_cylinder</span>
+<span class="go">26m_dish</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.from_db">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_db</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">time</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">datetime.datetime(2025,</span> <span class="pre">11,</span> <span class="pre">6,</span> <span class="pre">0,</span> <span class="pre">20,</span> <span class="pre">44,</span> <span class="pre">591182)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_start_sn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.from_db"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.from_db" title="Link to this definition"></a></dt>
+<dd><p>Create a new graph by reading the database.</p>
+<p>This method is designed to be efficient. It has customised SQL calls so that
+only a couple of queries are required. Doing this with the standard peewee
+functionality requires many more calls.</p>
+<p>This method will establish a connection to the database if it doesn’t
+already exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>time</strong> (<em>datetime.datetime</em>) – The time at which the graph is valid. Default is now().</p></li>
+<li><p><strong>sg_spec</strong> (<a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a>) – The subgraph specificationto use; can be set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+<li><p><strong>sg_start_sn</strong> (<em>string</em>) – If a serial number is specified, then only the subgraph starting with that
+component will be returned. This parameter is ignored if sg_spec is
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>If <em>sg_spec</em> is not <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, and <em>sg_start_sn</em> is not specified, then
+a list of <a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a> objects is returned instead.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a></p>
+</dd>
+</dl>
+<p>:raises If no graph is found, <code class="xref py py-exc docutils literal notranslate"><span class="pre">NotFound</span></code> is raised.:</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.from_graph">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_spec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sg_start_sn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.from_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.from_graph" title="Link to this definition"></a></dt>
+<dd><p>Find subgraphs within this graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>g</strong> (<a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a>) – The graph from which to get the new graph.</p></li>
+<li><p><strong>sg_spect</strong> (<a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a>) – The subgraph specification to use; can be set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p>A list of <a class="reference internal" href="#ch_util.layout.graph" title="ch_util.layout.graph"><code class="xref py py-obj docutils literal notranslate"><span class="pre">graph</span></code></a> objects, one for each subgraph found. If, however,</p></li>
+<li><p>*g* is set to <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>, a reference to the input graph is returned.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.ltf">
+<span class="sig-name descname"><span class="pre">ltf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.ltf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.ltf" title="Link to this definition"></a></dt>
+<dd><p>Get an LTF representation of the graph. The graph must be a subgraph,
+i.e., generated with a <code class="xref py py-obj docutils literal notranslate"><span class="pre">predef_subgraph_spec</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ltf</strong> – The LTF representation of the graph.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>string</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>NoSubgraph</strong> – </p></li>
+<li><p><strong>Raised if no subgraph specification is associate with this layout.</strong> – </p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Get the LTF for a subgraph of antenna to HK.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">layout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">start</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">component_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;antenna&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">id</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">terminate</span> <span class="o">=</span> <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">component_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;reflector&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+<span class="go">                 layout.component_type.get(name = &quot;cassette slot&quot;).id,</span>
+<span class="go">                 layout.component_type.get(name = &quot;correlator input&quot;).id,</span>
+<span class="go">                 layout.component_type.get(name = &quot;HK preamp&quot;).id,</span>
+<span class="go">                 layout.component_type.get(name = &quot;HK hydra&quot;).id]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">hide</span> <span class="o">=</span> <span class="p">[</span><span class="n">layout</span><span class="o">.</span><span class="n">component_type</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;reflector&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">id</span><span class="p">,</span>
+<span class="go">            layout.component_type.get(name = &quot;cassette slot&quot;).id,</span>
+<span class="go">            layout.component_type.get(name = &quot;HK preamp&quot;).id,</span>
+<span class="go">            layout.component_type.get(name = &quot;HK hydra&quot;).id]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">subgraph_spec</span><span class="p">(</span><span class="n">start</span><span class="p">,</span> <span class="n">terminate</span><span class="p">,</span> <span class="p">[],</span> <span class="n">hide</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sg_spec</span><span class="p">,</span><span class="s2">&quot;ANT0108B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sg</span><span class="o">.</span><span class="n">ltf</span><span class="p">())</span>
+<span class="go"># Antenna to correlator input.</span>
+<span class="go">ANT0108B pol1_orient=S pol2_orient=E</span>
+<span class="go">PL0108B1</span>
+<span class="go">LNA0249B</span>
+<span class="go">CXA0239C</span>
+<span class="go">CANBJ6B</span>
+<span class="go">CXS0042</span>
+<span class="go">RFTG00B attenuation=10</span>
+<span class="go">FLA0196B</span>
+<span class="go">CXS0058</span>
+<span class="go">K7BP16-00041606</span>
+
+<span class="go"># Antenna to correlator input.</span>
+<span class="go">ANT0108B pol1_orient=S pol2_orient=E</span>
+<span class="go">PL0108B2</span>
+<span class="go">LNA0296B</span>
+<span class="go">CXA0067B</span>
+<span class="go">CANBG6B</span>
+<span class="go">CXS0090</span>
+<span class="go">RFTG01B attenuation=10</span>
+<span class="go">FLA0269B</span>
+<span class="go">CXS0266</span>
+<span class="go">K7BP16-00041506</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.neighbour_of_type">
+<span class="sig-name descname"><span class="pre">neighbour_of_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.neighbour_of_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.neighbour_of_type" title="Link to this definition"></a></dt>
+<dd><p>Get a list of neighbours of a given type.</p>
+<p>This is like the <a class="reference external" href="https://networkx.org/documentation/latest/reference/classes/generated/networkx.Graph.neighbors.html#networkx.Graph.neighbors" title="(in NetworkX v3.6rc0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">networkx.Graph.neighbors()</span></code></a> method, but selects only
+the neighbours of the specified type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comp</strong> (<a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a>) – A node in the graph.</p></li>
+<li><p><strong>type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or string) – The component type to find.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>nlist</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>A list of nodes of type <strong>type</strong> adjacent to <strong>n</strong>.</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://networkx.org/documentation/latest/reference/exceptions.html#networkx.NetworkXError" title="(in NetworkX v3.6rc0)"><strong>networkx.NetworkXError</strong></a> – Raised if <strong>n</strong> is not in the graph.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.node_property">
+<span class="sig-name descname"><span class="pre">node_property</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.node_property"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.node_property" title="Link to this definition"></a></dt>
+<dd><p>Return the properties of a node excluding internally used properties.</p>
+<p>If you iterate over a nodes properties, you will also get the
+internally-used properties (starting with an underscore). This method gets
+the dictionary of properties without these “private” properties.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>node</strong> (<em>node object</em>) – The node for which to get the properties.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary of properties.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">graph</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">g</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">rft</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="n">comp</span> <span class="o">=</span> <span class="s2">&quot;RFTK07B&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">g</span><span class="o">.</span><span class="n">node_property</span><span class="p">(</span><span class="n">rft</span><span class="p">)</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+<span class="gp">... </span>  <span class="nb">print</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;=&quot;</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">value</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">units</span> <span class="k">if</span> <span class="n">p</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">units</span> <span class="k">else</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+<span class="go">attenuation = 10 dB</span>
+<span class="go">therm_avail = ch1</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.graph.sg_spec">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sg_spec</span></span><a class="headerlink" href="#ch_util.layout.graph.sg_spec" title="Link to this definition"></a></dt>
+<dd><p>The <a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a> (subgraph specification) used to get this graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The <a class="reference internal" href="#ch_util.layout.subgraph_spec" title="ch_util.layout.subgraph_spec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subgraph_spec</span></code></a> used to get this graph, if any.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.graph.sg_spec_start">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">sg_spec_start</span></span><a class="headerlink" href="#ch_util.layout.graph.sg_spec_start" title="Link to this definition"></a></dt>
+<dd><p>The subgraph starting component.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>The <a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> that was used to begin the subgraph, if any.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.graph.shortest_path_to_type">
+<span class="sig-name descname"><span class="pre">shortest_path_to_type</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">comp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">type_exclude</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_draws</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#graph.shortest_path_to_type"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.graph.shortest_path_to_type" title="Link to this definition"></a></dt>
+<dd><p>Searches for the shortest path to a component of a given type.</p>
+<p>Sometimes the closest component is through a long, convoluted path that you
+do not wish to explore. You can cut out these cases by including a list of
+component types that will block the search along a path.</p>
+<p>The component may be passed by object or by serial number; similarly for
+component types.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>comp</strong> (<a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> or string or list of one of these) – The component(s) to search from.</p></li>
+<li><p><strong>type</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or string) – The component type to find.</p></li>
+<li><p><strong>type_exclude</strong> (list of <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or strings) – Any components of this type will prematurely cut off a line of
+investigation.</p></li>
+<li><p><strong>ignore_draws</strong> (<em>boolean</em>) – It is possible that there be more than one component of a given type the
+same distance from the starting component. If this parameter is set to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">True</span></code>, then just return the first one that is found. If set to
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>, then raise an exception.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>comp</strong> – The closest component of the given type to <strong>start</strong>. If no path to a
+component of the specified type exists, return <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.layout.graph.component" title="ch_util.layout.graph.component"><code class="xref py py-obj docutils literal notranslate"><span class="pre">component</span></code></a> or list of such</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ClosestDraw</strong> – Raised if there is no unique closest component and <strong>ignore_draws</strong> is set
+    to <code class="xref py py-obj docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>See the examples for <a class="reference internal" href="#ch_util.layout.graph.closest_of_type" title="ch_util.layout.graph.closest_of_type"><code class="xref py py-meth docutils literal notranslate"><span class="pre">closest_of_type()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.graph.time">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><a class="headerlink" href="#ch_util.layout.graph.time" title="Link to this definition"></a></dt>
+<dd><p>The time of the graph.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>time</strong> – The time at which this graph existed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>datetime.datetime</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.layout.</span></span><span class="sig-name descname"><span class="pre">subgraph_spec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">start</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">terminate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">oneway</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">hide</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#subgraph_spec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.subgraph_spec" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Specifications for extracting a subgraph from a full graph.</p>
+<p>The subgraph specification can be created from scratch by passing the
+appropriate parameters. They can also be pulled from the database using the
+class method <code class="xref py py-meth docutils literal notranslate"><span class="pre">FROM_PREDef()</span></code>.</p>
+<p>The parameters can be passed as ID’s, names of compoenet types or
+<code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> instances.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>start</strong> (integer, <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or string) – The component type for the start of the subgraph.</p></li>
+<li><p><strong>terminate</strong> (list of integers, of <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or of strings) – Component type id’s for terminating the subgraph.</p></li>
+<li><p><strong>oneway</strong> (list of list of integer pairs, of <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or of strings) – Pairs of component types for defining connexions that should only be
+traced one way when moving from the starting to terminating components.</p></li>
+<li><p><strong>hide</strong> (list of integers, of <code class="xref py py-obj docutils literal notranslate"><span class="pre">component_type</span></code> or of strings) – Component types for components that should be hidden and skipped over in
+the subgraph.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>To look at subgraphs of components between the outer bulkhead and the
+correlator inputs, one could create the following specification:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">layout</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">subgraph_spec</span><span class="p">(</span><span class="n">start</span> <span class="o">=</span> <span class="s2">&quot;c-can thru&quot;</span><span class="p">,</span>
+<span class="go">                                   terminate = [&quot;correlator input&quot;, &quot;60m coax&quot;],</span>
+<span class="go">                                   oneway = [],</span>
+<span class="go">                                   hide = [&quot;60m coax&quot;, &quot;SMA coax&quot;])</span>
+</pre></div>
+</div>
+<p>What did we do? We specified that the subgraph starts at the C-Can bulkhead.
+It terminates at the correlator input; in the other direction, it must also
+terminate at a 60 m coaxial cable plugged into the bulkhead. We hide the 60 m
+coaxial cable so that it doesn’t show up in the subgraph. We also hide the SMA
+cables so that they will be skipped over.</p>
+<p>We can load all such subgraphs from the database now and see how many nodes
+they contain:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sg_spec</span><span class="p">)</span>
+<span class="go">print [s.order() for s in sg]</span>
+<span class="go">[903, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 903,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 903, 3, 3, 3, 903, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 903, 3, 1, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">903, 3, 903, 3, 3, 3, 3, 3, 3, 3, 903, 903, 5, 5]</span>
+</pre></div>
+</div>
+<p>Most of them are as short as we would expect, but there are some
+complications. Let’s look at that first one by printing out its LTF:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">sg</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">ltf</span><span class="p">)</span>
+<span class="go"># C-can thru to RFT thru.</span>
+<span class="go">CANAD0B</span>
+<span class="go">RFTA15B attenuation=10 therm_avail=ch7</span>
+
+<span class="go"># RFT thru to HK preamp.</span>
+<span class="go">RFTA15B attenuation=10 therm_avail=ch7</span>
+<span class="go">CHB036C7</span>
+<span class="go">HPA0002A</span>
+
+<span class="go"># HK preamp to HK readout.</span>
+<span class="go">HPA0002A</span>
+<span class="go">ATMEGA49704949575721220150</span>
+<span class="go">HKR00</span>
+
+<span class="go"># HK readout to HK ATMega.</span>
+<span class="go">HKR00</span>
+<span class="go">ATMEGA50874956504915100100</span>
+<span class="go">etc...</span>
+<span class="go">etc...</span>
+<span class="go"># RFT thru to FLA.</span>
+<span class="go">RFTA15B attenuation=10 therm_avail=ch7</span>
+<span class="go">FLA0159B</span>
+</pre></div>
+</div>
+<p>Some FLA’s are connected to HK hydra cables and we need to terminate on these
+as well. It turns out that some outer bulkheads are connected to 200 m
+coaxial cables, and some FLA’s are connected to 50 m delay cables, adding to
+the list of terminations. Let’s exclude these as well:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span><span class="o">.</span><span class="n">terminate</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;200m coax&quot;</span><span class="p">,</span> <span class="s2">&quot;HK hydra&quot;</span><span class="p">,</span> <span class="s2">&quot;50m coax&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span><span class="o">.</span><span class="n">hide</span> <span class="o">+=</span> <span class="p">[</span><span class="s2">&quot;200m coax&quot;</span><span class="p">,</span> <span class="s2">&quot;HK hydra&quot;</span><span class="p">,</span> <span class="s2">&quot;50m coax&quot;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sg_spec</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">([</span><span class="n">s</span><span class="o">.</span><span class="n">order</span><span class="p">()</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">sg</span><span class="p">])</span>
+<span class="go">[3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 1, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,</span>
+<span class="go">3, 3, 3, 3, 3, 10, 10, 5, 5]</span>
+</pre></div>
+</div>
+<p>The remaining subgraphs with more than three components actually turn out to
+be errors in the layout! Let’s investigate the last one by removing any hidden
+components and printing its LTF.</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sn</span> <span class="o">=</span> <span class="n">sg</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">component</span><span class="p">(</span><span class="nb">type</span> <span class="o">=</span> <span class="s2">&quot;C-can thru&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">sn</span>
+<span class="go">CANBL1B</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span><span class="o">.</span><span class="n">hide</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bad_sg</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sg_spec</span><span class="p">,</span> <span class="n">sn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">bad_sg</span><span class="o">.</span><span class="n">ltf</span><span class="p">())</span>
+<span class="go"># C-can thru to c-can thru.</span>
+<span class="go">CANBL1B</span>
+<span class="go">CXS0017</span>
+<span class="go">RFTQ00B</span>
+<span class="go">CXS0016</span>
+<span class="go">FLA0073B</span>
+<span class="go">RFTQ01B attenuation=9</span>
+<span class="go">CXS0015</span>
+<span class="go">CANBL0B</span>
+</pre></div>
+</div>
+<p>It appears that <code class="code docutils literal notranslate"><span class="pre">CXS0016</span></code> mistakenly connects <code class="code docutils literal notranslate"><span class="pre">RFTQ00B</span></code> to
+<code class="code docutils literal notranslate"><span class="pre">FLA0073B</span></code>. This is an error that should be investigated and fixed. But
+by way of illustration, let’s cut this subgraph short by specifying a one-way
+connection, and not allowing the subgrapher to trace backwards from the inner
+bulkhead to an SMA cable:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">sg_spec</span><span class="o">.</span><span class="n">oneway</span> <span class="o">=</span> <span class="p">[[</span><span class="s2">&quot;SMA coax&quot;</span><span class="p">,</span> <span class="s2">&quot;RFT thru&quot;</span><span class="p">]]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">bad_sg</span> <span class="o">=</span> <span class="n">layout</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">from_db</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2014</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">sg_spec</span><span class="p">,</span> <span class="n">sn</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span><span class="p">(</span><span class="n">bad_sg</span><span class="o">.</span><span class="n">ltf</span><span class="p">())</span>
+<span class="go"># C-can thru to RFT thru.</span>
+<span class="go">CANBL1B</span>
+<span class="go">CXS0017</span>
+<span class="go">RFTQ00B</span>
+</pre></div>
+</div>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec.from_predef">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_predef</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">predef</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/layout.html#subgraph_spec.from_predef"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.layout.subgraph_spec.from_predef" title="Link to this definition"></a></dt>
+<dd><p>Create a subgraph specification from a predefined version in the DB.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>predef</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">predef_subgraph_spec</span></code>) – A predefined subgraph specification in the DB.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec.hide">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">hide</span></span><a class="headerlink" href="#ch_util.layout.subgraph_spec.hide" title="Link to this definition"></a></dt>
+<dd><p>The component type ID(s) that are skipped over in the subgraph.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec.oneway">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">oneway</span></span><a class="headerlink" href="#ch_util.layout.subgraph_spec.oneway" title="Link to this definition"></a></dt>
+<dd><p>Pairs of component type ID(s) for one-way tracing of the subgraph.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec.start">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">start</span></span><a class="headerlink" href="#ch_util.layout.subgraph_spec.start" title="Link to this definition"></a></dt>
+<dd><p>The component type ID starting the subgraph.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.layout.subgraph_spec.terminate">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">terminate</span></span><a class="headerlink" href="#ch_util.layout.subgraph_spec.terminate" title="Link to this definition"></a></dt>
+<dd><p>The component type ID(s) terminating the subgraph.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.holography.html" class="btn btn-neutral float-left" title="ch_util.holography" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.ni_utils.html" class="btn btn-neutral float-right" title="ch_util.ni_utils" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

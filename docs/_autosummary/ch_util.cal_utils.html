@@ -1,0 +1,1302 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.cal_utils &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.chan_monitor" href="ch_util.chan_monitor.html" />
+    <link rel="prev" title="ch_util.andata" href="ch_util.andata.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.cal_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitAmpPhase"><code class="docutils literal notranslate"><span class="pre">FitAmpPhase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitGaussAmpPolyPhase"><code class="docutils literal notranslate"><span class="pre">FitGaussAmpPolyPhase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitPoly"><code class="docutils literal notranslate"><span class="pre">FitPoly</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase"><code class="docutils literal notranslate"><span class="pre">FitPolyLogAmpPolyPhase</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitPolyRealPolyImag"><code class="docutils literal notranslate"><span class="pre">FitPolyRealPolyImag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitRealImag"><code class="docutils literal notranslate"><span class="pre">FitRealImag</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.FitTransit"><code class="docutils literal notranslate"><span class="pre">FitTransit</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.estimate_directional_scale"><code class="docutils literal notranslate"><span class="pre">estimate_directional_scale()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.fit_histogram"><code class="docutils literal notranslate"><span class="pre">fit_histogram()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.fit_point_source_map"><code class="docutils literal notranslate"><span class="pre">fit_point_source_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.flag_outliers"><code class="docutils literal notranslate"><span class="pre">flag_outliers()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.func_2d_gauss"><code class="docutils literal notranslate"><span class="pre">func_2d_gauss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.func_2d_sinc_gauss"><code class="docutils literal notranslate"><span class="pre">func_2d_sinc_gauss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.func_dirty_gauss"><code class="docutils literal notranslate"><span class="pre">func_dirty_gauss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.func_real_dirty_gauss"><code class="docutils literal notranslate"><span class="pre">func_real_dirty_gauss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.get_reference_times_dataset_id"><code class="docutils literal notranslate"><span class="pre">get_reference_times_dataset_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.get_reference_times_file"><code class="docutils literal notranslate"><span class="pre">get_reference_times_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.guess_fwhm"><code class="docutils literal notranslate"><span class="pre">guess_fwhm()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.interpolate_gain"><code class="docutils literal notranslate"><span class="pre">interpolate_gain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.interpolate_gain_quiet"><code class="docutils literal notranslate"><span class="pre">interpolate_gain_quiet()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.cal_utils.thermal_amplitude"><code class="docutils literal notranslate"><span class="pre">thermal_amplitude()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.cal_utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.cal_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.cal_utils">
+<span id="ch-util-cal-utils"></span><h1>ch_util.cal_utils<a class="headerlink" href="#module-ch_util.cal_utils" title="Link to this heading"></a></h1>
+<p>Tools for point source calibration</p>
+<p>This module contains tools for performing point-source calibration.</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.estimate_directional_scale" title="ch_util.cal_utils.estimate_directional_scale"><code class="xref py py-obj docutils literal notranslate"><span class="pre">estimate_directional_scale</span></code></a>(z[, c])</p></td>
+<td><p>Calculate robust, direction dependent estimate of scale.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.fit_histogram" title="ch_util.cal_utils.fit_histogram"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_histogram</span></code></a>(arr[, bins, rng, no_weight, ...])</p></td>
+<td><p>Fit a gaussian to a histogram of the data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.fit_point_source_map" title="ch_util.cal_utils.fit_point_source_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_point_source_map</span></code></a>(ra, dec, submap[, rms, ...])</p></td>
+<td><p>Fits a map of a point source to a model.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.flag_outliers" title="ch_util.cal_utils.flag_outliers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">flag_outliers</span></code></a>(raw, flag[, window, nsigma])</p></td>
+<td><p>Flag outliers with respect to rolling median.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.func_2d_gauss" title="ch_util.cal_utils.func_2d_gauss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">func_2d_gauss</span></code></a>(coord, peak_amplitude, ...)</p></td>
+<td><p>Returns a parameteric model for the map of a point source, consisting of a 2-dimensional gaussian.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.func_2d_sinc_gauss" title="ch_util.cal_utils.func_2d_sinc_gauss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">func_2d_sinc_gauss</span></code></a>(coord, peak_amplitude, ...)</p></td>
+<td><p>Returns a parameteric model for the map of a point source,</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.func_dirty_gauss" title="ch_util.cal_utils.func_dirty_gauss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">func_dirty_gauss</span></code></a>(dirty_beam)</p></td>
+<td><p>Returns a parameteric model for the map of a point source, consisting of the interpolated dirty beam along the y-axis and a gaussian along the x-axis.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.func_real_dirty_gauss" title="ch_util.cal_utils.func_real_dirty_gauss"><code class="xref py py-obj docutils literal notranslate"><span class="pre">func_real_dirty_gauss</span></code></a>(dirty_beam)</p></td>
+<td><p>Returns a parameteric model for the map of a point source, consisting of the interpolated dirty beam along the y-axis and a sinusoid with gaussian envelope along the x-axis.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.get_reference_times_dataset_id" title="ch_util.cal_utils.get_reference_times_dataset_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_reference_times_dataset_id</span></code></a>(times, ...[, ...])</p></td>
+<td><p>Calculate the relevant calibration reference times from the dataset IDs.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.get_reference_times_file" title="ch_util.cal_utils.get_reference_times_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_reference_times_file</span></code></a>(times, cal_file[, ...])</p></td>
+<td><p>For a given set of times determine when and how they were calibrated.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.guess_fwhm" title="ch_util.cal_utils.guess_fwhm"><code class="xref py py-obj docutils literal notranslate"><span class="pre">guess_fwhm</span></code></a>(freq[, pol, dec, sigma, voltage, ...])</p></td>
+<td><p>Provide rough estimate of the FWHM of the CHIME primary beam pattern.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.interpolate_gain" title="ch_util.cal_utils.interpolate_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interpolate_gain</span></code></a>(freq, gain, weight[, flag, ...])</p></td>
+<td><p>Replace gain at flagged frequencies with interpolated values.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.interpolate_gain_quiet" title="ch_util.cal_utils.interpolate_gain_quiet"><code class="xref py py-obj docutils literal notranslate"><span class="pre">interpolate_gain_quiet</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Call <cite>interpolate_gain</cite> with <cite>ConvergenceWarnings</cite> silenced.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.thermal_amplitude" title="ch_util.cal_utils.thermal_amplitude"><code class="xref py py-obj docutils literal notranslate"><span class="pre">thermal_amplitude</span></code></a>(delta_T, freq)</p></td>
+<td><p>Computes the amplitude gain correction given a (set of) temperature difference and a (set of) frequency based on the thermal model.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitAmpPhase" title="ch_util.cal_utils.FitAmpPhase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitAmpPhase</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Base class for fitting models to the amplitude and phase.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitGaussAmpPolyPhase" title="ch_util.cal_utils.FitGaussAmpPolyPhase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitGaussAmpPolyPhase</span></code></a>([poly_deg_phi])</p></td>
+<td><p>Class that enables fits of a gaussian to amplitude and a polynomial to phase.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitPoly" title="ch_util.cal_utils.FitPoly"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitPoly</span></code></a>([poly_type])</p></td>
+<td><p>Base class for fitting polynomials to point source transits.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase" title="ch_util.cal_utils.FitPolyLogAmpPolyPhase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitPolyLogAmpPolyPhase</span></code></a>([poly_deg_amp, ...])</p></td>
+<td><p>Class that enables separate fits of a polynomial to log amplitude and phase.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitPolyRealPolyImag" title="ch_util.cal_utils.FitPolyRealPolyImag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitPolyRealPolyImag</span></code></a>([poly_deg, even, odd])</p></td>
+<td><p>Class that enables separate fits of a polynomial to real and imag components.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitRealImag" title="ch_util.cal_utils.FitRealImag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitRealImag</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Base class for fitting models to the real and imag component.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.cal_utils.FitTransit" title="ch_util.cal_utils.FitTransit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FitTransit</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Base class for fitting models to point source transits.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitAmpPhase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitAmpPhase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitAmpPhase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitAmpPhase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitTransit" title="ch_util.cal_utils.FitTransit"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitTransit</span></code></a></p>
+<p>Base class for fitting models to the amplitude and phase.</p>
+<p>Assumes an independent fit to amplitude and phase, and provides
+methods for predicting the uncertainty on each.</p>
+<p>Instantiates a FitTransit object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>]</em>) – Best-fit parameters.</p></li>
+<li><p><strong>param_cov</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>, </em><em>nparam</em><em>]</em>) – Covariance of the fit parameters.</p></li>
+<li><p><strong>chisq</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Chi-squared.</p></li>
+<li><p><strong>ndof</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Number of degrees of freedom.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitAmpPhase.nparam">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nparam</span></span><a class="headerlink" href="#ch_util.cal_utils.FitAmpPhase.nparam" title="Link to this definition"></a></dt>
+<dd><p>Number of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nparam</strong> – Number of fit parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitAmpPhase.uncertainty">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitAmpPhase.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitAmpPhase.uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on the response at given hour angle(s).</p>
+<p>Returns the quadrature sum of the amplitude and phase uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the response.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitAmpPhase.uncertainty_amp">
+<span class="sig-name descname"><span class="pre">uncertainty_amp</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitAmpPhase.uncertainty_amp"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitAmpPhase.uncertainty_amp" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on amplitude at given hour angle(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the amplitude in fractional units.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitAmpPhase.uncertainty_phi">
+<span class="sig-name descname"><span class="pre">uncertainty_phi</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitAmpPhase.uncertainty_phi"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitAmpPhase.uncertainty_phi" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on phase at given hour angle(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the phase in radians.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitGaussAmpPolyPhase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitGaussAmpPolyPhase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poly_deg_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitGaussAmpPolyPhase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitGaussAmpPolyPhase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitPoly" title="ch_util.cal_utils.FitPoly"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitPoly</span></code></a>, <a class="reference internal" href="#ch_util.cal_utils.FitAmpPhase" title="ch_util.cal_utils.FitAmpPhase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitAmpPhase</span></code></a></p>
+<p>Class that enables fits of a gaussian to amplitude and a polynomial to phase.</p>
+<p>Instantiates a FitGaussAmpPolyPhase object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>poly_deg_phi</strong> (<em>int</em>) – Degree of the polynomial to fit to phase.</p>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitGaussAmpPolyPhase.ndofa">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofa</span></span><a class="headerlink" href="#ch_util.cal_utils.FitGaussAmpPolyPhase.ndofa" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the amplitude fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ndofa</strong> – Number of degrees of freedom of the amplitude fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitGaussAmpPolyPhase.ndofp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofp</span></span><a class="headerlink" href="#ch_util.cal_utils.FitGaussAmpPolyPhase.ndofp" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the phase fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ndofp</strong> – Number of degrees of freedom of the phase fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitGaussAmpPolyPhase.parameter_names">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameter_names</span></span><a class="headerlink" href="#ch_util.cal_utils.FitGaussAmpPolyPhase.parameter_names" title="Link to this definition"></a></dt>
+<dd><p>Array of strings containing the name of the fit parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitGaussAmpPolyPhase.peak">
+<span class="sig-name descname"><span class="pre">peak</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitGaussAmpPolyPhase.peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitGaussAmpPolyPhase.peak" title="Link to this definition"></a></dt>
+<dd><p>Return the peak of the transit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>peak</strong> – Centroid of the gaussian fit to amplitude.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPoly">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitPoly</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poly_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'standard'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPoly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPoly" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitTransit" title="ch_util.cal_utils.FitTransit"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitTransit</span></code></a></p>
+<p>Base class for fitting polynomials to point source transits.</p>
+<p>Maps methods of np.polynomial to methods of the class for the
+requested polynomial type.</p>
+<p>Instantiates a FitPoly object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>poly_type</strong> (<em>str</em>) – Type of polynomial.  Can be ‘standard’, ‘hermite’, or ‘chebyshev’.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyLogAmpPolyPhase">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitPolyLogAmpPolyPhase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poly_deg_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">poly_deg_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyLogAmpPolyPhase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitPoly" title="ch_util.cal_utils.FitPoly"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitPoly</span></code></a>, <a class="reference internal" href="#ch_util.cal_utils.FitAmpPhase" title="ch_util.cal_utils.FitAmpPhase"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitAmpPhase</span></code></a></p>
+<p>Class that enables separate fits of a polynomial to log amplitude and phase.</p>
+<p>Instantiates a FitPolyLogAmpPolyPhase object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>poly_deg_amp</strong> (<em>int</em>) – Degree of the polynomial to fit to log amplitude.</p></li>
+<li><p><strong>poly_deg_phi</strong> (<em>int</em>) – Degree of the polynomial to fit to phase.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyLogAmpPolyPhase.ndofa">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofa</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase.ndofa" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the amplitude fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ndofa</strong> – Number of degrees of freedom of the amplitude fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyLogAmpPolyPhase.ndofp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofp</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase.ndofp" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the phase fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ndofp</strong> – Number of degrees of freedom of the phase fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyLogAmpPolyPhase.parameter_names">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameter_names</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase.parameter_names" title="Link to this definition"></a></dt>
+<dd><p>Array of strings containing the name of the fit parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyLogAmpPolyPhase.peak">
+<span class="sig-name descname"><span class="pre">peak</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyLogAmpPolyPhase.peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyLogAmpPolyPhase.peak" title="Link to this definition"></a></dt>
+<dd><p>Find the peak of the transit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>param</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>]</em>) – Coefficients of the polynomial model for log amplitude.
+Defaults to <cite>self.param</cite>.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>peak</strong> – Location of the maximum amplitude in degrees hour angle.
+If the polynomial does not have a maximum, then NaN is returned.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitPolyRealPolyImag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">poly_deg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">even</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">odd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyRealPolyImag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitPoly" title="ch_util.cal_utils.FitPoly"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitPoly</span></code></a>, <a class="reference internal" href="#ch_util.cal_utils.FitRealImag" title="ch_util.cal_utils.FitRealImag"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitRealImag</span></code></a></p>
+<p>Class that enables separate fits of a polynomial to real and imag components.</p>
+<p>Used to fit cross-polar response that is not well-described by the
+FitPolyLogAmpPolyPhase used for co-polar response.</p>
+<p>Instantiates a FitPolyRealPolyImag object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>poly_deg</strong> (<em>int</em>) – Degree of the polynomial to fit to real and imaginary component.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.deriv">
+<span class="sig-name descname"><span class="pre">deriv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">param</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyRealPolyImag.deriv"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.deriv" title="Link to this definition"></a></dt>
+<dd><p>Calculate the derivative of the transit.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.ndofi">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofi</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.ndofi" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the imag fit.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.ndofr">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ndofr</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.ndofr" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom for the real fit.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.parameter_names">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameter_names</span></span><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.parameter_names" title="Link to this definition"></a></dt>
+<dd><p>Array of strings containing the name of the fit parameters.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.peak">
+<span class="sig-name descname"><span class="pre">peak</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyRealPolyImag.peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.peak" title="Link to this definition"></a></dt>
+<dd><p>Calculate the peak of the transit.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitPolyRealPolyImag.vander">
+<span class="sig-name descname"><span class="pre">vander</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitPolyRealPolyImag.vander"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitPolyRealPolyImag.vander" title="Link to this definition"></a></dt>
+<dd><p>Create the Vandermonde matrix.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitRealImag">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitRealImag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitRealImag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitRealImag" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.cal_utils.FitTransit" title="ch_util.cal_utils.FitTransit"><code class="xref py py-class docutils literal notranslate"><span class="pre">FitTransit</span></code></a></p>
+<p>Base class for fitting models to the real and imag component.</p>
+<p>Assumes an independent fit to real and imaginary, and provides
+methods for predicting the uncertainty on each.</p>
+<p>Instantiates a FitTransit object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>]</em>) – Best-fit parameters.</p></li>
+<li><p><strong>param_cov</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>, </em><em>nparam</em><em>]</em>) – Covariance of the fit parameters.</p></li>
+<li><p><strong>chisq</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Chi-squared.</p></li>
+<li><p><strong>ndof</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Number of degrees of freedom.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitRealImag.nparam">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nparam</span></span><a class="headerlink" href="#ch_util.cal_utils.FitRealImag.nparam" title="Link to this definition"></a></dt>
+<dd><p>Number of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nparam</strong> – Number of fit parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitRealImag.uncertainty">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitRealImag.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitRealImag.uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on the response at given hour angle(s).</p>
+<p>Returns the quadrature sum of the real and imag uncertainty.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the response.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitRealImag.uncertainty_imag">
+<span class="sig-name descname"><span class="pre">uncertainty_imag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitRealImag.uncertainty_imag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitRealImag.uncertainty_imag" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on imag component at given hour angle(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the imag component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitRealImag.uncertainty_real">
+<span class="sig-name descname"><span class="pre">uncertainty_real</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitRealImag.uncertainty_real"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitRealImag.uncertainty_real" title="Link to this definition"></a></dt>
+<dd><p>Predicts the uncertainty on real component at given hour angle(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the real component.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">FitTransit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for fitting models to point source transits.</p>
+<p>The <cite>fit</cite> method should be used to populate the <cite>param</cite>, <cite>param_cov</cite>, <cite>chisq</cite>,
+and <cite>ndof</cite> attributes.  The <cite>predict</cite> and <cite>uncertainty</cite> methods can then be used
+to obtain the model prediction for the response and uncertainty on this quantity
+at a given hour angle.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.param">
+<span class="sig-name descname"><span class="pre">param</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.param" title="Link to this definition"></a></dt>
+<dd><p>Best-fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nparam]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.param_cov">
+<span class="sig-name descname"><span class="pre">param_cov</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.param_cov" title="Link to this definition"></a></dt>
+<dd><p>Covariance of the fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nparam, nparam]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.chisq">
+<span class="sig-name descname"><span class="pre">chisq</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.chisq" title="Link to this definition"></a></dt>
+<dd><p>Chi-squared of the fit.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.ndof">
+<span class="sig-name descname"><span class="pre">ndof</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.ndof" title="Link to this definition"></a></dt>
+<dd><p>Number of degrees of freedom.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Abstract</span> <span class="pre">Methods</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">----------------</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">Any</span> <span class="pre">subclass</span> <span class="pre">of</span> <span class="pre">FitTransit</span> <span class="pre">must</span> <span class="pre">define</span> <span class="pre">these</span> <span class="pre">methods</span></span></dt>
+<dd><p>peak
+_fit
+_model
+_jacobian</p>
+</dd></dl>
+
+<p>Instantiates a FitTransit object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>param</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>]</em>) – Best-fit parameters.</p></li>
+<li><p><strong>param_cov</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nparam</em><em>, </em><em>nparam</em><em>]</em>) – Covariance of the fit parameters.</p></li>
+<li><p><strong>chisq</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Chi-squared.</p></li>
+<li><p><strong>ndof</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ncomponent</em><em>]</em>) – Number of degrees of freedom.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.N">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">N</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.N" title="Link to this definition"></a></dt>
+<dd><p>Number of independent transit fits contained in this object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>N</strong> – Numpy-style shape indicating the number of
+fits that the object contains.  Is None
+if the object contains a single fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.fit">
+<span class="sig-name descname"><span class="pre">fit</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_err</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">absolute_sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit.fit"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit.fit" title="Link to this definition"></a></dt>
+<dd><p>Apply subclass defined <cite>_fit</cite> method to multiple transits.</p>
+<p>This function can be used to fit the transit for multiple inputs
+and frequencies.  Populates the <cite>param</cite>, <cite>param_cov</cite>, <cite>chisq</cite>, and <cite>ndof</cite>
+attributes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>]</em>) – Hour angle in degrees.</p></li>
+<li><p><strong>resp</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nha</em><em>]</em>) – Measured response to the point source.  Complex valued.</p></li>
+<li><p><strong>resp_err</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nha</em><em>]</em>) – Error on the measured response.</p></li>
+<li><p><strong>width</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>]</em>) – Initial guess at the width (sigma) of the transit in degrees.</p></li>
+<li><p><strong>absolute_sigma</strong> (<em>bool</em>) – Set to True if the errors provided are absolute.  Set to False if
+the errors provided are relative, in which case the parameter covariance
+will be scaled by the chi-squared per degree-of-freedom.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.ncomponent">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ncomponent</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.ncomponent" title="Link to this definition"></a></dt>
+<dd><p>Number of components.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ncomponent</strong> – Number of components (i.e, real and imag, amp and phase,
+complex) that have been fit.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.nparam">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nparam</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.nparam" title="Link to this definition"></a></dt>
+<dd><p>Number of parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>nparam</strong> – Number of fit parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.param_corr">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">param_corr</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.param_corr" title="Link to this definition"></a></dt>
+<dd><p>Parameter correlation matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>param_corr</strong> – Correlation of the fit parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[…, nparam, nparam]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.parameter_names">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parameter_names</span></span><a class="headerlink" href="#ch_util.cal_utils.FitTransit.parameter_names" title="Link to this definition"></a></dt>
+<dd><p>Array of strings containing the name of the fit parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>parameter_names</strong> – Names of the parameters.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>np.ndarray[nparam,]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.peak">
+<em class="property"><span class="k"><span class="pre">abstractmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">peak</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit.peak"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit.peak" title="Link to this definition"></a></dt>
+<dd><p>Calculate the peak of the transit.</p>
+<p>Any subclass of FitTransit must define this method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.predict">
+<span class="sig-name descname"><span class="pre">predict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit.predict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit.predict" title="Link to this definition"></a></dt>
+<dd><p>Predict the point source response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – The hour angle in degrees.</p></li>
+<li><p><strong>elementwise</strong> (<em>bool</em>) – If False, then the model will be evaluated at the
+requested hour angles for every set of parameters.
+If True, then the model will be evaluated at a
+separate hour angle for each set of parameters
+(requires <cite>ha.shape == self.N</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>model</strong> – Model for the point source response at the requested
+hour angles.  Complex valued.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha] or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.tval">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tval</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">alpha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndof</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit.tval"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit.tval" title="Link to this definition"></a></dt>
+<dd><p>Quantile of a standardized Student’s t random variable.</p>
+<p>This quantity is slow to compute.  Past values will be cached
+in a dictionary shared by all instances of the class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>alpha</strong> (<em>float</em>) – Calculate the quantile corresponding to the lower tail probability
+1 - alpha / 2.</p></li>
+<li><p><strong>ndof</strong> (<em>np.ndarray</em><em> or </em><em>int</em>) – Number of degrees of freedom of the Student’s t variable.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>tval</strong> – Quantile of a standardized Student’s t random variable.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray or float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.cal_utils.FitTransit.uncertainty">
+<span class="sig-name descname"><span class="pre">uncertainty</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ha</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">elementwise</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#FitTransit.uncertainty"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.FitTransit.uncertainty" title="Link to this definition"></a></dt>
+<dd><p>Predict the uncertainty on the point source response.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ha</strong> (<em>np.ndarray</em><em>[</em><em>nha</em><em>,</em><em>] or </em><em>float</em>) – The hour angle in degrees.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – Confidence level given by 1 - alpha.</p></li>
+<li><p><strong>elementwise</strong> (<em>bool</em>) – If False, then the uncertainty will be evaluated at
+the requested hour angles for every set of parameters.
+If True, then the uncertainty will be evaluated at a
+separate hour angle for each set of parameters
+(requires <cite>ha.shape == self.N</cite>).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>err</strong> – Uncertainty on the point source response at the
+requested hour angles.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nha]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.estimate_directional_scale">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">estimate_directional_scale</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">c</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2.1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#estimate_directional_scale"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.estimate_directional_scale" title="Link to this definition"></a></dt>
+<dd><p>Calculate robust, direction dependent estimate of scale.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>z</strong> (<em>np.ndarray</em>) – 1D array containing the data.</p></li>
+<li><p><strong>c</strong> (<em>float</em>) – Cutoff in number of MAD.  Data points whose absolute value is
+larger than c * MAD from the median are saturated at the
+maximum value in the estimator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>zmed</strong> (<em>float</em>) – The median value of z.</p></li>
+<li><p><strong>sa</strong> (<em>float</em>) – Estimate of scale for z &lt;= zmed.</p></li>
+<li><p><strong>sb</strong> (<em>float</em>) – Estimate of scale for z &gt; zmed.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.fit_histogram">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">fit_histogram</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bins</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'auto'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rng</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">no_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">test_normal</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_histogram</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#fit_histogram"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.fit_histogram" title="Link to this definition"></a></dt>
+<dd><p>Fit a gaussian to a histogram of the data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>arr</strong> (<em>np.ndarray</em>) – 1D array containing the data.  Arrays with more than one dimension
+are flattened.</p></li>
+<li><p><strong>bins</strong> (<em>int</em><em> or </em><em>sequence</em><em> of </em><em>scalars</em><em> or </em><em>str</em>) – <ul>
+<li><p>If <cite>bins</cite> is an int, it defines the number of equal-width bins in <cite>rng</cite>.</p></li>
+<li><dl class="simple">
+<dt>If <cite>bins</cite> is a sequence, it defines a monotonically increasing</dt><dd><p>array of bin edges, including the rightmost edge, allowing for
+non-uniform bin widths.</p>
+</dd>
+</dl>
+</li>
+<li><p>If <cite>bins</cite> is a string, it defines a method for computing the bins.</p></li>
+</ul>
+</p></li>
+<li><p><strong>rng</strong> (<em>(</em><em>float</em><em>, </em><em>float</em><em>)</em>) – The lower and upper range of the bins.  If not provided, then the range spans
+the minimum to maximum value of <cite>arr</cite>.</p></li>
+<li><p><strong>no_weight</strong> (<em>bool</em>) – Give equal weighting to each histogram bin.  Otherwise use proper weights based
+on number of counts observed in each bin.</p></li>
+<li><p><strong>test_normal</strong> (<em>bool</em>) – Apply the Shapiro-Wilk and Anderson-Darling tests for normality to the data.</p></li>
+<li><p><strong>return_histogram</strong> (<em>bool</em>) – Return the histogram.  Otherwise return only the best fit parameters
+and test statistics.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><p><strong>results</strong> (<em>dict</em>) – Dictionary containing the following fields:</p></li>
+<li><p><strong>indmin</strong> (<em>int</em>) – Only bins whose index is greater than indmin were included in the fit.</p></li>
+<li><p><strong>indmax</strong> (<em>int</em>) – Only bins whose index is less than indmax were included in the fit.</p></li>
+<li><p><strong>xmin</strong> (<em>float</em>) – The data value corresponding to the centre of the <cite>indmin</cite> bin.</p></li>
+<li><p><strong>xmax</strong> (<em>float</em>) – The data value corresponding to the centre of the <cite>indmax</cite> bin.</p></li>
+<li><p><strong>par</strong> (<em>[float, float, float]</em>) – The parameters of the fit, ordered as [peak, mu, sigma].</p></li>
+<li><p><strong>chisq</strong> (<em>float</em>) – The chi-squared of the fit.</p></li>
+<li><p><strong>ndof</strong> (<em>int</em>) – The number of degrees of freedom of the fit.</p></li>
+<li><p><strong>pte</strong> (<em>float</em>) – The probability to observe the chi-squared of the fit.</p></li>
+<li><p>If <cite>return_histogram</cite> is True, then <cite>results</cite> will also contain the</p></li>
+<li><p><em>following fields</em> –</p>
+<dl class="simple">
+<dt>bin_centre<span class="classifier">np.ndarray</span></dt><dd><p>The bin centre of the histogram.</p>
+</dd>
+<dt>bin_count<span class="classifier">np.ndarray</span></dt><dd><p>The bin counts of the histogram.</p>
+</dd>
+</dl>
+</li>
+<li><p>If <cite>test_normal</cite> is True, then <cite>results</cite> will also contain the following fields –</p>
+<dl class="simple">
+<dt>shapiro<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dt>stat<span class="classifier">float</span></dt><dd><p>The Shapiro-Wilk test statistic.</p>
+</dd>
+<dt>pte<span class="classifier">float</span></dt><dd><p>The probability to observe <cite>stat</cite> if the data were drawn from a gaussian</p>
+</dd>
+</dl>
+</dd>
+<dt>anderson<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dt>stat<span class="classifier">float</span></dt><dd><p>The Anderson-Darling test statistic.</p>
+</dd>
+<dt>critical<span class="classifier">list of float</span></dt><dd><p>The critical values of the test statistic.</p>
+</dd>
+<dt>alpha<span class="classifier">list of float</span></dt><dd><p>The significance levels corresponding to each critical value.</p>
+</dd>
+<dt>past<span class="classifier">list of bool</span></dt><dd><p>Boolean indicating if the data passes the test for each critical value.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.fit_point_source_map">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">fit_point_source_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ra</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">submap</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dirty_beam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">real_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">600.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ra0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#fit_point_source_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.fit_point_source_map" title="Link to this definition"></a></dt>
+<dd><p>Fits a map of a point source to a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ra</strong> (<em>np.ndarray</em><em>[</em><em>nra</em><em>, </em><em>]</em>) – Transit right ascension.</p></li>
+<li><p><strong>dec</strong> (<em>np.ndarray</em><em>[</em><em>ndec</em><em>, </em><em>]</em>) – Transit declination.</p></li>
+<li><p><strong>submap</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nra</em><em>, </em><em>ndec</em><em>]</em>) – Region of the ringmap around the point source.</p></li>
+<li><p><strong>rms</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nra</em><em>]</em>) – RMS error on the map.</p></li>
+<li><p><strong>flag</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nra</em><em>, </em><em>ndec</em><em>]</em>) – Boolean array that indicates which pixels to fit.</p></li>
+<li><p><strong>dirty_beam</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nra</em><em>, </em><em>ndec</em><em>] or </em><em>[</em><em>ra</em><em>, </em><em>dec</em><em>, </em><em>dirty_beam</em><em>]</em>) – Fourier transform of the weighting function used to create
+the map.  If input, then the interpolated dirty beam will be used
+as the model for the point source response in the declination direction.
+Can either be an array that is the same size as submap, or a list/tuple
+of length 3 that contains [ra, dec, dirty_beam] since the shape of the
+dirty beam is likely to be larger than the shape of the subregion of the
+map, at least in the declination direction.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>param_name</strong> (<em>np.ndarray[nparam, ]</em>) – Names of the parameters.</p></li>
+<li><p><strong>param</strong> (<em>np.ndarray[…, nparam]</em>) – Best-fit parameters for each item.</p></li>
+<li><p><strong>param_cov</strong> (<em>np.ndarray[…, nparam, nparam]</em>) – Parameter covariance for each item.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.flag_outliers">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">flag_outliers</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">25</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#flag_outliers"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.flag_outliers" title="Link to this definition"></a></dt>
+<dd><p>Flag outliers with respect to rolling median.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>raw</strong> (<em>np.ndarray</em><em>[</em><em>nsample</em><em>,</em><em>]</em>) – Raw data sampled at fixed rate.  Use the <cite>flag</cite> parameter to indicate missing
+or invalid data.</p></li>
+<li><p><strong>flag</strong> (<em>np.ndarray</em><em>[</em><em>nsample</em><em>,</em><em>]</em>) – Boolean array where True indicates valid data and False indicates invalid data.</p></li>
+<li><p><strong>window</strong> (<em>int</em>) – Window size (in number of samples) used to determine local median.</p></li>
+<li><p><strong>nsigma</strong> (<em>float</em>) – Data is considered an outlier if it is greater than this number of
+median absolute deviations away from the local median.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>not_outlier</strong> – Boolean array where True indicates valid data and False indicates data that is
+either an outlier or had flag = True.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nsample,]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.func_2d_gauss">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">func_2d_gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#func_2d_gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.func_2d_gauss" title="Link to this definition"></a></dt>
+<dd><p>Returns a parameteric model for the map of a point source,
+consisting of a 2-dimensional gaussian.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>(</em><em>ra</em><em>, </em><em>dec</em><em>)</em>) – Tuple containing the right ascension and declination.  These should be
+coordinate vectors of length nra and ndec, respectively.</p></li>
+<li><p><strong>peak_amplitude</strong> (<em>float</em>) – Model parameter.  Normalization of the gaussian.</p></li>
+<li><p><strong>centroid_x</strong> (<em>float</em>) – Model parameter.  Centroid of the gaussian in degrees in the
+right ascension direction.</p></li>
+<li><p><strong>centroid_y</strong> (<em>float</em>) – Model parameter.  Centroid of the gaussian in degrees in the
+declination direction.</p></li>
+<li><p><strong>fwhm_x</strong> (<em>float</em>) – Model parameter.  Full width at half maximum of the gaussian
+in degrees in the right ascension direction.</p></li>
+<li><p><strong>fwhm_y</strong> (<em>float</em>) – Model parameter.  Full width at half maximum of the gaussian
+in degrees in the declination direction.</p></li>
+<li><p><strong>offset</strong> (<em>float</em>) – Model parameter.  Constant background value of the map.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>model</strong> – Model prediction for the map of the point source.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nra*ndec]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.func_2d_sinc_gauss">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">func_2d_sinc_gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coord</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">peak_amplitude</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">centroid_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm_x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fwhm_y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#func_2d_sinc_gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.func_2d_sinc_gauss" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Returns a parameteric model for the map of a point source,</dt><dd><p>consisting of a sinc function along the declination direction
+and gaussian along the right ascension direction.</p>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coord</strong> (<em>(</em><em>ra</em><em>, </em><em>dec</em><em>)</em>) – Tuple containing the right ascension and declination.  These should be
+coordinate vectors of length nra and ndec, respectively.</p></li>
+<li><p><strong>peak_amplitude</strong> (<em>float</em>) – Model parameter.  Normalization of the gaussian.</p></li>
+<li><p><strong>centroid_x</strong> (<em>float</em>) – Model parameter.  Centroid of the gaussian in degrees in the
+right ascension direction.</p></li>
+<li><p><strong>centroid_y</strong> (<em>float</em>) – Model parameter.  Centroid of the sinc function in degrees in the
+declination direction.</p></li>
+<li><p><strong>fwhm_x</strong> (<em>float</em>) – Model parameter.  Full width at half maximum of the gaussian
+in degrees in the right ascension direction.</p></li>
+<li><p><strong>fwhm_y</strong> (<em>float</em>) – Model parameter.  Full width at half maximum of the sinc function
+in degrees in the declination direction.</p></li>
+<li><p><strong>offset</strong> (<em>float</em>) – Model parameter.  Constant background value of the map.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>model</strong> – Model prediction for the map of the point source.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nra*ndec]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.func_dirty_gauss">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">func_dirty_gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirty_beam</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#func_dirty_gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.func_dirty_gauss" title="Link to this definition"></a></dt>
+<dd><p>Returns a parameteric model for the map of a point source,
+consisting of the interpolated dirty beam along the y-axis
+and a gaussian along the x-axis.</p>
+<p>This function is a wrapper that defines the interpolated
+dirty beam.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dirty_beam</strong> (<em>scipy.interpolate.interp1d</em>) – Interpolation function that takes as an argument el = sin(za)
+and outputs an np.ndarray[nel, nra] that represents the dirty
+beam evaluated at the same right ascension as the map.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dirty_gauss</strong> – Model prediction for the map of the point source.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nra*ndec]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.func_real_dirty_gauss">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">func_real_dirty_gauss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dirty_beam</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#func_real_dirty_gauss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.func_real_dirty_gauss" title="Link to this definition"></a></dt>
+<dd><p>Returns a parameteric model for the map of a point source,
+consisting of the interpolated dirty beam along the y-axis
+and a sinusoid with gaussian envelope along the x-axis.</p>
+<p>This function is a wrapper that defines the interpolated
+dirty beam.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dirty_beam</strong> (<em>scipy.interpolate.interp1d</em>) – Interpolation function that takes as an argument el = sin(za)
+and outputs an np.ndarray[nel, nra] that represents the dirty
+beam evaluated at the same right ascension as the map.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>real_dirty_gauss</strong> – Model prediction for the map of the point source.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nra*ndec]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.get_reference_times_dataset_id">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">get_reference_times_dataset_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_ids</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">dict</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#get_reference_times_dataset_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.get_reference_times_dataset_id" title="Link to this definition"></a></dt>
+<dd><p>Calculate the relevant calibration reference times from the dataset IDs.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Dataset IDs before 2020/10/10 are corrupt so this routine won’t work.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>times</strong> – Unix times of data points to be calibrated as floats.</p></li>
+<li><p><strong>dataset_ids</strong> – The dataset IDs as an array of strings.</p></li>
+<li><p><strong>logger</strong> – A logging object to use for messages. If not provided, use a module level
+logger.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>A dictionary containing the results. See <cite>get_reference_times_file</cite> for a
+description of the contents.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>reftime_result</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.get_reference_times_file">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">get_reference_times_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cal_file</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">MemGroup</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logger</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Logger</span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">dict</span><span class="p"><span class="pre">[</span></span><span class="pre">str</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#get_reference_times_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.get_reference_times_file" title="Link to this definition"></a></dt>
+<dd><p>For a given set of times determine when and how they were calibrated.</p>
+<p>This uses the pre-calculated calibration time reference files.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>times</strong> – Unix times of data points to be calibrated as floats.</p></li>
+<li><p><strong>cal_file</strong> – memh5 container which containes the reference times for calibration source
+transits.</p></li>
+<li><p><strong>logger</strong> – A logging object to use for messages. If not provided, use a module level
+logger.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>reftime_result</strong> – A dictionary containing four entries:</p>
+<ul class="simple">
+<li><p>reftime: Unix time of same length as <cite>times</cite>. Reference times of
+transit of the source used to calibrate the data at each time in
+<cite>times</cite>. Returns <cite>NaN</cite> for times without a reference.</p></li>
+<li><p>reftime_prev: The Unix time of the previous gain update. Only set for time
+samples that need to be interpolated, otherwise <cite>NaN</cite>.</p></li>
+<li><p>interp_start: The Unix time of the start of the interpolation period. Only
+set for time samples that need to be interpolated, otherwise <cite>NaN</cite>.</p></li>
+<li><p>interp_stop: The Unix time of the end of the interpolation period. Only
+set for time samples that need to be interpolated, otherwise <cite>NaN</cite>.</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.guess_fwhm">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">guess_fwhm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'X'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">voltage</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">seconds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#guess_fwhm"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.guess_fwhm" title="Link to this definition"></a></dt>
+<dd><p>Provide rough estimate of the FWHM of the CHIME primary beam pattern.</p>
+<p>It uses a linear fit to the median FWHM(nu) over all feeds of a given
+polarization for CygA transits.  CasA and TauA transits also showed
+good agreement with this relationship.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>float</em><em> or </em><em>np.ndarray</em>) – Frequency in MHz.</p></li>
+<li><p><strong>pol</strong> (<em>string</em><em> or </em><em>bool</em>) – Polarization, can be ‘X’/’E’ or ‘Y’/’S’</p></li>
+<li><p><strong>dec</strong> (<em>float</em>) – Declination of the source in radians.  If this quantity
+is input, then the FWHM is divided by cos(dec) to account
+for the increased rate at which a source rotates across
+the sky.  Default is do not correct for this effect.</p></li>
+<li><p><strong>sigma</strong> (<em>bool</em>) – Return the standard deviation instead of the FWHM.
+Default is to return the FWHM.</p></li>
+<li><p><strong>voltage</strong> (<em>bool</em>) – Return the value for a voltage beam, otherwise returns
+value for a power beam.</p></li>
+<li><p><strong>seconds</strong> (<em>bool</em>) – Convert to elapsed time in units of seconds.
+Otherwise returns in units of degrees on the sky.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>fwhm</strong> – Rough estimate of the FWHM (or standard deviation if sigma=True).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.interpolate_gain">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">interpolate_gain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">length_scale</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">30.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#interpolate_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.interpolate_gain" title="Link to this definition"></a></dt>
+<dd><p>Replace gain at flagged frequencies with interpolated values.</p>
+<p>Uses a gaussian process regression to perform the interpolation
+with a Matern function describing the covariance between frequencies.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>,</em><em>]</em>) – Frequencies in MHz.</p></li>
+<li><p><strong>gain</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>ninput</em><em>]</em>) – Complex gain for each input and frequency.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>ninput</em><em>]</em>) – Uncertainty on the complex gain, expressed as inverse variance.</p></li>
+<li><p><strong>flag</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>ninput</em><em>]</em>) – Boolean array indicating the good (True) and bad (False) gains.
+If not provided, then it will be determined by evaluating <cite>weight &gt; 0.0</cite>.</p></li>
+<li><p><strong>length_scale</strong> (<em>float</em>) – Correlation length in frequency in MHz.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>interp_gain</strong> (<em>np.ndarray[nfreq, ninput]</em>) – For frequencies with <cite>flag = True</cite>, this will be equal to gain.
+For frequencies with <cite>flag = False</cite>, this will be an interpolation
+of the gains with <cite>flag = True</cite>.</p></li>
+<li><p><strong>interp_weight</strong> (<em>np.ndarray[nfreq, ninput]</em>) – For frequencies with <cite>flag = True</cite>, this will be equal to weight.
+For frequencies with <cite>flag = False</cite>, this will be the expected
+uncertainty on the interpolation.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.interpolate_gain_quiet">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">interpolate_gain_quiet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#interpolate_gain_quiet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.interpolate_gain_quiet" title="Link to this definition"></a></dt>
+<dd><p>Call <cite>interpolate_gain</cite> with <cite>ConvergenceWarnings</cite> silenced.</p>
+<p>Accepts and passes all arguments and keyword arguments for <cite>interpolate_gain</cite>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.cal_utils.thermal_amplitude">
+<span class="sig-prename descclassname"><span class="pre">ch_util.cal_utils.</span></span><span class="sig-name descname"><span class="pre">thermal_amplitude</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delta_T</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/cal_utils.html#thermal_amplitude"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.cal_utils.thermal_amplitude" title="Link to this definition"></a></dt>
+<dd><p>Computes the amplitude gain correction given a (set of) temperature
+difference and a (set of) frequency based on the thermal model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>delta_T</strong> (<em>float</em><em> or </em><em>array</em><em> of </em><em>foats</em>) – Temperature difference (T - T_0) for which to find a gain correction.</p></li>
+<li><p><strong>freq</strong> (<em>float</em><em> or </em><em>array</em><em> of </em><em>foats</em>) – Frequencies in MHz</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>g</strong> – Gain amplitude corrections. Multiply by data
+to correct it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float or array of floats</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.andata.html" class="btn btn-neutral float-left" title="ch_util.andata" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.chan_monitor.html" class="btn btn-neutral float-right" title="ch_util.chan_monitor" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,414 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.holography &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.layout" href="ch_util.layout.html" />
+    <link rel="prev" title="ch_util.hfbcat" href="ch_util.hfbcat.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.holography</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.holography.HolographyObservation"><code class="docutils literal notranslate"><span class="pre">HolographyObservation</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.holography.HolographySource"><code class="docutils literal notranslate"><span class="pre">HolographySource</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.holography</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.holography.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.holography">
+<span id="ch-util-holography"></span><h1>ch_util.holography<a class="headerlink" href="#module-ch_util.holography" title="Link to this heading"></a></h1>
+<p>Holography observation tables.</p>
+<p>This module defines the tables:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.holography.HolographyObservation" title="ch_util.holography.HolographyObservation"><code class="xref py py-class docutils literal notranslate"><span class="pre">HolographyObservation</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.holography.HolographySource" title="ch_util.holography.HolographySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HolographySource</span></code></a></p></li>
+</ul>
+<p>and the constants:</p>
+<ul class="simple">
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">QUALITY_GOOD</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">QUALITY_OFFSOURCE</span></code></p></li>
+<li><p><code class="xref py py-const docutils literal notranslate"><span class="pre">ONSOURCE_DIST_TO_FLAG</span></code></p></li>
+</ul>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.holography.HolographyObservation" title="ch_util.holography.HolographyObservation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HolographyObservation</span></code></a>(*args, **kwargs)</p></td>
+<td><p>A peewee model for the holographic observations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.holography.HolographySource" title="ch_util.holography.HolographySource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HolographySource</span></code></a>(*args, **kwargs)</p></td>
+<td><p>A peewee model for the Holography sources.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.holography.</span></span><span class="sig-name descname"><span class="pre">HolographyObservation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">base_model</span></code></p>
+<p>A peewee model for the holographic observations.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.source">
+<span class="sig-name descname"><span class="pre">source</span></span><a class="headerlink" href="#ch_util.holography.HolographyObservation.source" title="Link to this definition"></a></dt>
+<dd><p>The source that we were observing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>foreign key</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">start_time,</span> <span class="pre">finish_time</span></span></dt>
+<dd><p>Start and end times of the source observation (as UNIX times).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.notes">
+<span class="sig-name descname"><span class="pre">notes</span></span><a class="headerlink" href="#ch_util.holography.HolographyObservation.notes" title="Link to this definition"></a></dt>
+<dd><p>Any free form notes about the observation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.DoesNotExist">
+<span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ch_util.holography.HolographyObservation.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">HolographyObservationDoesNotExist</span></code></p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.create_from_ant_logs">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_ant_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">onsource_dist</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.create_from_ant_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.create_from_ant_logs" title="Link to this definition"></a></dt>
+<dd><p>Read John Galt Telescope log files and create an entry in the
+holography database corresponding to the exact times on source</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logs</strong> (<em>list</em><em> of </em><em>strings</em>) – log file archives (.zip files) to pass to parse_ant_logs()</p></li>
+<li><p><strong>onsource_dist</strong> (<em>float</em><em> (</em><em>default: 0.1</em><em>)</em>) – maximum angular distance at which to consider the Galt Telescope
+on source (in degrees)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>none</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.create_from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dryrun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_dup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.create_from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.create_from_dict" title="Link to this definition"></a></dt>
+<dd><p>Create a holography database entry from a dictionary</p>
+<p>This routine checks for duplicates and overwrites duplicates if and
+only if <cite>replace_dup = True</cite></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dict</strong> (<em>dict</em>) – <dl>
+<dt>src<span class="classifier"><a class="reference internal" href="#ch_util.holography.HolographySource" title="ch_util.holography.HolographySource"><code class="xref py py-class docutils literal notranslate"><span class="pre">HolographySource</span></code></a></span></dt><dd><p>A HolographySource object for the source</p>
+</dd>
+<dt>start_time</dt><dd><p>Start time as a Skyfield Time object</p>
+</dd>
+<dt>finish_time</dt><dd><p>Finish time as a Skyfield Time object</p>
+</dd>
+</dl>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.create_from_post_reports">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">create_from_post_reports</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">60.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dryrun</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_dup</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">verbose</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.create_from_post_reports"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.create_from_post_reports" title="Link to this definition"></a></dt>
+<dd><p>Create holography database entry from .POST_REPORT log files
+generated by the nsched controller for the Galt Telescope.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>logs</strong> (<em>string</em>) – list of paths to archives. Filenames should be, eg,
+01DEC17_1814.zip.  Must be only one period in the filename,
+separating the extension.</p></li>
+<li><p><strong>start_tol</strong> (<em>float</em><em> (</em><em>optional; default: 60.</em><em>)</em>) – Tolerance (in seconds) around which to search for duplicate
+operations.</p></li>
+<li><p><strong>dryrun</strong> (<em>boolean</em><em> (</em><em>optional; default: True</em><em>)</em>) – Dry run only; do not add entries to database</p></li>
+<li><p><strong>replace_dup</strong> (<em>boolean</em><em> (</em><em>optional; default: False</em><em>)</em>) – Delete existing duplicate entries and replace. Only has effect if
+dry_run == False</p></li>
+<li><p><strong>notes</strong> (<em>string</em><em> or </em><em>list</em><em> of </em><em>strings</em><em> (</em><em>optional; default: None</em><em>)</em>) – notes to be added. If a string, the same note will be added to all
+observations. If a list of strings (must be same length as logs),
+each element of the list will be added to the corresponding
+database entry.
+Nota bene: the text “Added by create_from_post_reports” with the
+current date and time will also be included in the notes database
+entry.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">holography</span> <span class="k">as</span> <span class="n">hl</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">glob</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obs</span> <span class="o">=</span> <span class="n">hl</span><span class="o">.</span><span class="n">HolographyObservation</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">logs</span> <span class="o">=</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s1">&#39;/path/to/logs/*JUN18*.zip&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">obs_list</span><span class="p">,</span> <span class="n">dup_obs_list</span><span class="p">,</span> <span class="n">missing</span> <span class="o">=</span>         <span class="o">...</span> <span class="n">obs</span><span class="o">.</span><span class="n">create_from_post_reports</span><span class="p">(</span><span class="n">logs</span><span class="p">,</span> <span class="n">dryrun</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.from_lst">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_lst</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_day</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start_lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">duration_lst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">quality_flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">notes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.from_lst"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.from_lst" title="Link to this definition"></a></dt>
+<dd><p>Method to initialize a HolographyObservation from a start day,
+start LST, and a stop day, stop LST.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<a class="reference internal" href="#ch_util.holography.HolographySource" title="ch_util.holography.HolographySource"><em>HolographySource</em></a>) – An instance of HolographySource.</p></li>
+<li><p><strong>start_day</strong> (<em>string</em>) – Of format YYYMMDD-ABT, ABT can be one of (UTC, PST, PDT)</p></li>
+<li><p><strong>start_lst</strong> (<em>float</em>) – Hours and fraction of hours on a scale from 0-24.</p></li>
+<li><p><strong>duration</strong> (<em>float</em>) – Hours and fraction of hours on a scale from 0-24.</p></li>
+<li><p><strong>quality_flag</strong> (<em>int</em><em>, </em><em>default : 0</em>) – Flag for poor quality data. Good data is zero.
+Sets a bitmask in the HolographyObservation instance.</p></li>
+<li><p><strong>notes</strong> (<em>string</em><em>, </em><em>optional</em>) – Any notes on this observation.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.parse_ant_logs">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_ant_logs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">logs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">return_post_report_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.parse_ant_logs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.parse_ant_logs" title="Link to this definition"></a></dt>
+<dd><p>Unzip and parse .ANT log file output by nsched for John Galt Telescope
+observations</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>logs</strong> (<em>list</em><em> of </em><em>strings</em>) – <p>.ZIP filenames. Each .ZIP archive should include a .ANT file and
+a .POST_REPORT file. This method unzips the archive, uses
+<cite>parse_post_report</cite> to read the .POST_REPORT file and extract
+the CHIME sidereal day corresponding to the DRAO sidereal day,
+and then reads the lines in the .ANT file to obtain the pointing
+history of the Galt Telescope during this observation.</p>
+<p>(The DRAO sidereal day is days since the clock in Ev Sheehan’s
+office at DRAO was reset. This clock is typically only reset every
+few years, but it does not correspond to any defined date, so the
+date must be figured out from the .POST_REPORT file, which reports
+both the DRAO sidereal day and the UTC date and time.</p>
+<p>Known reset dates: 2017-11-21, 2019-3-10)</p>
+</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><p><em>if output_params == False</em> –</p>
+<dl class="simple">
+<dt>ant_data: A dictionary consisting of lists containing the LST,</dt><dd><p>hour angle, RA, and dec (all as Skyfield Angle objects),
+CHIME sidereal day, and DRAO sidereal day.</p>
+</dd>
+</dl>
+</li>
+<li><p><em>if output_params == True</em> – output_params: dictionary returned by <cite>parse_post_report</cite>
+and
+ant_data: described above</p></li>
+<li><p><em>Files</em></p></li>
+<li><p><em>—–</em></p></li>
+<li><p><em>the .ANT and .POST_REPORT files in the input .zip archive are</em></p></li>
+<li><p><em>extracted into /tmp/26mlog/&lt;loginname&gt;/</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.holography.HolographyObservation.parse_post_report">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">parse_post_report</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">post_report_file</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographyObservation.parse_post_report"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographyObservation.parse_post_report" title="Link to this definition"></a></dt>
+<dd><p>read a .POST_REPORT file from the nsched program which controls the
+John Galt Telescope and extract the source name, estimated start time,
+DRAO sidereal day, commanded duration, and estimated finish time</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>post_report_file</strong> (<em>str</em>) – path to the .POST_REPORT file to read</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><p><strong>output_params</strong> –</p>
+<dl class="simple">
+<dt>output_params[‘src’]<span class="classifier">HolographySource object or string</span></dt><dd><p>If the source is a known source in the holography database,
+return the HolographySource object. If not, return the name
+of the source as a string</p>
+</dd>
+<dt>output_params[‘SID’]<span class="classifier">int</span></dt><dd><p>DRAO sidereal day at the beginning of the observation</p>
+</dd>
+<dt>output_params[‘start_time’]<span class="classifier">skyfield time object</span></dt><dd><p>UTC time at the beginning of the observation</p>
+</dd>
+<dt>output_params[‘DURATION’]<span class="classifier">float</span></dt><dd><p>Commanded duration of the observation in sidereal hours</p>
+</dd>
+<dt>output_params[‘finish_time’]<span class="classifier">skyfield time object</span></dt><dd><p>Calculated UTC time at the end of the observation
+Calculated as start_time + duration * caput.time.SIDEREAL_S</p>
+</dd>
+</dl>
+</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dictionary</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.holography.HolographySource">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.holography.</span></span><span class="sig-name descname"><span class="pre">HolographySource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/holography.html#HolographySource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.holography.HolographySource" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">base_model</span></code></p>
+<p>A peewee model for the Holography sources.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.holography.HolographySource.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#ch_util.holography.HolographySource.name" title="Link to this definition"></a></dt>
+<dd><p>Unique name for the source. Be careful to avoid duplicates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">ra,</span> <span class="pre">dec</span></span></dt>
+<dd><p>ICRS co-ordinates of the source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.holography.HolographySource.DoesNotExist">
+<span class="sig-name descname"><span class="pre">DoesNotExist</span></span><a class="headerlink" href="#ch_util.holography.HolographySource.DoesNotExist" title="Link to this definition"></a></dt>
+<dd><p>alias of <code class="xref py py-class docutils literal notranslate"><span class="pre">HolographySourceDoesNotExist</span></code></p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.hfbcat.html" class="btn btn-neutral float-left" title="ch_util.hfbcat" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.layout.html" class="btn btn-neutral float-right" title="ch_util.layout" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

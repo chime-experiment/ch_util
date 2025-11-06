@@ -1,0 +1,337 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.chan_monitor &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.data_quality" href="ch_util.data_quality.html" />
+    <link rel="prev" title="ch_util.cal_utils" href="ch_util.cal_utils.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.chan_monitor</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.chan_monitor.ChanMonitor"><code class="docutils literal notranslate"><span class="pre">ChanMonitor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.chan_monitor.FeedLocator"><code class="docutils literal notranslate"><span class="pre">FeedLocator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.chan_monitor</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.chan_monitor.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.chan_monitor">
+<span id="ch-util-chan-monitor"></span><h1>ch_util.chan_monitor<a class="headerlink" href="#module-ch_util.chan_monitor" title="Link to this heading"></a></h1>
+<p>Channel quality monitor routines</p>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.chan_monitor.ChanMonitor" title="ch_util.chan_monitor.ChanMonitor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ChanMonitor</span></code></a>(t1[, t2, freq_sel, prod_sel, ...])</p></td>
+<td><p>This class provides the user interface to FeedLocator.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.chan_monitor.FeedLocator" title="ch_util.chan_monitor.FeedLocator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">FeedLocator</span></code></a>(vis1, vis2, tm1, tm2, src1, ...)</p></td>
+<td><p>This class contains functions that do all the computations to determine feed positions from data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.chan_monitor.</span></span><span class="sig-name descname"><span class="pre">ChanMonitor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">t1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">t2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bswp1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">26</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bswp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsep1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">154</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsep2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">218</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class provides the user interface to FeedLocator.</p>
+<p>It initializes instances of FeedLocator (normally one per polarization)
+and returns results combined lists of results (good channels and positions,
+agreement/disagreement with the layout database, etc.)</p>
+<p>Feed locator should not
+have to sepparate the visibilities in data to run the test on and data
+not to run the test on. ChanMonitor should make the sepparation and
+provide FeedLocator with the right data cube to test.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>[</strong><strong>t2</strong><strong>]</strong> (<em>t1</em>) – set to 1 sideral day after t1</p></li>
+<li><p><strong>freq_sel</strong></p></li>
+<li><p><strong>prod_sel</strong></p></li>
+</ul>
+</dd>
+</dl>
+<p>Here t1 and t2 have to be unix time (floats)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.fromdata">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fromdata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.fromdata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.fromdata" title="Link to this definition"></a></dt>
+<dd><p>Initialize class from andata object</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.fromdate">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">fromdate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">date</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_sel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bswp1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">26</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bswp2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">90</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsep1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">154</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsep2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">218</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.fromdate"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.fromdate" title="Link to this definition"></a></dt>
+<dd><p>Initialize class from date</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.get_results">
+<span class="sig-name descname"><span class="pre">get_results</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tdelt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2800</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.get_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.get_results" title="Link to this definition"></a></dt>
+<dd><p>If self.finder exists, then it takes a deep copy of this object,
+further restricts the time range to include only src transits,
+and then queries the database to obtain a list of the acquisitions.
+If self.finder does not exist, then it creates a finder object,
+restricts the time range to include only src transits between
+self.t1 and self.t2, and then queries the database to obtain a list
+of the acquisitions.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.get_sunfree_srcs">
+<span class="sig-name descname"><span class="pre">get_sunfree_srcs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">srcs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.get_sunfree_srcs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.get_sunfree_srcs" title="Link to this definition"></a></dt>
+<dd><p>This method uses the attributes ‘night_acq_list’ and
+‘acq_list’ to determine the srcs that transit
+in the available data.  If these attributes do not
+exist, then the method ‘set_acq_list’ is called.
+If srcs is not specified, then it defaults to the
+brightest four radio point sources in the sky:
+CygA, CasA, TauA, and VirA.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.set_acq_list">
+<span class="sig-name descname"><span class="pre">set_acq_list</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.set_acq_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.set_acq_list" title="Link to this definition"></a></dt>
+<dd><p>This method sets four attributes.  The first two attributes
+are ‘night_finder’ and ‘night_acq_list’, which are the
+finder object and list of acquisitions that
+contain all night time data between self.t1 and self.t2.
+The second two attributes are ‘finder’ and ‘acq_list’,
+which are the finder object and list of acquisitions
+that contain all data beween self.t1 and self.t2 with the
+sunrise, sun transit, and sunset removed.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.set_metadata">
+<span class="sig-name descname"><span class="pre">set_metadata</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_map</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.set_metadata"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.set_metadata" title="Link to this definition"></a></dt>
+<dd><p>Sets self.corr_inputs, self.pwds, self.pstns, self.p1_idx, self.p2_idx</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.ChanMonitor.single_source_check">
+<span class="sig-name descname"><span class="pre">single_source_check</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#ChanMonitor.single_source_check"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.ChanMonitor.single_source_check" title="Link to this definition"></a></dt>
+<dd><p>Assumes self.source1 is NOT None</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.chan_monitor.</span></span><span class="sig-name descname"><span class="pre">FeedLocator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tm2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freqs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prods</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pstns0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bsipts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>This class contains functions that do all the computations to
+determine feed positions from data. It also determines the quality
+of data and returns a list of good inputs and frequencies.</p>
+<p>Uppon initialization, it receives visibility data around one or two
+bright sources transits as well as corresponding meta-data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis1</strong> (<em>Visibility data around bright source transit</em>)</p></li>
+<li><p><strong>[</strong><strong>vis2</strong><strong>]</strong> (<em>Visibility data around bright source transit</em>)</p></li>
+<li><p><strong>tm1</strong> (<em>Timestamp corresponding to vis1</em><em> [</em><em>vis2</em><em>]</em>)</p></li>
+<li><p><strong>[</strong><strong>tm2</strong><strong>]</strong> (<em>Timestamp corresponding to vis1</em><em> [</em><em>vis2</em><em>]</em>)</p></li>
+<li><p><strong>src1</strong> (<em>Ephemeris astronomical object corresponding to the</em>) – transit in vis1 [vis2]</p></li>
+<li><p><strong>[</strong><strong>src2</strong><strong>]</strong> (<em>Ephemeris astronomical object corresponding to the</em>) – transit in vis1 [vis2]</p></li>
+<li><p><strong>freqs</strong> (<em>frequency axis</em><em> of </em><em>vis1</em><em> [</em><em>and vis2</em><em>]</em>)</p></li>
+<li><p><strong>prods</strong> (<em>Product axis</em><em> of </em><em>vis1</em><em> [</em><em>and vis2</em><em>]</em>)</p></li>
+<li><p><strong>inputs</strong> (<em>inputs loaded in vis1</em><em> [</em><em>and vis2</em><em>]</em>)</p></li>
+<li><p><strong>pstns0</strong> (<em>positions</em><em> of </em><em>inputs as obtained from the layout database</em>)</p></li>
+<li><p><strong>bsipts</strong> (<em>base inputs used to determine cross correlations loaded</em>) – (might become unecessary in the future)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Basic initialization method</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.continuity_test">
+<span class="sig-name descname"><span class="pre">continuity_test</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knl</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.continuity_test"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.continuity_test" title="Link to this definition"></a></dt>
+<dd><p>Call only if freqs are adjacent.
+Uses xdists (Earth coords) instead of c_xdists (cylinder coords)
+to allow for calling before ydists are computed. Doesn’t make any
+difference for this test. Results are used in computing y_dists.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.get_c_ydist">
+<span class="sig-name descname"><span class="pre">get_c_ydist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ph1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ph2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">good_freqs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nmax</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.get_c_ydist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.get_c_ydist" title="Link to this definition"></a></dt>
+<dd><p>N-S. Absolutelly assumes contiguous frequencies!!!</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.get_c_ydist_perfreq">
+<span class="sig-name descname"><span class="pre">get_c_ydist_perfreq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ph1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ph2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.get_c_ydist_perfreq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.get_c_ydist_perfreq" title="Link to this definition"></a></dt>
+<dd><p>Old N-S dists function. TO be used only in case a continuum of
+frequencies is not available</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.get_xdist">
+<span class="sig-name descname"><span class="pre">get_xdist</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ft_prms</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.get_xdist"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.get_xdist" title="Link to this definition"></a></dt>
+<dd><p>E-W</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.good_prod_freq">
+<span class="sig-name descname"><span class="pre">good_prod_freq</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">pass_rst</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_ch1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_ch2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_fr1</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol_fr2</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.7</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.good_prod_freq"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.good_prod_freq" title="Link to this definition"></a></dt>
+<dd><p>Tries to determine overall bad products and overall bad frequencies
+from a test_pass result.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.params_ft">
+<span class="sig-name descname"><span class="pre">params_ft</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tm</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">x0_shift</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5.0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.params_ft"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.params_ft" title="Link to this definition"></a></dt>
+<dd><dl class="simple">
+<dt>Extract relevant parameters from source transit</dt><dd><dl class="simple">
+<dt>visibility in two steps:</dt><dd><ol class="arabic simple">
+<li><p>FFT visibility</p></li>
+<li><p>Fit a gaussian to the transform</p></li>
+</ol>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tm</strong> (<em>array-like</em>) – Independent variable (time)</p></li>
+<li><p><strong>trace</strong> (<em>array-like</em>) – Dependent variable (visibility)</p></li>
+<li><p><strong>freq</strong> (<em>float</em>) – Frenquency of the visibility trace, in MHz.</p></li>
+<li><p><strong>dec</strong> (<em>float</em>) – Declination of source. Used for initial guess of
+gaussian width. Defaults to CygA declination: 0.71</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>popt</strong> (<em>array of float</em>) – List with optimal parameters: [A,mu,sig2]</p></li>
+<li><p><strong>pcov</strong> (<em>array of float</em>) – Covariance matrix for optimal parameters.
+For details see documentation on numpy.curve_fit</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.chan_monitor.FeedLocator.set_good_ipts">
+<span class="sig-name descname"><span class="pre">set_good_ipts</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">base_ipts</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/chan_monitor.html#FeedLocator.set_good_ipts"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.chan_monitor.FeedLocator.set_good_ipts" title="Link to this definition"></a></dt>
+<dd><p>Good_prods to good_ipts</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.cal_utils.html" class="btn btn-neutral float-left" title="ch_util.cal_utils" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.data_quality.html" class="btn btn-neutral float-right" title="ch_util.data_quality" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,1849 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.tools &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="prev" title="ch_util.timing" href="ch_util.timing.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.tools</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#correlator-inputs">Correlator Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#housekeeping-inputs">Housekeeping Inputs</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#product-array-mapping">Product Array Mapping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#matrix-factorisation">Matrix Factorisation</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fringestopping">Fringestopping</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#miscellaneous">Miscellaneous</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.Antenna"><code class="docutils literal notranslate"><span class="pre">Antenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.ArrayAntenna"><code class="docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.Blank"><code class="docutils literal notranslate"><span class="pre">Blank</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.CHIMEAntenna"><code class="docutils literal notranslate"><span class="pre">CHIMEAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.CorrInput"><code class="docutils literal notranslate"><span class="pre">CorrInput</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.GBOAntenna"><code class="docutils literal notranslate"><span class="pre">GBOAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.HCOAntenna"><code class="docutils literal notranslate"><span class="pre">HCOAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.HKInput"><code class="docutils literal notranslate"><span class="pre">HKInput</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.HolographyAntenna"><code class="docutils literal notranslate"><span class="pre">HolographyAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.KKOAntenna"><code class="docutils literal notranslate"><span class="pre">KKOAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.NoiseSource"><code class="docutils literal notranslate"><span class="pre">NoiseSource</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.PCOAntenna"><code class="docutils literal notranslate"><span class="pre">PCOAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.PathfinderAntenna"><code class="docutils literal notranslate"><span class="pre">PathfinderAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.RFIAntenna"><code class="docutils literal notranslate"><span class="pre">RFIAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.TONEAntenna"><code class="docutils literal notranslate"><span class="pre">TONEAntenna</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.antenna_to_lna"><code class="docutils literal notranslate"><span class="pre">antenna_to_lna()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.apply_gain"><code class="docutils literal notranslate"><span class="pre">apply_gain()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.beam_index2number"><code class="docutils literal notranslate"><span class="pre">beam_index2number()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.calibrate_temperature"><code class="docutils literal notranslate"><span class="pre">calibrate_temperature()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.change_chime_location"><code class="docutils literal notranslate"><span class="pre">change_chime_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.change_pathfinder_location"><code class="docutils literal notranslate"><span class="pre">change_pathfinder_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.cmap"><code class="docutils literal notranslate"><span class="pre">cmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.decorrelation"><code class="docutils literal notranslate"><span class="pre">decorrelation()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.delay"><code class="docutils literal notranslate"><span class="pre">delay()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.eigh_no_diagonal"><code class="docutils literal notranslate"><span class="pre">eigh_no_diagonal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.ensure_list"><code class="docutils literal notranslate"><span class="pre">ensure_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.fake_tone_database"><code class="docutils literal notranslate"><span class="pre">fake_tone_database()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.fast_pack_product_array"><code class="docutils literal notranslate"><span class="pre">fast_pack_product_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.fringestop_time"><code class="docutils literal notranslate"><span class="pre">fringestop_time()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_correlator_inputs"><code class="docutils literal notranslate"><span class="pre">get_correlator_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_default_frequency_map_stream"><code class="docutils literal notranslate"><span class="pre">get_default_frequency_map_stream()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_feed_polarisations"><code class="docutils literal notranslate"><span class="pre">get_feed_polarisations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_feed_positions"><code class="docutils literal notranslate"><span class="pre">get_feed_positions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_holographic_index"><code class="docutils literal notranslate"><span class="pre">get_holographic_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_noise_channel"><code class="docutils literal notranslate"><span class="pre">get_noise_channel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.get_noise_source_index"><code class="docutils literal notranslate"><span class="pre">get_noise_source_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.hk_to_sensor"><code class="docutils literal notranslate"><span class="pre">hk_to_sensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.icmap"><code class="docutils literal notranslate"><span class="pre">icmap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.invert_no_zero"><code class="docutils literal notranslate"><span class="pre">invert_no_zero()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_array"><code class="docutils literal notranslate"><span class="pre">is_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_array_on"><code class="docutils literal notranslate"><span class="pre">is_array_on()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_array_x"><code class="docutils literal notranslate"><span class="pre">is_array_x()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_array_y"><code class="docutils literal notranslate"><span class="pre">is_array_y()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_chime"><code class="docutils literal notranslate"><span class="pre">is_chime()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_chime_on"><code class="docutils literal notranslate"><span class="pre">is_chime_on()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_holographic"><code class="docutils literal notranslate"><span class="pre">is_holographic()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_noise_source"><code class="docutils literal notranslate"><span class="pre">is_noise_source()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.is_pathfinder"><code class="docutils literal notranslate"><span class="pre">is_pathfinder()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.lna_to_antenna"><code class="docutils literal notranslate"><span class="pre">lna_to_antenna()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.normalise_correlations"><code class="docutils literal notranslate"><span class="pre">normalise_correlations()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.order_frequency_map_stream"><code class="docutils literal notranslate"><span class="pre">order_frequency_map_stream()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.pack_product_array"><code class="docutils literal notranslate"><span class="pre">pack_product_array()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.parse_chime_serial"><code class="docutils literal notranslate"><span class="pre">parse_chime_serial()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.parse_old_serial"><code class="docutils literal notranslate"><span class="pre">parse_old_serial()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.parse_pathfinder_serial"><code class="docutils literal notranslate"><span class="pre">parse_pathfinder_serial()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.rankN_approx"><code class="docutils literal notranslate"><span class="pre">rankN_approx()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.redefine_stack_index_map"><code class="docutils literal notranslate"><span class="pre">redefine_stack_index_map()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.reorder_correlator_inputs"><code class="docutils literal notranslate"><span class="pre">reorder_correlator_inputs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.sensor_to_hk"><code class="docutils literal notranslate"><span class="pre">sensor_to_hk()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.serial_to_id"><code class="docutils literal notranslate"><span class="pre">serial_to_id()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.serial_to_location"><code class="docutils literal notranslate"><span class="pre">serial_to_location()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.subtract_rank1_signal"><code class="docutils literal notranslate"><span class="pre">subtract_rank1_signal()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.tools.unpack_product_array"><code class="docutils literal notranslate"><span class="pre">unpack_product_array()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.tools.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.tools">
+<span id="ch-util-tools"></span><h1>ch_util.tools<a class="headerlink" href="#module-ch_util.tools" title="Link to this heading"></a></h1>
+<p>Tools for CHIME analysis</p>
+<p>A collection of miscellaneous utility routines.</p>
+<section id="correlator-inputs">
+<h2>Correlator Inputs<a class="headerlink" href="#correlator-inputs" title="Link to this heading"></a></h2>
+<p>Query the layout database to find out what is ultimately connected at the end
+of correlator inputs. This is done by calling the routine
+<a class="reference internal" href="#ch_util.tools.get_correlator_inputs" title="ch_util.tools.get_correlator_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_correlator_inputs()</span></code></a>, which returns a list of the inputs. Routines
+such as <a class="reference internal" href="#ch_util.tools.get_feed_positions" title="ch_util.tools.get_feed_positions"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_feed_positions()</span></code></a> operate on this list.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.get_correlator_inputs" title="ch_util.tools.get_correlator_inputs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_correlator_inputs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.get_feed_positions" title="ch_util.tools.get_feed_positions"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_feed_positions()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.get_feed_polarisations" title="ch_util.tools.get_feed_polarisations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_feed_polarisations()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_array" title="ch_util.tools.is_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_array()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_array_x" title="ch_util.tools.is_array_x"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_array_x()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_array_y" title="ch_util.tools.is_array_y"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_array_y()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_array_on" title="ch_util.tools.is_array_on"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_array_on()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_chime" title="ch_util.tools.is_chime"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_chime()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_pathfinder" title="ch_util.tools.is_pathfinder"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_pathfinder()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_holographic" title="ch_util.tools.is_holographic"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_holographic()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.is_noise_source" title="ch_util.tools.is_noise_source"><code class="xref py py-meth docutils literal notranslate"><span class="pre">is_noise_source()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.reorder_correlator_inputs" title="ch_util.tools.reorder_correlator_inputs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">reorder_correlator_inputs()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.redefine_stack_index_map" title="ch_util.tools.redefine_stack_index_map"><code class="xref py py-meth docutils literal notranslate"><span class="pre">redefine_stack_index_map()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.serial_to_id" title="ch_util.tools.serial_to_id"><code class="xref py py-meth docutils literal notranslate"><span class="pre">serial_to_id()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.serial_to_location" title="ch_util.tools.serial_to_location"><code class="xref py py-meth docutils literal notranslate"><span class="pre">serial_to_location()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.parse_chime_serial" title="ch_util.tools.parse_chime_serial"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_chime_serial()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.parse_pathfinder_serial" title="ch_util.tools.parse_pathfinder_serial"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_pathfinder_serial()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.parse_old_serial" title="ch_util.tools.parse_old_serial"><code class="xref py py-meth docutils literal notranslate"><span class="pre">parse_old_serial()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.get_noise_source_index" title="ch_util.tools.get_noise_source_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_noise_source_index()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.get_holographic_index" title="ch_util.tools.get_holographic_index"><code class="xref py py-meth docutils literal notranslate"><span class="pre">get_holographic_index()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.change_pathfinder_location" title="ch_util.tools.change_pathfinder_location"><code class="xref py py-meth docutils literal notranslate"><span class="pre">change_pathfinder_location()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.change_chime_location" title="ch_util.tools.change_chime_location"><code class="xref py py-meth docutils literal notranslate"><span class="pre">change_chime_location()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.beam_index2number" title="ch_util.tools.beam_index2number"><code class="xref py py-meth docutils literal notranslate"><span class="pre">beam_index2number()</span></code></a></p></li>
+</ul>
+<p>This can determine if we are connected to any of the following:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.HolographyAntenna" title="ch_util.tools.HolographyAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">HolographyAntenna</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.PathfinderAntenna" title="ch_util.tools.PathfinderAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">PathfinderAntenna</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.CHIMEAntenna" title="ch_util.tools.CHIMEAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">CHIMEAntenna</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.RFIAntenna" title="ch_util.tools.RFIAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">RFIAntenna</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.NoiseSource" title="ch_util.tools.NoiseSource"><code class="xref py py-class docutils literal notranslate"><span class="pre">NoiseSource</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.Blank" title="ch_util.tools.Blank"><code class="xref py py-class docutils literal notranslate"><span class="pre">Blank</span></code></a></p></li>
+</ul>
+<p class="rubric">Example</p>
+<p>Fetch the inputs for blanchard during layout 38:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">datetime</span><span class="w"> </span><span class="kn">import</span> <span class="n">datetime</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span> <span class="o">=</span> <span class="n">get_correlator_inputs</span><span class="p">(</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2016</span><span class="p">,</span><span class="mi">05</span><span class="p">,</span><span class="mi">23</span><span class="p">,</span><span class="mi">00</span><span class="p">),</span>
+<span class="gp">... </span><span class="n">correlator</span><span class="o">=</span><span class="s1">&#39;pathfinder&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+<span class="go">CHIMEAntenna(id=1, reflector=u&#39;W_cylinder&#39;, antenna=u&#39;ANT0123B&#39;,</span>
+<span class="go">powered=True, pos=9.071800000000001, input_sn=u&#39;K7BP16-00040401&#39;,</span>
+<span class="go">pol=u&#39;S&#39;, corr=u&#39;K7BP16-0004&#39;, cyl=0)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;NS position:&quot;</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pos</span>
+<span class="go">NS position: 9.0718</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nb">print</span> <span class="s2">&quot;Polarisation:&quot;</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">pol</span>
+<span class="go">Polarisation: S</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">inputs</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>
+<span class="go">CHIMEAntenna(id=3, reflector=u&#39;W_cylinder&#39;, antenna=u&#39;ANT0128B&#39;,</span>
+<span class="go">powered=True, pos=9.681400000000002, input_sn=u&#39;K7BP16-00040403&#39;,</span>
+<span class="go">pol=u&#39;S&#39;, corr=u&#39;K7BP16-0004&#39;, cyl=0)</span>
+</pre></div>
+</div>
+</section>
+<section id="housekeeping-inputs">
+<h2>Housekeeping Inputs<a class="headerlink" href="#housekeeping-inputs" title="Link to this heading"></a></h2>
+<p class="rubric">Functions</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.antenna_to_lna" title="ch_util.tools.antenna_to_lna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">antenna_to_lna()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.calibrate_temperature" title="ch_util.tools.calibrate_temperature"><code class="xref py py-meth docutils literal notranslate"><span class="pre">calibrate_temperature()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.hk_to_sensor" title="ch_util.tools.hk_to_sensor"><code class="xref py py-meth docutils literal notranslate"><span class="pre">hk_to_sensor()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.lna_to_antenna" title="ch_util.tools.lna_to_antenna"><code class="xref py py-meth docutils literal notranslate"><span class="pre">lna_to_antenna()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.sensor_to_hk" title="ch_util.tools.sensor_to_hk"><code class="xref py py-meth docutils literal notranslate"><span class="pre">sensor_to_hk()</span></code></a></p></li>
+</ul>
+<p class="rubric">Classes</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.HKInput" title="ch_util.tools.HKInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">HKInput</span></code></a></p></li>
+</ul>
+</section>
+<section id="product-array-mapping">
+<h2>Product Array Mapping<a class="headerlink" href="#product-array-mapping" title="Link to this heading"></a></h2>
+<p>Tools for mapping between products stored in upper triangular format, and the
+underlying pairs of inputs.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.cmap" title="ch_util.tools.cmap"><code class="xref py py-meth docutils literal notranslate"><span class="pre">cmap()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.icmap" title="ch_util.tools.icmap"><code class="xref py py-meth docutils literal notranslate"><span class="pre">icmap()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.fast_pack_product_array" title="ch_util.tools.fast_pack_product_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">fast_pack_product_array()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.pack_product_array" title="ch_util.tools.pack_product_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pack_product_array()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.unpack_product_array" title="ch_util.tools.unpack_product_array"><code class="xref py py-meth docutils literal notranslate"><span class="pre">unpack_product_array()</span></code></a></p></li>
+</ul>
+</section>
+<section id="matrix-factorisation">
+<h2>Matrix Factorisation<a class="headerlink" href="#matrix-factorisation" title="Link to this heading"></a></h2>
+<p>A few useful routines for factorising matrices, usually for calibration.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.eigh_no_diagonal" title="ch_util.tools.eigh_no_diagonal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">eigh_no_diagonal()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.rankN_approx" title="ch_util.tools.rankN_approx"><code class="xref py py-meth docutils literal notranslate"><span class="pre">rankN_approx()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.normalise_correlations" title="ch_util.tools.normalise_correlations"><code class="xref py py-meth docutils literal notranslate"><span class="pre">normalise_correlations()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.apply_gain" title="ch_util.tools.apply_gain"><code class="xref py py-meth docutils literal notranslate"><span class="pre">apply_gain()</span></code></a></p></li>
+<li><p><a class="reference internal" href="#ch_util.tools.subtract_rank1_signal" title="ch_util.tools.subtract_rank1_signal"><code class="xref py py-meth docutils literal notranslate"><span class="pre">subtract_rank1_signal()</span></code></a></p></li>
+</ul>
+</section>
+<section id="fringestopping">
+<h2>Fringestopping<a class="headerlink" href="#fringestopping" title="Link to this heading"></a></h2>
+<p>Routines for undoing the phase rotation of a fixed celestial source. The
+routine <code class="xref py py-func docutils literal notranslate"><span class="pre">fringestop()</span></code> is an easy to use routine for fringestopping data
+given a list of the feeds in the data. For more advanced usage
+<code class="xref py py-func docutils literal notranslate"><span class="pre">fringestop_phase()</span></code> can be used.</p>
+<ul class="simple">
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fringestop_phase()</span></code></p></li>
+<li><p><code class="xref py py-meth docutils literal notranslate"><span class="pre">fringestop()</span></code></p></li>
+</ul>
+</section>
+<section id="miscellaneous">
+<h2>Miscellaneous<a class="headerlink" href="#miscellaneous" title="Link to this heading"></a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="#ch_util.tools.ensure_list" title="ch_util.tools.ensure_list"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ensure_list()</span></code></a></p></li>
+</ul>
+</section>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.antenna_to_lna" title="ch_util.tools.antenna_to_lna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">antenna_to_lna</span></code></a>(graph, ant, pol)</p></td>
+<td><p>Find an LNA connected to an antenna.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.apply_gain" title="ch_util.tools.apply_gain"><code class="xref py py-obj docutils literal notranslate"><span class="pre">apply_gain</span></code></a>(vis, gain[, axis, out, prod_map])</p></td>
+<td><p>Apply per input gains to a set of visibilities packed in upper triangular format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.beam_index2number" title="ch_util.tools.beam_index2number"><code class="xref py py-obj docutils literal notranslate"><span class="pre">beam_index2number</span></code></a>(beam_index)</p></td>
+<td><p>Convert beam &quot;index&quot; (0-1023) to beam &quot;number&quot; (0-255, 1000-1255, etc.)</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.calibrate_temperature" title="ch_util.tools.calibrate_temperature"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calibrate_temperature</span></code></a>(raw)</p></td>
+<td><p>Calibrate housekeeping temperatures.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.change_chime_location" title="ch_util.tools.change_chime_location"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_chime_location</span></code></a>([rotation, location, ...])</p></td>
+<td><p>Change the orientation or location of CHIME.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.change_pathfinder_location" title="ch_util.tools.change_pathfinder_location"><code class="xref py py-obj docutils literal notranslate"><span class="pre">change_pathfinder_location</span></code></a>([rotation, ...])</p></td>
+<td><p>Change the orientation or location of Pathfinder.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.cmap" title="ch_util.tools.cmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cmap</span></code></a>(i, j, n)</p></td>
+<td><p>Given a pair of feed indices, return the pair index.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.decorrelation" title="ch_util.tools.decorrelation"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decorrelation</span></code></a>(timestream, times, feeds, src)</p></td>
+<td><p>Apply the decorrelation corrections to a timestream from observing a source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.delay" title="ch_util.tools.delay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">delay</span></code></a>(times, feeds, src[, wterm, bterm, ...])</p></td>
+<td><p>Calculate the delay in a visibilities observing a given source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.eigh_no_diagonal" title="ch_util.tools.eigh_no_diagonal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigh_no_diagonal</span></code></a>(A[, niter, eigvals])</p></td>
+<td><p>Eigenvalue decomposition ignoring the diagonal elements.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.ensure_list" title="ch_util.tools.ensure_list"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ensure_list</span></code></a>(obj[, num])</p></td>
+<td><p>Ensure <cite>obj</cite> is list-like, optionally with the length <cite>num</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.fake_tone_database" title="ch_util.tools.fake_tone_database"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fake_tone_database</span></code></a>()</p></td>
+<td><p>A fake correlator input database for GBO/TONE.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.fast_pack_product_array" title="ch_util.tools.fast_pack_product_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fast_pack_product_array</span></code></a>(arr)</p></td>
+<td><p>Equivalent to ch_util.tools.pack_product_array(arr, axis=-1), but 10^5 times faster for full CHIME!</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.fringestop_time" title="ch_util.tools.fringestop_time"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fringestop_time</span></code></a>(timestream, times, freq, ...)</p></td>
+<td><p>Fringestop timestream data to a fixed source.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.get_correlator_inputs" title="ch_util.tools.get_correlator_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_correlator_inputs</span></code></a>(lay_time[, ...])</p></td>
+<td><p>Get the information for all channels in a layout.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.get_default_frequency_map_stream" title="ch_util.tools.get_default_frequency_map_stream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_default_frequency_map_stream</span></code></a>()</p></td>
+<td><p>Get the default CHIME frequency map stream.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.get_feed_polarisations" title="ch_util.tools.get_feed_polarisations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_feed_polarisations</span></code></a>(feeds)</p></td>
+<td><p>Get an array of the feed polarisations.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.get_feed_positions" title="ch_util.tools.get_feed_positions"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_feed_positions</span></code></a>(feeds[, get_zpos])</p></td>
+<td><p>Get the positions of the CHIME antennas.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.get_holographic_index" title="ch_util.tools.get_holographic_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_holographic_index</span></code></a>(inputs)</p></td>
+<td><p>Find the indices of the holography antennas.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.get_noise_channel" title="ch_util.tools.get_noise_channel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_noise_channel</span></code></a>(inputs)</p></td>
+<td><p>Returns the index of the noise source with the lowest chan id (for backwards compatability).</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.get_noise_source_index" title="ch_util.tools.get_noise_source_index"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_noise_source_index</span></code></a>(inputs)</p></td>
+<td><p>Find the indices of the noise sources.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.hk_to_sensor" title="ch_util.tools.hk_to_sensor"><code class="xref py py-obj docutils literal notranslate"><span class="pre">hk_to_sensor</span></code></a>(graph, inp)</p></td>
+<td><p>Find what component a housekeeping channel is connected to.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.icmap" title="ch_util.tools.icmap"><code class="xref py py-obj docutils literal notranslate"><span class="pre">icmap</span></code></a>(ix, n)</p></td>
+<td><p>Inverse feed map.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.invert_no_zero" title="ch_util.tools.invert_no_zero"><code class="xref py py-obj docutils literal notranslate"><span class="pre">invert_no_zero</span></code></a>(*args, **kwargs)</p></td>
+<td><p>Deprecated - use 'caput.tools.invert_no_zero'</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.is_array" title="ch_util.tools.is_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_array</span></code></a>(feed)</p></td>
+<td><p>Is this feed part of an array?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.is_array_on" title="ch_util.tools.is_array_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_array_on</span></code></a>(inputs, *args)</p></td>
+<td><p>Check if inputs are on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.is_array_x" title="ch_util.tools.is_array_x"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_array_x</span></code></a>(feed)</p></td>
+<td><p>Is this an X-polarisation antenna in an array?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.is_array_y" title="ch_util.tools.is_array_y"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_array_y</span></code></a>(feed)</p></td>
+<td><p>Is this a Y-polarisation antenna in an array?</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.is_chime" title="ch_util.tools.is_chime"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_chime</span></code></a>(feed)</p></td>
+<td><p>Is this feed a CHIME antenna?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.is_chime_on" title="ch_util.tools.is_chime_on"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_chime_on</span></code></a>(inputs, *args)</p></td>
+<td><p>Check if inputs are on.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.is_holographic" title="ch_util.tools.is_holographic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_holographic</span></code></a>(feed)</p></td>
+<td><p>Is this feed a holographic antenna?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.is_noise_source" title="ch_util.tools.is_noise_source"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_noise_source</span></code></a>(inp)</p></td>
+<td><p>Is this correlator input connected to a noise source?</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.is_pathfinder" title="ch_util.tools.is_pathfinder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">is_pathfinder</span></code></a>(feed)</p></td>
+<td><p>Is this feed a Pathfinder antenna?</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.lna_to_antenna" title="ch_util.tools.lna_to_antenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">lna_to_antenna</span></code></a>(graph, lna)</p></td>
+<td><p>Find an antenna connected to an LNA.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.normalise_correlations" title="ch_util.tools.normalise_correlations"><code class="xref py py-obj docutils literal notranslate"><span class="pre">normalise_correlations</span></code></a>(A[, norm])</p></td>
+<td><p>Normalise to make a correlation matrix from a covariance matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.order_frequency_map_stream" title="ch_util.tools.order_frequency_map_stream"><code class="xref py py-obj docutils literal notranslate"><span class="pre">order_frequency_map_stream</span></code></a>(fmap, stream_id)</p></td>
+<td><p>Order stream_id components based on a frequency map.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.pack_product_array" title="ch_util.tools.pack_product_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pack_product_array</span></code></a>(exp_arr[, axis])</p></td>
+<td><p>Pack full correlation matrices into upper triangular form.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.parse_chime_serial" title="ch_util.tools.parse_chime_serial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_chime_serial</span></code></a>(sn)</p></td>
+<td><p>Parse a serial number into crate, slot, and SMA number.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.parse_old_serial" title="ch_util.tools.parse_old_serial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_old_serial</span></code></a>(sn)</p></td>
+<td><p>Parse an old 8/16-channel serial number into slot, and SMA number.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.parse_pathfinder_serial" title="ch_util.tools.parse_pathfinder_serial"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse_pathfinder_serial</span></code></a>(sn)</p></td>
+<td><p>Parse a pathfinder serial number into crate, slot, and SMA number.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.rankN_approx" title="ch_util.tools.rankN_approx"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rankN_approx</span></code></a>(A[, rank])</p></td>
+<td><p>Create the rank-N approximation to the matrix A.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.redefine_stack_index_map" title="ch_util.tools.redefine_stack_index_map"><code class="xref py py-obj docutils literal notranslate"><span class="pre">redefine_stack_index_map</span></code></a>(input_map, prod, ...)</p></td>
+<td><p>Ensure only baselines between array antennas are used to represent the stack.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.reorder_correlator_inputs" title="ch_util.tools.reorder_correlator_inputs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">reorder_correlator_inputs</span></code></a>(input_map, corr_inputs)</p></td>
+<td><p>Sort a list of correlator inputs into the order given in input map.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.sensor_to_hk" title="ch_util.tools.sensor_to_hk"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sensor_to_hk</span></code></a>(graph, comp)</p></td>
+<td><p>Find what housekeeping channel a component is connected to.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.serial_to_id" title="ch_util.tools.serial_to_id"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serial_to_id</span></code></a>(serial)</p></td>
+<td><p>Get the channel ID corresponding to a correlator input serial number.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.serial_to_location" title="ch_util.tools.serial_to_location"><code class="xref py py-obj docutils literal notranslate"><span class="pre">serial_to_location</span></code></a>(serial)</p></td>
+<td><p>Get the internal correlator ordering and the crate, slot, and sma number from a correlator input serial number.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.subtract_rank1_signal" title="ch_util.tools.subtract_rank1_signal"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract_rank1_signal</span></code></a>(vis, signal[, axis, ...])</p></td>
+<td><p>Subtract a rank 1 signal from a set of visibilities packed in upper triangular format.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.unpack_product_array" title="ch_util.tools.unpack_product_array"><code class="xref py py-obj docutils literal notranslate"><span class="pre">unpack_product_array</span></code></a>(prod_arr[, axis, feeds])</p></td>
+<td><p>Expand packed products to correlation matrices.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.Antenna" title="ch_util.tools.Antenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Antenna</span></code></a>(**input_dict)</p></td>
+<td><p>An antenna input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>Antenna that is part of a cylindrical interferometric array.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.Blank" title="ch_util.tools.Blank"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Blank</span></code></a>(**input_dict)</p></td>
+<td><p>Unconnected input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.CHIMEAntenna" title="ch_util.tools.CHIMEAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CHIMEAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>Antenna that is part of CHIME.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">CorrInput</span></code></a>(**input_dict)</p></td>
+<td><p>Base class for describing a correlator input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.GBOAntenna" title="ch_util.tools.GBOAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">GBOAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>GBO outrigger antenna for the CHIME/FRB project.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.HCOAntenna" title="ch_util.tools.HCOAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HCOAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>HCRO outrigger antenna for the CHIME/FRB project.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.HKInput" title="ch_util.tools.HKInput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HKInput</span></code></a>([atmel, chan, mux])</p></td>
+<td><p>A housekeeping input.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.HolographyAntenna" title="ch_util.tools.HolographyAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HolographyAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>Antenna used for holography.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.KKOAntenna" title="ch_util.tools.KKOAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KKOAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>KKO outrigger antenna for the CHIME/FRB project.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.NoiseSource" title="ch_util.tools.NoiseSource"><code class="xref py py-obj docutils literal notranslate"><span class="pre">NoiseSource</span></code></a>(**input_dict)</p></td>
+<td><p>Broad band noise calibration source.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.PCOAntenna" title="ch_util.tools.PCOAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PCOAntenna</span></code></a></p></td>
+<td><p>alias of <a class="reference internal" href="#ch_util.tools.KKOAntenna" title="ch_util.tools.KKOAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">KKOAntenna</span></code></a></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.PathfinderAntenna" title="ch_util.tools.PathfinderAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PathfinderAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>Antenna that is part of the Pathfinder.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.tools.RFIAntenna" title="ch_util.tools.RFIAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">RFIAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>RFI monitoring antenna</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.tools.TONEAntenna" title="ch_util.tools.TONEAntenna"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TONEAntenna</span></code></a>(**input_dict)</p></td>
+<td><p>Antenna that is part of GBO/TONE Outrigger.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.Antenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">Antenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#Antenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.Antenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a></p>
+<p>An antenna input.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.Antenna.reflector">
+<span class="sig-name descname"><span class="pre">reflector</span></span><a class="headerlink" href="#ch_util.tools.Antenna.reflector" title="Link to this definition"></a></dt>
+<dd><p>The name of the reflector the antenna is on.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.Antenna.antenna">
+<span class="sig-name descname"><span class="pre">antenna</span></span><a class="headerlink" href="#ch_util.tools.Antenna.antenna" title="Link to this definition"></a></dt>
+<dd><p>Serial number of the antenna.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.Antenna.rf_thru">
+<span class="sig-name descname"><span class="pre">rf_thru</span></span><a class="headerlink" href="#ch_util.tools.Antenna.rf_thru" title="Link to this definition"></a></dt>
+<dd><p>Serial number of the RF room thru that
+the connection passes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.ArrayAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">ArrayAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#ArrayAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.ArrayAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.Antenna" title="ch_util.tools.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
+<p>Antenna that is part of a cylindrical interferometric array.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.ArrayAntenna.cyl">
+<span class="sig-name descname"><span class="pre">cyl</span></span><a class="headerlink" href="#ch_util.tools.ArrayAntenna.cyl" title="Link to this definition"></a></dt>
+<dd><p>Index of the cylinder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.ArrayAntenna.pos">
+<span class="sig-name descname"><span class="pre">pos</span></span><a class="headerlink" href="#ch_util.tools.ArrayAntenna.pos" title="Link to this definition"></a></dt>
+<dd><p>Position of the antenna in meters in right-handed coordinates
+where x is eastward, y is northward, and z is upward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[x, y, z]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.ArrayAntenna.pol">
+<span class="sig-name descname"><span class="pre">pol</span></span><a class="headerlink" href="#ch_util.tools.ArrayAntenna.pol" title="Link to this definition"></a></dt>
+<dd><p>Orientation of the polarisation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.ArrayAntenna.flag">
+<span class="sig-name descname"><span class="pre">flag</span></span><a class="headerlink" href="#ch_util.tools.ArrayAntenna.flag" title="Link to this definition"></a></dt>
+<dd><p>Flag indicating whether or not the antenna is good.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.Blank">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">Blank</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#Blank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.Blank" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a></p>
+<p>Unconnected input.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.CHIMEAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">CHIMEAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#CHIMEAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.CHIMEAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>Antenna that is part of CHIME.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">CorrInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#CorrInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.CorrInput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Base class for describing a correlator input.</p>
+<p>Meant to be subclassed by actual types of inputs.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.input_sn">
+<span class="sig-name descname"><span class="pre">input_sn</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.input_sn" title="Link to this definition"></a></dt>
+<dd><p>Unique serial number of input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.corr">
+<span class="sig-name descname"><span class="pre">corr</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.corr" title="Link to this definition"></a></dt>
+<dd><p>Unique serial number of correlator.
+Set to <cite>None</cite> if no correlator is connected.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.corr_order">
+<span class="sig-name descname"><span class="pre">corr_order</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.corr_order" title="Link to this definition"></a></dt>
+<dd><p>Order of input for correlator internal datastream.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.crate">
+<span class="sig-name descname"><span class="pre">crate</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.crate" title="Link to this definition"></a></dt>
+<dd><p>Crate number within the correlator.
+Set to <cite>None</cite> if correlator consists of single crate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.slot">
+<span class="sig-name descname"><span class="pre">slot</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.slot" title="Link to this definition"></a></dt>
+<dd><p>Slot number of the fpga motherboard within the crate.
+Ranges from 0 to 15, left to right.
+Set to <cite>None</cite> if correlator consists of single slot.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.sma">
+<span class="sig-name descname"><span class="pre">sma</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.sma" title="Link to this definition"></a></dt>
+<dd><p>SMA number on the fpga motherboard within the slot.
+Ranges from 0 to 15, bottom to top.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.delay">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">delay</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.delay" title="Link to this definition"></a></dt>
+<dd><p>The delay along the signal chain in seconds.</p>
+<p>Postive delay values mean signals arriving later than the nominal value.</p>
+<p>Note that these are always relative. Here CHIME inputs are chosen as
+the delay=0 reference.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.tools.CorrInput.id">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">id</span></span><a class="headerlink" href="#ch_util.tools.CorrInput.id" title="Link to this definition"></a></dt>
+<dd><p>Channel ID. Automatically calculated from the serial number
+if id is not explicitly set.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>id</strong> – Channel id. Calculated from the serial.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.GBOAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">GBOAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#GBOAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.GBOAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>GBO outrigger antenna for the CHIME/FRB project.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.HCOAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">HCOAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#HCOAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.HCOAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>HCRO outrigger antenna for the CHIME/FRB project.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.HKInput">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">HKInput</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">atmel</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">chan</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mux</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#HKInput"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.HKInput" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>A housekeeping input.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>atmel</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code>) – The ATMEL board.</p></li>
+<li><p><strong>chan</strong> (<em>int</em>) – The channel number.</p></li>
+<li><p><strong>mux</strong> (<em>int</em>) – The mux number; if this HK stream has no multiplexer, this will simply
+remain as <code class="xref py py-obj docutils literal notranslate"><span class="pre">Null</span></code></p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.HKInput.atmel">
+<span class="sig-name descname"><span class="pre">atmel</span></span><a class="headerlink" href="#ch_util.tools.HKInput.atmel" title="Link to this definition"></a></dt>
+<dd><p>The ATMEL board.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.HKInput.chan">
+<span class="sig-name descname"><span class="pre">chan</span></span><a class="headerlink" href="#ch_util.tools.HKInput.chan" title="Link to this definition"></a></dt>
+<dd><p>The channel number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.HKInput.mux">
+<span class="sig-name descname"><span class="pre">mux</span></span><a class="headerlink" href="#ch_util.tools.HKInput.mux" title="Link to this definition"></a></dt>
+<dd><p>The mux number; if this HK stream has no multiplexer, this will simply
+remain as <code class="xref py py-obj docutils literal notranslate"><span class="pre">Null</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.HolographyAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">HolographyAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#HolographyAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.HolographyAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.Antenna" title="ch_util.tools.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
+<p>Antenna used for holography.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.HolographyAntenna.pos">
+<span class="sig-name descname"><span class="pre">pos</span></span><a class="headerlink" href="#ch_util.tools.HolographyAntenna.pos" title="Link to this definition"></a></dt>
+<dd><p>Position of the antenna in meters in right-handed coordinates
+where x is eastward, y is northward, and z is upward.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>[x, y, z]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.HolographyAntenna.pol">
+<span class="sig-name descname"><span class="pre">pol</span></span><a class="headerlink" href="#ch_util.tools.HolographyAntenna.pol" title="Link to this definition"></a></dt>
+<dd><p>Orientation of the polarisation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.KKOAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">KKOAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#KKOAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.KKOAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>KKO outrigger antenna for the CHIME/FRB project.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.NoiseSource">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">NoiseSource</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#NoiseSource"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.NoiseSource" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a></p>
+<p>Broad band noise calibration source.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.PCOAntenna">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">PCOAntenna</span></span><a class="headerlink" href="#ch_util.tools.PCOAntenna" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#ch_util.tools.KKOAntenna" title="ch_util.tools.KKOAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">KKOAntenna</span></code></a></p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.PathfinderAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">PathfinderAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#PathfinderAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.PathfinderAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>Antenna that is part of the Pathfinder.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.tools.PathfinderAntenna.powered">
+<span class="sig-name descname"><span class="pre">powered</span></span><a class="headerlink" href="#ch_util.tools.PathfinderAntenna.powered" title="Link to this definition"></a></dt>
+<dd><p>Flag indicating that the antenna is powered.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.RFIAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">RFIAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#RFIAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.RFIAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.Antenna" title="ch_util.tools.Antenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">Antenna</span></code></a></p>
+<p>RFI monitoring antenna</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.tools.TONEAntenna">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">TONEAntenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">input_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#TONEAntenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.TONEAntenna" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#ch_util.tools.ArrayAntenna" title="ch_util.tools.ArrayAntenna"><code class="xref py py-class docutils literal notranslate"><span class="pre">ArrayAntenna</span></code></a></p>
+<p>Antenna that is part of GBO/TONE Outrigger.
+Let’s allow for a global rotation and offset.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.antenna_to_lna">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">antenna_to_lna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ant</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pol</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#antenna_to_lna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.antenna_to_lna" title="Link to this definition"></a></dt>
+<dd><p>Find an LNA connected to an antenna.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (obj:<cite>layout.graph</cite> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – The graph in which to do the search. If you pass a time, then the graph
+will be constructed internally. (Note that the latter option will be
+quite slow if you do repeated calls!)</p></li>
+<li><p><strong>ant</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code>) – The antenna.</p></li>
+<li><p><strong>pol</strong> (<em>integer</em>) – There can be up to two LNA’s connected to the two polarisation outputs
+of an antenna. Select which by passing <code class="xref py py-obj docutils literal notranslate"><span class="pre">1</span></code> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">2</span></code>. (Note that
+conversion to old-style naming ‘A’ and ‘B’ is done automatically.)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>lna</strong> – The LNA.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code> or string</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>layout.NotFound</strong> – Raised if the polarisation connector could not be found in the graph.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.apply_gain">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">apply_gain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gain</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#apply_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.apply_gain" title="Link to this definition"></a></dt>
+<dd><p>Apply per input gains to a set of visibilities packed in upper
+triangular format.</p>
+<p>This allows us to apply the gains while minimising the intermediate
+products created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nprod</em><em>, </em><em>...</em><em>]</em>) – Array of visibility products.</p></li>
+<li><p><strong>gain</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ninput</em><em>, </em><em>...</em><em>]</em>) – Array of gains. One gain per input.</p></li>
+<li><p><strong>axis</strong> (<em>integer</em><em>, </em><em>optional</em>) – The axis along which the inputs (or visibilities) are
+contained. Currently only supports axis=1.</p></li>
+<li><p><strong>out</strong> (<em>np.ndarray</em>) – Array to place output in. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> create a new
+array. This routine can safely use <cite>out = vis</cite>.</p></li>
+<li><p><strong>prod_map</strong> (<em>ndarray</em><em> of </em><em>integer pairs</em>) – Gives the mapping from product axis to input pairs. If not supplied,
+<a class="reference internal" href="#ch_util.tools.icmap" title="ch_util.tools.icmap"><code class="xref py py-func docutils literal notranslate"><span class="pre">icmap()</span></code></a> is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – Visibility array with gains applied. Same shape as <code class="xref py py-obj docutils literal notranslate"><span class="pre">vis</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.beam_index2number">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">beam_index2number</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">beam_index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#beam_index2number"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.beam_index2number" title="Link to this definition"></a></dt>
+<dd><p>Convert beam “index” (0-1023) to beam “number” (0-255, 1000-1255, etc.)</p>
+<p>The beam “number”, with 1000s indicating the beam’s East-West index and the
+remainder going from 0 through 255 indicating the beam’s North-South index,
+is used in the CHIME/FRB beam_model package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>beam_index</strong> (<em>int</em><em> or </em><em>np.ndarray</em><em> of </em><em>int</em>) – The beam index or indices to be converted.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>beam_number</strong> – The corresponding beam number or numbers.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>same as beam_index</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.calibrate_temperature">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">calibrate_temperature</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">raw</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#calibrate_temperature"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.calibrate_temperature" title="Link to this definition"></a></dt>
+<dd><p>Calibrate housekeeping temperatures.</p>
+<p>The offset used here is rough; the results are therefore not absolutely
+precise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>raw</strong> (<em>numpy array</em>) – The raw values.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>t</strong> – The temperature in degrees Kelvin.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>numpy array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.change_chime_location">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">change_chime_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#change_chime_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.change_chime_location" title="Link to this definition"></a></dt>
+<dd><p>Change the orientation or location of CHIME.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotation</strong> (<em>float</em>) – Rotation of the telescope from true north in degrees.</p></li>
+<li><p><strong>location</strong> (<em>list</em>) – [x, y, z] of the telescope in meters,
+where x is eastward, y is northward, and z is upward.</p></li>
+<li><p><strong>default</strong> (<em>bool</em>) – Set parameters back to default value.  Overides other keywords.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.change_pathfinder_location">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">change_pathfinder_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">rotation</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">location</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">default</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#change_pathfinder_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.change_pathfinder_location" title="Link to this definition"></a></dt>
+<dd><p>Change the orientation or location of Pathfinder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rotation</strong> (<em>float</em>) – Rotation of the telescope from true north in degrees.</p></li>
+<li><p><strong>location</strong> (<em>list</em>) – [x, y, z] of the telescope in meters,
+where x is eastward, y is northward, and z is upward.</p></li>
+<li><p><strong>default</strong> (<em>bool</em>) – Set parameters back to default value.  Overides other keywords.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.cmap">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">cmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">i</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">j</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#cmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.cmap" title="Link to this definition"></a></dt>
+<dd><p>Given a pair of feed indices, return the pair index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>i</strong> (<em>integer</em>) – Feed index.</p></li>
+<li><p><strong>j</strong> (<em>integer</em>) – Feed index.</p></li>
+<li><p><strong>n</strong> (<em>integer</em>) – Total number of feeds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pi</strong> – Pair index.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>integer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.decorrelation">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">decorrelation</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_delays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#decorrelation"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.decorrelation" title="Link to this definition"></a></dt>
+<dd><p>Apply the decorrelation corrections to a timestream from observing a source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestream</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nprod</em><em>, </em><em>times</em><em>]</em>) – Array containing the timestream.</p></li>
+<li><p><strong>times</strong> (<em>np.ndarray</em><em>[</em><em>times</em><em>]</em>) – The UNIX time of each sample, or (if csd=True), the CSD of each sample.</p></li>
+<li><p><strong>feeds</strong> (<em>list</em><em> of </em><em>CorrInputs</em>) – The feeds in the timestream.</p></li>
+<li><p><strong>src</strong> (<em>skyfield source</em>) – skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+skyfield.jpllib.ChebyshevPosition body representing the source.</p></li>
+<li><p><strong>wterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include elevation information in the calculation.</p></li>
+<li><p><strong>bterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include a correction for baselines including the 26m Galt telescope.</p></li>
+<li><p><strong>prod_map</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>]</em>) – The products in the <cite>timestream</cite> array.</p></li>
+<li><p><strong>csd</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpret the times parameter as CSDs.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Fringestop the visibilities in place. If not set, leave the originals intact.</p></li>
+<li><p><strong>static_delays</strong> (<em>bool</em><em>, </em><em>optional</em>) – Correct for static cable delays in the system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>corrected_timestream</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nfreq, nprod, times]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.delay">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">delay</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_delays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#delay"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.delay" title="Link to this definition"></a></dt>
+<dd><p>Calculate the delay in a visibilities observing a given source.</p>
+<p>This includes both the geometric delay and static (cable) delays.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>times</strong> (<em>np.ndarray</em><em>[</em><em>times</em><em>]</em>) – The UNIX time of each sample, or (if csd=True), the CSD of each sample.</p></li>
+<li><p><strong>feeds</strong> (<em>list</em><em> of </em><em>CorrInputs</em>) – The feeds in the timestream.</p></li>
+<li><p><strong>src</strong> (<em>skyfield source</em>) – skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+skyfield.jpllib.ChebyshevPosition body representing the source.</p></li>
+<li><p><strong>wterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include elevation information in the calculation.</p></li>
+<li><p><strong>bterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include a correction for baselines which include the 26m Galt telescope.</p></li>
+<li><p><strong>prod_map</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>]</em>) – The products in the <cite>timestream</cite> array.</p></li>
+<li><p><strong>csd</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpret the times parameter as CSDs.</p></li>
+<li><p><strong>static_delays</strong> (<em>bool</em><em>, </em><em>optional</em>) – If set the returned value includes both geometric and static delays.
+If <cite>False</cite> only geometric delays are included.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>delay</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nprod, nra]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.eigh_no_diagonal">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">eigh_no_diagonal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigvals</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#eigh_no_diagonal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.eigh_no_diagonal" title="Link to this definition"></a></dt>
+<dd><p>Eigenvalue decomposition ignoring the diagonal elements.</p>
+<p>The diagonal elements are iteratively replaced with those from a rank=1
+approximation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>np.ndarray</em><em>[</em><em>:</em><em>, </em><em>:</em><em>]</em>) – Matrix to decompose.</p></li>
+<li><p><strong>niter</strong> (<em>int</em><em>, </em><em>optional</em>) – Number of iterations to perform.</p></li>
+<li><p><strong>eigvals</strong> (<em>(</em><em>lo</em><em>, </em><em>hi</em><em>)</em><em>, </em><em>optional</em>) – Indices of eigenvalues to select (inclusive).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>evals</strong> (<em>np.ndarray[:]</em>)</p></li>
+<li><p><strong>evecs</strong> (<em>np.ndarray[:, :]</em>)</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.ensure_list">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">ensure_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#ensure_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.ensure_list" title="Link to this definition"></a></dt>
+<dd><p>Ensure <cite>obj</cite> is list-like, optionally with the length <cite>num</cite>.</p>
+<p>If <cite>obj</cite> not a string but is iterable, it is returned as-is,
+although a length different than <cite>num</cite>, if given, will result in a
+<cite>ValueError</cite>.</p>
+<p>If <cite>obj</cite> is a string or non-iterable, a new list is created with
+<cite>num</cite> copies of <cite>obj</cite> as elements.  In this case, if <cite>num</cite> is not
+given, it is taken to be 1.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> – The object to check.</p></li>
+<li><p><strong>num</strong> (<em>int</em><em>, </em><em>optional</em>) – If given, also ensure that the list has <cite>num</cite> elements.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The input object, or the newly created list</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>obj</p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError:</strong> – <cite>obj</cite> was iterable but did not have a length of <cite>num</cite></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.fake_tone_database">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">fake_tone_database</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#fake_tone_database"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.fake_tone_database" title="Link to this definition"></a></dt>
+<dd><p>A fake correlator input database for GBO/TONE.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.fast_pack_product_array">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">fast_pack_product_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arr</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#fast_pack_product_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.fast_pack_product_array" title="Link to this definition"></a></dt>
+<dd><p>Equivalent to ch_util.tools.pack_product_array(arr, axis=-1),
+but 10^5 times faster for full CHIME!</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arr</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nfeed</em><em>, </em><em>nfeed</em><em>]</em>) – Array of full correlation matrices.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ret</strong> – Array containing products packed in upper triangle format
+with nprod = nfeed*(nfeed+1))/2.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nprod]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.fringestop_time">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">fringestop_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">times</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">src</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">wterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bterm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">csd</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inplace</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_delays</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">obs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#fringestop_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.fringestop_time" title="Link to this definition"></a></dt>
+<dd><p>Fringestop timestream data to a fixed source.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestream</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nprod</em><em>, </em><em>times</em><em>]</em>) – Array containing the visibility timestream.</p></li>
+<li><p><strong>times</strong> (<em>np.ndarray</em><em>[</em><em>times</em><em>]</em>) – The UNIX time of each sample, or (if csd=True), the CSD of each sample.</p></li>
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>]</em>) – The frequencies in the array (in MHz).</p></li>
+<li><p><strong>feeds</strong> (<em>list</em><em> of </em><em>CorrInputs</em>) – The feeds in the timestream.</p></li>
+<li><p><strong>src</strong> (<em>skyfield source</em>) – skyfield.starlib.Star or skyfield.vectorlib.VectorSum or
+skyfield.jpllib.ChebyshevPosition body representing the source.</p></li>
+<li><p><strong>wterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include elevation information in the calculation.</p></li>
+<li><p><strong>bterm</strong> (<em>bool</em><em>, </em><em>optional</em>) – Include a correction for baselines including the 26m Galt telescope.</p></li>
+<li><p><strong>prod_map</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>]</em>) – The products in the <cite>timestream</cite> array.</p></li>
+<li><p><strong>csd</strong> (<em>bool</em><em>, </em><em>optional</em>) – Interpret the times parameter as CSDs.</p></li>
+<li><p><strong>inplace</strong> (<em>bool</em><em>, </em><em>optional</em>) – Fringestop the visibilities in place. If not set, leave the originals intact.</p></li>
+<li><p><strong>static_delays</strong> (<em>bool</em><em>, </em><em>optional</em>) – Correct for static cable delays in the system.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>fringestopped_timestream</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nfreq, nprod, times]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_correlator_inputs">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_correlator_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">lay_time</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connect</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_correlator_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_correlator_inputs" title="Link to this definition"></a></dt>
+<dd><p>Get the information for all channels in a layout.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>lay_time</strong> (<a class="reference internal" href="ch_util.layout.html#ch_util.layout.graph" title="ch_util.layout.graph"><em>layout.graph</em></a><em> or </em><em>datetime</em>) – layout.graph object, layout tag id, or datetime.</p></li>
+<li><p><strong>correlator</strong> (<em>str</em><em>, </em><em>optional</em>) – Fetch only for specified correlator. Use the serial number in database,
+or <cite>pathfinder</cite> or <cite>chime</cite>, which will substitute the correct serial.
+If <cite>None</cite> return for all correlators.
+Option <cite>tone</cite> added for GBO 12 dish outrigger prototype array.</p></li>
+<li><p><strong>connect</strong> (<em>bool</em><em>, </em><em>optional</em>) – Connect to database and set the user to Jrs65 prior to query.
+Default is True.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>channels</strong> – List of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a> instances. Returns <cite>None</cite> for MPI ranks
+other than zero.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_default_frequency_map_stream">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_default_frequency_map_stream</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">ndarray</span><span class="p"><span class="pre">]</span></span></span></span><a class="reference internal" href="../_modules/ch_util/tools.html#get_default_frequency_map_stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_default_frequency_map_stream" title="Link to this definition"></a></dt>
+<dd><p>Get the default CHIME frequency map stream.</p>
+<p>Level order is [shuffle, crate, slot, link].</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><ul class="simple">
+<li><p><em>stream</em> – [shuffle, crate, slot, link] for each frequency bin</p></li>
+<li><p><em>stream_id</em> – stream_id for each map combination
+shuffle*2**12 + crate*2**8 + slot*2**4 + link</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_feed_polarisations">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_feed_polarisations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feeds</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_feed_polarisations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_feed_polarisations" title="Link to this definition"></a></dt>
+<dd><p>Get an array of the feed polarisations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feeds</strong> (<em>list</em><em> of </em><a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>) – List of feeds to compute positions of.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pol</strong> – Array of characters giving polarisation. If not an array feed returns
+‘0’.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_feed_positions">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_feed_positions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feeds</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">get_zpos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_feed_positions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_feed_positions" title="Link to this definition"></a></dt>
+<dd><p>Get the positions of the CHIME antennas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feeds</strong> (<em>list</em><em> of </em><a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>) – List of feeds to compute positions of.</p></li>
+<li><p><strong>get_zpos</strong> (<em>bool</em>) – Return a third column with elevation information.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>positions</strong> – Array of feed positions. The first column is the E-W position
+(increasing to the E), and the second is the N-S position (increasing
+to the N). Non CHIME feeds get set to <cite>NaN</cite>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nfeed, 2]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_holographic_index">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_holographic_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_holographic_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_holographic_index" title="Link to this definition"></a></dt>
+<dd><p>Find the indices of the holography antennas.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (list of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ixholo</strong> – Returns None if holographic antenna not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_noise_channel">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_noise_channel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_noise_channel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_noise_channel" title="Link to this definition"></a></dt>
+<dd><p>Returns the index of the noise source with
+the lowest chan id (for backwards compatability).</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.get_noise_source_index">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">get_noise_source_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#get_noise_source_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.get_noise_source_index" title="Link to this definition"></a></dt>
+<dd><p>Find the indices of the noise sources.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (list of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ixns</strong> – Returns None if noise source not found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.hk_to_sensor">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">hk_to_sensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#hk_to_sensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.hk_to_sensor" title="Link to this definition"></a></dt>
+<dd><p>Find what component a housekeeping channel is connected to.</p>
+<p>This method is for finding either LNA or FLA’s that your housekeeping
+channel is connected to. (It currently cannot find accelerometers, other
+novel housekeeping instruments that may later exist; nor will it work if the
+FLA/LNA is connected via a very non-standard chain of components.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (obj:<cite>layout.graph</cite> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – The graph in which to do the search. If you pass a time, then the graph
+will be constructed internally. (Note that the latter option will be
+quite slow if you do repeated calls!)</p></li>
+<li><p><strong>inp</strong> (<a class="reference internal" href="#ch_util.tools.HKInput" title="ch_util.tools.HKInput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HKInput</span></code></a>) – The housekeeping input to search.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>comp</strong> – The LNA/FLA connected to the specified channel; <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> is returned
+if none is found.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ValueError</strong> – Raised if one of the channels or muxes passed in <strong>hk_chan</strong> is out of
+    range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.icmap">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">icmap</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ix</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#icmap"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.icmap" title="Link to this definition"></a></dt>
+<dd><p>Inverse feed map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ix</strong> (<em>integer</em>) – Pair index.</p></li>
+<li><p><strong>n</strong> (<em>integer</em>) – Total number of feeds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>fi, fj</strong> – Feed indices.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>integer</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.invert_no_zero">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">invert_no_zero</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#invert_no_zero"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.invert_no_zero" title="Link to this definition"></a></dt>
+<dd><p>Deprecated - use ‘caput.tools.invert_no_zero’</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_array">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_array" title="Link to this definition"></a></dt>
+<dd><p>Is this feed part of an array?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feed</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>isarr</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_array_on">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_array_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_array_on"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_array_on" title="Link to this definition"></a></dt>
+<dd><p>Check if inputs are on.</p>
+<p>Input are on if they are attached to an array antenna AND powered on AND
+flagged as good.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a><em> or </em><em>list</em><em> of </em><em>CorrInput objects</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pwds</strong> – If list, it is the same length as inputs. Value is True if input is
+attached to a ArrayAntenna <em>and</em> powered-on and False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>boolean or list of bools.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_array_x">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_array_x</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_array_x"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_array_x" title="Link to this definition"></a></dt>
+<dd><p>Is this an X-polarisation antenna in an array?</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_array_y">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_array_y</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_array_y"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_array_y" title="Link to this definition"></a></dt>
+<dd><p>Is this a Y-polarisation antenna in an array?</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_chime">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_chime</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_chime"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_chime" title="Link to this definition"></a></dt>
+<dd><p>Is this feed a CHIME antenna?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feed</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ischime</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_chime_on">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_chime_on</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#ch_util.tools.is_chime_on" title="Link to this definition"></a></dt>
+<dd><p>Check if inputs are on.</p>
+<p>Input are on if they are attached to an array antenna AND powered on AND
+flagged as good.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a><em> or </em><em>list</em><em> of </em><em>CorrInput objects</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>pwds</strong> – If list, it is the same length as inputs. Value is True if input is
+attached to a ArrayAntenna <em>and</em> powered-on and False otherwise</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>boolean or list of bools.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_holographic">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_holographic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_holographic"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_holographic" title="Link to this definition"></a></dt>
+<dd><p>Is this feed a holographic antenna?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feed</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>isholo</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_noise_source">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_noise_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_noise_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_noise_source" title="Link to this definition"></a></dt>
+<dd><p>Is this correlator input connected to a noise source?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inp</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>isnoise</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.is_pathfinder">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">is_pathfinder</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#is_pathfinder"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.is_pathfinder" title="Link to this definition"></a></dt>
+<dd><p>Is this feed a Pathfinder antenna?</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feed</strong> (<a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ispathfinder</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.lna_to_antenna">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">lna_to_antenna</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lna</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#lna_to_antenna"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.lna_to_antenna" title="Link to this definition"></a></dt>
+<dd><p>Find an antenna connected to an LNA.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (obj:<cite>layout.graph</cite> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – The graph in which to do the search. If you pass a time, then the graph
+will be constructed internally. (Note that the latter option will be
+quite slow if you do repeated calls!)</p></li>
+<li><p><strong>lna</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code> or string) – The LNA.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>antenna</strong> – The antenna.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.normalise_correlations">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">normalise_correlations</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#normalise_correlations"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.normalise_correlations" title="Link to this definition"></a></dt>
+<dd><p>Normalise to make a correlation matrix from a covariance matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>np.ndarray</em><em>[</em><em>:</em><em>, </em><em>:</em><em>]</em>) – Matrix to normalise.</p></li>
+<li><p><strong>norm</strong> (<em>np.ndarray</em><em>[</em><em>:</em><em>,</em><em>:</em><em>]</em>) – Normalize by diagonals of norm.
+If None, then normalize by diagonals of A.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>X</strong> (<em>np.ndarray[:, :]</em>) – Normalised correlation matrix.</p></li>
+<li><p><strong>ach</strong> (<em>np.ndarray[:]</em>) – Array of the square root diagonal elements that normalise the matrix.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.order_frequency_map_stream">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">order_frequency_map_stream</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fmap</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stream_id</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">ndarray</span></span></span><a class="reference internal" href="../_modules/ch_util/tools.html#order_frequency_map_stream"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.order_frequency_map_stream" title="Link to this definition"></a></dt>
+<dd><p>Order stream_id components based on a frequency map.</p>
+<p>Level order is [shuffle, crate, slot, link]</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>fmap</strong> – frequency map</p></li>
+<li><p><strong>stream_id</strong> – 1-D array of stream_ids associated with each row in fmap</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>shuffle, crate, slot, link for each frequency</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>stream</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.pack_product_array">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">pack_product_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exp_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#pack_product_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.pack_product_array" title="Link to this definition"></a></dt>
+<dd><p>Pack full correlation matrices into upper triangular form.</p>
+<p>It replaces the two feed axes of the matrix, with a single upper
+triangle product axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>exp_arr</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nfeed</em><em>, </em><em>nfeed</em><em>, </em><em>...</em><em>]</em>) – Array of full correlation matrices.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Index of the first feed axis. The second feed axis must be the next one.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>prod_arr</strong> – Array containing products packed in upper triangle format.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nprod, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.parse_chime_serial">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">parse_chime_serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#parse_chime_serial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.parse_chime_serial" title="Link to this definition"></a></dt>
+<dd><p>Parse a serial number into crate, slot, and SMA number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sn</strong> (<em>str</em>) – Serial number to parse</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>crate</strong> (<em>int</em>) – Crate number</p></li>
+<li><p><strong>slot</strong> (<em>int</em>) – Slot number</p></li>
+<li><p><strong>sma</strong> (<em>int</em>) – SMA number</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError:</strong> – <cite>sn</cite> did not have the correct format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.parse_old_serial">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">parse_old_serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#parse_old_serial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.parse_old_serial" title="Link to this definition"></a></dt>
+<dd><p>Parse an old 8/16-channel serial number into slot, and SMA number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sn</strong> (<em>str</em>) – Serial number to parse</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>slot</strong> (<em>int</em>) – Slot number</p></li>
+<li><p><strong>sma</strong> (<em>int</em>) – SMA number</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError:</strong> – <cite>sn</cite> did not have the correct format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.parse_pathfinder_serial">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">parse_pathfinder_serial</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sn</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#parse_pathfinder_serial"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.parse_pathfinder_serial" title="Link to this definition"></a></dt>
+<dd><p>Parse a pathfinder serial number into crate, slot, and SMA number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sn</strong> (<em>str</em>) – Serial number to parse</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>crate</strong> (<em>int</em>) – Crate number</p></li>
+<li><p><strong>slot</strong> (<em>int</em>) – Slot number</p></li>
+<li><p><strong>sma</strong> (<em>int</em>) – SMA number</p></li>
+</ul>
+</p>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>RuntimeError:</strong> – <cite>sn</cite> did not have the correct format.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.rankN_approx">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">rankN_approx</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rank</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#rankN_approx"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.rankN_approx" title="Link to this definition"></a></dt>
+<dd><p>Create the rank-N approximation to the matrix A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>np.ndarray</em>) – Matrix to approximate</p></li>
+<li><p><strong>rank</strong> (<em>int</em><em>, </em><em>optional</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>B</strong> – Low rank approximation.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.redefine_stack_index_map">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">redefine_stack_index_map</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_stack</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#redefine_stack_index_map"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.redefine_stack_index_map" title="Link to this definition"></a></dt>
+<dd><p>Ensure only baselines between array antennas are used to represent the stack.</p>
+<p>The correlator will have inputs that are not connected to array antennas.
+These inputs are flagged as bad and are not included in the stack, however,
+products that contain their <cite>chan_id</cite> can still be used to represent a
+characteristic baseline in the <cite>stack</cite> index map.  This method creates a new
+<cite>stack</cite> index map that, if possible, only contains products between two
+array antennas.  This new <cite>stack</cite> index map should be used when calculating
+baseline distances to fringestop stacked data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_map</strong> (list of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a>) – List describing the inputs as they are in the file, output from
+<cite>tools.get_correlator_inputs</cite></p></li>
+<li><p><strong>prod</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'input_a'</em><em>, </em><em>'input_b'</em><em>)</em>) – The correlation products as pairs of inputs.</p></li>
+<li><p><strong>stack</strong> (<em>np.ndarray</em><em>[</em><em>nstack</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'prod'</em><em>, </em><em>'conjugate'</em><em>)</em>) – The index into the <cite>prod</cite> axis of a characteristic baseline included
+in the stack.</p></li>
+<li><p><strong>reverse_stack</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'stack'</em><em>, </em><em>'conjugate'</em><em>)</em>) – The index into the <cite>stack</cite> axis that each <cite>prod</cite> belongs.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>stack_new</strong> (<em>np.ndarray[nstack,] of dtype=(‘prod’, ‘conjugate’)</em>) – The updated <cite>stack</cite> index map, where each element is an index to a product
+consisting of a pair of array antennas.</p></li>
+<li><p><strong>stack_flag</strong> (<em>np.ndarray[nstack,] of dtype=bool</em>) – Boolean flag that is True if this element of the stack index map is now valid,
+and False if none of the baselines that were stacked contained array antennas.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.reorder_correlator_inputs">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">reorder_correlator_inputs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_map</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">corr_inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#reorder_correlator_inputs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.reorder_correlator_inputs" title="Link to this definition"></a></dt>
+<dd><p>Sort a list of correlator inputs into the order given in input map.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_map</strong> (<em>np.ndarray</em>) – Index map of correlator inputs.</p></li>
+<li><p><strong>corr_inputs</strong> (<em>list</em>) – List of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a> objects, e.g. the output from
+<a class="reference internal" href="#ch_util.tools.get_correlator_inputs" title="ch_util.tools.get_correlator_inputs"><code class="xref py py-func docutils literal notranslate"><span class="pre">get_correlator_inputs()</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>corr_input_list</strong> – List of <a class="reference internal" href="#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrInput</span></code></a> instances in the new order. Returns <cite>None</cite>
+where the serial number had no matching entry in parameter <code class="docutils literal notranslate"><span class="pre">corr_inputs</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.sensor_to_hk">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">sensor_to_hk</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">graph</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">comp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#sensor_to_hk"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.sensor_to_hk" title="Link to this definition"></a></dt>
+<dd><p>Find what housekeeping channel a component is connected to.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>graph</strong> (obj:<cite>layout.graph</cite> or <code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime.datetime</span></code>) – The graph in which to do the search. If you pass a time, then the graph
+will be constructed internally. (Note that the latter option will be
+quite slow if you do repeated calls!)</p></li>
+<li><p><strong>comp</strong> (<code class="xref py py-obj docutils literal notranslate"><span class="pre">layout.component</span></code> or string) – The component to search for (you can pass by serial number if you wish).
+Currently, only components of type LNA, FLA and RFT thru are accepted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>inp</strong> – The housekeeping input channel the sensor is connected to.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.tools.HKInput" title="ch_util.tools.HKInput"><code class="xref py py-obj docutils literal notranslate"><span class="pre">HKInput</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.serial_to_id">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">serial_to_id</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#serial_to_id"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.serial_to_id" title="Link to this definition"></a></dt>
+<dd><p>Get the channel ID corresponding to a correlator input serial number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>serial</strong> (<em>string</em>) – Correlator input serial number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>id</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.serial_to_location">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">serial_to_location</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">serial</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#serial_to_location"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.serial_to_location" title="Link to this definition"></a></dt>
+<dd><p>Get the internal correlator ordering and the
+crate, slot, and sma number from a correlator input serial number.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>serial</strong> (<em>string</em>) – Correlator input serial number.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>location</strong> – (corr_order, crate, slot, sma)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>4-tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.subtract_rank1_signal">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">subtract_rank1_signal</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">signal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#subtract_rank1_signal"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.subtract_rank1_signal" title="Link to this definition"></a></dt>
+<dd><p>Subtract a rank 1 signal from a set of visibilities packed in upper
+triangular format.</p>
+<p>This allows us to subtract the noise injection solutions
+while minimising the intermediate products created.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nprod</em><em>, </em><em>...</em><em>]</em>) – Array of visibility products.</p></li>
+<li><p><strong>signal</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>ninput</em><em>, </em><em>...</em><em>]</em>) – Array of underlying signals. One signal per input.</p></li>
+<li><p><strong>axis</strong> (<em>integer</em><em>, </em><em>optional</em>) – The axis along which the inputs (or visibilities) are
+contained. Currently only supports axis=1.</p></li>
+<li><p><strong>out</strong> (<em>np.ndarray</em>) – Array to place output in. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> create a new
+array. This routine can safely use <cite>out = vis</cite>.</p></li>
+<li><p><strong>prod_map</strong> (<em>ndarray</em><em> of </em><em>integer pairs</em>) – Gives the mapping from product axis to input pairs. If not supplied,
+<a class="reference internal" href="#ch_util.tools.icmap" title="ch_util.tools.icmap"><code class="xref py py-func docutils literal notranslate"><span class="pre">icmap()</span></code></a> is used.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>out</strong> – Visibility array with signal subtracted. Same shape as <code class="xref py py-obj docutils literal notranslate"><span class="pre">vis</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.tools.unpack_product_array">
+<span class="sig-prename descclassname"><span class="pre">ch_util.tools.</span></span><span class="sig-name descname"><span class="pre">unpack_product_array</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">prod_arr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">axis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feeds</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/tools.html#unpack_product_array"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.tools.unpack_product_array" title="Link to this definition"></a></dt>
+<dd><p>Expand packed products to correlation matrices.</p>
+<p>This turns an axis of the packed upper triangle set of products into the
+full correlation matrices. It replaces the specified product axis with two
+axes, one for each feed. By setting <cite>feeds</cite> this routine can also
+pull out a subset of feeds.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>prod_arr</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nprod</em><em>, </em><em>:</em><em>]</em>) – Array containing products packed in upper triangle format.</p></li>
+<li><p><strong>axis</strong> (<em>int</em><em>, </em><em>optional</em>) – Axis the products are contained on.</p></li>
+<li><p><strong>feeds</strong> (<em>list</em><em> of </em><em>int</em><em>, </em><em>optional</em>) – Indices of feeds to include. If <code class="xref py py-obj docutils literal notranslate"><span class="pre">None</span></code> (default) use all feeds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>corr_arr</strong> – Expanded array.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[…, nfeed, nfeed, …]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.timing.html" class="btn btn-neutral float-left" title="ch_util.timing" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

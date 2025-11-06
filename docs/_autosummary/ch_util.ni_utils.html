@@ -1,0 +1,701 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.ni_utils &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.plot" href="ch_util.plot.html" />
+    <link rel="prev" title="ch_util.layout" href="ch_util.layout.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.ni_utils</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.gains2utvec"><code class="docutils literal notranslate"><span class="pre">gains2utvec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.gains2utvec_tf"><code class="docutils literal notranslate"><span class="pre">gains2utvec_tf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.gen_prod_sel"><code class="docutils literal notranslate"><span class="pre">gen_prod_sel()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.ktrprod"><code class="docutils literal notranslate"><span class="pre">ktrprod()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.mat2utvec"><code class="docutils literal notranslate"><span class="pre">mat2utvec()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.ni_als"><code class="docutils literal notranslate"><span class="pre">ni_als()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.ni_data"><code class="docutils literal notranslate"><span class="pre">ni_data</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues"><code class="docutils literal notranslate"><span class="pre">ni_gains_evalues()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues_tf"><code class="docutils literal notranslate"><span class="pre">ni_gains_evalues_tf()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.process_gated_data"><code class="docutils literal notranslate"><span class="pre">process_gated_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.process_synced_data"><code class="docutils literal notranslate"><span class="pre">process_synced_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.sort_evalues_mag"><code class="docutils literal notranslate"><span class="pre">sort_evalues_mag()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.subtract_sky_noise"><code class="docutils literal notranslate"><span class="pre">subtract_sky_noise()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.ni_utils.utvec2mat"><code class="docutils literal notranslate"><span class="pre">utvec2mat()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.timing.html">ch_util.timing</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.ni_utils</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.ni_utils.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.ni_utils">
+<span id="ch-util-ni-utils"></span><h1>ch_util.ni_utils<a class="headerlink" href="#module-ch_util.ni_utils" title="Link to this heading"></a></h1>
+<p>Tools for noise injection data</p>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.gains2utvec" title="ch_util.ni_utils.gains2utvec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gains2utvec</span></code></a>(g)</p></td>
+<td><p>Converts a vector into an outer product matrix and vectorizes its upper triangle to obtain a vector in same format as the CHIME visibility matrix.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.gains2utvec_tf" title="ch_util.ni_utils.gains2utvec_tf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gains2utvec_tf</span></code></a>(gains)</p></td>
+<td><p>Converts gain array to CHIME visibility format for all frequencies and time frames.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.gen_prod_sel" title="ch_util.ni_utils.gen_prod_sel"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gen_prod_sel</span></code></a>(channels_to_select, ...)</p></td>
+<td><p>Generates correlation product indices for selected channels.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.ktrprod" title="ch_util.ni_utils.ktrprod"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ktrprod</span></code></a>(A, B)</p></td>
+<td><p>Khatri-Rao or column-wise Kronecker product of two matrices.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.mat2utvec" title="ch_util.ni_utils.mat2utvec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">mat2utvec</span></code></a>(A)</p></td>
+<td><p>Vectorizes its upper triangle of the (hermitian) matrix A.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.ni_als" title="ch_util.ni_utils.ni_als"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_als</span></code></a>(R, g0, Gamma, Upsilon, maxsteps, ...)</p></td>
+<td><p>Implementation of the Alternating Least Squares algorithm for noise injection.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues" title="ch_util.ni_utils.ni_gains_evalues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues</span></code></a>(C[, normalize_vis])</p></td>
+<td><p>Basic algorithm to compute gains and evalues from noise injection data.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues_tf" title="ch_util.ni_utils.ni_gains_evalues_tf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues_tf</span></code></a>(vis_gated, Nchannels[, ...])</p></td>
+<td><p>Computes gains and evalues from noise injection visibility data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.process_gated_data" title="ch_util.ni_utils.process_gated_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_gated_data</span></code></a>(data[, only_off])</p></td>
+<td><p>Processes fast gating data and turns it into gated form.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.process_synced_data" title="ch_util.ni_utils.process_synced_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">process_synced_data</span></code></a>(data[, ni_params, only_off])</p></td>
+<td><p>Turn a synced noise source observation into gated form.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.sort_evalues_mag" title="ch_util.ni_utils.sort_evalues_mag"><code class="xref py py-obj docutils literal notranslate"><span class="pre">sort_evalues_mag</span></code></a>(evalues)</p></td>
+<td><p>Sorts eigenvalue array by magnitude for all frequencies and time frames</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.ni_utils.subtract_sky_noise" title="ch_util.ni_utils.subtract_sky_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract_sky_noise</span></code></a>(vis, Nchannels, ...)</p></td>
+<td><p>Removes sky and system noise contributions from noise injection visibility data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.utvec2mat" title="ch_util.ni_utils.utvec2mat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utvec2mat</span></code></a>(n, utvec)</p></td>
+<td><p>Recovers a hermitian matrix a from its upper triangle vectorized version.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.ni_utils.ni_data" title="ch_util.ni_utils.ni_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_data</span></code></a>(Reader_read_obj, Nadc_channels[, ...])</p></td>
+<td><p>Provides analysis utilities for CHIME noise injection data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.gains2utvec">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">gains2utvec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">g</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#gains2utvec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.gains2utvec" title="Link to this definition"></a></dt>
+<dd><p>Converts a vector into an outer product matrix and vectorizes its upper
+triangle to obtain a vector in same format as the CHIME visibility matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>g</strong> (<em>1d array</em>) – gain vector</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>1d array with vectorized form of upper triangle for the outer product of g</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.gains2utvec_tf">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">gains2utvec_tf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">gains</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#gains2utvec_tf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.gains2utvec_tf" title="Link to this definition"></a></dt>
+<dd><p>Converts gain array to CHIME visibility format for all frequencies and
+time frames.</p>
+<p>For every frequency and time frame, converts a gain vector into an outer
+product matrix and then vectorizes its upper triangle to obtain a vector in
+the same format as the CHIME visibility matrix.</p>
+<p>Converting the gain arrays to CHIME visibility format makes easier to
+apply the gain corrections to the visibility data. See example below.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>gains</strong> (<em>3d array</em>) – Input array with the gains for all frequencies, channels and time frames
+in the fromat of ni_gains_evalues_tf. g has dimensions
+[frequency, channels, time].</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>G_ut</strong> – Output array with dimmensions [frequency, corr. number, time]. For
+every frequency and time frame, contains the vectorized form of upper
+triangle for the outer product of the respective gain vector.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>3d array</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>To compute the gains from a set of noise injection pass0 data and apply the
+gains to the visibilities run:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">andata</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="kn">import</span><span class="w"> </span><span class="nn">ni_utils</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ni</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">andata</span><span class="o">.</span><span class="n">Reader</span><span class="p">(</span><span class="s1">&#39;/data/20140916T173334Z_blanchard_corr/000[0-3]*.h5&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">readdata</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nidata</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">ni_data</span><span class="p">(</span><span class="n">readdata</span><span class="p">,</span> <span class="mi">16</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nidata</span><span class="o">.</span><span class="n">get_ni_gains</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">G_ut</span> <span class="o">=</span> <span class="n">ni</span><span class="o">.</span><span class="n">gains2utvec</span><span class="p">(</span><span class="n">nidata</span><span class="o">.</span><span class="n">ni_gains</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">corrected_vis</span> <span class="o">=</span> <span class="n">nidata</span><span class="o">.</span><span class="n">vis_off_dec</span><span class="o">/</span><span class="n">G_ut</span>
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.gains2utvec" title="ch_util.ni_utils.gains2utvec"><code class="xref py py-obj docutils literal notranslate"><span class="pre">gains2utvec</span></code></a>, <a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues_tf" title="ch_util.ni_utils.ni_gains_evalues_tf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues_tf</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.gen_prod_sel">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">gen_prod_sel</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">channels_to_select</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">total_N_channels</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#gen_prod_sel"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.gen_prod_sel" title="Link to this definition"></a></dt>
+<dd><p>Generates correlation product indices for selected channels.</p>
+<p>For a correlation matrix with total_N_channels total number of channels,
+generates indices for correlation products corresponding to channels in
+the list channels_to_select.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>channels_to_select</strong> (<em>list</em><em> of </em><em>integers</em>) – Indices of channels to select</p></li>
+<li><p><strong>total_N_channels</strong> (<em>int</em>) – Total number of channels</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>prod_sel</strong> – indices of correlation products for channels in channels_to_select</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ktrprod">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">ktrprod</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">B</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ktrprod"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ktrprod" title="Link to this definition"></a></dt>
+<dd><p>Khatri-Rao or column-wise Kronecker product of two matrices.</p>
+<p>A and B have the same number of columns</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>A</strong> (<em>2d array</em>)</p></li>
+<li><p><strong>B</strong> (<em>2d array</em>)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>C</strong> – Khatri-Rao product of A and B</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.mat2utvec">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">mat2utvec</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#mat2utvec"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.mat2utvec" title="Link to this definition"></a></dt>
+<dd><p>Vectorizes its upper triangle of the (hermitian) matrix A.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>A</strong> (<em>2d array</em>) – Hermitian matrix</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>1d array with vectorized form of upper triangle of A</p>
+</dd>
+</dl>
+<p class="rubric">Example</p>
+<p>if A is a 3x3 matrix then the output vector is
+outvector = [A00, A01, A02, A11, A12, A22]</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.utvec2mat" title="ch_util.ni_utils.utvec2mat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">utvec2mat</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_als">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">ni_als</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">g0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Gamma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Upsilon</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">maxsteps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abs_tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_tol</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weighted_als</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_als"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_als" title="Link to this definition"></a></dt>
+<dd><p>Implementation of the Alternating Least Squares algorithm for noise
+injection.</p>
+<p>Implements the Alternating Least Squares algorithm to recover the system
+gains, sky covariance matrix and system output noise covariance matrix
+from the data covariance matrix R. All the variables and definitions are as
+in <a class="reference external" href="http://bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf">http://bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>R</strong> (<em>2d array</em>) – Data covariance matrix</p></li>
+<li><p><strong>g0</strong> (<em>1d array</em>) – First estimate of system gains</p></li>
+<li><p><strong>Gamma</strong> (<em>2d array</em>) – Matrix that characterizes parametrization of sky covariance matrix</p></li>
+<li><p><strong>Upsilon</strong> (<em>2d array</em>) – Matrix characterizing parametrization of system noise covariance matrix</p></li>
+<li><p><strong>maxsteps</strong> (<em>int</em>) – Maximum number of iterations</p></li>
+<li><p><strong>abs_tol</strong> (<em>float</em>) – Absolute tolerance on error function</p></li>
+<li><p><strong>rel_tol</strong> (<em>float</em>) – Relative tolerance on error function</p></li>
+<li><p><strong>weighted_als</strong> (<em>bool</em>) – If True, perform weighted ALS</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>g</strong> (<em>1d array</em>) – System gains</p></li>
+<li><p><strong>C</strong> (<em>2d array</em>) – Sky covariance matrix</p></li>
+<li><p><strong>N</strong> (<em>2d array</em>) – System output noise covariance matrix</p></li>
+<li><p><strong>err</strong> (<em>1d array</em>) – Error function for every step</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">http</span></code></dt><dd><p>//bao.phas.ubc.ca/doc/library/doc_0103/rev_01/chime_calibration.pdf</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_data">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">ni_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Reader_read_obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nadc_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc_ch_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbin_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_data" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Provides analysis utilities for CHIME noise injection data.</p>
+<p>This is just a wrapper for all the utilities created in this module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>Reader_read_obj</strong> (<em>andata.Reader.read</em><em>(</em><em>) </em><em>like object</em>) – Contains noise injection data. Must have ‘vis’ and ‘timestamp’ property.
+Assumed to contain all the Nadc_channels*(Nadc_channels+1)/2 correlation
+products, in chime’s canonical vector, for an
+Nadc_channels x Nadc_channels correlation matrix</p></li>
+<li><p><strong>Nadc_channels</strong> (<em>int</em>) – Number of channels read in Reader_read_obj</p></li>
+<li><p><strong>adc_ch_ref</strong> (<em>int in the range 0 &lt;= adc_ch_ref &lt;= Nadc_channels-1</em>) – Reference channel (used to find on/off points).</p></li>
+<li><p><strong>fbin_ref</strong> (<em>int in the range</em>) – 0 &lt;= fbin_ref &lt;= np.size(Reader_read_obj.vis, 0)-1
+Reference frequency bin (used to find on/off points).</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">subtract_sky_noise</span> <span class="pre">:</span> <span class="pre">Removes</span> <span class="pre">sky</span> <span class="pre">and</span> <span class="pre">system</span> <span class="pre">noise</span> <span class="pre">contributions</span> <span class="pre">from</span> <span class="pre">noise</span></span></dt>
+<dd><p>injection visibility data.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_ni_gains</span> <span class="pre">:</span> <span class="pre">Solve</span> <span class="pre">for</span> <span class="pre">gains</span> <span class="pre">from</span> <span class="pre">decimated</span> <span class="pre">sky-and-noise-subtracted</span></span></dt>
+<dd><p>visibilities</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">get_als_gains</span> <span class="pre">:</span> <span class="pre">Compute</span> <span class="pre">gains,</span> <span class="pre">sky</span> <span class="pre">and</span> <span class="pre">system</span> <span class="pre">noise</span> <span class="pre">covariance</span> <span class="pre">matrices</span> <span class="pre">from</span></span></dt>
+<dd><p>a combination of noise injection gains and point source gains</p>
+</dd></dl>
+
+<p>Processes raw noise injection data so it is ready to compute gains.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_data.get_als_gains">
+<span class="sig-name descname"><span class="pre">get_als_gains</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_data.get_als_gains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_data.get_als_gains" title="Link to this definition"></a></dt>
+<dd><p>Compute gains, sky and system noise covariance matrices from a
+combination of noise injection gains and point source gains</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_data.get_ni_gains">
+<span class="sig-name descname"><span class="pre">get_ni_gains</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">normalize_vis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">masked_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_data.get_ni_gains"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_data.get_ni_gains" title="Link to this definition"></a></dt>
+<dd><p>Computes gains and evalues from noise injection visibility data.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues_tf" title="ch_util.ni_utils.ni_gains_evalues_tf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues_tf</span></code></a>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">Additional</span></code>, <code class="xref py py-obj docutils literal notranslate"><span class="pre">---------------------</span></code></p>
+<dl class="simple">
+<dt><code class="xref py py-obj docutils literal notranslate"><span class="pre">masked_channels</span></code></dt><dd><p>list of integers channels which are not considered in the calculation of the gains.</p>
+</dd>
+</dl>
+</div>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_data.save">
+<span class="sig-name descname"><span class="pre">save</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_data.save"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_data.save" title="Link to this definition"></a></dt>
+<dd><p>Save gain solutions</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_data.subtract_sky_noise">
+<span class="sig-name descname"><span class="pre">subtract_sky_noise</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_data.subtract_sky_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_data.subtract_sky_noise" title="Link to this definition"></a></dt>
+<dd><p>Removes sky and system noise contributions from noise injection
+visibility data.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.subtract_sky_noise" title="ch_util.ni_utils.subtract_sky_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract_sky_noise</span></code></a></p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_gains_evalues">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">ni_gains_evalues</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">C</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_vis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_gains_evalues"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_gains_evalues" title="Link to this definition"></a></dt>
+<dd><p>Basic algorithm to compute gains and evalues from noise injection data.</p>
+<p>C is a correlation matrix from which the gains are calculated.
+If normalize_vis = True, the visibility matrix is weighted by the diagonal
+matrix that turns it into a crosscorrelation coefficient matrix before the
+gain calculation. The eigenvalues are not sorted. The returned gain solution
+vector is normalized (LA.norm(g) = 1.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>C</strong> (<em>2d array</em>) – Data covariance matrix from which the gains are calculated. It is
+assumed that both the sky and system noise contributions have already
+been subtracted using noise injection</p></li>
+<li><p><strong>normalize_vis</strong> (<em>bool</em>) – If True, the visibility matrix is weighted by the diagonal matrix that
+turns it into a crosscorrelation coefficient matrix before the
+gain calculation.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>g</strong> (<em>1d array</em>) – Noise injection gains</p></li>
+<li><p><strong>ev</strong> (<em>1d array</em>) – Noise injection eigenvalues</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues_tf" title="ch_util.ni_utils.ni_gains_evalues_tf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues_tf</span></code></a>, <a class="reference internal" href="#ch_util.ni_utils.subtract_sky_noise" title="ch_util.ni_utils.subtract_sky_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract_sky_noise</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.ni_gains_evalues_tf">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">ni_gains_evalues_tf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis_gated</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nchannels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">normalize_vis</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis_on</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vis_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">niter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#ni_gains_evalues_tf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.ni_gains_evalues_tf" title="Link to this definition"></a></dt>
+<dd><p>Computes gains and evalues from noise injection visibility data.</p>
+<p>Gains and eigenvalues are calculated for all frames and
+frequencies in vis_gated.  The returned gain solution
+vector is normalized (LA.norm(gains[f, :, t]) = 1.)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis_gated</strong> (<em>3d array</em>) – Visibility array in chime’s canonical format. vis_gated has dimensions
+[frequency, corr. number, time]. It is assumed that both the sky and
+system noise contributions have already been subtracted using noise
+injection.</p></li>
+<li><p><strong>Nchannels</strong> (<em>int</em>) – Order of the visibility matrix (number of channels)</p></li>
+<li><p><strong>normalize_vis</strong> (<em>bool</em>) – If True, then the visibility matrix is weighted by the diagonal matrix that
+turns it into a crosscorrelation coefficient matrix before the
+gain calculation.</p></li>
+<li><p><strong>vis_on</strong> (<em>3d array</em>) – If input and normalize_vis is True, then vis_gated is weighted
+by the diagonal elements of the matrix vis_on.
+vis_on must be the same shape as vis_gated.</p></li>
+<li><p><strong>vis_off</strong> (<em>3d array</em>) – If input and normalize_vis is True, then vis_gated is weighted
+by the diagonal elements of the matrix: vis_on = vis_gated + vis_off.
+vis_off must be the same shape as vis_gated.  Keyword vis_on
+supersedes keyword vis_off.</p></li>
+<li><p><strong>niter</strong> (<em>0</em>) – Number of iterations to perform.  At each iteration, the diagonal
+elements of vis_gated are replaced with their rank 1 approximation.
+If niter == 0 (default), then no iterations are peformed and the
+autocorrelations are used instead.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>gains</strong> (<em>3d array</em>) – Noise injection gains</p></li>
+<li><p><strong>evals</strong> (<em>3d array</em>) – Noise injection eigenvalues</p></li>
+<li><p><em>Dependencies</em></p></li>
+<li><p><em>————</em></p></li>
+<li><p><em>tools.normalise_correlations, tools.eigh_no_diagonal</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#ch_util.ni_utils.ni_gains_evalues" title="ch_util.ni_utils.ni_gains_evalues"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ni_gains_evalues</span></code></a>, <a class="reference internal" href="#ch_util.ni_utils.subtract_sky_noise" title="ch_util.ni_utils.subtract_sky_noise"><code class="xref py py-obj docutils literal notranslate"><span class="pre">subtract_sky_noise</span></code></a></p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.process_gated_data">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">process_gated_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#process_gated_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.process_gated_data" title="Link to this definition"></a></dt>
+<dd><p>Processes fast gating data and turns it into gated form.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="ch_util.andata.html#ch_util.andata.CorrData" title="ch_util.andata.CorrData"><em>andata.CorrData</em></a>) – Correlator data with noise source switched synchronously with the
+integration.</p></li>
+<li><p><strong>only_off</strong> (<em>boolean</em>) – Only return the off dataset.  Do not return gated datasets.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>newdata</strong> (<em>andata.CorrData</em>) – Correlator data folded on the noise source.</p></li>
+<li><p><em>Comments</em></p></li>
+<li><p><em>——–</em></p></li>
+<li><p><em>For now the correlator only supports fast gating with one gate</em></p></li>
+<li><p><em>(gated_vis1) and 50% duty cycle. The vis dataset contains on+off</em></p></li>
+<li><p><em>and the gated_vis1 contains on-off. This function returns a new</em></p></li>
+<li><p><em>andata object with vis containing the off data only and gated_vis1</em></p></li>
+<li><p><em>as in the original andata object. The attribute</em></p></li>
+<li><p><em>’gpu.gpu_intergration_period’ is divided by 2 since during an</em></p></li>
+<li><p><em>integration half of the frames have on data.</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.process_synced_data">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">process_synced_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ni_params</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_off</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#process_synced_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.process_synced_data" title="Link to this definition"></a></dt>
+<dd><p>Turn a synced noise source observation into gated form.</p>
+<p>This will decimate the visibility to only the noise source off bins, and
+will add 1 or more gated on-off dataset according to the specification in
+doclib:5.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="ch_util.andata.html#ch_util.andata.CorrData" title="ch_util.andata.CorrData"><em>andata.CorrData</em></a>) – Correlator data with noise source switched synchronously with the
+integration.</p></li>
+<li><p><strong>ni_params</strong> (<em>dict</em>) – Dictionary with the noise injection parameters. Optional
+for data after ctime=1435349183. ni_params has the following keys
+- ni_period: Noise injection period in GPU integrations.
+It is assummed to be the same for all the enabled noise sources
+- ni_on_bins: A list of lists, one per enabled noise source,
+with the corresponding ON gates (within a period). For each
+noise source, the list contains the indices of the time frames
+for which the source is ON.
+Example: For 3 GPU integration period (3 gates: 0, 1, 2), two enabled
+noise sources, one ON during gate 0, the other ON during gate 1,
+and both OFF during gate 2, then
+<code class="docutils literal notranslate"><span class="pre">`</span>
+<span class="pre">ni_params</span> <span class="pre">=</span> <span class="pre">{'ni_period':3,</span> <span class="pre">'ni_on_bins':[[0],</span> <span class="pre">[1]]}</span>
+<span class="pre">`</span></code></p></li>
+<li><p><strong>only_off</strong> (<em>boolean</em>) – Only return the off dataset.  Do not return gated datasets.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>newdata</strong> (<em>andata.CorrData</em>) – Correlator data folded on the noise source.</p></li>
+<li><p><em>Comments</em></p></li>
+<li><p><em>——–</em></p></li>
+<li><p><em>- The function assumes that the fpga frame counter, which is used to</em></p></li>
+<li><p><em>determine the noise injection gating parameters, is unwrapped.</em></p></li>
+<li><p><em>- For noise injection data before ctime=1435349183 (i.e. for noise</em></p></li>
+<li><p><em>injection data before 20150626T200540Z_pathfinder_corr) the noise</em></p></li>
+<li><p><em>injection information is not in the headers so this function cannot be</em></p></li>
+<li><p><em>used to determine the noise injection parameters. A different method is</em></p></li>
+<li><p><em>required. Although it is recommended to check the data directly in this</em></p></li>
+<li><p><em>case, the previous version of this function assumed that</em></p></li>
+<li><p><strong>ni_params = {‘ni_period’</strong> (<em>2, ‘ni_on_bins’:[[0],]}</em>)</p></li>
+<li><p><em>for noise injection data before ctime=1435349183. Although this is not</em></p></li>
+<li><p><em>always true, it is true for big old datasets like pass1g.</em></p></li>
+<li><p><em>Use the value of ni_params recommended above to reproduce the</em></p></li>
+<li><p><em>results of the old function with the main old datasets.</em></p></li>
+<li><p><em>- Data (visibility, gain and weight datasets) are averaged for all the</em></p></li>
+<li><p><em>off gates within the noise source period, and also for all the on</em></p></li>
+<li><p><em>gates of each noise source.</em></p></li>
+<li><p><em>- For the time index map, only one timestamp per noise period is kept</em></p></li>
+<li><p><em>(no averaging)</em></p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.sort_evalues_mag">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">sort_evalues_mag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">evalues</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#sort_evalues_mag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.sort_evalues_mag" title="Link to this definition"></a></dt>
+<dd><p>Sorts eigenvalue array by magnitude for all frequencies and time frames</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>evalues</strong> (<em>3d array</em>) – Array of evalues. Its shape is [Nfreqs, Nevalues, Ntimeframes]</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>ev</strong> – Array of same shape as evalues</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>3d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.subtract_sky_noise">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">subtract_sky_noise</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Nchannels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">adc_ch_ref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fbin_ref</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#subtract_sky_noise"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.subtract_sky_noise" title="Link to this definition"></a></dt>
+<dd><p>Removes sky and system noise contributions from noise injection visibility
+data.</p>
+<p>By looking at the autocorrelation of the reference channel adc_ch_ref
+for frequency bin fbin_ref, finds timestamps indices for which the signal is
+on and off. For every noise signal period, the subcycles with the noise
+signal on and off are averaged separatedly and then subtracted.</p>
+<p>It is assumed that there are at least 5 noise signal cycles in the data.
+The first and last noise on subcycles are discarded since those cycles may
+be truncated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis</strong> (<em>3d array</em>) – Noise injection visibility array in chime’s canonical format. vis has
+dimensions [frequency, corr. number, time].</p></li>
+<li><p><strong>Nchannels</strong> (<em>int</em>) – Order of the visibility matrix (number of channels)</p></li>
+<li><p><strong>timestamp</strong> (<em>1d array</em>) – Timestamps for the visibility array vis</p></li>
+<li><p><strong>adc_ch_ref</strong> (<em>int in the range 0 &lt;= adc_ch_ref &lt;= N_channels-1</em>) – Reference channel (typically, but not necessaritly the channel
+corresponding to the directly injected noise signal) used to find
+timestamps indices for which the signal is on and off.
+on and off.</p></li>
+<li><p><strong>fbin_ref</strong> (<em>int in the range 0 &lt;= fbin_ref &lt;= np.size</em><em>(</em><em>vis</em><em>, </em><em>0</em><em>)</em><em>-1</em>) – frequency bin used to find timestamps indices for which the signal is
+on and off</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><em>A dictionary with keys</em></p></li>
+<li><p><strong>time_index_on</strong> (<em>1d array</em>) – timestamp indices for noise signal on.</p></li>
+<li><p><strong>time_index_off</strong> (<em>1d array</em>) – timestamp indices for noise signal off.</p></li>
+<li><p><strong>timestamp_on_dec</strong> (<em>1d array</em>) – timestamps for noise signal on after averaging.</p></li>
+<li><p><strong>timestamp_off_dec</strong> (<em>1d array</em>) – timestamps for noise signal off after averaging.</p></li>
+<li><p><strong>timestamp_dec</strong> (<em>1d array</em>) – timestamps for visibility data after averaging and subtracting on and
+off subcycles. These timestaps represent the time for every noise cycle
+and thus, these are the timestaps for the gain solutions.</p></li>
+<li><p><strong>vis_on_dec</strong> (<em>3d array</em>) – visibilities for noise signal on after averaging.</p></li>
+<li><p><strong>vis_off_dec</strong> (<em>3d array</em>) – visibilities for noise signal off after averaging.</p></li>
+<li><p><strong>vis_dec_sub</strong> (<em>3d array</em>) – visibilities data after averaging and subtracting on and
+off subcycles.</p></li>
+<li><p><strong>cor_prod_ref</strong> (<em>int</em>) – correlation index corresponding to the autocorrelation of the reference
+channel</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.ni_utils.utvec2mat">
+<span class="sig-prename descclassname"><span class="pre">ch_util.ni_utils.</span></span><span class="sig-name descname"><span class="pre">utvec2mat</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">utvec</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/ni_utils.html#utvec2mat"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.ni_utils.utvec2mat" title="Link to this definition"></a></dt>
+<dd><p>Recovers a hermitian matrix a from its upper triangle vectorized version.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<em>int</em>) – order of the output hermitian matrix</p></li>
+<li><p><strong>utvec</strong> (<em>1d array</em>) – vectorized form of upper triangle of output matrix</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>A</strong> – hermitian matrix</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>2d array</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.layout.html" class="btn btn-neutral float-left" title="ch_util.layout" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.plot.html" class="btn btn-neutral float-right" title="ch_util.plot" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

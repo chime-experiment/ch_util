@@ -1,0 +1,1160 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.timing &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="ch_util.tools" href="ch_util.tools.html" />
+    <link rel="prev" title="ch_util.rfi" href="ch_util.rfi.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../reference.html">API Reference</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../reference.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="ch_util.andata.html">ch_util.andata</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.cal_utils.html">ch_util.cal_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.chan_monitor.html">ch_util.chan_monitor</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.data_quality.html">ch_util.data_quality</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.finder.html">ch_util.finder</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.hfbcat.html">ch_util.hfbcat</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.holography.html">ch_util.holography</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.layout.html">ch_util.layout</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.ni_utils.html">ch_util.ni_utils</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.plot.html">ch_util.plot</a></li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.rfi.html">ch_util.rfi</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">ch_util.timing</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.TimingCorrection"><code class="docutils literal notranslate"><span class="pre">TimingCorrection</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.TimingData"><code class="docutils literal notranslate"><span class="pre">TimingData</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.TimingInterpolator"><code class="docutils literal notranslate"><span class="pre">TimingInterpolator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.TimingReader"><code class="docutils literal notranslate"><span class="pre">TimingReader</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.construct_delay_template"><code class="docutils literal notranslate"><span class="pre">construct_delay_template()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.eigen_decomposition"><code class="docutils literal notranslate"><span class="pre">eigen_decomposition()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.fit_poly_to_phase"><code class="docutils literal notranslate"><span class="pre">fit_poly_to_phase()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.load_timing_correction"><code class="docutils literal notranslate"><span class="pre">load_timing_correction()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.map_input_to_noise_source"><code class="docutils literal notranslate"><span class="pre">map_input_to_noise_source()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#ch_util.timing.model_poly_phase"><code class="docutils literal notranslate"><span class="pre">model_poly_phase()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="ch_util.tools.html">ch_util.tools</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../reference.html">API Reference</a></li>
+      <li class="breadcrumb-item active">ch_util.timing</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/_autosummary/ch_util.timing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="module-ch_util.timing">
+<span id="ch-util-timing"></span><h1>ch_util.timing<a class="headerlink" href="#module-ch_util.timing" title="Link to this heading"></a></h1>
+<p>Tools for timing jitter and delay corrections.</p>
+<p>This module contains tools for using noise sources to correct
+timing jitter and timing delay.</p>
+<p class="rubric">Example</p>
+<p>The function <a class="reference internal" href="#ch_util.timing.construct_delay_template" title="ch_util.timing.construct_delay_template"><code class="xref py py-meth docutils literal notranslate"><span class="pre">construct_delay_template()</span></code></a> generates a delay template from
+measurements of the visibility between noise source inputs, which can
+be used to remove the timing jitter in other data.</p>
+<p>The user seldom needs to work with <a class="reference internal" href="#ch_util.timing.construct_delay_template" title="ch_util.timing.construct_delay_template"><code class="xref py py-meth docutils literal notranslate"><span class="pre">construct_delay_template()</span></code></a>
+directly and can instead use several high-level functions and containers
+that load the timing data, derive the timing correction using
+<a class="reference internal" href="#ch_util.timing.construct_delay_template" title="ch_util.timing.construct_delay_template"><code class="xref py py-meth docutils literal notranslate"><span class="pre">construct_delay_template()</span></code></a>, and then enable easy application of
+the timing correction to other data.</p>
+<p>For example, to load the timing data and derive the timing correction from
+a list of timing acquisition files (i.e., <cite>YYYYMMSSTHHMMSSZ_chimetiming_corr</cite>),
+use the following:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`tdata</span> <span class="pre">=</span> <span class="pre">TimingData.from_acq_h5(timing_acq_filenames)`</span></code></p>
+</div></blockquote>
+<p>This results in a <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code> object that has additional
+methods avaiable for applying the timing correction to other data.
+For example, to obtain the complex gain for some freq, input, and time
+that upon multiplication will remove the timing jitter, use the following:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`tgain,</span> <span class="pre">tweight</span> <span class="pre">=</span> <span class="pre">tdata.get_gain(freq,</span> <span class="pre">input,</span> <span class="pre">time)`</span></code></p>
+</div></blockquote>
+<p>To apply the timing correction to the visibilities in an <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code>
+object called <cite>data</cite>, use the following:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`tdata.apply_timing_correction(data)`</span></code></p>
+</div></blockquote>
+<p>The timing acquisitions must cover the span of time that you wish to correct.
+If you have a list of data acquisition files and would like to obtain
+the appropriate timing correction by searching the archive for the
+corresponding timing acquisitons files, then use:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`tdata</span> <span class="pre">=</span> <span class="pre">load_timing_correction(data_acq_filenames_full_path)`</span></code></p>
+</div></blockquote>
+<p>To print a summary of the timing correction, use:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`print(tdata)`</span></code></p>
+</div></blockquote>
+<p>In April 2020, the CHIME pipeline began generating the timing correction in real time
+and saving it to delay acquisitions (with format <cite>YYYYMMSSTHHMMSSZ_chime_timing</cite>).
+To read in a timing correction generated by the real-time pipeline, use the following:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">`tdata</span> <span class="pre">=</span> <span class="pre">TimingCorrection.from_acq_h5(delay_acq_filenames)`</span></code></p>
+</div></blockquote>
+<p class="rubric">Functions</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.timing.construct_delay_template" title="ch_util.timing.construct_delay_template"><code class="xref py py-obj docutils literal notranslate"><span class="pre">construct_delay_template</span></code></a>(data[, ...])</p></td>
+<td><p>Construct a relative time delay template.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.timing.eigen_decomposition" title="ch_util.timing.eigen_decomposition"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eigen_decomposition</span></code></a>(vis, flag)</p></td>
+<td><p>Eigenvalue decomposition of the visibility matrix.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.timing.fit_poly_to_phase" title="ch_util.timing.fit_poly_to_phase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_poly_to_phase</span></code></a>(freq, resp, resp_error[, ...])</p></td>
+<td><p>Fit complex data versus frequency to a model consisting of a polynomial in phase.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.timing.load_timing_correction" title="ch_util.timing.load_timing_correction"><code class="xref py py-obj docutils literal notranslate"><span class="pre">load_timing_correction</span></code></a>(files[, start, stop, ...])</p></td>
+<td><p>Find and load the timing correction for a list of corr acquisition files.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.timing.map_input_to_noise_source" title="ch_util.timing.map_input_to_noise_source"><code class="xref py py-obj docutils literal notranslate"><span class="pre">map_input_to_noise_source</span></code></a>(inputs, noise_sources)</p></td>
+<td><p>Find the appropriate noise source to use to correct the phase of each input.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.timing.model_poly_phase" title="ch_util.timing.model_poly_phase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">model_poly_phase</span></code></a>(freq, *param)</p></td>
+<td><p>Evaluate a polynomial model for the phase.</p></td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Classes</p>
+<table class="autosummary longtable docutils align-default">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.timing.TimingCorrection" title="ch_util.timing.TimingCorrection"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimingCorrection</span></code></a>([h5_data])</p></td>
+<td><p>Container that holds a timing correction.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.timing.TimingData" title="ch_util.timing.TimingData"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimingData</span></code></a>([h5_data])</p></td>
+<td><p>Subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code> for timing data.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#ch_util.timing.TimingInterpolator" title="ch_util.timing.TimingInterpolator"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimingInterpolator</span></code></a>(x, y[, weight, flag, ...])</p></td>
+<td><p>Interpolation that is aware of flagged data and weights.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#ch_util.timing.TimingReader" title="ch_util.timing.TimingReader"><code class="xref py py-obj docutils literal notranslate"><span class="pre">TimingReader</span></code></a>(files)</p></td>
+<td><p>Subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReader</span></code> for timing data.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">TimingCorrection</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="ch_util.andata.html#ch_util.andata.BaseData" title="ch_util.andata.BaseData"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseData</span></code></a></p>
+<p>Container that holds a timing correction.</p>
+<p>Provides methods for applying that correction to other datasets.</p>
+<p>Used to pick which subclass to instantiate based on attributes in
+data.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.alpha">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">alpha</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.alpha" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the alpha array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.amp_to_delay">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">amp_to_delay</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.amp_to_delay" title="Link to this definition"></a></dt>
+<dd><p>This is the conversion from noise source amplitude variations
+to delay variations.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.apply_timing_correction">
+<span class="sig-name descname"><span class="pre">apply_timing_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestream</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">copy</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.apply_timing_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.apply_timing_correction" title="Link to this definition"></a></dt>
+<dd><p>Apply the timing correction to another visibility dataset.</p>
+<p>This method uses the get_gain or get_stacked_tau method, depending
+on whether or not the visibilities have been stacked.  It acccepts
+and passes along keyword arguments for those method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestream</strong> (<em>andata.CorrData / equivalent</em><em> or </em><em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nprod</em><em>, </em><em>ntime</em><em>]</em>) – If timestream is an np.ndarray containing the visiblities, the
+you must also pass the corresponding freq, prod, input, and
+time axis as kwargs.  Otherwise these quantities are obtained
+from the attributes of CorrData.  If the visibilities have been
+stacked, then you must additionally pass the stack and
+reverse_stack axis as kwargs, and (optionally) the input flags.</p></li>
+<li><p><strong>copy</strong> (<em>bool</em>) – Create a copy of the input visibilities.  Apply the timing
+correction to the copy and return it, leaving the original
+untouched.  Default is False.</p></li>
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Frequency in MHz.
+Must be passed as keyword argument if timestream is an np.ndarray.</p></li>
+<li><p><strong>prod</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,  </em><em>]</em>) – Product map.
+Must be passed as keyword argument if timestream is an np.ndarray.</p></li>
+<li><p><strong>time</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>, </em><em>]</em>) – Unix time.
+Must be passed as keyword argument if timestream is an np.ndarray.</p></li>
+<li><p><strong>input</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – Input axis.
+Must be passed as keyword argument if timestream is an np.ndarray.</p></li>
+<li><p><strong>stack</strong> (<em>np.ndarray</em><em>[</em><em>nstack</em><em>, </em><em>]</em>) – Stack axis.
+Must be passed as keyword argument if timestream is an np.ndarray
+and the visibilities have been stacked.</p></li>
+<li><p><strong>reverse_stack</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'stack'</em><em>, </em><em>'conjugate'</em><em>)</em>) – The index of the stack axis that each product went into.
+Typically found in <cite>reverse_map[‘stack’]</cite> attribute.
+Must be passed as keyword argument if timestream is an np.ndarray
+and the visibilities have been stacked.</p></li>
+<li><p><strong>input_flags</strong> (<em>np.ndarray</em><em> [</em><em>ninput</em><em>, </em><em>ntime</em><em>]</em>) – Array indicating which inputs were good at each time.  Non-zero
+value indicates that an input was good.  Optional.  Only used for
+stacked visibilities.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul>
+<li><p><em>If copy == True</em> –</p>
+<dl class="simple">
+<dt>vis<span class="classifier">np.ndarray[nfreq, nprod(nstack), ntime]</span></dt><dd><p>New set of visibilities with timing correction applied.</p>
+</dd>
+</dl>
+</li>
+<li><p><em>else</em> –</p>
+<dl class="simple">
+<dt>None</dt><dd><p>Correction is applied to the input visibility data.  Also,
+if timestream is an andata.CorrData instance and the gain
+dataset exists, then it will be updated with the complex
+gains that have been applied.</p>
+</dd>
+</dl>
+</li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.coeff_alpha">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coeff_alpha</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.coeff_alpha" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the coeff_alpha array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.coeff_tau">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">coeff_tau</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.coeff_tau" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the coeff_tau array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.delete_coeff">
+<span class="sig-name descname"><span class="pre">delete_coeff</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.delete_coeff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.delete_coeff" title="Link to this definition"></a></dt>
+<dd><p>Stop using coefficients to construct timing correction.</p>
+<p>Calling this method will delete the <cite>coeff_tau</cite>, <cite>coeff_alpha</cite>,
+and <cite>reference_noise_source</cite> datasets if they exist.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.freq">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">freq</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.freq" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the frequency bin centres.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.from_dict">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.from_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.from_dict" title="Link to this definition"></a></dt>
+<dd><p>Instantiate a TimingCorrection object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'centre'</em><em>, </em><em>'width'</em><em>)</em>) – Frequencies in MHz that were used to construct the timing correction.</p></li>
+<li><p><strong>noise_source</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – Correlator inputs that were used to construct the timing correction.</p></li>
+<li><p><strong>input</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – Correlator inputs to which the timing correction will be applied.</p></li>
+<li><p><strong>time</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>, </em><em>]</em>) – Unix time.</p></li>
+<li><p><strong>param</strong> (<em>np.ndarray</em><em>[</em><em>nparam</em><em>, </em><em>]</em>) – Parameters of the model fit to the static phase versus frequency.</p></li>
+<li><p><strong>series</strong> (<em>np.ndarray</em><em>[</em><em>nseries</em><em>, </em><em>]</em>) – Labels different time series output by the real-time pipeline.</p></li>
+<li><p><strong>tau</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>ntime</em><em>]</em>) – The actual timing correction, which is the relative delay of each of the
+noise source inputs with respect to a reference input versus time.</p></li>
+<li><p><strong>weight_tau</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>ntime</em><em>]</em>) – Estimate of the uncertainty (inverse variance) on the timing correction.</p></li>
+<li><p><strong>static_phi</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – The phase that was subtracted from each frequency and input prior to
+fitting for the timing correction.  This is necessary to remove the
+approximately static ripple pattern caused by reflections.</p></li>
+<li><p><strong>weight_static_phi</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Inverse variance on static_phi.</p></li>
+<li><p><strong>static_phi_fit</strong> (<em>np.ndarray</em><em>[</em><em>nparam</em><em>, </em><em>nsource</em><em>]</em>) – Best-fit parameters of a fit to the static phase versus frequency
+for each of the noise source inputs.</p></li>
+<li><p><strong>alpha</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>ntime</em><em>]</em>) – The coefficient of the spectral model of the amplitude variations of
+each of the noise source inputs versus time.</p></li>
+<li><p><strong>weight_alpha</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>ntime</em><em>]</em>) – Estimate of the uncertainty (inverse variance) on the amplitude
+coefficients.</p></li>
+<li><p><strong>static_amp</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – The amplitude that was subtracted from each frequency and input prior to
+fitting for the amplitude variations.  This is necessary to remove the
+approximately static ripple pattern caused by reflections.</p></li>
+<li><p><strong>weight_static_amp</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Inverse variance on static_amp.</p></li>
+<li><p><strong>num_freq</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>ntime</em><em>]</em>) – The number of frequencies used to determine the delay and alpha quantities.
+If num_freq is 0, then that time is ignored when deriving the timing
+correction.</p></li>
+<li><p><strong>rms_amp</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>nseries</em><em>, </em><em>ntime</em><em>]</em>) – The RMS of the amplitude over the frequency axis.  Only used by real-time
+pipeline.</p></li>
+<li><p><strong>rms_phi</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>nseries</em><em>, </em><em>ntime</em><em>]</em>) – The RMS of the phase over the frequency axis.  Only used by real-time
+pipeline.</p></li>
+<li><p><strong>coeff_tau</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>nsource</em><em>]</em>) – If coeff_tau is provided, then the timing correction applied to a particular
+input will be the linear combination of the tau correction from the
+noise source inputs, with the coefficients set by this array.</p></li>
+<li><p><strong>coeff_alpha</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>nsource</em><em>]</em>) – If coeff_alpha is provided, then the timing correction applied to a
+particular input will be adjusted by the linear combination of the alpha
+correction from the noise source inputs, with the coefficients set by this
+array.</p></li>
+<li><p><strong>reference_noise_source</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>]</em>) – The noise source input that was used as reference when fitting coeff_tau.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_alpha">
+<span class="sig-name descname"><span class="pre">get_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrap_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_alpha"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_alpha" title="Link to this definition"></a></dt>
+<dd><p>Return the amplitude variation for each noise source at the requested times.</p>
+<p>Uses the TimingInterpolator to interpolate to the requested times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>,</em><em>]</em>) – Unix timestamp.</p></li>
+<li><p><strong>interp</strong> (<em>string</em>) – Method to interpolate over time.  Options include ‘linear’, ‘nearest’,
+‘zero’, ‘slinear’, ‘quadratic’, ‘cubic’, ‘previous’, and ‘next’.</p></li>
+<li><p><strong>extrap_limit</strong> (<em>float</em>) – Do not extrapolate the underlying data beyond its boundaries by this
+amount in seconds.  Default is 2 integrations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>alpha</strong> (<em>np.ndarray[nsource, ntime]</em>) – Amplitude coefficient as a function of time for each of the noise sources.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray[nsource, ntime]</em>) – The uncertainty on the amplitude coefficient, expressed as an
+inverse variance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_gain">
+<span class="sig-name descname"><span class="pre">get_gain</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_gain"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_gain" title="Link to this definition"></a></dt>
+<dd><p>Return the complex gain for the requested frequencies, inputs, and times.</p>
+<p>Multiplying the visibilities by the outer product of these gains will remove
+the fluctuations in phase due to timing jitter.  This method uses the
+get_tau method.  It acccepts and passes along keyword arguments for that method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Frequency in MHz.</p></li>
+<li><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>]</em>) – Must contain ‘correlator_input’ field.</p></li>
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>, </em><em>]</em>) – Unix timestamps.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>gain</strong> (<em>np.ndarray[nfreq, ninput, ntime]</em>) – Complex gain.  Multiplying the visibilities by the
+outer product of this vector at a given time and
+frequency will correct for the timing jitter.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray[nfreq, ninput, ntime]</em>) – Uncerainty on the gain expressed as an inverse variance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_stacked_alpha">
+<span class="sig-name descname"><span class="pre">get_stacked_alpha</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_stacked_alpha"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_stacked_alpha" title="Link to this definition"></a></dt>
+<dd><p>Return the stacked alphas for the noise source amplitude variations.</p>
+<p>Averages the alphas from the noise source inputs that map to the
+set of redundant baseline included in each stacked visibility.  If
+input_flags is provided, then the bad inputs that were excluded
+from the stack are also excluded from the alpha template averaging.
+This method can be used to generate a stacked alpha template that
+can be used to correct a stacked tau template for variations in the
+noise source distribution system.  However, it is recommended that
+the tau template be corrected before stacking. This is accomplished
+by setting the <cite>amp_to_delay</cite> property prior to calling
+<cite>get_stacked_tau</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>,</em><em>]</em>) – Unix timestamp.</p></li>
+<li><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>,</em><em>]</em>) – Must contain ‘correlator_input’ field.</p></li>
+<li><p><strong>prod</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>]</em>) – The products that were included in the stack.
+Typically found in the <cite>index_map[‘prod’]</cite> attribute of the
+<cite>andata.CorrData</cite> object.</p></li>
+<li><p><strong>reverse_stack</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'stack'</em><em>, </em><em>'conjugate'</em><em>)</em>) – The index of the stack axis that each product went into.
+Typically found in <cite>reverse_map[‘stack’]</cite> attribute
+of the <cite>andata.CorrData</cite>.</p></li>
+<li><p><strong>input_flags</strong> (<em>np.ndarray</em><em> [</em><em>ninput</em><em>, </em><em>ntime</em><em>]</em>) – Array indicating which inputs were good at each time.
+Non-zero value indicates that an input was good.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>alpha</strong> – Noise source amplitude variation as a function of time for each
+stacked visibility.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nstack, ntime]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_stacked_tau">
+<span class="sig-name descname"><span class="pre">get_stacked_tau</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prod</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reverse_stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_stacked_tau"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_stacked_tau" title="Link to this definition"></a></dt>
+<dd><p>Return the delay for each stacked visibility at the requested time.</p>
+<p>Averages the delays from the noise source inputs that map to the
+set of redundant baseline included in each stacked visibility.
+This yields the appropriate common-mode delay correction.  If
+input_flags is provided, then the bad inputs that were excluded
+from the stack are also excluded from the delay template averaging.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>,</em><em>]</em>) – Unix timestamp.</p></li>
+<li><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>,</em><em>]</em>) – Must contain ‘correlator_input’ field.</p></li>
+<li><p><strong>prod</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>]</em>) – The products that were included in the stack.
+Typically found in the <cite>index_map[‘prod’]</cite> attribute of the
+<cite>andata.CorrData</cite> object.</p></li>
+<li><p><strong>reverse_stack</strong> (<em>np.ndarray</em><em>[</em><em>nprod</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'stack'</em><em>, </em><em>'conjugate'</em><em>)</em>) – The index of the stack axis that each product went into.
+Typically found in <cite>reverse_map[‘stack’]</cite> attribute
+of the <cite>andata.CorrData</cite>.</p></li>
+<li><p><strong>input_flags</strong> (<em>np.ndarray</em><em> [</em><em>ninput</em><em>, </em><em>ntime</em><em>]</em>) – Array indicating which inputs were good at each time.
+Non-zero value indicates that an input was good.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>tau</strong> – Delay as a function of time for each stacked visibility.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nstack, ntime]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_tau">
+<span class="sig-name descname"><span class="pre">get_tau</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ignore_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrap_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_tau"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_tau" title="Link to this definition"></a></dt>
+<dd><p>Return the delay for each noise source at the requested times.</p>
+<p>Uses the TimingInterpolator to interpolate to the requested times.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>,</em><em>]</em>) – Unix timestamp.</p></li>
+<li><p><strong>ignore_amp</strong> (<em>bool</em>) – Do not apply a noise source based amplitude correction, even if one exists.</p></li>
+<li><p><strong>interp</strong> (<em>string</em>) – Method to interpolate over time.  Options include ‘linear’, ‘nearest’,
+‘zero’, ‘slinear’, ‘quadratic’, ‘cubic’, ‘previous’, and ‘next’.</p></li>
+<li><p><strong>extrap_limit</strong> (<em>float</em>) – Do not extrapolate the underlying data beyond its boundaries by this
+amount in seconds.  Default is 2 integrations.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>tau</strong> (<em>np.ndarray[nsource, ntime]</em>) – Delay as a function of time for each of the noise sources.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray[nsource, ntime]</em>) – The uncertainty on the delay, expressed as an inverse variance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.get_timing_correction">
+<span class="sig-name descname"><span class="pre">get_timing_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.get_timing_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.get_timing_correction" title="Link to this definition"></a></dt>
+<dd><p>Return the phase correction from each noise source.</p>
+<p>Assumes the phase correction scales with frequency nu as</p>
+<blockquote>
+<div><p>phi = 2 pi nu tau</p>
+</div></blockquote>
+<p>and uses the get_tau method to interpolate over time. It acccepts and
+passes along keyword arguments for that method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Frequency in MHz.</p></li>
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>, </em><em>]</em>) – Unix timestamp.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>gain</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Complex gain containing a pure phase correction for each of the
+noise sources.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Uncerainty on the gain for each of the noise sources,
+expressed as an inverse variance.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.has_amplitude">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_amplitude</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.has_amplitude" title="Link to this definition"></a></dt>
+<dd><p>Determine if this timing correction contains amplitude data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.has_coeff_alpha">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_coeff_alpha</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.has_coeff_alpha" title="Link to this definition"></a></dt>
+<dd><p>Indicates if there are valid coeff that map noise source alpha to inputs.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.has_coeff_tau">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_coeff_tau</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.has_coeff_tau" title="Link to this definition"></a></dt>
+<dd><p>Indicates if there are valid coeff that map noise source tau to inputs.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.has_num_freq">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">has_num_freq</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.has_num_freq" title="Link to this definition"></a></dt>
+<dd><p>Inidicates if there is a num_freq flag that identifies missing data.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.input">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">input</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.input" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the correlator inputs.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.noise_source">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">noise_source</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.noise_source" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the noise source inputs.</p>
+<p>Note that in older versions of the timing correction, the
+noise_source axis does not exist.  Instead, the equivalent
+quantity is labeled as input.  Since the addition of the
+coeff dataset it has become necessary to distinguish between the
+noise source inputs from which the timing correction is derived
+and the correlator inputs to which the timing correction is applied.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.nsource">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">nsource</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.nsource" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the number of noise source inputs.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.ntime">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">ntime</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.ntime" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the number of time samples.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.num_freq">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">num_freq</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.num_freq" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the num_freq array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.predict_x_error">
+<span class="sig-name descname"><span class="pre">predict_x_error</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">timestamp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_map</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_flags</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">correlator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'chime'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.predict_x_error"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.predict_x_error" title="Link to this definition"></a></dt>
+<dd><p>Calculate offset in telescope x position of sources due to timing errors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>timestamp</strong> (<em>np.ndarray</em><em>[</em><em>ntime</em><em>,</em><em>] of </em><em>float</em>) – Calculate the x offset at these unix timestamps.</p></li>
+<li><p><strong>input_map</strong> (<em>list</em><em> of </em><a class="reference internal" href="ch_util.tools.html#ch_util.tools.CorrInput" title="ch_util.tools.CorrInput"><em>CorrInput</em></a>) – The correlator inputs.  If this parameter is not provided,
+then the <cite>tools.get_correlator_inputs</cite> method will be used
+to query the layout database for this information.</p></li>
+<li><p><strong>input_flags</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>,</em><em>] or </em><em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>ntime</em><em>] of </em><em>bool</em>) – Boolean flag indicating which inputs to include in the calculation.
+This can either be a single set of input flags that are valid for
+all timestamps, or a separate set for each timestamp.</p></li>
+<li><p><strong>correlator</strong> (<em>str</em>) – The name of the correlator.  This parameter is only used if the
+<cite>input_map</cite> parameter is not provided.  Defaults to ‘chime’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>dx</strong> – The offset in telescope x in degrees at the requested times.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[ntime,] of float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.reference_noise_source">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">reference_noise_source</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.reference_noise_source" title="Link to this definition"></a></dt>
+<dd><p>Return the index of the reference noise source.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.search_input">
+<span class="sig-name descname"><span class="pre">search_input</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.search_input"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.search_input" title="Link to this definition"></a></dt>
+<dd><p>Find inputs in the input axis.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>)</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>index</strong> – Indices of the input axis that yield the requested inputs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[ninput,] of .int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.set_coeff">
+<span class="sig-name descname"><span class="pre">set_coeff</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">coeff_tau</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">coeff_alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reference_noise_source</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.set_coeff"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.set_coeff" title="Link to this definition"></a></dt>
+<dd><p>Use coefficients to construct timing correction.</p>
+<p>Setting the coefficients changes how the timing corretion for a particular
+correlator input is derived.  Without coefficients, each input is matched
+to the timing correction from a single noise source input through the
+map_input_to_noise_source method.  With coefficients, each input is a
+linear combination of the timing correction from all noise source inputs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>coeff_tau</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>nsource</em><em>]</em>) – The timing correction applied to a particular input will be the
+linear combination of the tau correction from the noise source inputs,
+with the coefficients set by this array.</p></li>
+<li><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – Correlator inputs to which the timing correction will be applied.</p></li>
+<li><p><strong>noise_source</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>,</em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – Correlator inputs that were used to construct the timing correction.</p></li>
+<li><p><strong>coeff_alpha</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>nsource</em><em>]</em>) – The timing correction applied to a particular input will be adjusted by
+the linear combination of the alpha correction from the noise source inputs,
+with the coefficients set by this array.</p></li>
+<li><p><strong>reference_noise_source</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>,</em><em>]</em>) – For each input, the index into noise_source that was used as
+reference in the fit for coeff_tau.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.set_global_reference_time">
+<span class="sig-name descname"><span class="pre">set_global_reference_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.set_global_reference_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.set_global_reference_time" title="Link to this definition"></a></dt>
+<dd><p>Normalize the delay and alpha template to the value at a single time.</p>
+<p>Useful for referencing the template to the value at the time that
+you plan to calibrate.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tref</strong> (<em>unix time</em>) – Reference the templates to the values at this time.</p></li>
+<li><p><strong>window</strong> (<em>float</em>) – Reference the templates to the median value over a window (in
+seconds) around tref.  If nonzero, this will override the
+interpolate keyword.</p></li>
+<li><p><strong>interpolate</strong> (<em>bool</em>) – Interpolate the delay template to time tref.  Otherwise take
+the measured time nearest to tref.  The get_tau method is use
+to perform the interpolation, and kwargs for that method will
+be passed along.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.set_reference_time">
+<span class="sig-name descname"><span class="pre">set_reference_time</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tref</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tstart</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tend</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tinit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha_init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">interpolate</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.set_reference_time"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.set_reference_time" title="Link to this definition"></a></dt>
+<dd><p>Normalize the delay and alpha template to specific times.</p>
+<p>Required if applying the timing correction to data that has
+already been calibrated.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tref</strong> (<em>np.ndarray</em><em>[</em><em>nref</em><em>]</em>) – Reference the delays to the values at this unix time.</p></li>
+<li><p><strong>tstart</strong> (<em>np.ndarray</em><em>[</em><em>nref</em><em>]</em>) – Begin transition to the reference delay at this unix time.</p></li>
+<li><p><strong>tend</strong> (<em>np.ndarray</em><em>[</em><em>nref</em><em>]</em>) – Complete transition to the reference delay at this unix time.</p></li>
+<li><p><strong>tinit</strong> (<em>float</em>) – Use the delay at this time for the period before the first tstart.
+Takes prescendent over tau_init.</p></li>
+<li><p><strong>tau_init</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>]</em>) – Use this delay for times before the first tstart.  Must provide a value
+for each noise source input.  If None, then will reference with respect
+to the average delay over the full time series.</p></li>
+<li><p><strong>alpha_init</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>]</em>) – Use this alpha for times before the first tstart.  Must provide a value
+for each noise source input.  If None, then will reference with respect
+to the average alpha over the full time series.</p></li>
+<li><p><strong>interpolate</strong> (<em>bool</em>) – Interpolate the delay template to times tref. Otherwise take the measured
+times nearest to tref. The get_tau method is use to perform the
+interpolation, and kwargs for that method will be passed along.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.static_amp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">static_amp</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.static_amp" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the static_amp array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.static_phi">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">static_phi</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.static_phi" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the static_phi array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.static_phi_fit">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">static_phi_fit</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.static_phi_fit" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the static_phi_fit array.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingCorrection.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingCorrection.summary" title="Link to this definition"></a></dt>
+<dd><p>Provide a summary of the timing correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>summary</strong> – Contains useful information about the timing correction.
+Specifically contains for each noise source input the
+time averaged  phase offset and delay.  Also contains
+estimates of the variance in the timing for both the
+shortest and longest timescale probed by the underlying
+dataset.  Meant to be joined with new lines and printed.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.tau">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tau</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.tau" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the tau array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.time">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">time</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.time" title="Link to this definition"></a></dt>
+<dd><p>Calculate the time axis.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.weight_alpha">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight_alpha</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.weight_alpha" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the weight_alpha array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.weight_static_amp">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight_static_amp</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.weight_static_amp" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the weight_static_amp array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.weight_static_phi">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight_static_phi</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.weight_static_phi" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the weight_static_phi array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.weight_tau">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">weight_tau</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.weight_tau" title="Link to this definition"></a></dt>
+<dd><p>Provide convenience access to the weight_tau array.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="ch_util.timing.TimingCorrection.zero_delay_noise_source">
+<em class="property"><span class="k"><span class="pre">property</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">zero_delay_noise_source</span></span><a class="headerlink" href="#ch_util.timing.TimingCorrection.zero_delay_noise_source" title="Link to this definition"></a></dt>
+<dd><p>Return the index of the noise source with zero delay.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.timing.TimingData">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">TimingData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">h5_data</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingData" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="ch_util.andata.html#ch_util.andata.CorrData" title="ch_util.andata.CorrData"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorrData</span></code></a>, <a class="reference internal" href="#ch_util.timing.TimingCorrection" title="ch_util.timing.TimingCorrection"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimingCorrection</span></code></a></p>
+<p>Subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">andata.CorrData</span></code> for timing data.</p>
+<p>Automatically computes the timing correction when data is loaded and
+inherits the methods of <a class="reference internal" href="#ch_util.timing.TimingCorrection" title="ch_util.timing.TimingCorrection"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimingCorrection</span></code></a> that enable the application
+of that correction to other datasets.</p>
+<p>Used to pick which subclass to instantiate based on attributes in
+data.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingData.from_acq_h5">
+<em class="property"><span class="k"><span class="pre">classmethod</span></span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_acq_h5</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">acq_files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">only_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingData.from_acq_h5"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingData.from_acq_h5" title="Link to this definition"></a></dt>
+<dd><p>Load a list of acquisition files and computes the timing correction.</p>
+<p>Accepts and passes on all keyword arguments for andata.CorrData.from_acq_h5
+and the construct_delay_template function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>acq_files</strong> (<em>str</em><em> or </em><em>list</em><em> of </em><em>str</em>) – Path to file(s) containing the timing data.</p></li>
+<li><p><strong>only_correction</strong> (<em>bool</em>) – Only return the timing correction.  Do not return the underlying
+data from which that correction was derived.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.timing.TimingData" title="ch_util.timing.TimingData">TimingData</a> or <a class="reference internal" href="#ch_util.timing.TimingCorrection" title="ch_util.timing.TimingCorrection">TimingCorrection</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="ch_util.timing.TimingData.summary">
+<span class="sig-name descname"><span class="pre">summary</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingData.summary"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingData.summary" title="Link to this definition"></a></dt>
+<dd><p>Provide a summary of the timing data and correction.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>summary</strong> – Contains useful information about the timing correction
+and data.  Includes the reduction in the standard deviation
+of the phase after applying the timing correction.  This is
+presented as quantiles over frequency for each of the
+noise source products.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of strings</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.timing.TimingInterpolator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">TimingInterpolator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">y</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kind</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'linear'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">extrap_limit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingInterpolator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingInterpolator" title="Link to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Interpolation that is aware of flagged data and weights.</p>
+<p>Flagged data is ignored during the interpolation. The weights from
+the data are propagated to obtain weights for the interpolated points.</p>
+<p>Instantiate a callable TimingInterpolator object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>np.ndarray</em><em>[</em><em>nsample</em><em>,</em><em>]</em>) – The points where the data was sampled.
+Must be monotonically increasing.</p></li>
+<li><p><strong>y</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nsample</em><em>]</em>) – The data to interpolate.</p></li>
+<li><p><strong>weight</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nsample</em><em>]</em>) – The uncertainty on the data, expressed as an
+inverse variance.</p></li>
+<li><p><strong>flag</strong> (<em>np.ndarray</em><em>[</em><em>...</em><em>, </em><em>nsample</em><em>]</em>) – Boolean indicating if the data is to be
+included in the interpolation.</p></li>
+<li><p><strong>kind</strong> (<em>str</em>) – String that specifies the kind of interpolation.
+The value <cite>nearest</cite>, <cite>previous</cite>, <cite>next</cite>, and <cite>linear</cite> will use
+custom methods that propagate uncertainty to obtain the interpolated
+weights. The value <cite>zero</cite>, <cite>slinear</cite>, <cite>quadratic</cite>, and <cite>cubic</cite>
+will use spline interpolation from scipy.interpolation.interp1d
+and use the weight from the nearest point.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>interpolator</strong> – Callable that will interpolate the data that was provided
+to a new set of x values.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.timing.TimingInterpolator" title="ch_util.timing.TimingInterpolator">TimingInterpolator</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="ch_util.timing.TimingReader">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">TimingReader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#TimingReader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.TimingReader" title="Link to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="ch_util.andata.html#ch_util.andata.BaseReader" title="ch_util.andata.BaseReader"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReader</span></code></a></p>
+<p>Subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">BaseReader</span></code> for timing data.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="ch_util.timing.TimingReader.data_class">
+<span class="sig-name descname"><span class="pre">data_class</span></span><a class="headerlink" href="#ch_util.timing.TimingReader.data_class" title="Link to this definition"></a></dt>
+<dd><p>alias of <a class="reference internal" href="#ch_util.timing.TimingData" title="ch_util.timing.TimingData"><code class="xref py py-class docutils literal notranslate"><span class="pre">TimingData</span></code></a></p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.construct_delay_template">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">construct_delay_template</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_frac_kept</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">threshold</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">420.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_freq</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">780.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mask_rfi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter_weight</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsigma_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nsigma_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nparam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_static_phi</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_phi_fit</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">static_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weight_static_amp</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#construct_delay_template"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.construct_delay_template" title="Link to this definition"></a></dt>
+<dd><p>Construct a relative time delay template.</p>
+<p>Fits the phase of the cross-correlation between noise source inputs
+to a model that increases linearly with frequency.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<a class="reference internal" href="ch_util.andata.html#ch_util.andata.CorrData" title="ch_util.andata.CorrData"><em>andata.CorrData</em></a>) – <dl class="simple">
+<dt>Correlation data.  Must contain the following attributes:</dt><dd><dl class="simple">
+<dt>freq: np.ndarray[nfreq, ]</dt><dd><p>Frequency in MHz.</p>
+</dd>
+<dt>vis: np.ndarray[nfreq, nprod, ntime]</dt><dd><p>Upper-triangle, product packed visibility matrix
+containing ONLY the noise source inputs.</p>
+</dd>
+<dt>weight: np.ndarray[nfreq, nprod, ntime]</dt><dd><p>Flag indicating the data points to fit.</p>
+</dd>
+<dt>flags/frac_lost: np.ndarray[nfreq, ntime]</dt><dd><p>Flag indicating the fraction of data lost.
+If provided, then data will be weighted by the
+fraction of data that remains when solving
+for the delay template.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</p></li>
+<li><p><strong>min_frac_kept</strong> (<em>float</em>) – Do not include frequencies and times where the fraction
+of data that remains is less than this threshold.
+Default is 0.0.</p></li>
+<li><p><strong>threshold</strong> (<em>float</em>) – A (frequency, input) must pass the checks specified above
+more than this fraction of the time,  otherwise it will be
+flaged as bad for all times.  Default is 0.50.</p></li>
+<li><p><strong>min_freq</strong> (<em>float</em>) – Minimum frequency in MHz to include in the fit.
+Default is 420.</p></li>
+<li><p><strong>max_freq</strong> (<em>float</em>) – Maximum frequency in MHz to include in the fit.
+Default is 780.</p></li>
+<li><p><strong>mask_rfi</strong> (<em>bool</em>) – Mask frequencies that occur within known RFI bands.  Note that the
+noise source data does not contain RFI, however the real-time pipeline
+does not distinguish between noise source inputs and sky inputs, and as
+a result will discard large amounts of data in these bands.</p></li>
+<li><p><strong>max_iter_weight</strong> (<em>int</em>) – The weight for each frequency is estimated from the variance of the
+residuals of the template fit from the previous iteration.  Outliers
+are also flagged at each iteration with an increasingly aggresive threshold.
+This is the total number of times to iterate.  Setting to 1 corresponds
+to linear least squares.  Default is 1, unless check_amp or check_phi is True,
+in which case this defaults to the maximum number of thresholds provided.</p></li>
+<li><p><strong>check_amp</strong> (<em>bool</em>) – Do not fit frequencies and times where the residual amplitude is an outlier.
+Default is False.</p></li>
+<li><p><strong>nsigma_amp</strong> (<em>list</em><em> of </em><em>float</em>) – If check_amp is True, then residuals greater than this number of sigma
+will be considered an outlier.  Provide a list containing the value to be used
+at each iteration.  If the length of the list is less than max_iter_weight,
+then the last value in the list will be repeated for the remaining iterations.
+Default is [1000, 500, 200, 100, 50, 20, 10, 5].</p></li>
+<li><p><strong>check_phi</strong> (<em>bool</em>) – Do not fit frequencies and times where the residual phase is an outlier.
+Default is True.</p></li>
+<li><p><strong>nsigma_phi</strong> (<em>list</em><em> of </em><em>float</em>) – If check_phi is True, then residuals greater than this number of sigma
+will be considered an outlier.  Provide a list containing the value to be used
+at each iteration.  If the length of the list is less than max_iter_weight,
+then the last value in the list will be repeated for the remaining iterations.
+Default is [1000, 500, 200, 100, 50, 20, 10, 5].</p></li>
+<li><p><strong>nparam</strong> (<em>int</em>) – Number of parameters for polynomial fit to the
+time averaged phase versus frequency.  Default is 2.</p></li>
+<li><p><strong>static_phi</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Subtract this quantity from the noise source phase prior to fitting
+for the timing correction.  If None, then this will be estimated from
+the median of the noise source phase over time.</p></li>
+<li><p><strong>weight_static_phi</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Inverse variance of the time averaged phased.  Set to zero for
+frequencies and inputs that are missing or should be ignored.
+If None, then this will be estimated from the residuals of the fit.</p></li>
+<li><p><strong>static_phi_fit</strong> (<em>np.ndarray</em><em>[</em><em>nparam</em><em>, </em><em>nsource</em><em>]</em>) – Polynomial fit to static_phi versus frequency.</p></li>
+<li><p><strong>static_amp</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Subtract this quantity from the noise source amplitude prior to fitting
+for the amplitude variations.  If None, then this will be estimated from
+the median of the noise source amplitude over time.</p></li>
+<li><p><strong>weight_static_amp</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>]</em>) – Inverse variance of the time averaged amplitude.  Set to zero for
+frequencies and inputs that are missing or should be ignored.  If None,
+then this will be estimated from the residuals of the fit.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>phi</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Phase of the signal from the noise source.</p></li>
+<li><p><strong>weight_phi</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Inverse variance of the phase of the signal from the noise source.</p></li>
+<li><p><strong>tau</strong> (<em>np.ndarray[nsource, ntime]</em>) – Delay template for each noise source input.</p></li>
+<li><p><strong>weight_tau</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Estimate of the uncertainty on the delay template (inverse variance).</p></li>
+<li><p><strong>static_phi</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Time averaged phase versus frequency.</p></li>
+<li><p><strong>weight_static_phi</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Inverse variance of the time averaged phase.</p></li>
+<li><p><strong>static_phi_fit</strong> (<em>np.ndarray[nparam, nsource]</em>) – Best-fit parameters of the polynomial fit to the
+time averaged phase versus frequency.</p></li>
+<li><p><strong>amp</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Amplitude of the signal from the noise source.</p></li>
+<li><p><strong>weight_amp</strong> (<em>np.ndarray[nfreq, nsource, ntime]</em>) – Inverse variance of the amplitude of the signal from the noise source.</p></li>
+<li><p><strong>alpha</strong> (<em>np.ndarray[nsource, ntime]</em>) – Amplitude coefficient for each noise source input.</p></li>
+<li><p><strong>weight_alpha</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Estimate of the uncertainty on the amplitude coefficient (inverse variance).</p></li>
+<li><p><strong>static_amp</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Time averaged amplitude versus frequency.</p></li>
+<li><p><strong>weight_static_amp</strong> (<em>np.ndarray[nfreq, nsource]</em>) – Inverse variance of the time averaged amplitude.</p></li>
+<li><p><strong>num_freq</strong> (<em>np.ndarray[nsource, ntime]</em>) – Number of frequencies used to construct the delay and amplitude templates.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.eigen_decomposition">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">eigen_decomposition</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vis</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">flag</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#eigen_decomposition"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.eigen_decomposition" title="Link to this definition"></a></dt>
+<dd><p>Eigenvalue decomposition of the visibility matrix.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>vis</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nprod</em><em>, </em><em>ntime</em><em>]</em>) – Upper-triangle, product packed visibility matrix.</p></li>
+<li><p><strong>flag</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>nsource</em><em>, </em><em>ntime</em><em>] </em><em>(</em><em>optional</em><em>)</em>) – Array of 1 or 0 indicating the inputs that should be included
+in the eigenvalue decomposition for each frequency and time.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>resp</strong> – Eigenvector corresponding to the largest eigenvalue for
+each frequency and time.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nfreq, nsource, ntime]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.fit_poly_to_phase">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">fit_poly_to_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">resp_error</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nparam</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#fit_poly_to_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.fit_poly_to_phase" title="Link to this definition"></a></dt>
+<dd><p>Fit complex data versus frequency to a model consisting of a polynomial in phase.</p>
+<p>Nonlinear least squares algorithm is applied to the complex data to avoid problems
+caused by phase wrapping.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Frequency in MHz.</p></li>
+<li><p><strong>resp</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Complex data with magnitude equal to 1.0.</p></li>
+<li><p><strong>resp_error</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Uncertainty on the complex data.</p></li>
+<li><p><strong>nparam</strong> (<em>int</em>) – Number of parameters in the polynomial.
+Default is 2 (i.e, linear).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><ul class="simple">
+<li><p><strong>popt</strong> (<em>np.ndarray[nparam, ]</em>) – Best-fit parameters.</p></li>
+<li><p><strong>pcov</strong> (<em>np.ndarray[nparam, nparam]</em>) – Covariance of the best-fit parameters.
+Assumes that it obtained a good fit
+and returns the errors
+necessary to achieve that.</p></li>
+</ul>
+</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.load_timing_correction">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">load_timing_correction</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">files</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">start</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">window</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">43200.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">instrument</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'chime'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#load_timing_correction"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.load_timing_correction" title="Link to this definition"></a></dt>
+<dd><p>Find and load the timing correction for a list of corr acquisition files.</p>
+<p>For example, if the instrument keyword is set to ‘chime’,
+then this function will accept all types of chime corr acquisition files,
+such as ‘chimetiming’, ‘chimepb’, ‘chimeN2’, ‘chimecal’, and then find
+the relevant set of ‘chimetiming’ files to load.</p>
+<p>Accepts and passes on all keyword arguments for the functions
+andata.CorrData.from_acq_h5 and construct_delay_template.</p>
+<p>Should consider modifying this method to use Finder at some point in future.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>files</strong> (<em>string</em><em> or </em><em>list</em><em> of </em><em>strings</em>) – Absolute path to corr acquisition file(s).</p></li>
+<li><p><strong>start</strong> (<em>integer</em><em>, </em><em>optional</em>) – What frame to start at in the full set of files.</p></li>
+<li><p><strong>stop</strong> (<em>integer</em><em>, </em><em>optional</em>) – What frame to stop at in the full set of files.</p></li>
+<li><p><strong>window</strong> (<em>float</em>) – Use the timing data -window from start and +window from stop.
+Default is 12 hours.</p></li>
+<li><p><strong>instrument</strong> (<em>string</em>) – Name of the instrument.  Default is ‘chime’.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>data</strong></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#ch_util.timing.TimingData" title="ch_util.timing.TimingData">TimingData</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.map_input_to_noise_source">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">map_input_to_noise_source</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">inputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">noise_sources</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#map_input_to_noise_source"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.map_input_to_noise_source" title="Link to this definition"></a></dt>
+<dd><p>Find the appropriate noise source to use to correct the phase of each input.</p>
+<p>Searches for a noise source connected to the same slot,
+then crate, then hut, then correlator.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>np.ndarray</em><em>[</em><em>ninput</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – The input axis from a data acquisition file.</p></li>
+<li><p><strong>noise_sources</strong> (<em>np.ndarray</em><em>[</em><em>nsource</em><em>, </em><em>] of </em><em>dtype=</em><em>(</em><em>'chan_id'</em><em>, </em><em>'correlator_input'</em><em>)</em>) – The noise sources.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="ch_util.timing.model_poly_phase">
+<span class="sig-prename descclassname"><span class="pre">ch_util.timing.</span></span><span class="sig-name descname"><span class="pre">model_poly_phase</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">freq</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">param</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/ch_util/timing.html#model_poly_phase"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#ch_util.timing.model_poly_phase" title="Link to this definition"></a></dt>
+<dd><p>Evaluate a polynomial model for the phase.</p>
+<p>To be used with the parameters output from fit_poly_to_phase.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>freq</strong> (<em>np.ndarray</em><em>[</em><em>nfreq</em><em>, </em><em>]</em>) – Frequency in MHz.</p></li>
+<li><p><strong>*param</strong> (<em>float</em>) – Coefficients of the polynomial.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><strong>phi</strong> – Phase in radians between -pi and +pi.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>np.ndarray[nfreq, ]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="ch_util.rfi.html" class="btn btn-neutral float-left" title="ch_util.rfi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="ch_util.tools.html" class="btn btn-neutral float-right" title="ch_util.tools" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

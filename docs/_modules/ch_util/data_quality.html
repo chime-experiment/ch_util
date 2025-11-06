@@ -1,0 +1,1114 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ch_util.data_quality &mdash; ch_util 25.8.0.post7+git.687d3a3f documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=03e43079" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=e59714d7" />
+      <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/katex@0.16.22/dist/katex.min.css" />
+      <link rel="stylesheet" type="text/css" href="../../_static/katex-math.css?v=05624691" />
+
+  
+      <script src="../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../_static/documentation_options.js?v=c157ac5c"></script>
+      <script src="../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="../../_static/katex.min.js?v=5cc8ed51"></script>
+      <script src="../../_static/auto-render.min.js?v=af98beb9"></script>
+      <script src="../../_static/katex_autorenderer.js?v=bebc588a"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            ch_util
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../reference.html">API Reference</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">ch_util</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">ch_util.data_quality</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for ch_util.data_quality</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Data quality routines</span>
+
+
+<span class="sd">Data quality functions</span>
+<span class="sd">======================</span>
+<span class="sd">- :py:meth:`good_channels`</span>
+
+
+<span class="sd">Issues</span>
+<span class="sd">======</span>
+
+<span class="sd">Auxiliary functions are still lacking documentation.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">caput.time</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">ctime</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">andata</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">tools</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">ch_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">ni_utils</span>
+
+
+<div class="viewcode-block" id="good_channels">
+<a class="viewcode-back" href="../../_autosummary/ch_util.data_quality.html#ch_util.data_quality.good_channels">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">good_channels</span><span class="p">(</span>
+    <span class="n">data</span><span class="p">,</span>
+    <span class="n">gain_tol</span><span class="o">=</span><span class="mf">10.0</span><span class="p">,</span>
+    <span class="n">noise_tol</span><span class="o">=</span><span class="mf">2.0</span><span class="p">,</span>
+    <span class="n">fit_tol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">,</span>
+    <span class="n">test_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+    <span class="n">noise_synced</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">res_plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">verbose</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test data for misbehaving channels.</span>
+
+<span class="sd">    Three tests are performed:</span>
+
+<span class="sd">    1. Excessively high digital gains,</span>
+<span class="sd">    2. Compliance of noise to the radiometer equation and</span>
+<span class="sd">    3. Goodness of fit to a template Tsky.</span>
+
+<span class="sd">    See `Doclib:235</span>
+<span class="sd">    &lt;https://bao.phas.ubc.ca/doc/cgi-bin/general/documents/display?Id=235&gt;`_</span>
+<span class="sd">    file &#39;data_quality.pdf&#39; for details on how the filters and  tolerances work.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : ch_util.andata.CorrData object</span>
+<span class="sd">        Data to run test on.</span>
+<span class="sd">        If andata object contains cross-correlations,</span>
+<span class="sd">        test is performed on auto-correlations only.</span>
+<span class="sd">    gain_tol : float</span>
+<span class="sd">        Tolerance for digital gains filter. Flag channels whose</span>
+<span class="sd">        digital gain fractional absolute deviation</span>
+<span class="sd">        is above &#39;gain_tol&#39; (default is 10.)</span>
+<span class="sd">    noise_tol : float</span>
+<span class="sd">        Tolerance for radiometer noise filter. Flag channels whose</span>
+<span class="sd">        noise rms is higher then &#39;noise_tol&#39; times the expected</span>
+<span class="sd">        from the radiometer equation. (default = 2.)</span>
+<span class="sd">    fit_tol : float</span>
+<span class="sd">        Tolerance for the fit-to-Tsky filter. Flag channels whose</span>
+<span class="sd">        fractional rms for the &#39;gain&#39; fit parameter is above</span>
+<span class="sd">        &#39;fit_tol&#39; (default = 0.02)</span>
+<span class="sd">    test_freq : integer</span>
+<span class="sd">        Index of frequency to test. Default is 0.</span>
+<span class="sd">    noise_synced : boolean</span>
+<span class="sd">        Use this to force the code to call (or not call)</span>
+<span class="sd">        ni_utils.process_synced_data(). If not given,</span>
+<span class="sd">        the code will determine if syncronized noise injection was on.</span>
+<span class="sd">        For acquisitions newer then 20150626T200540Z_pathfinder_corr,</span>
+<span class="sd">        noise injection info is written in the attributes. For older</span>
+<span class="sd">        acquisitions the function _check_ni() is called to determine</span>
+<span class="sd">        if noise injection is On.</span>
+<span class="sd">    inputs : list of CorrInputs, optional</span>
+<span class="sd">        List of CorrInput objects describing the channels in this</span>
+<span class="sd">        dataset. This is optional, if not set (default), then it will</span>
+<span class="sd">        look the data up in the database. This option just allows</span>
+<span class="sd">        control of the database accesses.</span>
+<span class="sd">    res_plot : boolean, optional</span>
+<span class="sd">        If True, a plot with all the tested channels and the</span>
+<span class="sd">        Tsky fits is generated. File naming is</span>
+<span class="sd">        `plot_fit_{timestamp}.pdf`</span>
+<span class="sd">    verbose : boolean, optional</span>
+<span class="sd">        Print out useful output as the tests are run.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    good_gains : list of int</span>
+<span class="sd">        1. for channels that pass the gains filter, 0. otherwise.</span>
+<span class="sd">    good_noise : list of int</span>
+<span class="sd">        1. for channels that pass the noise filter, 0. otherwise.</span>
+<span class="sd">    good_fit : list of int</span>
+<span class="sd">        1. for channels that pass the fit-to-Tsky filter,</span>
+<span class="sd">        0. otherwise.</span>
+<span class="sd">    test_chans : list of int</span>
+<span class="sd">        A list of the channels tested in the same order as they</span>
+<span class="sd">        appear in all the other lists returned</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+
+<span class="sd">    Run test on frequency index 3. data is an andata object:</span>
+
+<span class="sd">    &gt;&gt;&gt; good_gains, good_noise, good_fit, test_chans = good_channels(data,test_freq=3)</span>
+
+<span class="sd">    And to create a plot of the results:</span>
+
+<span class="sd">    &gt;&gt;&gt; good_gains, good_noise, good_fit, test_chans = \</span>
+<span class="sd">    ... good_channels(data,test_freq=3,res_plot=True)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Running data quality test.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Determine if data has a gated visibility:</span>
+    <span class="n">is_gated_format</span> <span class="o">=</span> <span class="s2">&quot;gated_vis0&quot;</span> <span class="ow">in</span> <span class="n">data</span>
+
+    <span class="c1"># Get number of samples during an integration period:</span>
+    <span class="k">if</span> <span class="s2">&quot;gpu.gpu_intergration_period&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">:</span>
+        <span class="c1"># From attributes:</span>
+        <span class="n">n_samp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;gpu.gpu_intergration_period&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Or from integration time and bandwidth:</span>
+        <span class="n">t_step</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+        <span class="p">)</span>  <span class="c1"># Integration time</span>
+        <span class="n">bwdth</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;freq&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="mf">1e6</span>  <span class="c1"># Bandwidth comes in MHz</span>
+        <span class="n">n_samp</span> <span class="o">=</span> <span class="n">t_step</span> <span class="o">*</span> <span class="n">bwdth</span>
+
+    <span class="c1"># Processing noise synced data, if noise_synced != False:</span>
+    <span class="k">if</span> <span class="n">noise_synced</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">elif</span> <span class="n">noise_synced</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">is_gated_format</span><span class="p">:</span>
+            <span class="c1"># If data is gated, ignore noise_synced argument:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Warning: noise_synced=True argument given &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;but data seems to be gated.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Ignoring noise_synced argument&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Process noise synced data:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">ni_utils</span><span class="o">.</span><span class="n">process_synced_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">noise_synced</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># If noise_synced is not given, try to read ni_enable from data:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># Newer data have a noise-injection flag</span>
+            <span class="n">ni_enable</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;fpga.ni_enable&quot;</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="c1"># If no info is found, run function to determine ni_enable:</span>
+            <span class="n">ni_enable</span> <span class="o">=</span> <span class="n">_check_ni</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_freq</span><span class="p">)</span>
+        <span class="c1"># If noise injection is enabled and data is not gated:</span>
+        <span class="k">if</span> <span class="n">ni_enable</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">is_gated_format</span><span class="p">:</span>
+            <span class="c1"># Process noise synced data:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">ni_utils</span><span class="o">.</span><span class="n">process_synced_data</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+    <span class="c1"># Read full product array in data:</span>
+    <span class="n">prod_array_full</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;prod&quot;</span><span class="p">]</span>
+    <span class="c1"># Get indices for auto-corrs:</span>
+    <span class="n">autos_index</span><span class="p">,</span> <span class="n">autos_chan</span> <span class="o">=</span> <span class="n">_get_autos_index</span><span class="p">(</span><span class="n">prod_array_full</span><span class="p">)</span>
+    <span class="c1"># Select auto-corrs and test_freq only:</span>
+    <span class="n">visi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="n">test_freq</span><span class="p">,</span> <span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="n">autos_index</span><span class="p">])</span>
+    <span class="n">chan_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">autos_chan</span><span class="p">)</span>
+    <span class="n">tmstp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">]</span>
+
+    <span class="c1"># Remove non-chime channels (Noise source, RFI, 26m...):</span>
+    <span class="n">visi</span><span class="p">,</span> <span class="n">test_chans</span> <span class="o">=</span> <span class="n">_cut_non_chime</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">visi</span><span class="p">,</span> <span class="n">chan_array</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+
+    <span class="c1"># Digital gains test:</span>
+    <span class="k">if</span> <span class="s2">&quot;gain&quot;</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Testing quality of digital gains&quot;</span><span class="p">)</span>
+
+        <span class="n">good_gains</span> <span class="o">=</span> <span class="n">_gains_test</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_freq</span><span class="p">,</span> <span class="n">test_chans</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">gain_tol</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;Could not obtain digital gains information from data. &quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Ignoring gains test.&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">good_gains</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Radiometer noise test:</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Testing noise levels&quot;</span><span class="p">)</span>
+
+    <span class="n">good_noise</span><span class="p">,</span> <span class="n">rnt</span> <span class="o">=</span> <span class="n">_noise_test</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">noise_tol</span><span class="p">)</span>
+
+    <span class="c1"># Standard channels to fit for Tsky:</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">good_gains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">good_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Use channels that pass both tests</span>
+        <span class="n">stand_chans</span> <span class="o">=</span> <span class="n">good_gains</span> <span class="o">*</span> <span class="n">good_noise</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="n">good_gains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">good_noise</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># If gains and noise tests are missing, run fit on all channels:</span>
+        <span class="n">stand_chans</span> <span class="o">=</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_chans</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">good_gains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If only gains test was run</span>
+            <span class="n">stand_chans</span> <span class="o">=</span> <span class="n">good_gains</span>
+        <span class="k">if</span> <span class="n">good_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># If only noise test was run</span>
+            <span class="n">stand_chans</span> <span class="o">=</span> <span class="n">good_noise</span>
+
+    <span class="c1"># Median filter visibilities for fit test:</span>
+    <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">_median_filter</span><span class="p">(</span><span class="n">visi</span><span class="p">)</span>
+
+    <span class="c1"># Cut sun transit from visibilities:</span>
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cutting Sun transist from visibilities&quot;</span><span class="p">)</span>
+    <span class="n">cut_vis</span><span class="p">,</span> <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">_cut_sun_transit</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">)</span>
+
+    <span class="c1"># Only run fit test if there are enough good channels</span>
+    <span class="c1"># and enogh time around Sun transits:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">stand_chans</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">50</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">cut_tmstp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+        <span class="c1"># Getting template visibility (most typical visibility):</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting template visibility&quot;</span><span class="p">)</span>
+        <span class="n">gn</span><span class="p">,</span> <span class="n">Ts</span> <span class="o">=</span> <span class="n">_get_template</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">,</span> <span class="n">stand_chans</span><span class="p">)</span>
+
+        <span class="c1"># Fit template to visibilities:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Fitting template to visibilities&quot;</span><span class="p">)</span>
+        <span class="n">good_fit</span><span class="p">,</span> <span class="n">popt</span><span class="p">,</span> <span class="n">perr</span><span class="p">,</span> <span class="n">sky</span> <span class="o">=</span> <span class="n">_fit_template</span><span class="p">(</span><span class="n">Ts</span><span class="p">,</span> <span class="n">cut_vis</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="n">fit_tol</span><span class="p">)</span>
+
+        <span class="c1"># Create plot with results, if res_plot is True:</span>
+        <span class="k">if</span> <span class="n">res_plot</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating plots&quot;</span><span class="p">)</span>
+            <span class="n">_create_plot</span><span class="p">(</span>
+                <span class="n">visi</span><span class="p">,</span>
+                <span class="n">tmstp</span><span class="p">,</span>
+                <span class="n">cut_tmstp</span><span class="p">,</span>
+                <span class="n">sky</span><span class="p">,</span>
+                <span class="n">popt</span><span class="p">,</span>
+                <span class="n">test_chans</span><span class="p">,</span>
+                <span class="n">good_gains</span><span class="p">,</span>
+                <span class="n">good_noise</span><span class="p">,</span>
+                <span class="n">good_fit</span><span class="p">,</span>
+            <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">stand_chans</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not enough channels for fit test.&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">cut_tmstp</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">100</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Not enough time around Sun transit.&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Skipping template fit test.&quot;</span><span class="p">)</span>
+        <span class="n">good_fit</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="c1"># Computing some statistics to the filter:</span>
+        <span class="n">Nact</span><span class="p">,</span> <span class="n">Nnoisy</span><span class="p">,</span> <span class="n">Ngains</span><span class="p">,</span> <span class="n">Nfit</span><span class="p">,</span> <span class="n">Nbad</span> <span class="o">=</span> <span class="n">_stats_print</span><span class="p">(</span>
+            <span class="n">good_noise</span><span class="p">,</span> <span class="n">good_gains</span><span class="p">,</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">test_chans</span>
+        <span class="p">)</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Finished running data quality test.&quot;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">good_gains</span><span class="p">,</span> <span class="n">good_noise</span><span class="p">,</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">test_chans</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_check_ni</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_freq</span><span class="o">=</span><span class="mi">0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;This is a quick and dirt function to determine if</span>
+<span class="sd">        noise injection was ON or OFF for acquisitions</span>
+<span class="sd">        older then ctime = 1435349183, when noise injection</span>
+<span class="sd">        info started to be written to the h5py files</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    data : andata.CorrData</span>
+<span class="sd">        Data to check for noise injection.</span>
+<span class="sd">    test_freq : int</span>
+<span class="sd">        frequency bin within data, to be run the test on</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    ni_on : boolean</span>
+<span class="sd">        True if noise injection is On, False otherwise.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">visi</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">vis</span><span class="p">[</span><span class="n">test_freq</span><span class="p">]</span><span class="o">.</span><span class="n">real</span>
+    <span class="c1"># Divide visibility in even and odd time bins</span>
+    <span class="k">if</span> <span class="n">visi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">v_even</span> <span class="o">=</span> <span class="n">visi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">v_even</span> <span class="o">=</span> <span class="n">visi</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># v_even and v_odd have same length</span>
+    <span class="n">v_odd</span> <span class="o">=</span> <span class="n">visi</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Average difference ON-OFF. Should be the same as Off-Off</span>
+    <span class="c1"># if noise injection is Off.</span>
+    <span class="n">diff_on_off</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">v_even</span> <span class="o">-</span> <span class="n">v_odd</span><span class="p">))</span>
+
+    <span class="c1"># Divide odd visibility again in odd and even</span>
+    <span class="k">if</span> <span class="n">v_odd</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">v_1</span> <span class="o">=</span> <span class="n">v_odd</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">v_1</span> <span class="o">=</span> <span class="n">v_odd</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">:</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">v_2</span> <span class="o">=</span> <span class="n">v_odd</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+
+    <span class="c1"># Average difference OFF-OFF.</span>
+    <span class="n">diff_off_off</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">v_1</span> <span class="o">-</span> <span class="n">v_2</span><span class="p">))</span>
+
+    <span class="c1"># Ratio of differences. Sould be close to 1</span>
+    <span class="c1"># if noise injection is off.</span>
+    <span class="n">ratio</span> <span class="o">=</span> <span class="n">diff_on_off</span> <span class="o">/</span> <span class="n">diff_off_off</span>
+
+    <span class="k">if</span> <span class="n">ratio</span> <span class="o">&gt;</span> <span class="mf">3.0</span><span class="p">:</span>
+        <span class="n">ni_on</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">ni_on</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">return</span> <span class="n">ni_on</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_autos_index</span><span class="p">(</span><span class="n">prod_array</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Obtain auto-correlation indices from the &#39;prod&#39; index map</span>
+<span class="sd">    returned by andata.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">autos_index</span><span class="p">,</span> <span class="n">autos_chan</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">prod_array</span><span class="p">)):</span>
+        <span class="k">if</span> <span class="n">prod_array</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">prod_array</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">1</span><span class="p">]:</span>
+            <span class="n">autos_index</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">ii</span><span class="p">)</span>
+            <span class="n">autos_chan</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">prod_array</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">autos_index</span><span class="p">,</span> <span class="n">autos_chan</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_prod_array</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Function to get visibility product array from file path</span>
+
+<span class="sd">    Useful when desired file is known but not the time span, so that</span>
+<span class="sd">    finder and as_reader are not useful. Or when file is not known</span>
+<span class="sd">    to alpenhorn</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">    ***********</span>
+<span class="sd">    path : string, path to file</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">    ********</span>
+<span class="sd">    prod_array : array-like, the visibility products.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># If given list of files, use first one:</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="c1"># Get file with single time, single frequency:</span>
+    <span class="n">data_aux</span> <span class="o">=</span> <span class="n">andata</span><span class="o">.</span><span class="n">AnData</span><span class="o">.</span><span class="n">from_acq_h5</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">start</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">stop</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">freq_sel</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">data_aux</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;prod&quot;</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cut_non_chime</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">visi</span><span class="p">,</span> <span class="n">chan_array</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Remove non CHIME channels (noise injection, RFI antenna,</span>
+<span class="sd">    26m, etc...) from visibility. Also remove channels marked</span>
+<span class="sd">    as powered-off in layout DB.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Map of channels to corr. inputs:</span>
+    <span class="n">input_map</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">input</span>
+    <span class="n">tmstp</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">index_map</span><span class="p">[</span><span class="s2">&quot;time&quot;</span><span class="p">][</span><span class="s2">&quot;ctime&quot;</span><span class="p">]</span>  <span class="c1"># time stamp</span>
+    <span class="c1"># Datetime halfway through data:</span>
+    <span class="n">half_time</span> <span class="o">=</span> <span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">tmstp</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmstp</span><span class="p">)</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)])</span>
+    <span class="c1"># Get information on correlator inputs, if not already supplied</span>
+    <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">get_correlator_inputs</span><span class="p">(</span><span class="n">half_time</span><span class="p">)</span>
+    <span class="c1"># Reorder inputs to have sema order as input map (and data)</span>
+    <span class="n">inputs</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">reorder_correlator_inputs</span><span class="p">(</span><span class="n">input_map</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+    <span class="c1"># Get noise source channel index:</span>
+
+    <span class="c1"># Test if inputs are attached to CHIME antenna and powered on:</span>
+    <span class="n">pwds</span> <span class="o">=</span> <span class="n">tools</span><span class="o">.</span><span class="n">is_chime_on</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)):</span>
+        <span class="c1">#        if ( (not tools.is_chime(inputs[ii]))</span>
+        <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">pwds</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ii</span> <span class="ow">in</span> <span class="n">chan_array</span><span class="p">):</span>
+            <span class="c1"># Remove non-CHIME-on channels from visibility matrix...</span>
+            <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">chan_array</span> <span class="o">==</span> <span class="n">ii</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># index of channel</span>
+            <span class="n">visi</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+            <span class="c1"># ...and from product array:</span>
+            <span class="n">chan_array</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">chan_array</span><span class="p">,</span> <span class="n">idx</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">visi</span><span class="p">,</span> <span class="n">chan_array</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_noise_test</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Calls radiom_noise to obtain radiometer statistics</span>
+<span class="sd">    and aplies the noise tolerance to get a list of</span>
+<span class="sd">    channels that pass the radiometer noise test</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Nchans</span> <span class="o">=</span> <span class="n">visi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="c1"># Array to hold radiom noise fractions</span>
+    <span class="n">rnt</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">full</span><span class="p">((</span><span class="n">Nchans</span><span class="p">),</span> <span class="n">np</span><span class="o">.</span><span class="n">nan</span><span class="p">)</span>
+
+    <span class="c1"># Cut daytime from visibility:</span>
+    <span class="n">visi_night</span><span class="p">,</span> <span class="n">tmstp_night</span> <span class="o">=</span> <span class="n">_cut_daytime</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">)</span>
+
+    <span class="n">run_noise_test</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">if</span> <span class="n">tmstp_night</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># All data is in day-time</span>
+        <span class="n">run_noise_test</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="p">(</span><span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tmstp_night</span><span class="p">,</span> <span class="nb">list</span><span class="p">))</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">tmstp_night</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">20</span><span class="p">):</span>
+        <span class="c1"># To little night-time:</span>
+        <span class="n">run_noise_test</span> <span class="o">=</span> <span class="kc">False</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">run_noise_test</span><span class="p">:</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s2">&quot;Not enough night-time for noise test. Ignoring noise test.&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+        <span class="n">good_noise</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">rnt</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Run noise test</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">):</span>
+            <span class="c1"># If multiple nights are present, result is a list:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tmstp_night</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+                <span class="n">rnt_aux</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c1"># rnt parameter for each night</span>
+                <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">visi_night</span><span class="p">)):</span>
+                    <span class="n">rnt_array</span><span class="p">,</span> <span class="n">rnt_med</span><span class="p">,</span> <span class="n">rnt_max</span><span class="p">,</span> <span class="n">rnt_min</span> <span class="o">=</span> <span class="n">_radiom_noise</span><span class="p">(</span>
+                        <span class="n">visi_night</span><span class="p">[</span><span class="n">jj</span><span class="p">][</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">n_samp</span>
+                    <span class="p">)</span>
+                    <span class="n">rnt_aux</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">rnt_med</span><span class="p">)</span>
+                <span class="c1"># Use median of rnt&#39;s as parameter:</span>
+                <span class="n">rnt</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">rnt_aux</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">rnt_array</span><span class="p">,</span> <span class="n">rnt_med</span><span class="p">,</span> <span class="n">rnt_max</span><span class="p">,</span> <span class="n">rnt_min</span> <span class="o">=</span> <span class="n">_radiom_noise</span><span class="p">(</span>
+                    <span class="n">visi_night</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">n_samp</span>
+                <span class="p">)</span>
+                <span class="c1"># Use median of rnt&#39;s as parameter:</span>
+                <span class="n">rnt</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="n">rnt_med</span>
+
+        <span class="c1"># List of good noise channels (Initialized with all True):</span>
+        <span class="n">good_noise</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)</span>
+        <span class="c1"># Test noise against tolerance and isnan, isinf:</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">):</span>
+            <span class="n">is_nan_inf</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">rnt</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="ow">or</span> <span class="n">np</span><span class="o">.</span><span class="n">isinf</span><span class="p">(</span><span class="n">rnt</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span>
+            <span class="k">if</span> <span class="n">is_nan_inf</span> <span class="ow">or</span> <span class="n">rnt</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>
+                <span class="n">good_noise</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+    <span class="k">return</span> <span class="n">good_noise</span><span class="p">,</span> <span class="n">rnt</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_radiom_noise</span><span class="p">(</span><span class="n">trace</span><span class="p">,</span> <span class="n">n_samp</span><span class="p">,</span> <span class="n">wind</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generates radiometer noise test statistics&quot;&quot;&quot;</span>
+
+    <span class="c1"># If window is &lt; the length, use length of trace:</span>
+    <span class="n">wind</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trace</span><span class="p">),</span> <span class="n">wind</span><span class="p">)</span>
+
+    <span class="c1"># Window has to be even in length:</span>
+    <span class="k">if</span> <span class="n">wind</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="n">wind</span> <span class="o">=</span> <span class="n">wind</span> <span class="o">-</span> <span class="mi">1</span>
+
+    <span class="c1"># Separate trace in windows:</span>
+    <span class="n">t_w</span> <span class="o">=</span> <span class="p">[</span><span class="n">trace</span><span class="p">[</span><span class="n">ii</span> <span class="o">*</span> <span class="n">wind</span> <span class="p">:</span> <span class="p">(</span><span class="n">ii</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span> <span class="o">*</span> <span class="n">wind</span><span class="p">]</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">trace</span><span class="p">)</span> <span class="o">//</span> <span class="n">wind</span><span class="p">))]</span>
+
+    <span class="c1"># Estimate total Temp by median of each window:</span>
+    <span class="n">T</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">t_w</span><span class="p">]</span>
+
+    <span class="c1"># Subtract even - odd bins to get rid of general trends in data:</span>
+    <span class="n">t_s</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="p">[</span><span class="n">t_w</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="n">jj</span><span class="p">]</span> <span class="o">-</span> <span class="n">t_w</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="n">jj</span> <span class="o">+</span> <span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">int</span><span class="p">(</span><span class="n">wind</span><span class="p">),</span> <span class="mi">2</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">t_w</span><span class="p">))</span>
+    <span class="p">]</span>
+
+    <span class="c1"># RMS of each window:</span>
+    <span class="c1"># Use MAD to estimate RMS. More robust against RFI/correlator spikes.</span>
+    <span class="c1"># sqrt(2) factor is due to my subtracting even - odd time bins.</span>
+    <span class="c1"># 1.4826 factor is to go from MAD to RMS of a normal distribution:</span>
+    <span class="c1"># rms = [ np.std(entry)/np.sqrt(2) for entry in t_s ] # Using MAD to estimate rms</span>
+    <span class="n">rms</span> <span class="o">=</span> <span class="p">[</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">entry</span><span class="p">))</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="p">))])</span>
+        <span class="o">*</span> <span class="mf">1.4826</span>
+        <span class="o">/</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">t_s</span>
+    <span class="p">]</span>
+
+    <span class="c1"># Radiometer equation proporcionality factor:</span>
+    <span class="n">r_fact</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.5</span> <span class="o">*</span> <span class="n">n_samp</span><span class="p">)</span> <span class="o">**</span> <span class="mf">0.5</span>
+    <span class="c1"># Radiometer noise factor (should be ~1):</span>
+    <span class="n">rnt</span> <span class="o">=</span> <span class="p">[</span><span class="n">rms</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">*</span> <span class="n">r_fact</span> <span class="o">/</span> <span class="p">(</span><span class="n">T</span><span class="p">[</span><span class="n">ii</span><span class="p">])</span> <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">rms</span><span class="p">))]</span>
+
+    <span class="n">rnt_med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">rnt</span><span class="p">)</span>
+    <span class="n">rnt_max</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">rnt</span><span class="p">)</span>
+    <span class="n">rnt_min</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">rnt</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">rnt</span><span class="p">,</span> <span class="n">rnt_med</span><span class="p">,</span> <span class="n">rnt_max</span><span class="p">,</span> <span class="n">rnt_min</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cut_daytime</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Returns visibilities with night time only.</span>
+<span class="sd">    Returns an array if a single night is present.</span>
+<span class="sd">    Returns a list of arrays if multiple nights are present.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ch_ephem.observers</span><span class="w"> </span><span class="kn">import</span> <span class="n">chime</span>
+
+    <span class="n">tstp</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Get time step</span>
+
+    <span class="n">risings</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">solar_rising</span><span class="p">(</span><span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="n">settings</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">solar_setting</span><span class="p">(</span><span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">next_rising</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">solar_rising</span><span class="p">(</span><span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">next_setting</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">solar_setting</span><span class="p">(</span><span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">next_setting</span> <span class="o">&lt;</span> <span class="n">next_rising</span><span class="p">:</span>
+            <span class="c1"># All data is in daylight time</span>
+            <span class="n">cut_vis</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># All data is in night time</span>
+            <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">visi</span><span class="p">)</span>
+            <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">tmstp</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Only one rising:</span>
+        <span class="n">sr</span> <span class="o">=</span> <span class="n">risings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Find time bin index closest to solar rising:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmstp</span> <span class="o">-</span> <span class="n">sr</span><span class="p">))</span>
+
+        <span class="c1"># Determine time limits to cut:</span>
+        <span class="c1"># (20 min after setting and before rising, if within range)</span>
+        <span class="n">cut_low</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="mf">20.0</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">))</span>  <span class="c1"># lower limit of time cut</span>
+
+        <span class="c1"># Cut daylight times:</span>
+        <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">visi</span><span class="p">[:,</span> <span class="p">:</span><span class="n">cut_low</span><span class="p">])</span>
+        <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[:</span><span class="n">cut_low</span><span class="p">]</span>
+
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">risings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>  <span class="c1"># Only one setting:</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="c1"># Find time bin index closest to solar setting:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmstp</span> <span class="o">-</span> <span class="n">ss</span><span class="p">))</span>
+
+        <span class="c1"># Determine time limits to cut:</span>
+        <span class="c1"># (20 min after setting and before rising, if within range)</span>
+        <span class="n">cut_up</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+            <span class="nb">len</span><span class="p">(</span><span class="n">tmstp</span><span class="p">),</span> <span class="n">idx</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="mf">20.0</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">)</span>
+        <span class="p">)</span>  <span class="c1"># upper limit of time to cut</span>
+
+        <span class="c1"># Cut daylight times:</span>
+        <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">visi</span><span class="p">[:,</span> <span class="n">cut_up</span><span class="p">:])</span>
+        <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[</span><span class="n">cut_up</span><span class="p">:]</span>
+
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cut_pairs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">risings</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+            <span class="n">cut_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="mi">0</span><span class="p">]])</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">)):</span>
+                <span class="n">cut_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">risings</span><span class="p">[</span><span class="n">ii</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="n">ii</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risings</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+                <span class="n">cut_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">risings</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">)):</span>
+                <span class="n">cut_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">risings</span><span class="p">[</span><span class="n">ii</span><span class="p">],</span> <span class="n">settings</span><span class="p">[</span><span class="n">ii</span><span class="p">]])</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">risings</span><span class="p">)</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">settings</span><span class="p">):</span>
+                <span class="n">cut_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">risings</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]])</span>
+
+        <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">cut_vis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">tmstp_remain</span> <span class="o">=</span> <span class="n">tmstp</span>
+        <span class="n">vis_remain</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">visi</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">cp</span> <span class="ow">in</span> <span class="n">cut_pairs</span><span class="p">:</span>
+            <span class="c1"># Find time bin index closest to cuts:</span>
+            <span class="n">idx_low</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmstp_remain</span> <span class="o">-</span> <span class="n">cp</span><span class="p">[</span><span class="mi">0</span><span class="p">]))</span>
+            <span class="n">idx_up</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">tmstp_remain</span> <span class="o">-</span> <span class="n">cp</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+            <span class="c1"># Determine time limits to cut:</span>
+            <span class="c1"># (20 min after setting and before rising, if within range)</span>
+            <span class="n">cut_low</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span>
+                <span class="mi">0</span><span class="p">,</span> <span class="n">idx_low</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="mf">20.0</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">)</span>
+            <span class="p">)</span>  <span class="c1"># lower limit of time cut</span>
+            <span class="n">cut_up</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">tmstp_remain</span><span class="p">),</span> <span class="n">idx_up</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="mf">20.0</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">)</span>
+            <span class="p">)</span>  <span class="c1"># upper limit of time to cut</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmstp_remain</span><span class="p">[:</span><span class="n">cut_low</span><span class="p">])</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">cut_vis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vis_remain</span><span class="p">[:,</span> <span class="p">:</span><span class="n">cut_low</span><span class="p">])</span>
+                <span class="n">cut_tmstp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                    <span class="n">tmstp_remain</span><span class="p">[:</span><span class="n">cut_low</span><span class="p">]</span>
+                <span class="p">)</span>  <span class="c1"># Append times before rising to cut_tmstp</span>
+            <span class="n">vis_remain</span> <span class="o">=</span> <span class="n">vis_remain</span><span class="p">[:,</span> <span class="n">cut_up</span><span class="p">:]</span>
+            <span class="n">tmstp_remain</span> <span class="o">=</span> <span class="n">tmstp_remain</span><span class="p">[</span>
+                <span class="n">cut_up</span><span class="p">:</span>
+            <span class="p">]</span>  <span class="c1"># Use times after setting for further cuts</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">tmstp_remain</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="c1"># If there is a bit of night data in the end, append it:</span>
+            <span class="n">cut_tmstp</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tmstp_remain</span><span class="p">)</span>
+            <span class="n">cut_vis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">vis_remain</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">cut_vis</span><span class="p">,</span> <span class="n">cut_tmstp</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_gains_test</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">test_freq</span><span class="p">,</span> <span class="n">test_chans</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test channels for excessive digital gains.&quot;&quot;&quot;</span>
+
+    <span class="n">input_map</span> <span class="o">=</span> <span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">input</span><span class="p">]</span>
+
+    <span class="c1"># Get gains:</span>
+    <span class="c1"># (only gains of channels being tested)</span>
+    <span class="n">gains</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+            <span class="p">[</span><span class="n">data</span><span class="o">.</span><span class="n">gain</span><span class="p">[</span><span class="n">test_freq</span><span class="p">,</span> <span class="n">input_map</span><span class="o">.</span><span class="n">index</span><span class="p">(</span><span class="n">chan</span><span class="p">),</span> <span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="n">test_chans</span><span class="p">]</span>
+        <span class="p">)</span>
+    <span class="p">)</span>
+
+    <span class="n">g_med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">gains</span><span class="p">)</span>  <span class="c1"># median</span>
+    <span class="n">g_devs</span> <span class="o">=</span> <span class="p">[</span><span class="nb">abs</span><span class="p">(</span><span class="n">entry</span> <span class="o">-</span> <span class="n">g_med</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">gains</span><span class="p">]</span>  <span class="c1"># deviations from median</span>
+    <span class="n">g_mad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">g_devs</span><span class="p">)</span>  <span class="c1"># MAD is insensitive to outlier deviations</span>
+    <span class="n">g_frac_devs</span> <span class="o">=</span> <span class="p">[</span><span class="n">dev</span> <span class="o">/</span> <span class="n">g_mad</span> <span class="k">for</span> <span class="n">dev</span> <span class="ow">in</span> <span class="n">g_devs</span><span class="p">]</span>  <span class="c1"># Fractional deviations</span>
+
+    <span class="n">Nchans</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">gains</span><span class="p">)</span>  <span class="c1"># Number of channels</span>
+
+    <span class="n">good_gains</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)</span>  <span class="c1"># Good gains initialized to ones</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">g_frac_devs</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">:</span>  <span class="c1"># Tolerance for gain deviations</span>
+            <span class="n">good_gains</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">return</span> <span class="n">good_gains</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_stats_print</span><span class="p">(</span><span class="n">good_noise</span><span class="p">,</span> <span class="n">good_gains</span><span class="p">,</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">test_chans</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Generate a simple set of statistics for the test</span>
+<span class="sd">    and print them to screen.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\n</span><span class="s2">Filter statistics:&quot;</span><span class="p">)</span>
+
+    <span class="n">good_chans</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_chans</span><span class="p">)</span>
+
+    <span class="n">Nact</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">test_chans</span><span class="p">)</span>  <span class="c1"># Number of active channels</span>
+    <span class="k">if</span> <span class="n">good_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Nnoisy</span> <span class="o">=</span> <span class="n">Nact</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">good_noise</span><span class="p">))</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="n">Nnoisy</span> <span class="o">*</span> <span class="mf">100.0</span> <span class="o">/</span> <span class="n">Nact</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Noisy channels: </span><span class="si">{</span><span class="n">Nnoisy</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">Nact</span><span class="si">}</span><span class="s2"> active channels (</span><span class="si">{</span><span class="n">percent</span><span class="si">:</span><span class="s2">2.1f</span><span class="si">}</span><span class="s2">%)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">good_chans</span> <span class="o">=</span> <span class="n">good_chans</span> <span class="o">*</span> <span class="n">good_noise</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Nnoisy</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">good_gains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Ngains</span> <span class="o">=</span> <span class="n">Nact</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">good_gains</span><span class="p">))</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="n">Ngains</span> <span class="o">*</span> <span class="mf">100.0</span> <span class="o">/</span> <span class="n">Nact</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="s2">&quot;High digital gains: &quot;</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">Ngains</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">Nact</span><span class="si">}</span><span class="s2"> active channels (</span><span class="si">{</span><span class="n">percent</span><span class="si">:</span><span class="s2">2.1f</span><span class="si">}</span><span class="s2">%)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">good_chans</span> <span class="o">=</span> <span class="n">good_chans</span> <span class="o">*</span> <span class="n">good_gains</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Ngains</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">good_fit</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">Nfit</span> <span class="o">=</span> <span class="n">Nact</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">good_fit</span><span class="p">))</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="n">Nfit</span> <span class="o">*</span> <span class="mf">100.0</span> <span class="o">/</span> <span class="n">Nact</span>
+        <span class="nb">print</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Bad fit to T_sky: </span><span class="si">{</span><span class="n">Nfit</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">Nact</span><span class="si">}</span><span class="s2"> active channels (</span><span class="si">{</span><span class="n">percent</span><span class="si">:</span><span class="s2">2.1f</span><span class="si">}</span><span class="s2">%)&quot;</span>
+        <span class="p">)</span>
+        <span class="n">good_chans</span> <span class="o">=</span> <span class="n">good_chans</span> <span class="o">*</span> <span class="n">good_fit</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Nfit</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="c1"># Obtain total number of bad channels:</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">((</span><span class="n">good_noise</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">good_gains</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">good_fit</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)):</span>
+        <span class="n">Nbad</span> <span class="o">=</span> <span class="n">Nact</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">good_chans</span><span class="p">))</span>
+        <span class="n">percent</span> <span class="o">=</span> <span class="n">Nbad</span> <span class="o">*</span> <span class="mf">100.0</span> <span class="o">/</span> <span class="n">Nact</span>
+        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Overall bad: </span><span class="si">{</span><span class="n">Nbad</span><span class="si">}</span><span class="s2"> out of </span><span class="si">{</span><span class="n">Nact</span><span class="si">}</span><span class="s2"> active channels (</span><span class="si">{</span><span class="n">percent</span><span class="si">:</span><span class="s2">2.1f</span><span class="si">}</span><span class="s2">%)</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">Nbad</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">return</span> <span class="n">Nact</span><span class="p">,</span> <span class="n">Nnoisy</span><span class="p">,</span> <span class="n">Ngains</span><span class="p">,</span> <span class="n">Nfit</span><span class="p">,</span> <span class="n">Nbad</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_cut_sun_transit</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">,</span> <span class="n">tcut</span><span class="o">=</span><span class="mf">120.0</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Cut sun transit times from visibilities.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    cut_vis : numpy 2D array</span>
+<span class="sd">        visibilities to cut (prod,time).</span>
+<span class="sd">    tmstp : numpy 1D array</span>
+<span class="sd">        time stamps (u-time)</span>
+<span class="sd">    tcut : float</span>
+<span class="sd">        time (in minutes) to cut on both sides of Sun transit.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">ch_ephem.observers</span><span class="w"> </span><span class="kn">import</span> <span class="n">chime</span>
+
+    <span class="c1"># Start looking for transits tcut minutes before start time:</span>
+    <span class="n">st_time</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">tcut</span> <span class="o">*</span> <span class="mf">60.0</span>
+    <span class="c1"># Stop looking for transits tcut minutes after end time:</span>
+    <span class="n">end_time</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tcut</span> <span class="o">*</span> <span class="mf">60.0</span>
+
+    <span class="c1"># Find Sun transits between start time and end time:</span>
+    <span class="n">sun_trans</span> <span class="o">=</span> <span class="n">chime</span><span class="o">.</span><span class="n">solar_transit</span><span class="p">(</span><span class="n">st_time</span><span class="p">,</span> <span class="n">end_time</span><span class="p">)</span>
+
+    <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">tmstp</span>  <span class="c1"># Time stamps to be cut</span>
+    <span class="n">tstp</span> <span class="o">=</span> <span class="n">tmstp</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">tmstp</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Get time step</span>
+    <span class="k">for</span> <span class="n">st</span> <span class="ow">in</span> <span class="n">sun_trans</span><span class="p">:</span>
+        <span class="c1"># Find time bin index closest to solar transit:</span>
+        <span class="n">idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cut_tmstp</span> <span class="o">-</span> <span class="n">st</span><span class="p">))</span>
+
+        <span class="c1"># Determine time limits to cut:</span>
+        <span class="c1"># (tcut min on both sides of solar transit, if within range)</span>
+        <span class="c1"># lower limit of time cut:</span>
+        <span class="n">cut_low</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">idx</span> <span class="o">-</span> <span class="nb">int</span><span class="p">(</span><span class="n">tcut</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">))</span>
+        <span class="c1"># upper limit of time cut:</span>
+        <span class="n">cut_up</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cut_tmstp</span><span class="p">),</span> <span class="n">idx</span> <span class="o">+</span> <span class="nb">int</span><span class="p">(</span><span class="n">tcut</span> <span class="o">*</span> <span class="mf">60.0</span> <span class="o">/</span> <span class="n">tstp</span><span class="p">))</span>
+
+        <span class="c1"># Cut times of solar transit:</span>
+        <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">cut_vis</span><span class="p">[:,</span> <span class="p">:</span><span class="n">cut_low</span><span class="p">],</span> <span class="n">cut_vis</span><span class="p">[:,</span> <span class="n">cut_up</span><span class="p">:]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">cut_tmstp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">cut_tmstp</span><span class="p">[:</span><span class="n">cut_low</span><span class="p">],</span> <span class="n">cut_tmstp</span><span class="p">[</span><span class="n">cut_up</span><span class="p">:]))</span>
+
+    <span class="k">return</span> <span class="n">cut_vis</span><span class="p">,</span> <span class="n">cut_tmstp</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_median_filter</span><span class="p">(</span><span class="n">visi</span><span class="p">,</span> <span class="n">ks</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Median filter visibilities for fit test.&quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.signal</span><span class="w"> </span><span class="kn">import</span> <span class="n">medfilt</span>
+
+    <span class="c1"># Median filter visibilities:</span>
+    <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">medfilt</span><span class="p">(</span><span class="n">visi</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="n">ks</span><span class="p">)</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">visi</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])]</span>
+    <span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_get_template</span><span class="p">(</span><span class="n">cut_vis_full</span><span class="p">,</span> <span class="n">stand_chans</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Obtain template visibility through an SVD.</span>
+<span class="sd">    This template will be compared to the actual</span>
+<span class="sd">    visibilities in _fit_template.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="c1"># Full copy of visibilities without sun:</span>
+    <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">cut_vis_full</span><span class="p">)</span>
+
+    <span class="c1"># Cut out noisy and bad-gain channels:</span>
+    <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cut_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="k">if</span> <span class="n">stand_chans</span><span class="p">[</span><span class="n">jj</span><span class="p">]]</span>
+    <span class="p">)</span>
+
+    <span class="n">Nchans</span> <span class="o">=</span> <span class="n">cut_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Number of channels after cut</span>
+
+    <span class="c1"># Perform a first cut of the most outlying visibilities:</span>
+    <span class="c1"># Remove the offset of the visibilities (aprox T_receiver):</span>
+    <span class="n">vis_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:])</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)]</span>
+    <span class="p">)</span>
+    <span class="c1"># Normalize visibilities:</span>
+    <span class="n">vis_test</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="n">vis_test</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="o">/</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">vis_test</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">vis_test</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]))</span>
+            <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">vis_test</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">medn</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">vis_test</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>  <span class="c1"># Median visibility across channels</span>
+    <span class="n">devs</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">entry</span> <span class="o">-</span> <span class="n">medn</span><span class="p">))</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">vis_test</span><span class="p">]</span>  <span class="c1"># Deviations sumed in time</span>
+    <span class="c1"># Number of channels that can be ignored due</span>
+    <span class="c1"># to excessive deviations:</span>
+    <span class="n">Ncut</span> <span class="o">=</span> <span class="mi">10</span>
+    <span class="c1"># Find the channels with largest deviations:</span>
+    <span class="n">indices</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">devs</span><span class="p">)))</span>
+    <span class="n">del_ind</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">nn</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Ncut</span><span class="p">):</span>
+        <span class="n">max_ind</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">devs</span><span class="p">)</span>
+        <span class="n">del_ind</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">indices</span><span class="p">[</span><span class="n">max_ind</span><span class="p">])</span>
+        <span class="n">devs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">devs</span><span class="p">,</span> <span class="n">max_ind</span><span class="p">)</span>
+        <span class="n">indices</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">indices</span><span class="p">,</span> <span class="n">max_ind</span><span class="p">)</span>
+    <span class="c1"># Cut-out channels with largest deviations:</span>
+    <span class="n">cut_vis</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">))</span> <span class="k">if</span> <span class="n">jj</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">del_ind</span><span class="p">]</span>
+    <span class="p">)</span>
+
+    <span class="n">Nchans</span> <span class="o">=</span> <span class="n">cut_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Number of channels after cut</span>
+
+    <span class="c1"># Find most typical channel within each frequency:</span>
+    <span class="c1"># Model: visi = gn*(Ts + Tr) = gn*Ts + gTr</span>
+    <span class="c1"># Where:</span>
+    <span class="c1"># gn : gains</span>
+    <span class="c1"># Ts : Sky temperature</span>
+    <span class="c1"># Tr : reciver temperature</span>
+    <span class="c1"># gTr = gn * Tr</span>
+
+    <span class="c1"># Determine first guess for receiver temperature * gain: Tr * gn = gTr</span>
+    <span class="c1"># (lower value of low-pass filtered visibility)</span>
+    <span class="n">gTr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:])</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)])</span>
+    <span class="c1"># Matrix Vs is the visibilities minus the guessed receiver temperature * gn</span>
+    <span class="c1"># For the exact gTr it should be: Vs = visi - gTr = gn * Ts</span>
+    <span class="n">Vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">,</span> <span class="p">:]</span> <span class="o">-</span> <span class="n">gTr</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)])</span>
+
+    <span class="n">ss</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">ss_diff</span> <span class="o">=</span> <span class="mf">1.0</span>
+    <span class="n">tries</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">ss_diff</span> <span class="o">&gt;</span> <span class="mf">0.01</span> <span class="ow">or</span> <span class="n">ss</span> <span class="o">&lt;</span> <span class="mf">3.0</span><span class="p">:</span>
+        <span class="c1"># SVD on Vs:</span>
+        <span class="n">U</span><span class="p">,</span> <span class="n">s</span><span class="p">,</span> <span class="n">V</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">svd</span><span class="p">(</span><span class="n">Vs</span><span class="p">,</span> <span class="n">full_matrices</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+
+        <span class="n">ss_diff</span> <span class="o">=</span> <span class="nb">abs</span><span class="p">(</span><span class="n">ss</span> <span class="o">-</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+        <span class="n">ss</span> <span class="o">=</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="c1"># print &#39;Ratio of first to second singular value: &#39;, ss</span>
+
+        <span class="c1"># Updated gains, sky temp, sky visibility and</span>
+        <span class="c1"># gTr approximations:</span>
+        <span class="n">gn</span> <span class="o">=</span> <span class="n">U</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># Only first singular value</span>
+        <span class="n">Ts</span> <span class="o">=</span> <span class="n">V</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="p">:]</span>  <span class="c1"># Only first singular value</span>
+        <span class="n">Vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">outer</span><span class="p">(</span><span class="n">gn</span><span class="p">,</span> <span class="n">Ts</span><span class="p">)</span>  <span class="c1"># Outer product</span>
+        <span class="c1"># New gTr is visi minus spprox sky vis, averaged over time:</span>
+        <span class="n">gTr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">((</span><span class="n">cut_vis</span> <span class="o">-</span> <span class="n">Vs</span><span class="p">),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">Vs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="o">-</span> <span class="n">gTr</span><span class="p">[</span><span class="n">jj</span><span class="p">]</span> <span class="k">for</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)])</span>
+
+        <span class="n">tries</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">tries</span> <span class="o">==</span> <span class="mi">100</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="s2">&quot;SVD search for Tsky at freq </span><span class="si">{0}</span><span class="s2"> did NOT converge.</span><span class="se">\n</span><span class="s2">&quot;</span>
+                <span class="o">+</span> <span class="s2">&quot;Bad channels list might not be accurate.&quot;</span>
+            <span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">break</span>
+
+    <span class="c1"># Solution could have negative gains and negative T sky:</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="n">gn</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0</span><span class="p">:</span>  <span class="c1"># Most gains are &lt; 0 means sign is wrong</span>
+        <span class="c1"># if np.all(Ts &lt; 0) and np.all(gn &lt; 0):</span>
+        <span class="n">Ts</span> <span class="o">=</span> <span class="n">Ts</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+        <span class="n">gn</span> <span class="o">=</span> <span class="n">gn</span> <span class="o">*</span> <span class="p">(</span><span class="o">-</span><span class="mf">1.0</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">gn</span><span class="p">,</span> <span class="n">Ts</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_fit_template</span><span class="p">(</span><span class="n">Ts</span><span class="p">,</span> <span class="n">cut_vis</span><span class="p">,</span> <span class="n">tol</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Fits template visibility to actual ones</span>
+<span class="sd">    to identify bad channels.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="kn">from</span><span class="w"> </span><span class="nn">scipy.optimize</span><span class="w"> </span><span class="kn">import</span> <span class="n">curve_fit</span>
+
+    <span class="k">class</span><span class="w"> </span><span class="nc">Template</span><span class="p">:</span>
+        <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tmplt</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tmplt</span> <span class="o">=</span> <span class="n">tmplt</span>
+
+        <span class="k">def</span><span class="w"> </span><span class="nf">fit_func</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">t</span><span class="p">,</span> <span class="n">gn</span><span class="p">,</span> <span class="n">Tr</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">gn</span> <span class="o">*</span> <span class="bp">self</span><span class="o">.</span><span class="n">tmplt</span><span class="p">[</span><span class="n">t</span><span class="p">]</span> <span class="o">+</span> <span class="n">Tr</span>  <span class="c1"># Template*gains + receiver temper.</span>
+
+    <span class="n">sky</span> <span class="o">=</span> <span class="n">Template</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span>
+
+    <span class="c1"># Amplitude of template used in first guesses:</span>
+    <span class="n">amp_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span>
+    <span class="n">min_t</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">Ts</span><span class="p">)</span>
+
+    <span class="n">popt</span><span class="p">,</span> <span class="n">perr</span> <span class="o">=</span> <span class="p">[],</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">chan</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">cut_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]):</span>
+        <span class="c1"># First guesses:</span>
+        <span class="n">amp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">chan</span><span class="p">])</span> <span class="o">-</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">chan</span><span class="p">])</span>
+        <span class="n">gn0</span> <span class="o">=</span> <span class="n">amp</span> <span class="o">/</span> <span class="n">amp_t</span>  <span class="c1"># gain as fraction of amplitudes</span>
+        <span class="n">Tr0</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">chan</span><span class="p">])</span> <span class="o">-</span> <span class="n">min_t</span> <span class="o">*</span> <span class="n">gn0</span>
+        <span class="n">p0</span> <span class="o">=</span> <span class="p">[</span><span class="n">gn0</span><span class="p">,</span> <span class="n">Tr0</span><span class="p">]</span>  <span class="c1"># First guesses at parameters</span>
+
+        <span class="c1"># Make the fit:</span>
+        <span class="n">xdata</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cut_vis</span><span class="p">[</span><span class="n">chan</span><span class="p">])))</span>
+        <span class="n">popt_aux</span><span class="p">,</span> <span class="n">pcov</span> <span class="o">=</span> <span class="n">curve_fit</span><span class="p">(</span><span class="n">sky</span><span class="o">.</span><span class="n">fit_func</span><span class="p">,</span> <span class="n">xdata</span><span class="p">,</span> <span class="n">cut_vis</span><span class="p">[</span><span class="n">chan</span><span class="p">],</span> <span class="n">p0</span><span class="p">)</span>
+        <span class="n">perr_aux</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diag</span><span class="p">(</span><span class="n">pcov</span><span class="p">))</span>  <span class="c1"># Standard deviation of parameters</span>
+
+        <span class="n">popt</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">popt_aux</span><span class="p">)</span>
+        <span class="n">perr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">perr_aux</span><span class="p">)</span>
+
+    <span class="n">Nchans</span> <span class="o">=</span> <span class="n">cut_vis</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">good_fit</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">Nchans</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">Nchans</span><span class="p">):</span>
+        <span class="n">neg_gain</span> <span class="o">=</span> <span class="n">popt</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">0.0</span>  <span class="c1"># Negative gains fail the test</span>
+        <span class="k">if</span> <span class="n">neg_gain</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">abs</span><span class="p">(</span><span class="n">perr</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">/</span> <span class="n">popt</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span> <span class="o">&gt;</span> <span class="n">tol</span><span class="p">):</span>
+            <span class="n">good_fit</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span> <span class="o">=</span> <span class="mf">0.0</span>
+
+    <span class="k">return</span> <span class="n">good_fit</span><span class="p">,</span> <span class="n">popt</span><span class="p">,</span> <span class="n">perr</span><span class="p">,</span> <span class="n">sky</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_create_plot</span><span class="p">(</span>
+    <span class="n">visi</span><span class="p">,</span> <span class="n">tmstp</span><span class="p">,</span> <span class="n">cut_tmstp</span><span class="p">,</span> <span class="n">sky</span><span class="p">,</span> <span class="n">popt</span><span class="p">,</span> <span class="n">test_chans</span><span class="p">,</span> <span class="n">good_gains</span><span class="p">,</span> <span class="n">good_noise</span><span class="p">,</span> <span class="n">good_fit</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Creates plot of the visibilities and the fits</span>
+<span class="sd">    with labels for those that fail the tests</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib</span>
+
+    <span class="n">matplotlib</span><span class="o">.</span><span class="n">use</span><span class="p">(</span><span class="s2">&quot;PDF&quot;</span><span class="p">)</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">plt</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
+
+    <span class="c1"># Visibilities to plot:</span>
+    <span class="n">visi1</span> <span class="o">=</span> <span class="n">visi</span>  <span class="c1"># Raw data</span>
+    <span class="n">tmstp1</span> <span class="o">=</span> <span class="n">tmstp</span>  <span class="c1"># Raw data</span>
+    <span class="n">visi2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span>
+        <span class="p">[</span>
+            <span class="p">[</span><span class="n">sky</span><span class="o">.</span><span class="n">fit_func</span><span class="p">(</span><span class="n">tt</span><span class="p">,</span> <span class="n">popt</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">popt</span><span class="p">[</span><span class="n">ii</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span> <span class="k">for</span> <span class="n">tt</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">cut_tmstp</span><span class="p">))]</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">popt</span><span class="p">))</span>
+        <span class="p">]</span>
+    <span class="p">)</span>
+    <span class="n">tmstp2</span> <span class="o">=</span> <span class="n">cut_tmstp</span>
+
+    <span class="c1"># For title, use start time stamp:</span>
+    <span class="n">title</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;Good channels result for </span><span class="si">{</span><span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="o">.</span><span class="n">date</span><span class="p">()</span><span class="si">}</span><span class="s2">&quot;</span>
+
+    <span class="c1"># I need to know the slot for each channel:</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_slot</span><span class="p">(</span><span class="n">channel</span><span class="p">):</span>
+        <span class="n">slot_array</span> <span class="o">=</span> <span class="p">[</span><span class="mi">4</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">15</span><span class="p">,</span> <span class="mi">13</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">6</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">11</span><span class="p">,</span> <span class="mi">9</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">slot_array</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">channel</span><span class="p">)</span> <span class="o">//</span> <span class="mi">16</span><span class="p">]</span>
+
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">(</span><span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">64</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">16</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">tmstp1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mf">24.0</span> <span class="o">*</span> <span class="mf">3600.0</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mf">3.0</span><span class="p">:</span>
+        <span class="c1"># Days since starting time</span>
+        <span class="c1"># Notice: same starting time for both</span>
+        <span class="n">time_pl1</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmstp1</span> <span class="o">-</span> <span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span><span class="p">)</span>
+        <span class="n">time_pl2</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmstp2</span> <span class="o">-</span> <span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3600</span> <span class="o">*</span> <span class="mi">24</span><span class="p">)</span>
+        <span class="n">time_unit</span> <span class="o">=</span> <span class="s2">&quot;days&quot;</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="c1"># Hours since starting time</span>
+        <span class="n">time_pl1</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmstp1</span> <span class="o">-</span> <span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3600</span><span class="p">)</span>
+        <span class="n">time_pl2</span> <span class="o">=</span> <span class="p">(</span><span class="n">tmstp2</span> <span class="o">-</span> <span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="p">(</span><span class="mi">3600</span><span class="p">)</span>
+        <span class="n">time_unit</span> <span class="o">=</span> <span class="s2">&quot;hours&quot;</span>
+
+    <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">visi1</span><span class="p">)):</span>
+        <span class="n">chan</span> <span class="o">=</span> <span class="n">test_chans</span><span class="p">[</span><span class="n">ii</span><span class="p">]</span>
+
+        <span class="c1"># Determine position in subplot:</span>
+        <span class="k">if</span> <span class="n">chan</span> <span class="o">&lt;</span> <span class="mi">64</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="n">chan</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">&lt;</span> <span class="mi">128</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">chan</span> <span class="o">-</span> <span class="mi">64</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">2</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">&lt;</span> <span class="mi">192</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">chan</span> <span class="o">-</span> <span class="mi">128</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">3</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">&lt;</span> <span class="mi">256</span><span class="p">:</span>
+            <span class="n">pos</span> <span class="o">=</span> <span class="p">(</span><span class="n">chan</span> <span class="o">-</span> <span class="mi">192</span><span class="p">)</span> <span class="o">*</span> <span class="mi">4</span> <span class="o">+</span> <span class="mi">4</span>
+
+        <span class="c1"># Create subplot:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">subplot</span><span class="p">(</span><span class="mi">64</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="n">pos</span><span class="p">)</span>
+
+        <span class="n">lab</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+        <span class="c1"># Or print standard label:</span>
+        <span class="k">if</span> <span class="n">good_gains</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">good_gains</span><span class="p">[</span><span class="n">ii</span><span class="p">]:</span>
+                <span class="n">lab</span> <span class="o">=</span> <span class="n">lab</span> <span class="o">+</span> <span class="s2">&quot;bad gains | &quot;</span>
+        <span class="k">if</span> <span class="n">good_noise</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">good_noise</span><span class="p">[</span><span class="n">ii</span><span class="p">]:</span>
+                <span class="n">lab</span> <span class="o">=</span> <span class="n">lab</span> <span class="o">+</span> <span class="s2">&quot;noisy | &quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">good_fit</span><span class="p">[</span><span class="n">ii</span><span class="p">]:</span>
+            <span class="n">lab</span> <span class="o">=</span> <span class="n">lab</span> <span class="o">+</span> <span class="s2">&quot;bad fit&quot;</span>
+
+        <span class="k">if</span> <span class="n">lab</span> <span class="o">!=</span> <span class="s2">&quot;&quot;</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">([],</span> <span class="p">[],</span> <span class="s2">&quot;1.0&quot;</span><span class="p">,</span> <span class="n">label</span><span class="o">=</span><span class="n">lab</span><span class="p">)</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">legend</span><span class="p">(</span><span class="n">loc</span><span class="o">=</span><span class="s2">&quot;best&quot;</span><span class="p">,</span> <span class="n">prop</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;size&quot;</span><span class="p">:</span> <span class="mi">6</span><span class="p">})</span>
+
+        <span class="n">trace_pl1</span> <span class="o">=</span> <span class="n">visi1</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_pl1</span><span class="p">,</span> <span class="n">trace_pl1</span><span class="p">,</span> <span class="s2">&quot;b-&quot;</span><span class="p">)</span>
+
+        <span class="n">trace_pl2</span> <span class="o">=</span> <span class="n">visi2</span><span class="p">[</span><span class="n">ii</span><span class="p">,</span> <span class="p">:]</span><span class="o">.</span><span class="n">real</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">time_pl2</span><span class="p">,</span> <span class="n">trace_pl2</span><span class="p">,</span> <span class="s2">&quot;r-&quot;</span><span class="p">)</span>
+
+        <span class="n">tm_brd</span> <span class="o">=</span> <span class="p">(</span><span class="n">time_pl1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">time_pl1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">/</span> <span class="mf">10.0</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">xlim</span><span class="p">(</span><span class="n">time_pl1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">tm_brd</span><span class="p">,</span> <span class="n">time_pl1</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">tm_brd</span><span class="p">)</span>
+
+        <span class="c1"># Determine limits of plots:</span>
+        <span class="n">med</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">(</span><span class="n">trace_pl1</span><span class="p">)</span>
+        <span class="n">mad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">median</span><span class="p">([</span><span class="nb">abs</span><span class="p">(</span><span class="n">entry</span> <span class="o">-</span> <span class="n">med</span><span class="p">)</span> <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">trace_pl1</span><span class="p">])</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylim</span><span class="p">(</span><span class="n">med</span> <span class="o">-</span> <span class="mf">7.0</span> <span class="o">*</span> <span class="n">mad</span><span class="p">,</span> <span class="n">med</span> <span class="o">+</span> <span class="mf">7.0</span> <span class="o">*</span> <span class="n">mad</span><span class="p">)</span>
+
+        <span class="c1"># labels:</span>
+        <span class="n">plt</span><span class="o">.</span><span class="n">ylabel</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Ch</span><span class="si">{</span><span class="n">chan</span><span class="si">}</span><span class="s2"> (Sl.</span><span class="si">{</span><span class="n">get_slot</span><span class="p">(</span><span class="n">chan</span><span class="p">)</span><span class="si">}</span><span class="s2">)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+
+        <span class="c1"># Hide numbering:</span>
+        <span class="n">frame</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">gca</span><span class="p">()</span>
+        <span class="n">frame</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_yaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([])</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">chan</span> <span class="o">!=</span> <span class="mi">63</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">chan</span> <span class="o">!=</span> <span class="mi">127</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">chan</span> <span class="o">!=</span> <span class="mi">191</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">chan</span> <span class="o">!=</span> <span class="mi">255</span><span class="p">):</span>
+            <span class="c1"># Remove x-axis, except on bottom plots:</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">axes</span><span class="o">.</span><span class="n">get_xaxis</span><span class="p">()</span><span class="o">.</span><span class="n">set_ticks</span><span class="p">([])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Change size of numbers in x axis:</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;major&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+            <span class="n">frame</span><span class="o">.</span><span class="n">tick_params</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="s2">&quot;both&quot;</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s2">&quot;minor&quot;</span><span class="p">,</span> <span class="n">labelsize</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">chan</span> <span class="o">==</span> <span class="mi">127</span><span class="p">:</span>
+                <span class="c1"># Put x-labels on bottom plots:</span>
+                <span class="k">if</span> <span class="n">time_unit</span> <span class="o">==</span> <span class="s2">&quot;days&quot;</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Time (days since </span><span class="si">{</span><span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2"> UTC)&quot;</span><span class="p">,</span>
+                        <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">plt</span><span class="o">.</span><span class="n">xlabel</span><span class="p">(</span>
+                        <span class="sa">f</span><span class="s2">&quot;Time (hours since </span><span class="si">{</span><span class="n">ctime</span><span class="o">.</span><span class="n">unix_to_datetime</span><span class="p">(</span><span class="n">tmstp1</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s2"> UTC)&quot;</span><span class="p">,</span>
+                        <span class="n">fontsize</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span>
+                    <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">chan</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;West cyl. P1(N-S)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">==</span> <span class="mi">64</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;West cyl. P2(E-W)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">==</span> <span class="mi">128</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;East cyl. P1(N-S)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">chan</span> <span class="o">==</span> <span class="mi">192</span><span class="p">:</span>
+            <span class="n">plt</span><span class="o">.</span><span class="n">title</span><span class="p">(</span><span class="s2">&quot;East cyl. P2(E-W)&quot;</span><span class="p">,</span> <span class="n">fontsize</span><span class="o">=</span><span class="mi">12</span><span class="p">)</span>
+
+    <span class="n">filename</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;plot_fit_</span><span class="si">{</span><span class="nb">int</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">())</span><span class="si">}</span><span class="s2">.pdf&quot;</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">savefig</span><span class="p">(</span><span class="n">filename</span><span class="p">)</span>
+    <span class="n">plt</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Finished creating plot. File name: </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2013–2024, CHIME Collaboration.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
