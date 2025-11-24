@@ -6,9 +6,10 @@ Use `radiocosmology.fluxcat`.
 
 import warnings
 
-from fluxcat import (
+from fluxcat import FluxCatalog as FluxCatalog
+
+from fluxcat.core import (
     FitSpectrum as FitSpectrum,
-    FluxCatalog as FluxCatalog,
     CurvedPowerLaw as CurvedPowerLaw,
     MetaFluxCatalog as MetaFluxCatalog,
     get_epoch as get_epoch,
