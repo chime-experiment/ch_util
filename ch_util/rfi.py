@@ -90,15 +90,15 @@ BAD_FREQUENCIES = {
         [[None, None], [529.10, 536.52]],
         # Bad band at first light.
         # UHF TV Channel 26 turned off on CSD 3440 (2023/04/07).
-        # This is extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
         [[None, 1681448064], [541.60, 548.00]],
         # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
-        # This is extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
         [[None, 1681448064], [548.00, 554.49]],
         # UHF TV Channel 30/31.  31 broadcast out of Omak.
         [[None, None], [564.65, 578.00]],
         # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
-        # This is extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
         [[None, 1681448064], [578.00, 585.35]],
         # UHF TV Channel 33 from CSD 2893 (2021/10/09).  Broadcast out of Omak.
         [[1633758888, None], [584.00, 590.00]],
