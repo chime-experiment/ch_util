@@ -52,27 +52,15 @@ BAD_FREQUENCIES = {
         [[None, None], [454.88, 456.05]],
         # Bad band at first light.
         [[None, None], [457.62, 459.18]],
-        ###
-        ### TODO: Resolve differences between ch_util and wtl.broker-utils
-        ###
-        ### The following is from ch_util
-        ###
-        # Narrow, high power bands visible in sensitivities and some longer
-        # baselines. There is some sporadic RFI in between the two bands
+        # Narrow, high power band visible in sensitivities and some longer
+        # baselines. There is some sporadic RFI near this band
         [[None, None], [460.15, 460.55]],
-        [[None, None], [464.00, 470.32]],
-        ###
-        ### The following is from wtl.broker-utils
-        ###
         # Persistent, bright narrow line.
         # Added to mask during Dec 2023 update.
         [[1700573980, None], [464.45, 465.24]],
         # Persistent, bright narrow line.
         # Added to mask during Dec 2023 update.
         [[1700573980, None], [468.75, 469.54]],
-        ###
-        ### End of TODO
-        ###
         # Bad band at first light.
         [[None, None], [483.01, 485.35]],
         # Bad band at first light.
