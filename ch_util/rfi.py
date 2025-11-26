@@ -99,7 +99,7 @@ BAD_FREQUENCIES = {
         # Freedom's new 600 MHz band from CSD 2642 (2021/02/01), turned on gradually.
         [[1612137600, None], [637.00, 642.00]],
         # Freedom's new 600 MHz band from CSD 4383 (2025/11/03)
-        [[1762177500, None], [642.00, 651.36]],
+        [[1762177500, None], [642.00, 652.00]],
         # Bad band at first light.
         [[None, None], [693.16, 693.55]],
         # Bad band at first light.
