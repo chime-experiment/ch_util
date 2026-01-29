@@ -203,23 +203,23 @@ class HolographyObservation(base_model):
         with open(post_report_file) as f:
             for line in f:
                 if (line.find("Source")) != -1:
-                    srcnm = re.search("Source:\s+(.*?)\s+", line).group(1)
+                    srcnm = re.search(r"Source:\s+(.*?)\s+", line).group(1)
                     if srcnm in cls.source_alias:
                         srcnm = cls.source_alias[srcnm]
                 if (line.find("DURATION")) != -1:
                     output_params["DURATION"] = float(
-                        re.search("DURATION:\s+(.*?)\s+", line).group(1)
+                        re.search(r"DURATION:\s+(.*?)\s+", line).group(1)
                     )
 
                 # convert Julian Date to Skyfield time object
                 if (line.find("JULIAN DATE")) != -1:
                     output_params["start_time"] = ts.ut1(
-                        jd=float(re.search("JULIAN DATE:\s+(.*?)\s+", line).group(1))
+                        jd=float(re.search(r"JULIAN DATE:\s+(.*?)\s+", line).group(1))
                     )
 
                 if line.find("SID:") != -1:
                     output_params["SID"] = int(
-                        re.search("SID:\s(.*?)\s+", line).group(1)
+                        re.search(r"SID:\s(.*?)\s+", line).group(1)
                     )
             try:
                 output_params["src"] = HolographySource.get(name=srcnm)
