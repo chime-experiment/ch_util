@@ -1088,7 +1088,7 @@ def parse_chime_serial(sn):
     RuntimeError:
         `sn` did not have the correct format.
     """
-    mo = re.match("FCC(\d{2})(\d{2})(\d{2})", sn)
+    mo = re.match(r"FCC(\d{2})(\d{2})(\d{2})", sn)
 
     if mo is None:
         raise RuntimeError(f"Serial number {sn} does not match expected CHIME format.")
@@ -1122,7 +1122,7 @@ def parse_pathfinder_serial(sn):
     RuntimeError:
         `sn` did not have the correct format.
     """
-    mo = re.match("(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
+    mo = re.match(r"(\w{6}\-\d{4})(\d{2})(\d{2})", sn)
 
     if mo is None:
         raise RuntimeError(
@@ -1156,7 +1156,7 @@ def parse_old_serial(sn):
     RuntimeError:
         `sn` did not have the correct format.
     """
-    mo = re.match("(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
+    mo = re.match(r"(\d{5}\-\d{4}\-\d{4})\-C(\d{1,2})", sn)
 
     if mo is None:
         raise RuntimeError(
