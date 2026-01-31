@@ -2843,8 +2843,10 @@ def _format_split_acq_dataset_acq1(dataset, time_slice):
 
 def _data_attrs_from_acq_attrs_acq1(acq_attrs):
     # The frequency axis.  In MHz.
-    samp_freq = float(acq_attrs["system_sampling_frequency"]) / 1e6
-    nfreq = int(acq_attrs["n_freq"])
+    # NOTE: have to explicitly extract the array element in order
+    # to cast to a float
+    samp_freq = float(acq_attrs["system_sampling_frequency"][0]) / 1e6
+    nfreq = int(acq_attrs["n_freq"][0])
     freq_width = samp_freq / 2 / nfreq
     freq_width_array = np.empty((nfreq,), dtype=np.float64)
     freq_width_array[:] = freq_width
@@ -3424,7 +3426,10 @@ def _remap_inputs(afile):
     # h5py should return a byte string for the attribute and so we need to decode
     # it
     inst_name = typeutils.bytes_to_unicode(afile.attrs.get("instrument_name", b""))
-    num_antenna = int(afile.history.get("acq", {}).get("n_antenna", "-1"))
+    num_antenna = afile.history.get("acq", {}).get("n_antenna", (-1))
+
+    if not isinstance(num_antenna, int):
+        num_antenna = int(num_antenna[0])
 
     # Test if is abbot or stone
     if last_time < SA_END and num_antenna == 8:
