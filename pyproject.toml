@@ -40,7 +40,7 @@ doc = [
     "mock",
     "numpydoc",
     "PyYAML",
-    "Sphinx",
+    "Sphinx<9",
     "sphinx_rtd_theme",
     "sphinxcontrib-katex"
 ]
