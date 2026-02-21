@@ -705,7 +705,7 @@ def _get_input_props(lay, corr_input, corr, rfl_path, rfi_antenna, noise_source)
         "cylinder_D": 5,
         "pco_cylinder": 6,
         "gbo_cylinder": 7,
-        "hcro_cylinder": 8,
+        "hco_cylinder": 8,
     }
 
     cyl = pos_dict[rfl.sn]
