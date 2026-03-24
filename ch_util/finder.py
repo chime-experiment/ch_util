@@ -42,7 +42,6 @@ Routines
 import logging
 from os import path
 import time
-import socket
 import peewee as pw
 import tabulate
 
@@ -235,16 +234,19 @@ class Finder:
         import copy
 
         # Which nodes do we have available?
-        host = socket.gethostname().split(".")[0]
         self._my_node = []
         self._node_spoof = node_spoof
 
         connect_database()
 
         if not node_spoof:
+            # If not given a node list, search all active archive nodes
+            logging.warning(
+                "No node_spoof provided.  Searching all active archive nodes."
+            )
             for n in (
                 di.StorageNode.select()
-                .where(di.StorageNode.host == host)
+                .where(di.StorageNode.archive)
                 .where(di.StorageNode.active)
             ):
                 self._my_node.append(n)
