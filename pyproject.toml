@@ -21,6 +21,7 @@ dependencies = [
     "fluxcat @ git+https://github.com/radiocosmology/fluxcat.git",
     "bitshuffle",
     "click",
+    "emcee",
     "h5py",
     "matplotlib",
     "mpi4py",

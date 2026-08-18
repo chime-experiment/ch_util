@@ -6,9 +6,12 @@ This module contains tools for performing point-source calibration.
 
 from abc import ABCMeta, abstractmethod
 from datetime import datetime
+from pathlib import Path
 import inspect
 import logging
+import time
 
+import h5py
 import numpy as np
 import scipy.stats
 from scipy.optimize import curve_fit
@@ -24,7 +27,7 @@ from chimedb.dataset.utils import state_id_of_type, unique_unmasked_entry
 from ch_ephem.observers import chime
 import ch_ephem.sources
 
-from ch_util import tools
+from ch_util import rfi, tools
 
 # Set up logging
 logger = logging.getLogger(__name__)
@@ -2448,6 +2451,154 @@ def interpolate_gain_quiet(*args, **kwargs):
     with warnings.catch_warnings():
         warnings.filterwarnings("ignore", category=ConvergenceWarning, module="sklearn")
         return interpolate_gain(*args, **kwargs)
+
+
+def interpolate_outrigger_gains(
+    h5_path,
+    outfile=None,
+    n_iter=1,
+    n_subbands_rfi=1,
+    n_sig_rfi=10.0,
+    deg=3,
+    n_subbands_fit=1,
+    nwalkers=24,
+    rfi_mask_pol0=None,
+    rfi_mask_pol1=None,
+    telescope=None,
+):
+    """Run the gain interpolation pipeline on a single outrigger gain file.
+
+    The following steps are performed:
+
+        - Load the raw complex gains and weights.
+        - Construct a static, per-polarisation RFI mask from the bands
+          provided by the user.
+        - Apply the phase-derivative RFI flagger, seeded with that mask.
+        - For each input, run an MCMC phase derotation, followed by a subband
+          polynomial fit and a median absolute deviation cut on the residuals,
+          to obtain the flags.
+        - Interpolate over the flagged frequencies with `interpolate_gain_quiet`.
+        - Write an output file that copies all datasets from the source file,
+          with the gain and weight replaced by the interpolated arrays.
+
+    The first four steps are carried out by
+    :py:meth:`ch_util.rfi.compute_gain_flags`.
+
+    Parameters
+    ----------
+    h5_path : str or Path
+        Path to a raw calibration-broker gain HDF5 file.
+    outfile : str or Path, optional
+        Destination HDF5 path.  If `None` (default), write
+        `<h5_path stem>_interpolated.h5` alongside the input file.
+    n_iter : int
+        Number of phase-derivative flagging iterations.
+    n_subbands_rfi : int or list of int
+        Number of frequency subbands per phase-derivative iteration.
+    n_sig_rfi : float or list of float
+        Threshold in scaled-MAD units per phase-derivative iteration.
+    deg : int
+        Degree of the polynomial fit to the amplitude and derotated phase.
+    n_subbands_fit : int
+        Number of frequency subbands used for the polynomial fit.
+    nwalkers : int
+        Number of emcee walkers used for the MCMC phase fit.
+    rfi_mask_pol0 : list or str, optional
+        Static RFI bands to flag in the pol0 inputs, in either the
+        `ch_util.rfi.BAD_FREQUENCIES` format or as `(freq_start, freq_end)`
+        pairs.  If `None` (default), no static flags are applied to pol0.
+        If set to the string `"autopick"`, the bands defined for `telescope`
+        in `ch_util.rfi.BAD_FREQUENCIES` are used instead.
+    rfi_mask_pol1 : list or str, optional
+        As `rfi_mask_pol0`, but for the pol1 inputs.
+    telescope : str, optional
+        Telescope name used to look up the static RFI bands whenever
+        `rfi_mask_pol0` or `rfi_mask_pol1` is `"autopick"`.  The
+        polarisation dependent bands are preferred, so that `"hco"` selects
+        the `hco_pol0` and `hco_pol1` bands rather than the merged `hco`
+        bands.  Telescopes without per-polarisation bands, such as `"gbo"`,
+        use the same bands for both polarisations.
+
+    Returns
+    -------
+    outfile : Path
+        Path to the output file that was written.
+    """
+    t0 = time.perf_counter()
+
+    h5_path = Path(h5_path)
+    outfile = (
+        Path(outfile)
+        if outfile is not None
+        else h5_path.parent / f"{h5_path.stem}_interpolated.h5"
+    )
+
+    # Look up any mask requested with "autopick" in the static bands that
+    # ch_util.rfi defines for this telescope.  The polarisation dependent
+    # bands are preferred, so that "hco" resolves to the hco_pol0 and
+    # hco_pol1 bands rather than to the merged hco bands.
+    resolved = []
+    for pol, mask in [("pol0", rfi_mask_pol0), ("pol1", rfi_mask_pol1)]:
+        if isinstance(mask, str):
+            if mask != "autopick":
+                raise ValueError(
+                    f"Unknown value for rfi_mask_{pol}: {mask!r}.  Expected "
+                    "'autopick', a list of RFI bands, or None."
+                )
+
+            if telescope is None:
+                raise ValueError(
+                    f"A telescope must be provided to autopick rfi_mask_{pol}."
+                )
+
+            key = f"{telescope}_{pol}"
+            if key not in rfi.BAD_FREQUENCIES:
+                key = telescope
+
+            if key not in rfi.BAD_FREQUENCIES:
+                raise ValueError(f"No RFI flags defined for {telescope}")
+
+            logger.info(f"Using the {key} RFI bands for {pol}.")
+            mask = rfi.BAD_FREQUENCIES[key]
+
+        resolved.append(mask)
+
+    rfi_mask_pol0, rfi_mask_pol1 = resolved
+
+    # Load the gains and determine the frequencies and inputs that are good
+    freqs, gain, weights, flag = rfi.compute_gain_flags(
+        h5_path,
+        n_iter=n_iter,
+        n_subbands_rfi=n_subbands_rfi,
+        n_sig_rfi=n_sig_rfi,
+        deg=deg,
+        n_subbands_fit=n_subbands_fit,
+        nwalkers=nwalkers,
+        rfi_mask_pol0=rfi_mask_pol0,
+        rfi_mask_pol1=rfi_mask_pol1,
+    )
+
+    # Interpolate over the flagged frequencies
+    interpolated, interp_weight = interpolate_gain_quiet(
+        freqs, gain, weights, flag=flag
+    )
+
+    # Copy the source file, replacing the gain and weight datasets
+    outfile.parent.mkdir(parents=True, exist_ok=True)
+    with h5py.File(h5_path, "r") as src, h5py.File(outfile, "w") as dst:
+        for key in src.keys():
+            src.copy(key, dst)
+
+        del dst["gain"]
+        del dst["weight"]
+
+        dst.create_dataset("gain", data=interpolated, dtype=np.complex64)
+        dst.create_dataset("weight", data=interp_weight, dtype=np.float32)
+
+    logger.info(f"Written: {outfile}")
+    logger.info(f"Pipeline elapsed: {time.perf_counter() - t0:.1f} s")
+
+    return outfile
 
 
 def thermal_amplitude(delta_T, freq):

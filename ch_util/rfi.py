@@ -21,6 +21,9 @@ For more control there are specific routines that can be called:
 - :py:meth:`mad_cut_rolling`
 - :py:meth:`spectral_cut`
 - :py:meth:`frequency_mask`
+- :py:meth:`get_log_derived_mask`
+- :py:meth:`get_rfi_mask_phase_deriv`
+- :py:meth:`compute_gain_flags`
 - :py:meth:`sir1d`
 - :py:meth:`sir`
 """
@@ -28,8 +31,10 @@ For more control there are specific routines that can be called:
 import warnings
 import logging
 
+import h5py
 import numpy as np
 import scipy.signal as sig
+from scipy.stats import median_abs_deviation
 
 from ch_ephem.observers import chime
 
@@ -96,8 +101,88 @@ BAD_FREQUENCIES = {
         # Notch filter stoppband + leakage
         [[None, None], [710.55, 757.81]],
     ],
-    "gbo": [],
-    "hco": [],
+    "gbo": [
+        # Bands identified in the gain spectra
+        # (channels 470-485, 424-439, and 378-393)
+        [[None, None], [610.15625, 616.40625]],
+        [[None, None], [628.125, 634.375]],
+        [[None, None], [646.09375, 652.34375]],
+    ],
+    "hco": [
+        # Union of the per-polarisation bands, see "hco_pol0" and "hco_pol1"
+        [[None, None], [420.0, 423.0]],
+        [[None, None], [430.0, 435.5]],
+        [[None, None], [439.5, 442.0]],
+        [[None, None], [450.0, 455.0]],
+        [[None, None], [460.0, 462.0]],
+        [[None, None], [462.3, 466.5]],
+        [[None, None], [467.8, 469.0]],
+        [[None, None], [475.0, 488.0]],
+        [[None, None], [490.5, 500.0]],
+        [[None, None], [510.0, 518.0]],
+        [[None, None], [527.5, 529.0]],
+        [[None, None], [530.0, 535.0]],
+        [[None, None], [536.0, 541.0]],
+        [[None, None], [541.5, 547.5]],
+        [[None, None], [552.0, 560.0]],
+        [[None, None], [565.5, 572.0]],
+        [[None, None], [595.0, 600.0]],
+        [[None, None], [621.3, 650.0]],
+        [[None, None], [705.0, 706.0]],
+        [[None, None], [712.0, 713.0]],
+        [[None, None], [729.0, 745.3]],
+        [[None, None], [745.6, 756.3]],
+        [[None, None], [757.7, 768.5]],
+    ],
+    "hco_pol0": [
+        # Bands identified in the raw ADC spectra of the pol0 inputs
+        [[None, None], [420.0, 423.0]],
+        [[None, None], [430.0, 435.5]],
+        [[None, None], [439.5, 442.0]],
+        [[None, None], [450.0, 455.0]],
+        [[None, None], [460.0, 462.0]],
+        [[None, None], [462.3, 466.5]],
+        [[None, None], [467.8, 469.0]],
+        [[None, None], [475.0, 488.0]],
+        [[None, None], [493.5, 500.0]],
+        [[None, None], [510.0, 518.0]],
+        [[None, None], [527.5, 529.0]],
+        [[None, None], [530.0, 534.0]],
+        [[None, None], [541.5, 547.5]],
+        [[None, None], [552.0, 560.0]],
+        [[None, None], [565.5, 572.0]],
+        [[None, None], [621.3, 650.0]],
+        [[None, None], [705.0, 706.0]],
+        [[None, None], [712.0, 713.0]],
+        [[None, None], [729.0, 745.3]],
+        [[None, None], [745.6, 756.3]],
+        [[None, None], [757.7, 768.5]],
+    ],
+    "hco_pol1": [
+        # Bands identified in the raw ADC spectra of the pol1 inputs
+        [[None, None], [430.0, 435.5]],
+        [[None, None], [439.5, 442.0]],
+        [[None, None], [450.0, 455.0]],
+        [[None, None], [460.0, 462.0]],
+        [[None, None], [462.3, 466.5]],
+        [[None, None], [467.8, 469.0]],
+        [[None, None], [475.0, 488.0]],
+        [[None, None], [490.5, 500.0]],
+        [[None, None], [510.0, 518.0]],
+        [[None, None], [527.5, 529.0]],
+        [[None, None], [530.0, 535.0]],
+        [[None, None], [536.0, 541.0]],
+        [[None, None], [541.5, 547.5]],
+        [[None, None], [553.5, 560.0]],
+        [[None, None], [565.5, 572.0]],
+        [[None, None], [595.0, 600.0]],
+        [[None, None], [621.3, 650.0]],
+        [[None, None], [705.0, 706.0]],
+        [[None, None], [712.0, 713.0]],
+        [[None, None], [729.0, 745.3]],
+        [[None, None], [745.6, 756.3]],
+        [[None, None], [757.7, 768.5]],
+    ],
 }
 
 
@@ -470,7 +555,7 @@ def frequency_mask(
         end times. If supplied as an array it must be broadcastable against
         `freq_centre`.
     instrument
-        Telescope name. [kko, gbo, hco, chime (default)]
+        Telescope name. [kko, gbo, hco, hco_pol0, hco_pol1, chime (default)]
 
     Returns
     -------
@@ -921,6 +1006,438 @@ def iterative_hpf_masking(
     yhpf = np.matmul(NF, y)
 
     return yhpf, new_flag, rsigma
+
+
+# Gain-based RFI flagging
+def get_log_derived_mask(array, sigma=3.0):
+    """Mask outliers in log-normal distributed data.
+
+    Robust statistics are calculated in log space and the resulting
+    bounds are projected back into linear space.  This yields bounds
+    that are asymmetric in linear space, e.g. the upper bound is
+    further from the median than the lower bound, which correctly
+    describes log-normally distributed data.
+
+    Parameters
+    ----------
+    array : np.ndarray[nfreq, ninput]
+        Data to search for outliers.  The statistics are calculated
+        over the last axis.
+    sigma : float
+        Number of median absolute deviations beyond which a value is
+        considered an outlier.
+
+    Returns
+    -------
+    mask : np.ndarray[nfreq, ninput] of bool
+        True indicates that the value is an outlier.
+    lower_bound : np.ndarray[nfreq, 1]
+        The lower threshold in linear units.
+    upper_bound : np.ndarray[nfreq, 1]
+        The upper threshold in linear units.
+    """
+    # Calculate robust statistics in log space
+    with np.errstate(invalid="ignore"):
+        log_arr = np.log10(array)
+
+    med_log = np.nanmedian(log_arr, axis=-1)[:, np.newaxis]
+    mad_log = median_abs_deviation(log_arr, axis=-1, nan_policy="omit")[:, np.newaxis]
+
+    # Determine the bounds in log space, then convert back to linear space
+    lower_bound = 10 ** (med_log - sigma * mad_log)
+    upper_bound = 10 ** (med_log + sigma * mad_log)
+
+    # Compare the original linear data against the projected bounds
+    mask = (array < lower_bound) | (array > upper_bound)
+
+    return mask, lower_bound, upper_bound
+
+
+def get_rfi_mask_phase_deriv(
+    h5_path,
+    n_iter=1,
+    n_subbands=1,
+    n_sig=10.0,
+    return_iter_masks=False,
+    static_mask=None,
+):
+    """Flag channels with anomalous cross-input phase-derivative variance.
+
+    Gain phases should evolve smoothly with frequency.  Channels where
+    the cross-input standard deviation of the phase derivative is
+    anomalously large are flagged as RFI contaminated.
+
+    The flagger runs for `n_iter` passes.  After each pass the newly
+    flagged channels are NaN-ed out of the gain array so that they
+    cannot bias the statistics of subsequent passes.
+
+    Parameters
+    ----------
+    h5_path : str or Path
+        Path to a raw calibration-broker gain HDF5 file.
+    n_iter : int
+        Number of flagging iterations.
+    n_subbands : int or list of int
+        Number of frequency subbands per iteration.  A scalar is
+        broadcast to all iterations; a list must have length `n_iter`.
+    n_sig : float or list of float
+        Threshold in scaled-MAD units per iteration.  A scalar is
+        broadcast to all iterations; a list must have length `n_iter`.
+    return_iter_masks : bool
+        If True, return `(mask, stage_masks)` instead of just `mask`.
+        `stage_masks` is a list of incremental boolean arrays with the
+        same shape as `mask`, one per stage:
+
+            - `stage_masks[0]`: amplitude pre-mask
+            - `stage_masks[i]`: new flags from phase iteration i (i >= 1)
+
+        Each entry contains only the *new* flags added at that stage.
+    static_mask : np.ndarray[nfreq, ninput] of bool
+        Indicates channels that are always RFI contaminated.  Applied
+        before the phase derivatives are computed.
+
+    Returns
+    -------
+    mask : np.ndarray[nfreq, ninput] of bool
+        Cumulative mask.  True where flagged by any stage.
+    stage_masks : list of np.ndarray[nfreq, ninput] of bool
+        Only returned when `return_iter_masks` is True.
+    """
+    with h5py.File(h5_path, "r") as f:
+        gain = f["gain"][:]
+        freqs = f["index_map"]["freq"]["centre"][:]
+
+    ninp = gain.shape[1]
+
+    # Broadcast scalar parameters to per-iteration lists
+    n_subbands_list = (
+        [n_subbands] * n_iter if np.isscalar(n_subbands) else list(n_subbands)
+    )
+    n_sig_list = [n_sig] * n_iter if np.isscalar(n_sig) else list(n_sig)
+
+    # Amplitude pre-mask (log-derived, per-frequency).  Flag cross-input
+    # amplitude outliers before the phase statistics are computed so that
+    # spuriously bright channels do not corrupt dphi_std.  Flagged entries
+    # are set to complex NaN, which np.nanstd and np.angle propagate
+    # correctly through the derivative calculation below.
+    amp_mask, _, _ = get_log_derived_mask(np.abs(gain))
+
+    # Apply the static mask for channels that are always contaminated
+    if static_mask is not None:
+        logger.info("Applying static mask specified by user.")
+        amp_mask |= static_mask
+
+    gain = gain.astype(complex)
+    gain[amp_mask] = np.nan + 1j * np.nan
+
+    # Seed the mask with the amplitude flags so they appear in the output,
+    # and track the incremental flags per stage.  Index 0 is the pre-mask.
+    mask = amp_mask.copy()
+    stage_masks = [amp_mask.copy()]
+
+    # Pol split (dynamic, never hardcoded).  These are views into gain,
+    # so in-place NaN updates are reflected automatically in subsequent
+    # iterations.
+    ninp_pol = ninp // 2
+    pols = {
+        0: (gain[:, :ninp_pol], slice(0, ninp_pol)),  # Y pol
+        1: (gain[:, ninp_pol:], slice(ninp_pol, ninp)),  # X pol
+    }
+
+    # Iterative phase-derivative flagging
+    for it in range(n_iter):
+        # NaN out all entries flagged so far so they do not bias this pass
+        gain[mask] = np.nan + 1j * np.nan
+        mask_before = mask.copy()
+
+        edges = np.linspace(freqs.min(), freqs.max(), n_subbands_list[it] + 1)
+
+        for _pol_id, (g_pol, pol_slice) in pols.items():
+            for sb in range(n_subbands_list[it]):
+                lo, hi = edges[sb], edges[sb + 1]
+                sb_mask = (
+                    (freqs >= lo) & (freqs < hi)
+                    if sb < n_subbands_list[it] - 1
+                    else (freqs >= lo) & (freqs <= hi)
+                )
+                sb_indices = np.where(sb_mask)[0]
+                if len(sb_indices) < 2:
+                    continue
+
+                g_sub = g_pol[sb_indices, :]  # (n_ch, ninp_pol)
+
+                # Zero-gain columns are set to NaN so they do not skew nanstd
+                zero_cols = np.abs(g_sub).sum(axis=0) == 0
+                g_sub = g_sub.copy().astype(complex)
+                g_sub[:, zero_cols] = np.nan
+
+                # Unwrap the phase per input column over the valid samples,
+                # then take a simple diff.  Per-column unwrapping (rather
+                # than a global np.unwrap on the full 2D array) prevents a
+                # single NaN gap in one input from corrupting the unwrap of
+                # all subsequent channels in that column.
+                phase_sub = np.angle(g_sub)  # NaN where g_sub is NaN
+                for col in range(phase_sub.shape[1]):
+                    col_data = phase_sub[:, col]
+                    valid = ~np.isnan(col_data)
+                    if valid.sum() >= 2:
+                        col_data[valid] = np.unwrap(col_data[valid])
+                        phase_sub[:, col] = col_data
+
+                # First phase derivative: shape (n_ch - 1, ninp_pol)
+                dphi = np.diff(phase_sub, axis=0)
+
+                # Cross-input std per frequency channel: shape (n_ch - 1,)
+                dphi_std = np.nanstd(dphi, axis=1)
+
+                med = np.nanmedian(dphi_std)
+                mad = median_abs_deviation(dphi_std, scale="normal", nan_policy="omit")
+                if mad == 0.0:
+                    # Perfectly clean subband, no flags
+                    continue
+
+                bad = dphi_std > (med + n_sig_list[it] * mad)  # (n_ch - 1,)
+
+                # Expand the derivative flags into channel flags by
+                # flagging both neighbours
+                bad_expanded = np.zeros(len(sb_indices), dtype=bool)
+                bad_expanded[:-1] |= bad
+                bad_expanded[1:] |= bad
+                mask[sb_indices[bad_expanded], pol_slice] = True
+
+        # Record only the new flags added in this iteration
+        stage_masks.append(mask & ~mask_before)
+
+    if return_iter_masks:
+        return mask, stage_masks
+
+    return mask
+
+
+def _format_rfi_bands(bands):
+    """Format RFI band definitions as a list of frequency ranges.
+
+    Both the `BAD_FREQUENCIES` format, where each entry is
+    `[[start_time, end_time], [freq_start, freq_end]]`, and a plain
+    sequence of `(freq_start, freq_end)` pairs are accepted.  Any time
+    range is discarded, i.e. the bands are applied at all times.
+
+    Parameters
+    ----------
+    bands : list
+        RFI bands in either of the formats described above.
+
+    Returns
+    -------
+    ranges : list of tuple
+        The `(freq_start, freq_end)` pair for each band.
+    """
+    ranges = []
+    for band in bands:
+        first, second = band
+
+        # In the BAD_FREQUENCIES format the first element is the time range
+        if isinstance(first, (list, tuple, np.ndarray)):
+            ranges.append(tuple(second))
+        else:
+            ranges.append((first, second))
+
+    return ranges
+
+
+def _subband_indices(freqs, edges, sb, n_subbands):
+    """Determine the channels that fall within a subband.
+
+    Parameters
+    ----------
+    freqs : np.ndarray[nfreq,]
+        Frequency in MHz.
+    edges : np.ndarray[n_subbands + 1,]
+        Frequency of the subband edges in MHz.
+    sb : int
+        Index of the subband.
+    n_subbands : int
+        Total number of subbands.
+
+    Returns
+    -------
+    index : np.ndarray
+        Index into `freqs` of the channels in this subband.  The upper
+        edge is exclusive for all but the final subband, which includes
+        it so that the highest channel is not dropped.
+    """
+    lo, hi = edges[sb], edges[sb + 1]
+
+    if sb < n_subbands - 1:
+        sel = (freqs >= lo) & (freqs < hi)
+    else:
+        sel = (freqs >= lo) & (freqs <= hi)
+
+    return np.where(sel)[0]
+
+
+def compute_gain_flags(
+    h5_path,
+    n_iter=1,
+    n_subbands_rfi=1,
+    n_sig_rfi=10.0,
+    deg=3,
+    n_subbands_fit=1,
+    nwalkers=24,
+    rfi_mask_pol0=None,
+    rfi_mask_pol1=None,
+):
+    """Load a raw gain file and compute the per (freq, input) good-data flag.
+
+    Applies a static, per-polarisation RFI mask, followed by phase-derivative
+    RFI flagging, and then for each input an MCMC phase derotation, a subband
+    polynomial fit, and a median absolute deviation cut on the residuals.
+
+    Parameters
+    ----------
+    h5_path : str or Path
+        Path to a raw calibration-broker gain HDF5 file.
+    n_iter : int
+        Number of phase-derivative flagging iterations.
+    n_subbands_rfi : int or list of int
+        Number of frequency subbands per phase-derivative iteration.
+    n_sig_rfi : float or list of float
+        Threshold in scaled-MAD units per phase-derivative iteration.
+    deg : int
+        Degree of the polynomial fit to the amplitude and derotated phase.
+    n_subbands_fit : int
+        Number of frequency subbands used for the polynomial fit.
+    nwalkers : int
+        Number of emcee walkers used for the MCMC phase fit.
+    rfi_mask_pol0 : list, optional
+        Static RFI bands to flag in the pol0 inputs, in either the
+        `BAD_FREQUENCIES` format or as `(freq_start, freq_end)` pairs.
+        If `None` (default), no static flags are applied to pol0.
+    rfi_mask_pol1 : list, optional
+        As `rfi_mask_pol0`, but for the pol1 inputs.
+
+    Returns
+    -------
+    freqs : np.ndarray[nfreq,]
+        Channel centre frequency in MHz.
+    gain : np.ndarray[nfreq, ninput]
+        The raw complex gains.
+    weights : np.ndarray[nfreq, ninput]
+        The raw inverse-variance weights.
+    flag : np.ndarray[nfreq, ninput] of bool
+        True where the gain is good, and False where it is flagged
+        and will be interpolated over.
+    """
+    from .mcmc import run_mcmc_gain_fit_simple
+
+    # Load the raw gains and weights
+    with h5py.File(h5_path, "r") as f:
+        gain = f["gain"][:]
+        freqs = f["index_map"]["freq"]["centre"][:]
+        weights = f["weight"][:]
+
+    nfreq, ninp = gain.shape
+
+    # Static, per-polarisation RFI mask.  A polarisation whose bands were
+    # not provided is not flagged here at all.
+    static_mask = None
+    if (rfi_mask_pol0 is not None) or (rfi_mask_pol1 is not None):
+        rfi_1d = []
+        for bands in [rfi_mask_pol0, rfi_mask_pol1]:
+            flg = np.zeros(nfreq, dtype=bool)
+            for f_start, f_end in _format_rfi_bands([] if bands is None else bands):
+                flg |= (freqs >= f_start) & (freqs <= f_end)
+
+            rfi_1d.append(flg)
+
+        static_mask = np.hstack(
+            [np.broadcast_to(f1d[:, np.newaxis], (nfreq, ninp // 2)) for f1d in rfi_1d]
+        )
+
+    # Phase-derivative RFI flagging, seeded with the static mask
+    mask = get_rfi_mask_phase_deriv(
+        h5_path,
+        n_iter=n_iter,
+        n_subbands=n_subbands_rfi,
+        n_sig=n_sig_rfi,
+        static_mask=static_mask,
+    )
+
+    # For each input, derotate the phase, fit a polynomial to the amplitude
+    # and derotated phase, and flag outlying residuals
+    logger.info(f"Running MCMC and outlier flagging for {ninp} inputs.")
+
+    flag = np.zeros((nfreq, ninp), dtype=bool)
+    edges = np.linspace(freqs.min(), freqs.max(), n_subbands_fit + 1)
+
+    for inp_index in range(ninp):
+        gain_inp = gain[:, inp_index]
+        good = ~mask[:, inp_index]
+
+        amp = np.abs(gain_inp)
+        phase = np.angle(gain_inp)
+
+        # Derotate the phase using the best-fit delay and offset
+        mcmc_result = run_mcmc_gain_fit_simple(
+            gain_inp, freqs, good, nwalkers=nwalkers
+        )
+        tau_us = float(mcmc_result["best_fit_theta"][0])
+        offset = float(mcmc_result["best_fit_theta"][1])
+        derot_phase = 2 * np.pi * tau_us * freqs + offset
+        phase_derot = np.angle(gain_inp * np.exp(-1j * derot_phase))
+
+        # Fit a polynomial to each subband
+        amp_fit = np.full_like(amp, np.nan)
+        phase_fit = np.full_like(phase, np.nan)
+
+        for sb in range(n_subbands_fit):
+            sb_idx = _subband_indices(freqs, edges, sb, n_subbands_fit)
+            good_sb = good[sb_idx]
+            if good_sb.sum() <= deg:
+                continue
+
+            freqs_c = freqs[sb_idx] - freqs[sb_idx].mean()
+
+            amp_fit[sb_idx] = np.polyval(
+                np.polyfit(freqs_c[good_sb], amp[sb_idx][good_sb], deg), freqs_c
+            )
+            phase_fit[sb_idx] = np.polyval(
+                np.polyfit(freqs_c[good_sb], phase_derot[sb_idx][good_sb], deg),
+                freqs_c,
+            )
+
+        amp_resid = amp - amp_fit
+        phase_resid = phase_derot - phase_fit
+
+        # Flag residuals that deviate significantly from the local median
+        outlier_amp = np.zeros(nfreq, dtype=bool)
+        outlier_phase = np.zeros(nfreq, dtype=bool)
+
+        for sb in range(n_subbands_fit):
+            sb_idx = _subband_indices(freqs, edges, sb, n_subbands_fit)
+            valid_sb = good[sb_idx] & ~np.isnan(amp_resid[sb_idx])
+            if valid_sb.sum() < 2:
+                continue
+
+            ar = amp_resid[sb_idx[valid_sb]]
+            med_a = np.nanmedian(ar)
+            mad_a = median_abs_deviation(ar, scale="normal", nan_policy="omit")
+            if mad_a > 0:
+                outlier_amp[sb_idx] |= good[sb_idx] & (
+                    np.abs(amp_resid[sb_idx] - med_a) > 5 * mad_a
+                )
+
+            pr = phase_resid[sb_idx[valid_sb]]
+            med_p = np.nanmedian(pr)
+            mad_p = median_abs_deviation(pr, scale="normal", nan_policy="omit")
+            if mad_p > 0:
+                outlier_phase[sb_idx] |= good[sb_idx] & (
+                    np.abs(phase_resid[sb_idx] - med_p) > 2 * mad_p
+                )
+
+        flag[:, inp_index] = good & ~outlier_amp & ~outlier_phase
+
+    return freqs, gain, weights, flag
 
 
 # Scale-invariant rank (SIR) functions
