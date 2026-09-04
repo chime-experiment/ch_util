@@ -1106,8 +1106,9 @@ class Finder:
         )
 
         for rise_time in rise_times:
+            # solar_setting always returns an array, even for a scalar argument
             set_time = chime.solar_setting(rise_time)
-            self.exclude_time_interval(rise_time, set_time)
+            self.exclude_time_interval(rise_time, set_time[0])
 
     def exclude_nighttime(self):
         """Add time intervals to exclude all night time data."""
@@ -1117,8 +1118,9 @@ class Finder:
         )
 
         for set_time in set_times:
+            # solar_rising always returns an array, even for a scalar argument
             rise_time = chime.solar_rising(set_time)
-            self.exclude_time_interval(set_time, rise_time)
+            self.exclude_time_interval(set_time, rise_time[0])
 
     def exclude_sun(self, time_delta=4000.0, time_delta_rise_set=4000.0):
         """Add time intervals to exclude sunrise, sunset, and sun transit.
