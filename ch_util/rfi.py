@@ -43,47 +43,72 @@ logger.addHandler(logging.NullHandler())
 # Ranges of bad frequencies given by their start time (in unix time) and
 # corresponding start and end frequencies (in MHz)
 # If the start time is not specified, t = [], the flag is applied to all CSDs
+# When making changes here, please also update the list in wtl.broker-utils
 BAD_FREQUENCIES = {
     "chime": [
-        ### Bad bands at first light
+        # Bad band at first light.
         [[None, None], [449.41, 450.98]],
+        # Bad band at first light.
         [[None, None], [454.88, 456.05]],
+        # Bad band at first light.
         [[None, None], [457.62, 459.18]],
-        [[None, None], [483.01, 485.35]],
-        [[None, None], [487.70, 494.34]],
-        [[None, None], [497.85, 506.05]],
-        [[None, None], [529.10, 536.52]],
-        [[None, None], [541.60, 548.00]],
-        ### Additional bad bands
-        # Narrow, high power bands visible in sensitivities and
-        # some longer baselines. There is some sporadic rfi in between
-        # the two bands
+        # Narrow, high power band visible in sensitivities and some longer
+        # baselines. There is some sporadic RFI near this band
         [[None, None], [460.15, 460.55]],
-        [[None, None], [464.00, 470.32]],
-        # 6 MHz band (reported by Simon)
-        [[None, None], [505.85, 511.71]],
+        # Persistent, bright narrow line.
+        # Added to mask during Dec 2023 update.
+        [[1700573980, None], [464.45, 465.24]],
+        # Persistent, bright narrow line.
+        # Added to mask during Dec 2023 update.
+        [[1700573980, None], [468.75, 469.54]],
+        # Bad band at first light.
+        [[None, None], [483.01, 485.35]],
+        # Bad band at first light.
+        # UHF TV Channel 17, broadcast out of Omak.
+        [[None, None], [487.70, 494.34]],
+        # Bad band at first light.
+        # UHF TV Channel 19, broadcast out of Omak.
+        [[None, None], [497.85, 506.05]],
+        # 6 MHz band (reported by Simon).
+        # Excluded from gain calibration during Dec 2023 update.
+        [[None, 1700573980], [505.85, 511.71]],
         # Bright band which has been present since early on
         [[None, None], [517.97, 525.00]],
+        # Bad band at first light.
+        [[None, None], [529.10, 536.52]],
+        # Bad band at first light.
+        # UHF TV Channel 26 turned off on CSD 3440 (2023/04/07).
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        [[None, 1681448064], [541.60, 548.00]],
         # UHF TV Channel 27 ending CSD 3212 inclusive (2022/08/24)
-        # This is extended until CSD 3446 (2023/04/13) to account for gain errors
-        [[None, 1681410777], [548.00, 554.49]],
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        [[None, 1681448064], [548.00, 554.49]],
+        # UHF TV Channel 30/31.  31 broadcast out of Omak.
         [[None, None], [564.65, 578.00]],
         # UHF TV Channel 32 ending CSD 3213 inclusive (2022/08/25)
-        # This is extended until CSD 3446 (2023/04/13) to account for gain errors
-        [[None, 1681410777], [578.00, 585.35]],
-        # from CSD 2893 (2021/10/09 - ) UHF TV Channel 33 (reported by Seth)
+        # Extended until CSD 3446 (2023/04/14) to account for stale digital gains.
+        [[None, 1681448064], [578.00, 585.35]],
+        # UHF TV Channel 33 from CSD 2893 (2021/10/09).  Broadcast out of Omak.
         [[1633758888, None], [584.00, 590.00]],
-        # UHF TV Channel 35
+        # UHF TV Channel 35 from CSD 2893 (2021/10/09).  Broadcast out of Omak.
         [[1633758888, None], [596.00, 602.00]],
-        # Low power band visible in long baselines
-        [[None, None], [602.00, 607.82]],
-        # from CSD 2243 (2019/12/31 - ) Rogers’ new 600 MHz band
+        # Rogers’ new 600 MHz band from CSD 2243 (2019/12/31)
         [[1577755022, None], [617.00, 627.00]],
+        # Bells’ new 600 MHz band from CSD 2642 (2021/02/01), turned on gradually.
+        [[1612137600, None], [627.00, 637.00]],
+        # Freedom's new 600 MHz band from CSD 2642 (2021/02/01), turned on gradually.
+        [[1612137600, None], [637.00, 642.00]],
+        # Freedom's new 600 MHz band from CSD 4383 (2025/11/03)
+        [[1762177500, None], [642.00, 652.00]],
+        # Bad band at first light.
         [[None, None], [693.16, 693.55]],
+        # Bad band at first light.
         [[None, None], [694.34, 696.68]],
         # from CSD 2080 (2019/07/21 - ) Blobs, Channels 55 and 56
         [[1564051033, None], [716.00, 728.00]],
+        # Bad band at first light.
         [[None, None], [729.88, 745.12]],
+        # Bad band at first light.
         [[None, None], [746.29, 756.45]],
     ],
     "kko": [
